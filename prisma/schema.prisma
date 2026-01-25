@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  DIRECTOR
+  TEACHER
+  STUDENT
+}
+
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  ABSENT
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      Role     @default(STUDENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  groupsAsTeacher Group[]      @relation("TeacherGroups")
+  groupsAsStudent GroupMember[]
+  attendances     Attendance[]
+  submissions     Submission[]
+  flashcardSets   FlashcardSet[] // Teachers create sets
+}
+
+model Group {
+  id        String   @id @default(cuid())
+  name      String
+  teacherId String
+  teacher   User     @relation("TeacherGroups", fields: [teacherId], references: [id])
+  
+  members   GroupMember[]
+  sessions  Session[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GroupMember {
+  id        String   @id @default(cuid())
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id])
+  studentId String
+  student   User     @relation(fields: [studentId], references: [id])
+  
+  joinedAt  DateTime @default(now())
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id])
+  date      DateTime
+  topic     String?
+  
+  attendances Attendance[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Attendance {
+  id        String           @id @default(cuid())
+  sessionId String
+  session   Session          @relation(fields: [sessionId], references: [id])
+  studentId String
+  student   User             @relation(fields: [studentId], references: [id])
+  status    AttendanceStatus
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FlashcardSet {
+  id        String   @id @default(cuid())
+  title     String
+  teacherId String
+  teacher   User     @relation(fields: [teacherId], references: [id])
+  
+  cards     Flashcard[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Flashcard {
+  id        String   @id @default(cuid())
+  setId     String
+  set       FlashcardSet @relation(fields: [setId], references: [id])
+  front     String
+  back      String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Assignment {
+  id        String   @id @default(cuid())
+  title     String
+  // groupId   String // Simplified for MVP
+  
+  submissions Submission[]
+}
+
+model Submission {
+  id           String   @id @default(cuid())
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id])
+  studentId    String
+  student      User     @relation(fields: [studentId], references: [id])
+  score        Int?
+  content      String
+}
