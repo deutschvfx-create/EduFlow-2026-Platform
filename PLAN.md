@@ -13,8 +13,9 @@
 - **UI Component Library**: Shadcn/UI (based on Radix UI) + Framer Motion (for animations) to achieve the "Premium/Apple" feel.
 
 ### Database & Backend
-- **Database**: PostgreSQL.
-  - *Reasoning*: The relationships between Users, Roles, Groups, Attendance, and Scores are highly structured. SQL is superior to NoSQL for this specific CRM-like use case.
+- **Database**: SQLite (via file:./dev.db)
+  - *Reasoning*: Simplified for MVP and local development, avoiding Docker issues.
+  - *Future Migration*: Can check migrating to Postgres for production later.
 - **ORM**: Prisma.
 - **Auth**: NextAuth.js (v5) or Supabase Auth. handling Role-Based Access Control (RBAC).
 

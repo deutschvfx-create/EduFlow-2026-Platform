@@ -1,0 +1,76 @@
+'use client';
+
+import { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import {
+    Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { BookOpen } from "lucide-react";
+
+interface CreateCourseModalProps {
+    onSuccess: () => void;
+}
+
+export function CreateCourseModal({ onSuccess }: CreateCourseModalProps) {
+    const [open, setOpen] = useState(false);
+    const [name, setName] = useState('');
+
+    const handleSubmit = () => {
+        if (!name) return;
+
+        import("@/lib/data/courses.repo").then(({ coursesRepo }) => {
+            coursesRepo.add({
+                id: crypto.randomUUID(),
+                name,
+                code: 'NEW',
+                facultyId: 'unknown',
+                facultyName: 'Факультет Неизвестен',
+                facultyCode: 'UNK',
+                departmentId: 'unknown',
+                departmentName: 'Кафедра Неизвестна',
+                departmentCode: 'UNK',
+                status: 'ACTIVE',
+                level: 'A1',
+                description: '',
+                teacherIds: [],
+                teacherNames: [],
+                groupIds: [],
+                groupNames: [],
+                createdAt: new Date().toISOString()
+            });
+            setOpen(false);
+            setName('');
+            onSuccess();
+        });
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button variant="outline" className="h-24 flex flex-col gap-2 items-center justify-center border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-all hover:scale-105 active:scale-95 group">
+                    <div className="h-10 w-10 rounded-full bg-zinc-800 flex items-center justify-center group-hover:bg-cyan-500/20 group-hover:text-cyan-400 transition-colors">
+                        <BookOpen className="h-5 w-5" />
+                    </div>
+                    <span className="font-medium text-xs">Предмет</span>
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-zinc-900 border-zinc-800 text-zinc-100 sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Создать предмет</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="name">Название *</Label>
+                        <Input id="name" value={name} onChange={e => setName(e.target.value)} className="bg-zinc-950 border-zinc-800" />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setOpen(false)} className="border-zinc-700 hover:bg-zinc-800 hover:text-white">Отмена</Button>
+                    <Button onClick={handleSubmit} disabled={!name} className="bg-cyan-600 hover:bg-cyan-700 text-white">Создать</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}

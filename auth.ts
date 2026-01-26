@@ -1,13 +1,11 @@
 import NextAuth from "next-auth"
 import { authConfig } from "./auth.config"
-import { PrismaAdapter } from "@auth/prisma-adapter"
-import { prisma } from "@/lib/prisma"
 import Credentials from "next-auth/providers/credentials"
 
 export const { auth, signIn, signOut, handlers } = NextAuth({
     ...authConfig,
-    adapter: PrismaAdapter(prisma),
     session: { strategy: "jwt" },
+    secret: process.env.AUTH_SECRET,
     providers: [
         Credentials({
             name: "Credentials",
@@ -16,22 +14,21 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
                 password: { label: "Password", type: "password" }
             },
             async authorize(credentials) {
-                if (!credentials?.email || !credentials?.password) return null;
-
+                if (!credentials?.email) return null;
                 const email = credentials.email as string;
 
-                // Fetch user from DB
-                const user = await prisma.user.findUnique({
-                    where: { email }
-                });
+                // Demo Users for MVP
+                if (email === "director@example.com") {
+                    return { id: "d1", name: "Director Smith", email, role: "DIRECTOR" }
+                }
+                if (email === "teacher@example.com") {
+                    return { id: "t1", name: "Teacher Jones", email, role: "TEACHER" }
+                }
+                if (email === "student@example.com") {
+                    return { id: "s1", name: "Alex Student", email, role: "STUDENT" }
+                }
 
-                if (!user) return null;
-
-                // Simplistic password check (INSECURE: MVP only, should use bcrypt)
-                // Assuming plain text for initial demo seed
-                if (user.password !== credentials.password) return null;
-
-                return user;
+                return null;
             },
         }),
     ],

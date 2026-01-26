@@ -1,0 +1,12 @@
+'use client';
+
+import PlaceholderPage from "@/components/placeholder-page";
+import { ModuleGuard } from "@/components/system/module-guard";
+
+export default function Page() {
+    return (
+        <ModuleGuard module="announcements">
+            <PlaceholderPage title="Объявления" />
+        </ModuleGuard>
+    );
+}

@@ -1,0 +1,180 @@
+
+'use client';
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
+import { updateModulesConfig, getModulesConfig } from "@/app/actions";
+import { Loader2, ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+export default function ModulesSettingsPage() {
+    const router = useRouter();
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+
+    // Default Config
+    const [config, setConfig] = useState<any>({
+        teachers: true,
+        faculties: false,
+        departments: false,
+        groups: true,
+        courses: true,
+        schedule: false,
+        attendance: true,
+        grades: false,
+        announcements: false,
+        chat: false,
+        reports: false
+    });
+
+    useEffect(() => {
+        getModulesConfig().then((data) => {
+            if (data && Object.keys(data).length > 0) {
+                setConfig(data);
+            }
+            setLoading(false);
+        });
+    }, []);
+
+    const handleToggle = async (key: string, checked: boolean) => {
+        const newConfig = { ...config, [key]: checked };
+        setConfig(newConfig);
+        setSaving(true);
+        await updateModulesConfig(newConfig);
+        setSaving(false);
+        router.refresh(); // Refresh layout to update sidebar
+    };
+
+    if (loading) return <div className="text-zinc-500">Loading...</div>;
+
+    return (
+        <div className="space-y-6 max-w-4xl">
+            <div className="flex items-center gap-4">
+                <Link href="/app/settings">
+                    <Button variant="ghost" size="icon">
+                        <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                </Link>
+                <div>
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
+                        Модули платформы
+                    </h1>
+                    <p className="text-zinc-400">Включайте только то, что нужно вашей организации</p>
+                </div>
+            </div>
+
+            <div className="grid gap-6">
+                {/* People */}
+                <Card className="bg-zinc-900 border-zinc-800">
+                    <CardHeader>
+                        <CardTitle>Люди</CardTitle>
+                        <CardDescription>Управление пользователями</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <Label className="flex flex-col gap-1">
+                                <span>Студенты</span>
+                                <span className="font-normal text-xs text-zinc-500">Базовый модуль</span>
+                            </Label>
+                            <Switch checked={true} disabled />
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="teachers" className="flex flex-col gap-1">
+                                <span>Преподаватели</span>
+                                <span className="font-normal text-xs text-zinc-500">Управление штатом</span>
+                            </Label>
+                            <Switch
+                                id="teachers"
+                                checked={config.teachers}
+                                onCheckedChange={(c) => handleToggle('teachers', c)}
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Structure */}
+                <Card className="bg-zinc-900 border-zinc-800">
+                    <CardHeader>
+                        <CardTitle>Структура</CardTitle>
+                        <CardDescription>Иерархия организации</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="faculties">Факультеты</Label>
+                            <Switch id="faculties" checked={config.faculties} onCheckedChange={(c) => handleToggle('faculties', c)} />
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="departments">Кафедры</Label>
+                            <Switch id="departments" checked={config.departments} onCheckedChange={(c) => handleToggle('departments', c)} />
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="groups">Группы</Label>
+                            <Switch id="groups" checked={config.groups} onCheckedChange={(c) => handleToggle('groups', c)} />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Education */}
+                <Card className="bg-zinc-900 border-zinc-800">
+                    <CardHeader>
+                        <CardTitle>Обучение</CardTitle>
+                        <CardDescription>Учебный процесс</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="courses">Предметы</Label>
+                            <Switch id="courses" checked={config.courses} onCheckedChange={(c) => handleToggle('courses', c)} />
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="schedule">Расписание</Label>
+                            <Switch id="schedule" checked={config.schedule} onCheckedChange={(c) => handleToggle('schedule', c)} />
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="attendance">Посещаемость</Label>
+                            <Switch id="attendance" checked={config.attendance} onCheckedChange={(c) => handleToggle('attendance', c)} />
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="grades">Оценки</Label>
+                            <Switch id="grades" checked={config.grades} onCheckedChange={(c) => handleToggle('grades', c)} />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Communication */}
+                <Card className="bg-zinc-900 border-zinc-800">
+                    <CardHeader>
+                        <CardTitle>Коммуникация</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="announcements">Объявления</Label>
+                            <Switch id="announcements" checked={config.announcements} onCheckedChange={(c) => handleToggle('announcements', c)} />
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="chat">Чаты</Label>
+                            <Switch id="chat" checked={config.chat} onCheckedChange={(c) => handleToggle('chat', c)} />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Analytics */}
+                <Card className="bg-zinc-900 border-zinc-800">
+                    <CardHeader>
+                        <CardTitle>Аналитика</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="reports">Отчёты</Label>
+                            <Switch id="reports" checked={config.reports} onCheckedChange={(c) => handleToggle('reports', c)} />
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+            {saving && <div className="fixed bottom-4 right-4 bg-indigo-600 text-white px-4 py-2 rounded-full flex items-center gap-2 shadow-lg animate-in slide-in-from-bottom-5"><Loader2 className="h-4 w-4 animate-spin" /> Сохранение...</div>}
+        </div>
+    );
+}

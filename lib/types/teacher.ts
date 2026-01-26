@@ -1,0 +1,34 @@
+export type TeacherStatus = "INVITED" | "ACTIVE" | "SUSPENDED" | "ARCHIVED";
+
+export type TeacherRole = "TEACHER" | "CURATOR" | "ADMIN";
+
+export type TeacherPermissions = {
+    canCreateGroups: boolean;
+    canManageStudents: boolean; // activate/suspend/remove from group
+    canMarkAttendance: boolean;
+    canGradeStudents: boolean;
+    canSendAnnouncements: boolean;
+    canUseChat: boolean;
+    canInviteStudents: boolean;
+};
+
+export type TeacherGroup = {
+    id: string;
+    name: string;
+};
+
+export type Teacher = {
+    id: string;
+    firstName: string;
+    lastName: string;
+    birthDate?: string; // YYYY-MM-DD
+    email?: string;
+    phone?: string;
+    specialization?: string;
+    status: TeacherStatus;
+    role: TeacherRole;
+    permissions: TeacherPermissions;
+    groups: TeacherGroup[];
+    createdAt: string; // ISO
+    lastActivityAt?: string; // ISO
+};

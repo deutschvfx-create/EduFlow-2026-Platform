@@ -1,88 +1,128 @@
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Calendar, Clock, MapPin, QrCode } from "lucide-react"
+import { MOCK_STUDENTS } from "@/lib/mock/students"
+import { MOCK_SCHEDULE } from "@/lib/mock/schedule"
+import QRCode from "react-qr-code"
+
+// Mock config for current student and app settings, replacing missing "@/lib/data"
+const CURRENT_STUDENT_ID = "s1";
+const APP_CONFIG = { orgType: 'LanguageSchool' };
 
 export default function StudentDashboard() {
+    const rawStudent = MOCK_STUDENTS.find(s => s.id === CURRENT_STUDENT_ID) || MOCK_STUDENTS[0];
+
+    // Extend raw student with UI helpers
+    const student = {
+        ...rawStudent,
+        name: `${rawStudent.firstName} ${rawStudent.lastName}`,
+        avatar: rawStudent.firstName[0] + rawStudent.lastName[0], // Mock avatar initials
+    };
+
+    const isLanguageSchool = APP_CONFIG.orgType === 'LanguageSchool';
+
+    // Get Today's Schedule (Mock logic: showing all for now or filtering by "MON" to simulate today)
+    const todayLessons = MOCK_SCHEDULE.filter(l => l.groupId === student.groups[0]?.id).slice(0, 3); // Simulating today's lessons
+
     return (
-        <div className="p-6 md:p-8 space-y-6 bg-zinc-950 min-h-screen text-zinc-100">
-            <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">Hello, Alex!</h1>
-                    <p className="text-zinc-400">Level 5 Scholar • 2,450 XP</p>
-                </div>
-                <div className="flex gap-4">
-                    <Card className="bg-zinc-900 border-zinc-800 p-4 flex flex-col items-center min-w-[120px]">
-                        <span className="text-2xl font-bold text-amber-400">12 🔥</span>
-                        <span className="text-xs text-zinc-500">Day Streak</span>
-                    </Card>
-                </div>
-            </div>
+        <div className="flex flex-col gap-6 p-4 md:p-6 min-h-[calc(100vh-4rem)] max-w-md mx-auto w-full">
 
-            <div className="grid gap-6 md:grid-cols-3">
-                {/* Main content */}
-                <div className="md:col-span-2 space-y-6">
-                    <Card className="bg-zinc-900 border-zinc-800 overflow-hidden relative">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500" />
-                        <CardHeader>
-                            <CardTitle className="text-zinc-200">Current Course: Advanced English</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-2">
-                                <div className="flex justify-between text-sm">
-                                    <span>Progress</span>
-                                    <span>65%</span>
-                                </div>
-                                <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
-                                    <div className="h-full bg-indigo-500 w-[65%] rounded-full shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
-                                </div>
-                                <p className="text-xs text-zinc-500 pt-2">Next Lesson: "Phrasal Verbs" tomorrow at 10:00 AM</p>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <Card className="bg-zinc-900 border-zinc-800 hover:border-indigo-500/50 transition-colors cursor-pointer group">
-                            <CardContent className="p-6 flex flex-col items-center justify-center space-y-4">
-                                <div className="h-12 w-12 rounded-full bg-indigo-500/20 flex items-center justify-center group-hover:bg-indigo-500/30 transition-colors">
-                                    <span className="text-2xl">📚</span>
-                                </div>
-                                <h3 className="font-semibold text-zinc-200">Homework</h3>
-                                <Badge variant="secondary">2 Pending</Badge>
-                            </CardContent>
-                        </Card>
-                        <Card className="bg-zinc-900 border-zinc-800 hover:border-purple-500/50 transition-colors cursor-pointer group">
-                            <CardContent className="p-6 flex flex-col items-center justify-center space-y-4">
-                                <div className="h-12 w-12 rounded-full bg-purple-500/20 flex items-center justify-center group-hover:bg-purple-500/30 transition-colors">
-                                    <span className="text-2xl">🧠</span>
-                                </div>
-                                <h3 className="font-semibold text-zinc-200">Flashcards</h3>
-                                <Badge variant="secondary">Start Review</Badge>
-                            </CardContent>
-                        </Card>
+            {/* 1. Header Logic: Profile & Status */}
+            <div className="flex items-center gap-4">
+                <div className="h-14 w-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xl font-bold text-white shadow-lg shadow-indigo-500/20">
+                    {student.avatar}
+                </div>
+                <div className="flex flex-col">
+                    <h1 className="text-xl font-bold text-white leading-tight">
+                        {student.name}
+                    </h1>
+                    <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline" className="border-zinc-700 text-zinc-400 text-xs px-2 py-0.5 h-auto">
+                            Студент
+                        </Badge>
+                        {isLanguageSchool && (
+                            <Badge className={student.paymentStatus === 'OK' ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-xs px-2 py-0.5 h-auto' : 'bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs px-2 py-0.5 h-auto'}>
+                                {student.paymentStatus === 'OK' ? 'Оплачено' : 'Долг'}
+                            </Badge>
+                        )}
                     </div>
                 </div>
+            </div>
 
-                {/* Sidebar */}
-                <div className="space-y-6">
-                    <Card className="bg-zinc-900 border-zinc-800">
-                        <CardHeader>
-                            <CardTitle className="text-sm uppercase text-zinc-500 tracking-wider">Leaderboard</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
-                                {[{ n: "You", x: 2450, r: 1 }, { n: "Maria", x: 2300, r: 2 }, { n: "John", x: 2100, r: 3 }].map((u, i) => (
-                                    <div key={i} className={`flex items-center justify-between ${i === 0 ? 'bg-zinc-800 p-2 rounded -mx-2' : ''}`}>
-                                        <div className="flex items-center gap-3">
-                                            <span className={`font-mono font-bold ${i === 0 ? 'text-amber-400' : 'text-zinc-500'}`}>#{u.r}</span>
-                                            <span className="text-sm font-medium">{u.n}</span>
+            {/* 2. Central QR Card (Pass) */}
+            <Card className="bg-gradient-to-b from-zinc-900 to-zinc-950 border-zinc-800 shadow-xl overflow-hidden relative group">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+
+                <CardContent className="p-8 flex flex-col items-center justify-center gap-6">
+                    <div className="bg-white p-4 rounded-2xl shadow-inner">
+                        <QRCode
+                            value={`student:${student.id}`}
+                            size={180}
+                            style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                            viewBox={`0 0 256 256`}
+                            fgColor="#000000"
+                            bgColor="#ffffff"
+                        />
+                    </div>
+                    <div className="text-center space-y-1">
+                        <div className="text-zinc-500 text-xs uppercase tracking-widest font-semibold">Ваш ID</div>
+                        <div className="font-mono text-xl text-zinc-300 tracking-wider font-bold">{student.id.toUpperCase()}</div>
+                    </div>
+                    <p className="text-xs text-zinc-600 text-center max-w-[200px]">
+                        Покажите этот код преподавателю или на ресепшн для отметки
+                    </p>
+                </CardContent>
+            </Card>
+
+            {/* 3. Schedule List */}
+            <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-indigo-400" />
+                        Расписание на сегодня
+                    </h2>
+                    <Button variant="ghost" size="sm" className="text-zinc-500 text-xs h-8 hover:text-white">
+                        Все
+                    </Button>
+                </div>
+
+                <div className="space-y-3">
+                    {todayLessons.length > 0 ? todayLessons.map((lesson) => (
+                        <Card key={lesson.id} className="bg-zinc-900/50 border-zinc-800/50 active:scale-[0.98] transition-transform">
+                            <CardContent className="p-4 flex gap-4 items-center">
+                                <div className="flex flex-col items-center justify-center w-12 h-12 rounded-xl bg-zinc-800 text-zinc-300 font-bold border border-zinc-700/50">
+                                    <span className="text-sm">{lesson.startTime}</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="font-semibold text-zinc-200 truncate">{lesson.courseName}</h3>
+                                    <div className="flex items-center gap-3 mt-1 text-xs text-zinc-500">
+                                        <div className="flex items-center gap-1">
+                                            <MapPin className="h-3 w-3" />
+                                            {lesson.room}
                                         </div>
-                                        <span className="text-xs font-bold text-zinc-400">{u.x} XP</span>
+                                        <div className="flex items-center gap-1">
+                                            <Clock className="h-3 w-3" />
+                                            90 мин
+                                        </div>
                                     </div>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
+                                </div>
+                                <div className={`h-2 w-2 rounded-full ${lesson.status === 'PLANNED' ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                            </CardContent>
+                        </Card>
+                    )) : (
+                        <div className="text-center py-8 text-zinc-500 bg-zinc-900/30 rounded-xl border border-dashed border-zinc-800">
+                            <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                            <p>Нет занятий на сегодня</p>
+                        </div>
+                    )}
                 </div>
             </div>
+
+            {/* Bottom Spacer for Mobile Nav */}
+            <div className="h-20" />
         </div>
     )
 }

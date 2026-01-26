@@ -1,47 +1,99 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { signInWithEmailAndPassword } from "firebase/auth"
+import { auth } from "@/lib/firebase"
+import { UserService } from "@/lib/services/firestore"
 
 export default function LoginPage() {
+    const [email, setEmail] = useState("")
+    const [password, setPassword] = useState("")
+    const [loading, setLoading] = useState(false)
+    const router = useRouter()
+    const searchParams = useSearchParams()
+    const roleParam = searchParams.get('role')
+
+    useEffect(() => {
+        // Prefill email for testing if needed or just visual indication
+        // If role is student, maybe show different visual?
+    }, [roleParam])
+
+    const handleLogin = async () => {
+        setLoading(true)
+        try {
+            const userCredential = await signInWithEmailAndPassword(auth, email, password)
+            const uid = userCredential.user.uid
+
+            // Check Role in Firestore
+            const userData = await UserService.getUser(uid)
+
+            if (userData) {
+                if (userData.role === 'STUDENT') {
+                    router.push('/student')
+                } else {
+                    router.push('/director')
+                }
+            } else {
+                // Should not happen if registered correctly
+                router.push('/')
+            }
+
+        } catch (e: any) {
+            console.error(e)
+            alert("Login failed: " + e.message)
+        } finally {
+            setLoading(false)
+        }
+    }
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-4">
             <Card className="w-full max-w-sm bg-zinc-900 border-zinc-800 shadow-2xl shadow-indigo-500/10 z-10">
                 <CardHeader className="space-y-1">
-                    <CardTitle className="text-2xl font-bold text-center tracking-tight text-white">EduFlow 2026</CardTitle>
+                    <CardTitle className="text-2xl font-bold text-center tracking-tight text-white">
+                        {roleParam === 'student' ? 'Вход для Ученика' : roleParam === 'director' ? 'Вход для Директора' : 'Вход в систему'}
+                    </CardTitle>
                     <CardDescription className="text-center text-zinc-400">
-                        Enter your credentials to access the platform
+                        Введите ваши данные для входа
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="email" className="text-zinc-200">Email</Label>
-                        <Input id="email" placeholder="m@example.com" className="bg-zinc-950 border-zinc-700 text-zinc-100 placeholder:text-zinc-600" />
+                        <Input
+                            id="email"
+                            placeholder={roleParam === 'student' ? "student@school.com" : "director@school.com"}
+                            className="bg-zinc-950 border-zinc-700 text-zinc-100 placeholder:text-zinc-600"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="password" className="text-zinc-200">Password</Label>
-                        <Input id="password" type="password" className="bg-zinc-950 border-zinc-700 text-zinc-100" />
-                    </div>
-                    <div className="space-y-2">
-                        <Label className="text-zinc-200">Role (Demo Only)</Label>
-                        <Select>
-                            <SelectTrigger className="bg-zinc-950 border-zinc-700 text-zinc-100">
-                                <SelectValue placeholder="Select role" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-200">
-                                <SelectItem value="DIRECTOR">Director</SelectItem>
-                                <SelectItem value="TEACHER">Teacher</SelectItem>
-                                <SelectItem value="STUDENT">Student</SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <Label htmlFor="password" className="text-zinc-200">Пароль</Label>
+                        <Input
+                            id="password"
+                            type="password"
+                            className="bg-zinc-950 border-zinc-700 text-zinc-100"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
                     </div>
                 </CardContent>
-                <CardFooter>
-                    <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium">Sign In</Button>
+                <CardFooter className="flex flex-col gap-4">
+                    <Button onClick={handleLogin} disabled={loading} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium">
+                        {loading ? 'Вход...' : 'Войти'}
+                    </Button>
+                    {/* Add Navigation to Register */}
+                    <div className="text-xs text-zinc-500 text-center">
+                        Нет аккаунта? <a href={`/register?role=${roleParam || 'director'}`} className="text-zinc-300 hover:text-white underline">Зарегистрироваться</a>
+                    </div>
                 </CardFooter>
             </Card>
-            {/* Background decoration */}
             <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/10 via-zinc-950 to-zinc-950 pointer-events-none" />
         </div>
     )

@@ -1,0 +1,68 @@
+import { Student } from "@/lib/types/student";
+
+export const MOCK_STUDENTS: Student[] = [
+    {
+        id: "s1",
+        firstName: "Алексей",
+        lastName: "Смирнов",
+        birthDate: "2010-05-15",
+        email: "alex.smirnov@example.com",
+        createdAt: "2025-09-01T10:00:00Z",
+        status: "ACTIVE",
+        groups: [{ id: "g1", name: "English A1" }],
+        lastActivityAt: "2026-01-24T14:30:00Z",
+        paymentStatus: "OK"
+    },
+    {
+        id: "s2",
+        firstName: "Мария",
+        lastName: "Иванова",
+        birthDate: "2011-03-22",
+        email: "m.ivanova@example.com",
+        createdAt: "2025-09-05T11:20:00Z",
+        status: "ACTIVE",
+        groups: [{ id: "g1", name: "English A1" }, { id: "g2", name: "Math Club" }],
+        lastActivityAt: "2026-01-25T09:00:00Z",
+        paymentStatus: "DUE"
+    },
+    {
+        id: "s3",
+        firstName: "Дмитрий",
+        lastName: "Козлов",
+        birthDate: "2009-11-10",
+        createdAt: "2026-01-10T15:00:00Z",
+        status: "PENDING",
+        groups: [],
+        paymentStatus: "UNKNOWN"
+    },
+    {
+        id: "s4",
+        firstName: "Елена",
+        lastName: "Соколова",
+        birthDate: "2010-01-05",
+        createdAt: "2025-01-15T09:00:00Z",
+        status: "SUSPENDED",
+        groups: [{ id: "g3", name: "German B1" }],
+        lastActivityAt: "2025-12-20T10:00:00Z",
+        paymentStatus: "DUE"
+    },
+    {
+        id: "s5",
+        firstName: "Николай",
+        lastName: "Петров",
+        birthDate: "2008-07-30",
+        createdAt: "2024-09-01T08:00:00Z",
+        status: "ARCHIVED",
+        groups: [],
+        lastActivityAt: "2025-05-30T12:00:00Z",
+        paymentStatus: "OK"
+    }
+];
+
+export const MOCK_GROUPS = [
+    { id: "all", name: "Все группы" },
+    { id: "g1", name: "English A1" },
+    { id: "g2", name: "Math Club" },
+    { id: "g3", name: "German B1" },
+    { id: "g4", name: "Robotics" }
+];
