@@ -7,12 +7,17 @@ import { useRouter } from "next/navigation"
 export default function LoginPage() {
     const router = useRouter()
 
-    const skipAuth = (role: 'director' | 'student') => {
+    const skipAuth = async (role: 'director' | 'student') => {
         // Записываем данные в память браузера, чтобы другие страницы тебя "узнали"
-        localStorage.setItem('user', JSON.stringify({ 
-            email: 'debug@owner.com', 
-            role: role.toUpperCase() 
+        localStorage.setItem('user', JSON.stringify({
+            email: 'rajlatipov01@gmail.com',
+            role: role.toUpperCase(),
+            name: 'Raj Latipov'
         }));
+
+        // Даем браузеру время записать данные
+        await new Promise(r => setTimeout(r, 100));
+
         // Переходим в нужный кабинет
         router.push(`/${role}`);
     }
@@ -29,14 +34,14 @@ export default function LoginPage() {
                     <p className="text-zinc-400 text-sm text-center">
                         Защита отключена. Используйте кнопки для входа.
                     </p>
-                    <Button 
-                        onClick={() => skipAuth('director')} 
+                    <Button
+                        onClick={() => skipAuth('director')}
                         className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-6"
                     >
                         ВОЙТИ КАК ДИРЕКТОР
                     </Button>
-                    <Button 
-                        onClick={() => skipAuth('student')} 
+                    <Button
+                        onClick={() => skipAuth('student')}
                         variant="outline"
                         className="w-full border-zinc-700 text-zinc-300 py-6"
                     >

@@ -133,7 +133,8 @@ function MyGroupsList() {
 export default function DirectorDashboard() {
     const router = useRouter()
 
-    // Client-side RBAC check
+    // Client-side RBAC check - DISABLED FOR DEBUG MODE
+    /*
     useEffect(() => {
         const user = getStoredUser();
         if (user) {
@@ -144,6 +145,7 @@ export default function DirectorDashboard() {
             router.push('/login');
         }
     }, [router]);
+    */
 
     const { data: stats, isLoading } = useQuery({
         queryKey: ['dashboard-stats'],
