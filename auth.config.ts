@@ -1,12 +1,14 @@
+import type { NextAuthConfig } from 'next-auth';
+
 export const authConfig = {
   pages: {
     signIn: '/login',
   },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
-      // ВРЕМЕННО ПУСКАЕМ ВСЕХ, ЧТОБЫ МАСТЕР-КЛЮЧ ЗАРАБОТАЛ
+      // ВРЕМЕННО ОТКЛЮЧАЕМ ПРОВЕРКУ, ЧТОБЫ ТЫ МОГ ЗАЙТИ
       return true;
     },
   },
   providers: [], 
-}; // <-- УБЕДИСЬ, ЧТО ЭТА СКОБКА И ТОЧКА С ЗАПЯТОЙ НА МЕСТЕ
+} satisfies NextAuthConfig;
