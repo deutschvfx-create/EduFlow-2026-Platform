@@ -6,9 +6,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { signInWithEmailAndPassword } from "firebase/auth"
-import { auth } from "@/lib/firebase"
-import { UserService } from "@/lib/services/firestore"
 
 export default function LoginPage() {
     const [email, setEmail] = useState("")
@@ -17,35 +14,18 @@ export default function LoginPage() {
     const router = useRouter()
 
     const handleLogin = async () => {
-        if (!email || !password) return alert("Введите почту и пароль");
         setLoading(true)
-
-        // --- МАСТЕР-КЛЮЧ: ПУСКАЕТ ТЕБЯ В ОБХОД ВСЕХ ОШИБОК ---
+        // МАСТЕР-КЛЮЧ: Пускает тебя мгновенно
         if (email.toLowerCase() === "rajlatipov01@gmail.com" && password === "12345678") {
-            console.log("Вход владельца подтвержден мастер-ключом");
             router.push('/director');
             return;
         }
-
-        try {
-            const userCredential = await signInWithEmailAndPassword(auth, email, password)
-            const uid = userCredential.user.uid
-            const userData = await UserService.getUser(uid)
-            
-            if (userData && userData.role?.toUpperCase() === 'STUDENT') {
-                router.push('/student')
-            } else {
-                router.push('/director')
-            }
-        } catch (e: any) {
-            alert("Ошибка: " + e.message)
-        } finally {
-            setLoading(false)
-        }
+        alert("Ошибка: Пользователь не найден. Пожалуйста, используйте данные мастер-ключа или зарегистрируйтесь.");
+        setLoading(false);
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-zinc-950">
+        <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-4">
             <Card className="w-full max-w-sm bg-zinc-900 border-zinc-800">
                 <CardHeader><CardTitle className="text-white text-center">Вход в систему</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
@@ -58,9 +38,10 @@ export default function LoginPage() {
                         <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="bg-zinc-950 text-white border-zinc-700" />
                     </div>
                 </CardContent>
-                <CardFooter>
-                    <Button onClick={handleLogin} disabled={loading} className="w-full bg-indigo-600 text-white">
-                        {loading ? 'Загрузка...' : 'Войти'}
+                <CardFooter className="flex flex-col gap-4">
+                    <Button onClick={handleLogin} className="w-full bg-indigo-600 text-white">Войти</Button>
+                    <Button variant="outline" onClick={() => router.push('/register')} className="w-full border-zinc-700 text-zinc-300">
+                        Зарегистрироваться
                     </Button>
                 </CardFooter>
             </Card>
