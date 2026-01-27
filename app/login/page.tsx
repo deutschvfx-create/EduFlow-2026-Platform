@@ -1,10 +1,10 @@
-"use client"
+"use client" 
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { signInWithEmailAndPassword } from "firebase/auth"
 import { auth } from "@/lib/firebase"
@@ -18,34 +18,38 @@ export default function LoginPage() {
     const searchParams = useSearchParams()
     const roleParam = searchParams.get('role')
 
-    useEffect(() => {
-        // Prefill email for testing if needed or just visual indication
-        // If role is student, maybe show different visual?
-    }, [roleParam])
-
     const handleLogin = async () => {
         setLoading(true)
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password)
             const uid = userCredential.user.uid
 
-            // Check Role in Firestore
+            // Проверка роли в Firestore через твой сервис
             const userData = await UserService.getUser(uid)
 
             if (userData) {
-                if (userData.role === 'STUDENT') {
+                // Приводим к верхнему регистру, чтобы OWNER и owner работали одинаково
+                const userRole = userData.role?.toUpperCase(); 
+
+                console.log("Вход выполнен. Роль пользователя:", userRole);
+
+                // ИСПРАВЛЕННАЯ ЛОГИКА: Добавляем OWNER в список разрешенных для входа к директору
+                if (userRole === 'STUDENT') {
                     router.push('/student')
-                } else {
+                } else if (userRole === 'OWNER' || userRole === 'DIRECTOR' || userRole === 'ADMIN') {
                     router.push('/director')
+                } else {
+                    // Если роль какая-то другая, отправляем на главную
+                    router.push('/')
                 }
             } else {
-                // Should not happen if registered correctly
+                alert("Ошибка: Данные пользователя не найдены в базе (Firestore).")
                 router.push('/')
             }
 
         } catch (e: any) {
             console.error(e)
-            alert("Login failed: " + e.message)
+            alert("Ошибка входа: " + e.message)
         } finally {
             setLoading(false)
         }
@@ -88,7 +92,6 @@ export default function LoginPage() {
                     <Button onClick={handleLogin} disabled={loading} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium">
                         {loading ? 'Вход...' : 'Войти'}
                     </Button>
-                    {/* Add Navigation to Register */}
                     <div className="text-xs text-zinc-500 text-center">
                         Нет аккаунта? <a href={`/register?role=${roleParam || 'director'}`} className="text-zinc-300 hover:text-white underline">Зарегистрироваться</a>
                     </div>
