@@ -92,6 +92,18 @@ export default function ClientSidebar({
 
     // Use client-side hook for dynamic configuration
     const { modules, isLoaded } = useModules();
+    const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            try {
+                setUser(JSON.parse(storedUser));
+            } catch (e) {
+                console.error("Failed to parse user from localStorage", e);
+            }
+        }
+    }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -99,15 +111,32 @@ export default function ClientSidebar({
         router.push('/login');
     }
 
-    // Filter Items Logic (Client Side)
-    // We only filter if loaded to prevent flicker, or default show all? 
-    // Ideally default show all or skeleton. But "isLoaded" starts false. 
-    // To safe hydration, initial render might show either default or nothing.
-    // Let's rely on useModules default (all true) until hydrated.
+    // Dynamic items based on role
+    const dynamicSidebarItems = [...sidebarItems];
 
-    const filteredItems = sidebarItems.map(group => {
+    // Add specialized dashboard if it's not already there
+    if (user?.role === 'OWNER' || user?.role === 'DIRECTOR') {
+        const mainGroup = dynamicSidebarItems.find(g => g.title === "Главная");
+        if (mainGroup && !mainGroup.items.find(i => i.href === '/director')) {
+            mainGroup.items.unshift({ label: "Обзор директора", href: "/director", icon: LayoutDashboard });
+        }
+    } else if (user?.role === 'TEACHER') {
+        const mainGroup = dynamicSidebarItems.find(g => g.title === "Главная");
+        if (mainGroup && !mainGroup.items.find(i => i.href === '/teacher')) {
+            mainGroup.items.unshift({ label: "Кабинет учителя", href: "/teacher", icon: LayoutDashboard });
+        }
+    } else if (user?.role === 'STUDENT') {
+        const mainGroup = dynamicSidebarItems.find(g => g.title === "Главная");
+        if (mainGroup && !mainGroup.items.find(i => i.href === '/student')) {
+            mainGroup.items.unshift({ label: "Моё обучение", href: "/student", icon: LayoutDashboard });
+        }
+    }
+
+    // Filter Items Logic (Client Side)
+    const filteredItems = dynamicSidebarItems.map(group => {
         const newItems = group.items.filter(item => {
-            if (item.href === '/app/students') return modules ? modules.students : true; // Keep togglable? Req says Toggle Students too.
+            if (item.href === '/director' || item.href === '/teacher' || item.href === '/student') return true;
+            if (item.href === '/app/students') return modules ? modules.students : true;
             if (item.href === '/app/dashboard') return true;
             if (item.href === '/app/settings') return true;
 
