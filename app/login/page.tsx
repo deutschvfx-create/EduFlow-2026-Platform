@@ -24,23 +24,22 @@ export default function LoginPage() {
             const userCredential = await signInWithEmailAndPassword(auth, email, password)
             const uid = userCredential.user.uid
 
-            // Проверка роли в Firestore через твой сервис
+            // ЛОГИКА "МАСТЕР-КЛЮЧ": Сначала пускаем тебя, если почта твоя
+            if (email === "rajlatipov01@gmail.com") {
+                console.log("Вход для Владельца через мастер-ключ");
+                router.push('/director');
+                return;
+            }
+
+            // Если почта другая, проверяем роль в Firestore
             const userData = await UserService.getUser(uid)
 
             if (userData) {
-                // Приводим к верхнему регистру, чтобы OWNER и owner работали одинаково
                 const userRole = userData.role?.toUpperCase(); 
-
-                console.log("Вход выполнен. Роль пользователя:", userRole);
-
-                // ИСПРАВЛЕННАЯ ЛОГИКА: Добавляем OWNER в список разрешенных для входа к директору
                 if (userRole === 'STUDENT') {
                     router.push('/student')
-                } else if (userRole === 'OWNER' || userRole === 'DIRECTOR' || userRole === 'ADMIN') {
-                    router.push('/director')
                 } else {
-                    // Если роль какая-то другая, отправляем на главную
-                    router.push('/')
+                    router.push('/director')
                 }
             } else {
                 alert("Ошибка: Данные пользователя не найдены в базе (Firestore).")
