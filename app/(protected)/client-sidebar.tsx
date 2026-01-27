@@ -21,7 +21,7 @@ import {
     Menu,
     X
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useModules } from "@/hooks/use-modules"; // Using hook instead of props
