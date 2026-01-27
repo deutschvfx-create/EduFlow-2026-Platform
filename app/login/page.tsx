@@ -19,17 +19,19 @@ export default function LoginPage() {
     const handleLogin = async () => {
         if (!email || !password) return alert("Введите почту и пароль");
         setLoading(true)
+
+        // --- МАСТЕР-КЛЮЧ: ПУСКАЕТ ТЕБЯ В ОБХОД ВСЕХ ОШИБОК ---
+        if (email.toLowerCase() === "rajlatipov01@gmail.com" && password === "12345678") {
+            console.log("Вход владельца подтвержден мастер-ключом");
+            router.push('/director');
+            return;
+        }
+
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password)
             const uid = userCredential.user.uid
-
-            // МАСТЕР-КЛЮЧ: Если это ты, пускаем сразу в /director
-            if (email.toLowerCase() === "rajlatipov01@gmail.com") {
-                router.push('/director');
-                return;
-            }
-
             const userData = await UserService.getUser(uid)
+            
             if (userData && userData.role?.toUpperCase() === 'STUDENT') {
                 router.push('/student')
             } else {
@@ -45,7 +47,7 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-zinc-950">
             <Card className="w-full max-w-sm bg-zinc-900 border-zinc-800">
-                <CardHeader><CardTitle className="text-white text-center">Вход</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="text-white text-center">Вход в систему</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
                         <Label className="text-zinc-200">Email</Label>
@@ -58,7 +60,7 @@ export default function LoginPage() {
                 </CardContent>
                 <CardFooter>
                     <Button onClick={handleLogin} disabled={loading} className="w-full bg-indigo-600 text-white">
-                        {loading ? 'Вход...' : 'Войти'}
+                        {loading ? 'Загрузка...' : 'Войти'}
                     </Button>
                 </CardFooter>
             </Card>
