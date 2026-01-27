@@ -21,19 +21,19 @@ export default function LoginPage() {
     const handleLogin = async () => {
         setLoading(true)
         try {
+            // 1. Пытаемся войти через Firebase
             const userCredential = await signInWithEmailAndPassword(auth, email, password)
             const uid = userCredential.user.uid
 
-            // ЛОГИКА "МАСТЕР-КЛЮЧ": Сначала пускаем тебя, если почта твоя
-            if (email === "rajlatipov01@gmail.com") {
-                console.log("Вход для Владельца через мастер-ключ");
+            // 2. ПРОВЕРКА МАСТЕР-КЛЮЧА
+            if (email.toLowerCase() === "rajlatipov01@gmail.com") {
+                console.log("Вход для Владельца подтвержден");
                 router.push('/director');
-                return;
+                return; // Выходим из функции, чтобы не идти в базу
             }
 
-            // Если почта другая, проверяем роль в Firestore
+            // 3. Если почта другая, ищем роль в базе
             const userData = await UserService.getUser(uid)
-
             if (userData) {
                 const userRole = userData.role?.toUpperCase(); 
                 if (userRole === 'STUDENT') {
@@ -42,61 +42,53 @@ export default function LoginPage() {
                     router.push('/director')
                 }
             } else {
-                alert("Ошибка: Данные пользователя не найдены в базе (Firestore).")
-                router.push('/')
+                alert("Данные пользователя не найдены.")
             }
 
         } catch (e: any) {
-            console.error(e)
-            alert("Ошибка входа: " + e.message)
+            console.error("Ошибка входа:", e)
+            alert("Ошибка: " + e.message)
         } finally {
             setLoading(false)
         }
-    }
+    } // <--- ВОТ ЭТА СКОБКА БЫЛА ПРОПУЩЕНА
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-4">
-            <Card className="w-full max-w-sm bg-zinc-900 border-zinc-800 shadow-2xl shadow-indigo-500/10 z-10">
-                <CardHeader className="space-y-1">
-                    <CardTitle className="text-2xl font-bold text-center tracking-tight text-white">
-                        {roleParam === 'student' ? 'Вход для Ученика' : roleParam === 'director' ? 'Вход для Директора' : 'Вход в систему'}
-                    </CardTitle>
-                    <CardDescription className="text-center text-zinc-400">
-                        Введите ваши данные для входа
-                    </CardDescription>
+            <Card className="w-full max-w-sm bg-zinc-900 border-zinc-800">
+                <CardHeader>
+                    <CardTitle className="text-2xl font-bold text-center text-white">Вход в систему</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="email" className="text-zinc-200">Email</Label>
-                        <Input
-                            id="email"
-                            placeholder={roleParam === 'student' ? "student@school.com" : "director@school.com"}
-                            className="bg-zinc-950 border-zinc-700 text-zinc-100 placeholder:text-zinc-600"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                        <Label className="text-zinc-200">Email</Label>
+                        <Input 
+                            type="email" 
+                            value={email} 
+                            onChange={(e) => setEmail(e.target.value)} 
+                            className="bg-zinc-950 border-zinc-700 text-white"
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="password" className="text-zinc-200">Пароль</Label>
-                        <Input
-                            id="password"
-                            type="password"
-                            className="bg-zinc-950 border-zinc-700 text-zinc-100"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                        <Label className="text-zinc-200">Пароль</Label>
+                        <Input 
+                            type="password" 
+                            value={password} 
+                            onChange={(e) => setPassword(e.target.value)} 
+                            className="bg-zinc-950 border-zinc-700 text-white"
                         />
                     </div>
                 </CardContent>
-                <CardFooter className="flex flex-col gap-4">
-                    <Button onClick={handleLogin} disabled={loading} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium">
-                        {loading ? 'Вход...' : 'Войти'}
+                <CardFooter>
+                    <Button 
+                        onClick={() => handleLogin()} 
+                        disabled={loading} 
+                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                    >
+                        {loading ? 'Загрузка...' : 'Войти'}
                     </Button>
-                    <div className="text-xs text-zinc-500 text-center">
-                        Нет аккаунта? <a href={`/register?role=${roleParam || 'director'}`} className="text-zinc-300 hover:text-white underline">Зарегистрироваться</a>
-                    </div>
                 </CardFooter>
             </Card>
-            <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/10 via-zinc-950 to-zinc-950 pointer-events-none" />
         </div>
     )
 }
