@@ -4,6 +4,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { ArrowLeft, Search, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { MobileDrawer } from "./mobile-drawer";
 
 interface MobileHeaderProps {
     title?: string;
@@ -56,9 +57,7 @@ export function MobileHeader({
                                 <ArrowLeft className="h-5 w-5" />
                             </Button>
                         ) : (
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shrink-0">
-                                <span className="text-white font-bold text-lg">E</span>
-                            </div>
+                            <MobileDrawer />
                         )}
 
                         {/* Title */}
