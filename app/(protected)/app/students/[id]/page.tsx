@@ -52,6 +52,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
 
+import { FeaturePlaceholder } from "@/components/shared/feature-placeholder";
+
 export default function StudentProfilePage() {
     const params = useParams();
     const router = useRouter();
@@ -281,6 +283,7 @@ export default function StudentProfilePage() {
                             <TabsTrigger value="attendance" className="flex-1 rounded-xl py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-indigo-600 data-[state=active]:text-white transition-all">Журнал</TabsTrigger>
                             <TabsTrigger value="grades" className="flex-1 rounded-xl py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-indigo-600 data-[state=active]:text-white transition-all">Оценки</TabsTrigger>
                             <TabsTrigger value="payments" className="flex-1 rounded-xl py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-indigo-600 data-[state=active]:text-white transition-all">Платежи</TabsTrigger>
+                            <TabsTrigger value="analytics" className="flex-1 rounded-xl py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-indigo-600 data-[state=active]:text-white transition-all">Аналитика</TabsTrigger>
                         </TabsList>
 
                         <div className="mt-8 space-y-6">
@@ -441,7 +444,27 @@ export default function StudentProfilePage() {
                                 <Card className="bg-zinc-900/40 border-zinc-800/50 rounded-3xl overflow-hidden">
                                     <div className="p-4 border-b border-zinc-800/50 bg-zinc-950/20 flex items-center justify-between">
                                         <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-500">История транзакций</h3>
-                                        <Button variant="link" className="text-indigo-400 text-[10px] font-bold uppercase tracking-widest h-auto p-0 hover:text-indigo-300" onClick={() => alert("Симуляция: Генерация PDF отчета...")}>Экспорт PDF</Button>
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                                <Button variant="link" className="text-indigo-400 text-[10px] font-bold uppercase tracking-widest h-auto p-0 hover:text-indigo-300">Экспорт PDF</Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="max-w-none border-none bg-transparent p-0 shadow-none outline-none">
+                                                <FeaturePlaceholder
+                                                    featureName="Экспорт отчетов"
+                                                    plannedFeatures={[
+                                                        "Генерация детализированных PDF с логотипом школы",
+                                                        "Экспорт в Excel/CSV для бухгалтерии",
+                                                        "Автоматическая отправка квитанций родителям на email/WhatsApp",
+                                                        "История всех выгруженных документов"
+                                                    ]}
+                                                    benefits={[
+                                                        "Экономия времени на рутинной отчетности",
+                                                        "Профессиональный вид документов для клиентов",
+                                                        "Полный контроль финансовых потоков"
+                                                    ]}
+                                                />
+                                            </DialogContent>
+                                        </Dialog>
                                     </div>
                                     <div className="p-6 space-y-4">
                                         {paymentsSummary.map((payment) => (
@@ -468,6 +491,23 @@ export default function StudentProfilePage() {
                                         </div>
                                     </div>
                                 </Card>
+                            </TabsContent>
+
+                            <TabsContent value="analytics" className="animate-in fade-in slide-in-from-bottom-5 duration-700 outline-none">
+                                <FeaturePlaceholder
+                                    featureName="AI Аналитика Студента"
+                                    plannedFeatures={[
+                                        "Прогноз успеваемости на основе динамики оценок",
+                                        "Анализ вовлеченности и рисков отчисления",
+                                        "Персональные рекомендации по темам для изучения",
+                                        "Сравнение прогресса с успехами группы"
+                                    ]}
+                                    benefits={[
+                                        "Предотвращение потери учеников через раннее выявление проблем",
+                                        "Повышение качества обучения за счет точных данных",
+                                        "Автоматические инсайты без ручного анализа"
+                                    ]}
+                                />
                             </TabsContent>
                         </div>
                     </Tabs>
