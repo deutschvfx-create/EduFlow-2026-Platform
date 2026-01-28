@@ -2,7 +2,6 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState, Suspense } from "react"
@@ -10,45 +9,51 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { createUserWithEmailAndPassword } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { UserService } from "@/lib/services/firestore"
-import { GraduationCap, Briefcase } from "lucide-react"
+import { GraduationCap, Briefcase, Mail, Lock, User as UserIcon, ArrowRight, Sparkles } from "lucide-react"
+import { Mascot } from "@/components/shared/mascot"
+import { motion, AnimatePresence } from "framer-motion"
 
 function RegisterForm() {
     const searchParams = useSearchParams()
     const roleParam = searchParams.get('role')
-    // Default to Director if not specified, but UI usually specifies.
-    // Ensure we handle "Student" registration for the Test case.
+    const initialName = searchParams.get('name') || ""
+    const initialLang = searchParams.get('lang') || "ru"
+
     const role = roleParam === 'student' ? 'STUDENT' : 'DIRECTOR';
 
-    const [name, setName] = useState("")
+    const [name, setName] = useState(initialName)
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [loading, setLoading] = useState(false)
+    const [mascotStatus, setMascotStatus] = useState<"idle" | "typing" | "success" | "looking_away" | "thinking">("idle")
     const router = useRouter()
 
     const handleRegister = async () => {
         if (!email || !password || !name) {
-            alert("Заполните все поля")
+            setMascotStatus("looking_away")
+            setTimeout(() => setMascotStatus("idle"), 2000)
             return
         }
 
         setLoading(true)
+        setMascotStatus("thinking")
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password)
             const uid = userCredential.user.uid
 
-            // Save Context to Firestore
-            // Save Context to Firestore
             const userData = {
                 email,
                 name,
-                role: role === 'DIRECTOR' ? 'OWNER' : 'STUDENT', // Director registers as OWNER initially
+                role: role === 'DIRECTOR' ? 'OWNER' : 'STUDENT',
                 organizationId: role === 'DIRECTOR' ? null : 'pending_invite',
                 createdAt: Date.now()
             }
             // @ts-ignore
             await UserService.createUser(uid, userData)
 
-            // Redirect
+            setMascotStatus("success")
+            await new Promise(r => setTimeout(r, 1000))
+
             if (role === 'DIRECTOR') {
                 router.push('/director')
             } else {
@@ -57,6 +62,7 @@ function RegisterForm() {
 
         } catch (e: any) {
             console.error(e)
+            setMascotStatus("looking_away")
             alert("Registration failed: " + e.message)
         } finally {
             setLoading(false)
@@ -64,73 +70,117 @@ function RegisterForm() {
     }
 
     return (
-        <Card className="w-full max-w-sm bg-zinc-900 border-zinc-800 shadow-2xl z-10">
-            <CardHeader className="space-y-1 text-center">
-                <div className="mx-auto mb-4 p-3 rounded-full bg-zinc-800 w-fit text-zinc-400">
-                    {role === 'STUDENT' ? <GraduationCap className="h-6 w-6 text-indigo-400" /> : <Briefcase className="h-6 w-6 text-purple-400" />}
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full max-w-[450px] relative mt-12 mb-12"
+        >
+            {/* Mascot Integration */}
+            <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-40 h-40 z-20 pointer-events-none">
+                <Mascot status={mascotStatus} className="w-full h-full" />
+            </div>
+
+            <div className="bg-zinc-900/40 border border-white/5 backdrop-blur-2xl rounded-[3rem] p-10 shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
+
+                <div className="space-y-8">
+                    <div className="space-y-2 text-center">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black uppercase tracking-widest mb-4">
+                            <Sparkles className="h-3 w-3" /> EduFlow Core 2.0
+                        </div>
+                        <h1 className="text-3xl font-black text-white uppercase tracking-tight">
+                            {role === 'STUDENT' ? 'Регистрация Ученика' : 'Регистрация Директора'}
+                        </h1>
+                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">
+                            Начните свой путь в новой экосистеме
+                        </p>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="space-y-2 group">
+                            <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600 px-1">Ваше Имя</Label>
+                            <div className="relative">
+                                <UserIcon className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-700 group-focus-within:text-indigo-400 transition-colors" />
+                                <Input
+                                    placeholder="Иван Петров"
+                                    className="h-16 pl-14 bg-zinc-950/50 border-zinc-800 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 rounded-2xl text-white font-bold"
+                                    value={name}
+                                    onChange={(e) => {
+                                        setName(e.target.value)
+                                        setMascotStatus("typing")
+                                    }}
+                                    onBlur={() => setMascotStatus("idle")}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2 group">
+                            <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600 px-1">Email</Label>
+                            <div className="relative">
+                                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-700 group-focus-within:text-indigo-400 transition-colors" />
+                                <Input
+                                    type="email"
+                                    placeholder="your@email.com"
+                                    className="h-16 pl-14 bg-zinc-950/50 border-zinc-800 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 rounded-2xl text-white font-bold"
+                                    value={email}
+                                    onChange={(e) => {
+                                        setEmail(e.target.value)
+                                        setMascotStatus("typing")
+                                    }}
+                                    onBlur={() => setMascotStatus("idle")}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2 group">
+                            <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600 px-1">Пароль</Label>
+                            <div className="relative">
+                                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-700 group-focus-within:text-pink-400 transition-colors" />
+                                <Input
+                                    type="password"
+                                    placeholder="••••••••"
+                                    className="h-16 pl-14 bg-zinc-950/50 border-zinc-800 focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 rounded-2xl text-white font-bold"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    onFocus={() => setMascotStatus("looking_away")}
+                                    onBlur={() => setMascotStatus("idle")}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <Button
+                        onClick={handleRegister}
+                        disabled={loading}
+                        className={`w-full h-16 rounded-2xl text-white font-black uppercase tracking-widest text-lg transition-all gap-3 shadow-xl ${role === 'STUDENT'
+                                ? 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-500/20'
+                                : 'bg-purple-600 hover:bg-purple-500 shadow-purple-500/20'
+                            }`}
+                    >
+                        {loading ? 'Создание...' : 'Создать аккаунт'}
+                        <ArrowRight className="h-5 w-5" />
+                    </Button>
+
+                    <div className="text-[10px] text-zinc-600 font-black uppercase tracking-[0.2em] text-center">
+                        Уже зарегистрированы?{' '}
+                        <a href="/login" className="text-zinc-400 hover:text-white underline underline-offset-4 transition-colors">Войти</a>
+                    </div>
                 </div>
-                <CardTitle className="text-2xl font-bold tracking-tight text-white">
-                    {role === 'STUDENT' ? 'Регистрация Ученика' : 'Регистрация Директора'}
-                </CardTitle>
-                <CardDescription className="text-zinc-400">
-                    Создайте новый аккаунт
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="space-y-2">
-                    <Label htmlFor="name" className="text-zinc-200">Имя Фамилия</Label>
-                    <Input
-                        id="name"
-                        placeholder="Иван Петров"
-                        className="bg-zinc-950 border-zinc-700 text-zinc-100"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="email" className="text-zinc-200">Email</Label>
-                    <Input
-                        id="email"
-                        placeholder={role === 'STUDENT' ? "student@school.com" : "director@school.com"}
-                        className="bg-zinc-950 border-zinc-700 text-zinc-100 placeholder:text-zinc-600"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="password" className="text-zinc-200">Пароль</Label>
-                    <Input
-                        id="password"
-                        type="password"
-                        className="bg-zinc-950 border-zinc-700 text-zinc-100"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                </div>
-            </CardContent>
-            <CardFooter className="flex flex-col gap-4">
-                <Button
-                    onClick={handleRegister}
-                    disabled={loading}
-                    className={`w-full text-white font-medium ${role === 'STUDENT' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-purple-600 hover:bg-purple-700'}`}
-                >
-                    {loading ? 'Создание...' : 'Зарегистрироваться'}
-                </Button>
-                <div className="text-xs text-zinc-500 text-center">
-                    Уже есть аккаунт? <a href={`/login?role=${roleParam}`} className="text-zinc-300 hover:text-white underline">Войти</a>
-                </div>
-            </CardFooter>
-        </Card>
+            </div>
+        </motion.div>
     )
 }
 
 export default function RegisterPage() {
     return (
-        <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-4">
-            <Suspense fallback={<div className="text-zinc-400">Loading...</div>}>
+        <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-4 relative overflow-hidden">
+            {/* Background elements */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
+
+            <Suspense fallback={<div className="text-zinc-500 font-black uppercase tracking-widest text-xs animate-pulse">Инициализация...</div>}>
                 <RegisterForm />
             </Suspense>
-            <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/5 via-zinc-950 to-zinc-950 pointer-events-none" />
         </div>
     )
 }
