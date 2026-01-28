@@ -24,7 +24,7 @@ type Role = 'student' | 'teacher' | 'parent' | 'director';
 interface OnboardingData {
     language: Language;
     name: string;
-    birthYear: string;
+    birthDate: string;
     role: Role | null;
 }
 
@@ -36,8 +36,8 @@ const TRANSLATIONS = {
         ask_name: "Как мне к вам обращаться?",
         placeholder_name: "Ваше имя...",
         nice_to_meet: "Приятно познакомиться, {name}!",
-        ask_age: "В каком году вы родились?",
-        placeholder_age: "ГГГГ",
+        ask_age: "Когда у тебя день рождения?",
+        placeholder_age: "ДД ММ ГГГГ",
         ask_role: "Какую роль вы занимаете в школе?",
         role_director: "Директор / Владелец",
         role_director_desc: "Управление всей организацией, финансами и штатом.",
@@ -56,8 +56,8 @@ const TRANSLATIONS = {
         ask_name: "What should I call you?",
         placeholder_name: "Your name...",
         nice_to_meet: "Nice to meet you, {name}!",
-        ask_age: "What year were you born?",
-        placeholder_age: "YYYY",
+        ask_age: "When is your birthday?",
+        placeholder_age: "DD MM YYYY",
         ask_role: "What is your role in the school?",
         role_director: "Director / Owner",
         role_director_desc: "Manage organization, finances, and staff.",
@@ -76,8 +76,8 @@ const TRANSLATIONS = {
         ask_name: "Wie soll ich dich nennen?",
         placeholder_name: "Dein Name...",
         nice_to_meet: "Freut mich, {name}!",
-        ask_age: "In welchem Jahr bist du geboren?",
-        placeholder_age: "JJJJ",
+        ask_age: "Wann hast du Geburtstag?",
+        placeholder_age: "TT MM JJJJ",
         ask_role: "Was ist deine Rolle in der Schule?",
         role_director: "Direktor / Inhaber",
         role_director_desc: "Organisation, Finanzen und Personal verwalten.",
@@ -96,8 +96,8 @@ const TRANSLATIONS = {
         ask_name: "Шуморо чӣ ном барам?",
         placeholder_name: "Номи шумо...",
         nice_to_meet: "Аз вохӯрӣ бо шумо шодам, {name}!",
-        ask_age: "Шумо дар кадом сол таваллуд шудаед?",
-        placeholder_age: "СССС",
+        ask_age: "Зодрӯзи шумо кай аст?",
+        placeholder_age: "РР ММ СССС",
         ask_role: "Нақши шумо дар мактаб чист?",
         role_director: "Директор / Соҳибкор",
         role_director_desc: "Идоракунии ташкилот, молия ва кормандон.",
@@ -117,7 +117,7 @@ export function OnboardingFlow() {
     const [data, setData] = useState<OnboardingData>({
         language: 'ru',
         name: '',
-        birthYear: '',
+        birthDate: '', // Changed from birthYear
         role: null
     });
     const [mascotStatus, setMascotStatus] = useState<"idle" | "typing" | "success" | "looking_away" | "thinking">("idle");
@@ -138,6 +138,21 @@ export function OnboardingFlow() {
         setTimeout(() => {
             router.push(`/login?role=${role}&name=${data.name}&lang=${data.language}`);
         }, 1000);
+    };
+
+    const handleDateChange = (val: string) => {
+        // Allow digits only
+        let v = val.replace(/\D/g, '').slice(0, 8);
+
+        // Auto-format as DD MM YYYY
+        if (v.length > 4) {
+            v = `${v.slice(0, 2)} ${v.slice(2, 4)} ${v.slice(4)}`;
+        } else if (v.length > 2) {
+            v = `${v.slice(0, 2)} ${v.slice(2)}`;
+        }
+
+        setData(d => ({ ...d, birthDate: v }));
+        if (v.length > 0) setMascotStatus("typing");
     };
 
     const stepTransition = {
@@ -240,24 +255,20 @@ export function OnboardingFlow() {
                                 <p className="text-zinc-500 text-sm font-bold uppercase tracking-widest">{t.ask_age}</p>
                             </div>
 
-                            <div className="relative max-w-[200px] mx-auto">
-                                <Calendar className={`absolute left-5 top-1/2 -translate-y-1/2 h-6 w-6 transition-colors ${data.birthYear.length === 4 ? 'text-emerald-400' : 'text-zinc-700'}`} />
+                            <div className="relative max-w-[280px] mx-auto">
+                                <Calendar className={`absolute left-5 top-1/2 -translate-y-1/2 h-6 w-6 transition-colors ${data.birthDate?.length === 10 ? 'text-emerald-400' : 'text-zinc-700'}`} />
                                 <Input
-                                    value={data.birthYear}
-                                    onChange={(e) => {
-                                        const val = e.target.value.replace(/\D/g, '').slice(0, 4);
-                                        setData(d => ({ ...d, birthYear: val }));
-                                        if (val.length > 0) setMascotStatus("typing");
-                                    }}
+                                    value={data.birthDate}
+                                    onChange={(e) => handleDateChange(e.target.value)}
                                     onBlur={() => setMascotStatus("idle")}
-                                    placeholder={t.placeholder_age}
-                                    className="h-20 pl-16 pr-8 bg-zinc-950/50 border-zinc-800 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-[1.5rem] text-center text-3xl font-black tracking-[0.2em] text-white placeholder:text-zinc-800"
+                                    placeholder="DD MM YYYY"
+                                    className="h-20 pl-16 pr-8 bg-zinc-950/50 border-zinc-800 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-[1.5rem] text-center text-3xl font-black tracking-[0.1em] text-white placeholder:text-zinc-800"
                                 />
                             </div>
 
                             <Button
                                 size="lg"
-                                disabled={data.birthYear.length !== 4}
+                                disabled={!data.birthDate || data.birthDate.length < 10}
                                 onClick={nextStep}
                                 className="w-full h-16 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white transition-all font-black uppercase tracking-widest gap-3 text-lg shadow-xl shadow-emerald-500/20"
                             >
