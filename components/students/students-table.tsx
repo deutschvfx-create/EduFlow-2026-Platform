@@ -1,5 +1,3 @@
-'use client';
-
 import {
     Table,
     TableBody,
@@ -10,7 +8,7 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Shield, ShieldAlert, Archive, Trash2, Eye } from "lucide-react";
+import { MoreHorizontal, Shield, ShieldAlert, Archive, Trash2, Eye, CreditCard, Calendar } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -22,6 +20,7 @@ import {
 import { Student } from "@/lib/types/student";
 import { StudentStatusBadge } from "./status-badge";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -43,93 +42,132 @@ export function StudentsTable({ students }: StudentsTableProps) {
     if (students.length === 0) {
         return (
             <div className="text-center py-20 bg-zinc-900/50 rounded-lg border border-zinc-800 border-dashed">
-                <p className="text-zinc-500 mb-2">Студенты не найдены</p>
+                <p className="text-zinc-500 mb-2 font-bold uppercase tracking-widest text-xs">Студенты не найдены</p>
                 <p className="text-sm text-zinc-600">Попробуйте изменить фильтры или добавьте нового ученика</p>
             </div>
         );
     }
 
     return (
-        <div className="rounded-md border border-zinc-800 overflow-hidden">
+        <div className="overflow-x-auto">
             <Table>
-                <TableHeader className="bg-zinc-900">
-                    <TableRow className="hover:bg-zinc-900 border-zinc-800">
-                        <TableHead className="w-[50px]">
-                            <Checkbox className="border-zinc-700 data-[state=checked]:bg-indigo-600" />
+                <TableHeader className="bg-zinc-900/50">
+                    <TableRow className="hover:bg-zinc-900 border-zinc-800/50">
+                        <TableHead className="w-[40px] px-4">
+                            <Checkbox className="border-zinc-700 data-[state=checked]:bg-indigo-600 rounded-md" />
                         </TableHead>
-                        <TableHead>ФИО</TableHead>
-                        <TableHead>Дата рождения</TableHead>
-                        <TableHead>Статус</TableHead>
-                        <TableHead>Группы</TableHead>
-                        <TableHead>Оплата</TableHead>
-                        <TableHead className="text-right">Действия</TableHead>
+                        <TableHead className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Студент</TableHead>
+                        <TableHead className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 hidden md:table-cell">Возраст / Дата рождения</TableHead>
+                        <TableHead className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Статус</TableHead>
+                        <TableHead className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 hidden lg:table-cell">Группы / Курсы</TableHead>
+                        <TableHead className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Оплата</TableHead>
+                        <TableHead className="text-right text-[10px] font-bold uppercase tracking-widest text-zinc-500 px-4">Управление</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {students.map((student) => (
                         <TableRow
                             key={student.id}
-                            className="hover:bg-zinc-900/50 border-zinc-800 cursor-pointer group"
+                            className="hover:bg-zinc-900/50 border-zinc-800/50 cursor-pointer group transition-colors"
                             onClick={() => router.push(`/app/students/${student.id}`)}
                         >
-                            <TableCell onClick={(e) => e.stopPropagation()}>
-                                <Checkbox className="border-zinc-700 data-[state=checked]:bg-indigo-600" />
+                            <TableCell className="px-4" onClick={(e) => e.stopPropagation()}>
+                                <Checkbox className="border-zinc-700 data-[state=checked]:bg-indigo-600 rounded-md" />
                             </TableCell>
-                            <TableCell className="font-medium text-zinc-200">
-                                {student.firstName} {student.lastName}
+                            <TableCell>
+                                <div className="flex items-center gap-3">
+                                    <Avatar className="h-9 w-9 border border-zinc-800 ring-1 ring-white/5 shadow-xl">
+                                        <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.firstName}${student.lastName}`} alt={student.firstName} />
+                                        <AvatarFallback className="bg-zinc-950 text-indigo-400 font-black text-xs">
+                                            {student.firstName[0]}{student.lastName[0]}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex flex-col">
+                                        <div className="text-sm font-bold text-white group-hover:text-indigo-400 transition-colors">
+                                            {student.firstName} {student.lastName}
+                                        </div>
+                                        <div className="text-[10px] text-zinc-500 font-medium">
+                                            {student.email || 'Нет email'}
+                                        </div>
+                                    </div>
+                                </div>
                             </TableCell>
-                            <TableCell className="text-zinc-400">
-                                {new Date(student.birthDate).toLocaleDateString('ru-RU')}
+                            <TableCell className="hidden md:table-cell">
+                                <div className="flex flex-col gap-0.5">
+                                    <div className="text-sm text-zinc-300 font-medium flex items-center gap-1.5">
+                                        <Calendar className="h-3 w-3 text-zinc-500" />
+                                        {new Date(student.birthDate).toLocaleDateString('ru-RU')}
+                                    </div>
+                                    <div className="text-[10px] text-zinc-600 uppercase font-black">
+                                        {Math.floor((new Date().getTime() - new Date(student.birthDate).getTime()) / 31536000000)} лет
+                                    </div>
+                                </div>
                             </TableCell>
                             <TableCell>
                                 <StudentStatusBadge status={student.status} />
                             </TableCell>
-                            <TableCell>
-                                <div className="flex flex-wrap gap-1">
+                            <TableCell className="hidden lg:table-cell">
+                                <div className="flex flex-wrap gap-1 max-w-[200px]">
                                     {(student.groups?.length || 0) > 0 ? (
                                         student.groups.map(g => (
-                                            <Badge key={g.id} variant="secondary" className="bg-zinc-800 text-zinc-300 hover:bg-zinc-700 text-[10px] px-1 py-0 h-5">
+                                            <Badge key={g.id} variant="secondary" className="bg-zinc-900/50 text-zinc-400 border border-zinc-800/50 text-[9px] px-1.5 py-0 h-5 font-bold uppercase tracking-tighter hover:bg-zinc-800 transition-colors">
                                                 {g.name}
                                             </Badge>
                                         ))
                                     ) : (
-                                        <span className="text-zinc-600 text-xs italic">Нет групп</span>
+                                        <span className="text-zinc-700 text-[10px] font-bold uppercase italic">Без группы</span>
                                     )}
                                 </div>
                             </TableCell>
                             <TableCell>
-                                {student.paymentStatus === 'OK' && <Badge variant="outline" className="text-green-500 border-green-500/20 bg-green-500/10">Оплачено</Badge>}
-                                {student.paymentStatus === 'DUE' && <Badge variant="outline" className="text-amber-500 border-amber-500/20 bg-amber-500/10">Задолженность</Badge>}
-                                {student.paymentStatus === 'UNKNOWN' && <Badge variant="outline" className="text-zinc-500 border-zinc-800">-</Badge>}
+                                <div className="flex flex-col gap-1">
+                                    {student.paymentStatus === 'OK' && (
+                                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 w-fit">
+                                            <div className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />
+                                            <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Оплачено</span>
+                                        </div>
+                                    )}
+                                    {student.paymentStatus === 'DUE' && (
+                                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20 w-fit">
+                                            <div className="h-1 w-1 rounded-full bg-rose-500 animate-pulse" />
+                                            <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest">Задолженность</span>
+                                        </div>
+                                    )}
+                                    {student.paymentStatus === 'UNKNOWN' && (
+                                        <span className="text-zinc-700 font-black text-xs">—</span>
+                                    )}
+                                </div>
                             </TableCell>
-                            <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                            <TableCell className="text-right px-4" onClick={(e) => e.stopPropagation()}>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" className="h-8 w-8 p-0 text-zinc-400 group-hover:text-white">
-                                            <span className="sr-only">Open menu</span>
+                                        <Button variant="ghost" className="h-8 w-8 p-0 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors">
                                             <MoreHorizontal className="h-4 w-4" />
                                         </Button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-800 text-zinc-200">
-                                        <DropdownMenuLabel>Действия</DropdownMenuLabel>
-                                        <DropdownMenuItem onClick={() => router.push(`/app/students/${student.id}`)} className="cursor-pointer hover:bg-zinc-800">
-                                            <Eye className="mr-2 h-4 w-4" /> Профиль
+                                    <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-800 text-zinc-300 shadow-2xl min-w-[160px]">
+                                        <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 px-3 py-2">Контроль</DropdownMenuLabel>
+                                        <DropdownMenuItem onClick={() => router.push(`/app/students/${student.id}`)} className="cursor-pointer hover:bg-zinc-800 focus:bg-zinc-800 py-2">
+                                            <Eye className="mr-2 h-4 w-4 text-zinc-400" /> Профиль студента
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem className="cursor-pointer hover:bg-zinc-800 focus:bg-zinc-800 py-2">
+                                            <CreditCard className="mr-2 h-4 w-4 text-zinc-400" /> История оплат
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator className="bg-zinc-800" />
 
                                         {student.status !== 'ACTIVE' && (
-                                            <DropdownMenuItem onClick={() => handleAction('activate', student.id)} className="text-green-400 cursor-pointer hover:bg-zinc-800 hover:text-green-300">
+                                            <DropdownMenuItem onClick={() => handleAction('activate', student.id)} className="text-emerald-400 cursor-pointer hover:bg-emerald-500/10 focus:bg-emerald-500/10 py-2">
                                                 <Shield className="mr-2 h-4 w-4" /> Активировать
                                             </DropdownMenuItem>
                                         )}
 
                                         {student.status === 'ACTIVE' && (
-                                            <DropdownMenuItem onClick={() => handleAction('suspend', student.id)} className="text-amber-400 cursor-pointer hover:bg-zinc-800 hover:text-amber-300">
+                                            <DropdownMenuItem onClick={() => handleAction('suspend', student.id)} className="text-rose-400 cursor-pointer hover:bg-rose-500/10 focus:bg-rose-500/10 py-2">
                                                 <ShieldAlert className="mr-2 h-4 w-4" /> Заблокировать
                                             </DropdownMenuItem>
                                         )}
 
-                                        <DropdownMenuItem onClick={() => handleAction('archive', student.id)} className="text-zinc-400 cursor-pointer hover:bg-zinc-800">
+                                        <DropdownMenuItem onClick={() => handleAction('archive', student.id)} className="text-zinc-500 cursor-pointer hover:bg-zinc-800 py-2">
                                             <Archive className="mr-2 h-4 w-4" /> В архив
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
