@@ -98,12 +98,30 @@ export default function StudentProfilePage() {
                                 {student.firstName[0]}{student.lastName[0]}
                             </AvatarFallback>
                         </Avatar>
-                        <button
-                            onClick={() => alert("Симуляция: Режим загрузки фото активирован")}
-                            className="absolute bottom-2 right-2 z-20 h-8 w-8 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 flex items-center justify-center hover:text-white hover:bg-zinc-800 transition-all"
-                        >
-                            <Camera className="h-4 w-4" />
-                        </button>
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <button className="absolute bottom-2 right-2 z-20 h-8 w-8 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 flex items-center justify-center hover:text-white hover:bg-zinc-800 transition-all">
+                                    <Camera className="h-4 w-4" />
+                                </button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl bg-zinc-950 border-zinc-900 p-0 overflow-hidden">
+                                <FeaturePlaceholder
+                                    featureName="Система Хранения Медиа"
+                                    plannedFeatures={[
+                                        "Загрузка фото профиля в высоком качестве",
+                                        "Автоматическая обрезка и оптимизация для веба",
+                                        "Интеграция с Google Drive и Dropbox",
+                                        "Хранение документов и справок в профиле",
+                                        "Система распознавания лиц для быстрой идентификации"
+                                    ]}
+                                    benefits={[
+                                        "Профессиональный вид личных дел",
+                                        "Быстрая идентификация учеников сотрудниками",
+                                        "Безопасное хранение конфиденциальных данных"
+                                    ]}
+                                />
+                            </DialogContent>
+                        </Dialog>
                     </div>
 
                     <div className="flex-1 space-y-4">
@@ -137,9 +155,54 @@ export default function StudentProfilePage() {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-800 text-zinc-300 min-w-[160px]">
                                         <DropdownMenuItem className="cursor-pointer py-2"><Edit className="mr-2 h-4 w-4" /> Изменить профиль</DropdownMenuItem>
-                                        <DropdownMenuItem className="cursor-pointer py-2 text-zinc-400"><Archive className="mr-2 h-4 w-4" /> В архив</DropdownMenuItem>
+
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                                <DropdownMenuItem className="cursor-pointer py-2 text-zinc-400" onSelect={(e) => e.preventDefault()}><Archive className="mr-2 h-4 w-4" /> В архив</DropdownMenuItem>
+                                            </DialogTrigger>
+                                            <DialogContent className="max-w-2xl bg-zinc-950 border-zinc-900 p-0 overflow-hidden">
+                                                <FeaturePlaceholder
+                                                    featureName="Интеллектуальный Архив"
+                                                    plannedFeatures={[
+                                                        "Мгновенный перенос во вторичное хранилище",
+                                                        "Сохранение всей истории обучения и платежей",
+                                                        "Возможность быстрого восстановления студента",
+                                                        "Автоматическое освобождение места в группах",
+                                                        "Годовые отчеты по архивным студентам"
+                                                    ]}
+                                                    benefits={[
+                                                        "Чистая база данных без лишних записей",
+                                                        "Сохранение юридической истории отношений",
+                                                        "Оптимизация лицензионных расходов"
+                                                    ]}
+                                                />
+                                            </DialogContent>
+                                        </Dialog>
+
                                         <DropdownMenuSeparator className="bg-zinc-800" />
-                                        <DropdownMenuItem className="text-rose-400 cursor-pointer py-2 hover:bg-rose-500/10"><ShieldAlert className="mr-2 h-4 w-4" /> Заблокировать</DropdownMenuItem>
+
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                                <DropdownMenuItem className="text-rose-400 cursor-pointer py-2 hover:bg-rose-500/10" onSelect={(e) => e.preventDefault()}><ShieldAlert className="mr-2 h-4 w-4" /> Заблокировать</DropdownMenuItem>
+                                            </DialogTrigger>
+                                            <DialogContent className="max-w-2xl bg-zinc-950 border-zinc-900 p-0 overflow-hidden">
+                                                <FeaturePlaceholder
+                                                    featureName="Система Модерации Доступа"
+                                                    plannedFeatures={[
+                                                        "Полная блокировка входа в ЛК и мобильное приложение",
+                                                        "Отмена всех активных бронирований и занятий",
+                                                        "Причины блокировки с фиксацией в журнале логов",
+                                                        "Автоматическое уведомление преподавателей",
+                                                        "Черный список для будущих регистраций"
+                                                    ]}
+                                                    benefits={[
+                                                        "Безопасность образовательной среды",
+                                                        "Быстрая реакция на нарушения",
+                                                        "Предотвращение повторных претензий"
+                                                    ]}
+                                                />
+                                            </DialogContent>
+                                        </Dialog>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>

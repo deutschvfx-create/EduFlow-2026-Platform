@@ -17,6 +17,9 @@ import { LayoutGrid, List, ShieldCheck } from "lucide-react";
 import { TeacherControlToolbar } from "@/components/teachers/teacher-control-toolbar";
 import { Badge } from "@/components/ui/badge";
 
+import { FeaturePlaceholder } from "@/components/shared/feature-placeholder";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+
 export default function TeachersPage() {
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
@@ -36,6 +39,9 @@ export default function TeachersPage() {
     // Filter Logic
     const [teachers, setTeachers] = useState<Teacher[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
+
+    // Roadmap Dialog State
+    const [assignmentRoadmapOpen, setAssignmentRoadmapOpen] = useState(false);
 
     useEffect(() => {
         // Load preference
@@ -88,7 +94,7 @@ export default function TeachersPage() {
         } else if (action === 'activate') {
             selectedIds.forEach(id => teachersRepo.update(id, { status: 'ACTIVE' }));
         } else if (action === 'assign_groups') {
-            alert("Функция массового назначения групп в разработке");
+            setAssignmentRoadmapOpen(true);
             return;
         }
 
@@ -141,6 +147,27 @@ export default function TeachersPage() {
 
     return (
         <ModuleGuard module="teachers">
+            {/* Assignment Roadmap Dialog */}
+            <Dialog open={assignmentRoadmapOpen} onOpenChange={setAssignmentRoadmapOpen}>
+                <DialogContent className="max-w-2xl bg-zinc-950 border-zinc-900 p-0 overflow-hidden">
+                    <FeaturePlaceholder
+                        featureName="Массовое Назначение Групп"
+                        plannedFeatures={[
+                            "Выбор нескольких групп для группы преподавателей",
+                            "Копирование расписания между учителями",
+                            "Автоматический расчет нагрузки при назначении",
+                            "Интеллектуальный поиск конфликтов в расписании",
+                            "Экспорт обновленного графика штата в PDF"
+                        ]}
+                        benefits={[
+                            "Экономия времени при формировании семестра",
+                            "Прозрачное распределение нагрузки",
+                            "Мгновенное уведомление учителей о новых группах"
+                        ]}
+                    />
+                </DialogContent>
+            </Dialog>
+
             <div className="space-y-6">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>

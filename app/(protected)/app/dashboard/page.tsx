@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,8 +13,8 @@ import { TodaySchedule } from "@/components/dashboard/today-schedule";
 import { Loader2, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
-import { AttendanceTrend, EnrollmentFunnel, RevenueRadial } from "@/components/dashboard/performance-charts";
-import { StudentRetentionMatrix } from "@/components/dashboard/detailed-metrics";
+import { FeaturePlaceholder } from "@/components/shared/feature-placeholder";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 export default function DashboardPage() {
     const [stats, setStats] = useState({
@@ -65,21 +64,35 @@ export default function DashboardPage() {
 
                 <div className="flex items-center gap-2">
                     {isOwner && (
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                                const toast = document.getElementById('dashboard-toast');
-                                if (toast) {
-                                    toast.classList.remove('hidden');
-                                    setTimeout(() => toast.classList.add('hidden'), 3000);
-                                }
-                            }}
-                            className="h-9 px-3 gap-2 border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all rounded-lg shadow-lg"
-                        >
-                            <Download className="h-4 w-4" />
-                            <span className="text-xs">Экспорт</span>
-                        </Button>
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-9 px-3 gap-2 border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all rounded-lg shadow-lg"
+                                >
+                                    <Download className="h-4 w-4" />
+                                    <span className="text-xs">Экспорт</span>
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl bg-zinc-950 border-zinc-900 p-0 overflow-hidden">
+                                <FeaturePlaceholder
+                                    featureName="Продвинутая Финансовая Отчетность"
+                                    plannedFeatures={[
+                                        "Генерация детализированных PDF отчетов о доходах",
+                                        "Автоматическая рассылка бухгалтеру по расписанию",
+                                        "Экспорт данных в Excel и 1C",
+                                        "Графики прибыли с учетом операционных расходов",
+                                        "Прогноз кассовых разрывов на базе AI"
+                                    ]}
+                                    benefits={[
+                                        "Сокращение времени на подготовку отчетов",
+                                        "Исключение ошибок человеческого фактора",
+                                        "Данные для принятия стратегических решений всегда под рукой"
+                                    ]}
+                                />
+                            </DialogContent>
+                        </Dialog>
                     )}
                     <div className="h-9 w-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-indigo-400 cursor-pointer transition-colors shadow-lg">
                         <CalendarIcon className="h-4 w-4" />
@@ -187,16 +200,6 @@ export default function DashboardPage() {
                             Все системы работают в штатном режиме. Последняя полная синхронизация базы данных прошла успешно.
                         </p>
                     </div>
-                </div>
-            </div>
-
-            {/* Hidden Toast Container */}
-            <div id="dashboard-toast" className="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-bottom-5">
-                <div className="bg-zinc-800 text-white px-6 py-3 rounded-full shadow-2xl border border-zinc-700 flex items-center gap-4">
-                    <div className="h-6 w-6 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500">
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                    </div>
-                    <span className="font-medium text-sm">Подготовка отчета PDF...</span>
                 </div>
             </div>
         </div>
