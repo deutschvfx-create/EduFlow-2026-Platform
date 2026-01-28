@@ -2,6 +2,7 @@
 import { db } from "@/lib/firebase";
 import { Student } from "@/lib/types/student";
 import { MOCK_STUDENTS } from "@/lib/mock/students";
+import { withFallback } from "./utils";
 import {
     collection,
     doc,
@@ -19,44 +20,46 @@ const COLLECTION = "users";
 
 export const studentsRepo = {
     getAll: async (): Promise<Student[]> => {
-        try {
-            const q = query(collection(db, COLLECTION), where("role", "==", "STUDENT"));
-            const snapshot = await getDocs(q);
+        return withFallback((async () => {
+            try {
+                const q = query(collection(db, COLLECTION), where("role", "==", "STUDENT"));
+                const snapshot = await getDocs(q);
 
-            // Auto-seed if empty (Migration from mock)
-            if (snapshot.empty) {
-                console.log("Seeding mock students to Firestore...");
-                const batch = writeBatch(db);
-                const seeded: Student[] = [];
+                // Auto-seed if empty (Migration from mock)
+                if (snapshot.empty) {
+                    console.log("Seeding mock students to Firestore...");
+                    const batch = writeBatch(db);
+                    const seeded: Student[] = [];
 
-                MOCK_STUDENTS.forEach(s => {
-                    const ref = doc(db, COLLECTION, s.id);
-                    // Map Student to Firestore UserData properties + extra student fields
-                    const userData = {
-                        ...s,
-                        uid: s.id,
-                        role: "STUDENT",
-                        organizationId: "default", // or whatever default
-                    };
-                    batch.set(ref, userData);
-                    seeded.push(userData as unknown as Student);
+                    MOCK_STUDENTS.forEach(s => {
+                        const ref = doc(db, COLLECTION, s.id);
+                        // Map Student to Firestore UserData properties + extra student fields
+                        const userData = {
+                            ...s,
+                            uid: s.id,
+                            role: "STUDENT",
+                            organizationId: "default", // or whatever default
+                        };
+                        batch.set(ref, userData);
+                        seeded.push(userData as unknown as Student);
+                    });
+
+                    await batch.commit();
+                    return seeded;
+                }
+
+                return snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        ...data
+                    } as unknown as Student;
                 });
-
-                await batch.commit();
-                return seeded;
+            } catch (e) {
+                console.error("Failed to fetch students", e);
+                throw e;
             }
-
-            return snapshot.docs.map(doc => {
-                const data = doc.data();
-                return {
-                    id: doc.id,
-                    ...data
-                } as unknown as Student;
-            });
-        } catch (e) {
-            console.error("Failed to fetch students", e);
-            throw e;
-        }
+        })(), MOCK_STUDENTS);
     },
 
     add: async (student: Student) => {

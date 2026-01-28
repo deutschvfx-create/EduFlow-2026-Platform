@@ -2,6 +2,7 @@
 import { db } from "@/lib/firebase"; // Using Client SDK
 import { Teacher } from "@/lib/types/teacher";
 import { MOCK_TEACHERS } from "@/lib/mock/teachers";
+import { withFallback } from "./utils";
 import {
     collection,
     doc,
@@ -19,45 +20,47 @@ const COLLECTION = "users";
 
 export const teachersRepo = {
     getAll: async (): Promise<Teacher[]> => {
-        try {
-            const q = query(collection(db, COLLECTION), where("role", "==", "TEACHER"));
-            const snapshot = await getDocs(q);
+        return withFallback((async () => {
+            try {
+                const q = query(collection(db, COLLECTION), where("role", "==", "TEACHER"));
+                const snapshot = await getDocs(q);
 
-            // Auto-seed if empty
-            if (snapshot.empty) {
-                console.log("Seeding mock teachers to Firestore...");
-                const batch = writeBatch(db);
-                const seeded: Teacher[] = [];
+                // Auto-seed if empty
+                if (snapshot.empty) {
+                    console.log("Seeding mock teachers to Firestore...");
+                    const batch = writeBatch(db);
+                    const seeded: Teacher[] = [];
 
-                MOCK_TEACHERS.forEach(t => {
-                    const ref = doc(db, COLLECTION, t.id);
-                    // Map Teacher to Firestore UserData + extra fields
-                    const userData = {
-                        ...t,
-                        uid: t.id, // Ensure uid matches id
-                        role: "TEACHER",
-                        organizationId: "default", // or null
-                    };
-                    batch.set(ref, userData);
-                    seeded.push(userData as unknown as Teacher);
+                    MOCK_TEACHERS.forEach(t => {
+                        const ref = doc(db, COLLECTION, t.id);
+                        // Map Teacher to Firestore UserData + extra fields
+                        const userData = {
+                            ...t,
+                            uid: t.id, // Ensure uid matches id
+                            role: "TEACHER",
+                            organizationId: "default", // or null
+                        };
+                        batch.set(ref, userData);
+                        seeded.push(userData as unknown as Teacher);
+                    });
+
+                    await batch.commit();
+                    return seeded;
+                }
+
+                return snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    // Map back to Teacher type if necessary, or just cast if structure matches
+                    return {
+                        id: doc.id,
+                        ...data
+                    } as unknown as Teacher;
                 });
-
-                await batch.commit();
-                return seeded;
+            } catch (e) {
+                console.error("Failed to fetch teachers", e);
+                throw e;
             }
-
-            return snapshot.docs.map(doc => {
-                const data = doc.data();
-                // Map back to Teacher type if necessary, or just cast if structure matches
-                return {
-                    id: doc.id,
-                    ...data
-                } as unknown as Teacher;
-            });
-        } catch (e) {
-            console.error("Failed to fetch teachers", e);
-            throw e;
-        }
+        })(), MOCK_TEACHERS);
     },
 
     add: async (teacher: Teacher) => {

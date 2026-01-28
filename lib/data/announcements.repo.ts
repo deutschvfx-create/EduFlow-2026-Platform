@@ -1,6 +1,7 @@
 
 import { db } from "@/lib/firebase";
 import { Announcement } from "@/lib/types/announcement";
+import { withFallback } from "./utils";
 import {
     collection,
     doc,
@@ -33,24 +34,26 @@ const MOCK_ANNOUNCEMENTS: Announcement[] = [
 
 export const announcementsRepo = {
     getAll: async (): Promise<Announcement[]> => {
-        try {
-            const q = query(collection(db, COLLECTION), orderBy("createdAt", "desc"));
-            const snapshot = await getDocs(q);
+        return withFallback((async () => {
+            try {
+                const q = query(collection(db, COLLECTION), orderBy("createdAt", "desc"));
+                const snapshot = await getDocs(q);
 
-            if (snapshot.empty) {
-                const batch = writeBatch(db);
-                MOCK_ANNOUNCEMENTS.forEach(a => {
-                    batch.set(doc(db, COLLECTION, a.id), a);
-                });
-                await batch.commit();
+                if (snapshot.empty) {
+                    const batch = writeBatch(db);
+                    MOCK_ANNOUNCEMENTS.forEach(a => {
+                        batch.set(doc(db, COLLECTION, a.id), a);
+                    });
+                    await batch.commit();
+                    return MOCK_ANNOUNCEMENTS;
+                }
+
+                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Announcement));
+            } catch (e) {
+                console.error("Failed to fetch announcements", e);
                 return MOCK_ANNOUNCEMENTS;
             }
-
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Announcement));
-        } catch (e) {
-            console.error("Failed to fetch announcements", e);
-            return [];
-        }
+        })(), MOCK_ANNOUNCEMENTS);
     },
 
     add: async (announcement: Announcement) => {

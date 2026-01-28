@@ -1,6 +1,8 @@
 
 import { db } from "@/lib/firebase";
 import { Course } from "@/lib/types/course";
+import { withFallback } from "./utils";
+// import { MOCK_COURSES } from "@/lib/mock/courses"; // If exists
 import {
     collection,
     doc,
@@ -57,23 +59,25 @@ const MOCK_COURSES: Course[] = [
 
 export const coursesRepo = {
     getAll: async (): Promise<Course[]> => {
-        try {
-            const snapshot = await getDocs(collection(db, COLLECTION));
+        return withFallback((async () => {
+            try {
+                const snapshot = await getDocs(collection(db, COLLECTION));
 
-            if (snapshot.empty) {
-                const batch = writeBatch(db);
-                MOCK_COURSES.forEach(c => {
-                    batch.set(doc(db, COLLECTION, c.id), c);
-                });
-                await batch.commit();
+                if (snapshot.empty) {
+                    const batch = writeBatch(db);
+                    MOCK_COURSES.forEach(c => {
+                        batch.set(doc(db, COLLECTION, c.id), c);
+                    });
+                    await batch.commit();
+                    return MOCK_COURSES;
+                }
+
+                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Course));
+            } catch (e) {
+                console.error("Failed to fetch courses", e);
                 return MOCK_COURSES;
             }
-
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Course));
-        } catch (e) {
-            console.error("Failed to fetch courses", e);
-            return [];
-        }
+        })(), MOCK_COURSES);
     },
 
     add: async (course: Course) => {

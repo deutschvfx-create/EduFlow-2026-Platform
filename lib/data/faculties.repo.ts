@@ -2,6 +2,7 @@
 import { db } from "@/lib/firebase";
 import { Faculty } from "@/lib/types/faculty";
 import { MOCK_FACULTIES } from "@/lib/mock/faculties";
+import { withFallback } from "./utils";
 import {
     collection,
     doc,
@@ -19,30 +20,32 @@ const COLLECTION = "faculties";
 
 export const facultiesRepo = {
     getAll: async (): Promise<Faculty[]> => {
-        try {
-            const snapshot = await getDocs(collection(db, COLLECTION));
+        return withFallback((async () => {
+            try {
+                const snapshot = await getDocs(collection(db, COLLECTION));
 
-            // Auto-seed if empty
-            if (snapshot.empty) {
-                console.log("Seeding mock faculties to Firestore...");
-                const batch = writeBatch(db);
-                const seeded: Faculty[] = [];
+                // Auto-seed if empty
+                if (snapshot.empty) {
+                    console.log("Seeding mock faculties to Firestore...");
+                    const batch = writeBatch(db);
+                    const seeded: Faculty[] = [];
 
-                MOCK_FACULTIES.forEach(f => {
-                    const ref = doc(db, COLLECTION, f.id);
-                    batch.set(ref, f);
-                    seeded.push(f);
-                });
+                    MOCK_FACULTIES.forEach(f => {
+                        const ref = doc(db, COLLECTION, f.id);
+                        batch.set(ref, f);
+                        seeded.push(f);
+                    });
 
-                await batch.commit();
-                return seeded;
+                    await batch.commit();
+                    return seeded;
+                }
+
+                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Faculty));
+            } catch (e) {
+                console.error("Failed to fetch faculties", e);
+                throw e;
             }
-
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Faculty));
-        } catch (e) {
-            console.error("Failed to fetch faculties", e);
-            throw e;
-        }
+        })(), MOCK_FACULTIES);
     },
 
     getById: async (id: string): Promise<Faculty | undefined> => {

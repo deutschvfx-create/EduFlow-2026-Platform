@@ -2,6 +2,7 @@
 import { db } from "@/lib/firebase";
 import { Group } from "@/lib/types/group";
 import { MOCK_GROUPS_FULL } from "@/lib/mock/groups";
+import { withFallback } from "./utils";
 import {
     collection,
     doc,
@@ -19,30 +20,32 @@ const COLLECTION = "groups";
 
 export const groupsRepo = {
     getAll: async (): Promise<Group[]> => {
-        try {
-            const snapshot = await getDocs(collection(db, COLLECTION));
+        return withFallback((async () => {
+            try {
+                const snapshot = await getDocs(collection(db, COLLECTION));
 
-            // Auto-seed if empty
-            if (snapshot.empty) {
-                console.log("Seeding mock groups to Firestore...");
-                const batch = writeBatch(db);
-                const seeded: Group[] = [];
+                // Auto-seed if empty
+                if (snapshot.empty) {
+                    console.log("Seeding mock groups to Firestore...");
+                    const batch = writeBatch(db);
+                    const seeded: Group[] = [];
 
-                MOCK_GROUPS_FULL.forEach(g => {
-                    const ref = doc(db, COLLECTION, g.id);
-                    batch.set(ref, g);
-                    seeded.push(g);
-                });
+                    MOCK_GROUPS_FULL.forEach(g => {
+                        const ref = doc(db, COLLECTION, g.id);
+                        batch.set(ref, g);
+                        seeded.push(g);
+                    });
 
-                await batch.commit();
-                return seeded;
+                    await batch.commit();
+                    return seeded;
+                }
+
+                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Group));
+            } catch (e) {
+                console.error("Failed to fetch groups", e);
+                throw e;
             }
-
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Group));
-        } catch (e) {
-            console.error("Failed to fetch groups", e);
-            throw e;
-        }
+        })(), MOCK_GROUPS_FULL);
     },
 
     getById: async (id: string): Promise<Group | undefined> => {
