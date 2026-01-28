@@ -21,6 +21,7 @@ import { Student } from "@/lib/types/student";
 import { StudentStatusBadge } from "./status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { CreditCountdown } from "./credit-countdown";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -60,6 +61,7 @@ export function StudentsTable({ students }: StudentsTableProps) {
                         <TableHead className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 hidden md:table-cell">Возраст / Дата рождения</TableHead>
                         <TableHead className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Статус</TableHead>
                         <TableHead className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 hidden lg:table-cell">Группы / Курсы</TableHead>
+                        <TableHead className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Баланс (время)</TableHead>
                         <TableHead className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Оплата</TableHead>
                         <TableHead className="text-right text-[10px] font-bold uppercase tracking-widest text-zinc-500 px-4">Управление</TableHead>
                     </TableRow>
@@ -118,6 +120,9 @@ export function StudentsTable({ students }: StudentsTableProps) {
                                         <span className="text-zinc-700 text-[10px] font-bold uppercase italic">Без группы</span>
                                     )}
                                 </div>
+                            </TableCell>
+                            <TableCell>
+                                <CreditCountdown paidUntil={student.paidUntil} />
                             </TableCell>
                             <TableCell>
                                 <div className="flex flex-col gap-1">

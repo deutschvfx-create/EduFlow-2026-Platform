@@ -11,7 +11,8 @@ export const MOCK_STUDENTS: Student[] = [
         status: "ACTIVE",
         groups: [{ id: "g1", name: "English A1" }],
         lastActivityAt: "2026-01-24T14:30:00Z",
-        paymentStatus: "OK"
+        paymentStatus: "OK",
+        paidUntil: "2026-03-05T12:00:00Z"
     },
     {
         id: "s2",
@@ -23,7 +24,8 @@ export const MOCK_STUDENTS: Student[] = [
         status: "ACTIVE",
         groups: [{ id: "g1", name: "English A1" }, { id: "g2", name: "Math Club" }],
         lastActivityAt: "2026-01-25T09:00:00Z",
-        paymentStatus: "DUE"
+        paymentStatus: "DUE",
+        paidUntil: "2026-01-30T15:00:00Z"
     },
     {
         id: "s3",
@@ -33,7 +35,8 @@ export const MOCK_STUDENTS: Student[] = [
         createdAt: "2026-01-10T15:00:00Z",
         status: "PENDING",
         groups: [],
-        paymentStatus: "UNKNOWN"
+        paymentStatus: "UNKNOWN",
+        paidUntil: "2026-02-15T10:00:00Z"
     },
     {
         id: "s4",
@@ -44,7 +47,8 @@ export const MOCK_STUDENTS: Student[] = [
         status: "SUSPENDED",
         groups: [{ id: "g3", name: "German B1" }],
         lastActivityAt: "2025-12-20T10:00:00Z",
-        paymentStatus: "DUE"
+        paymentStatus: "DUE",
+        paidUntil: "2026-01-28T18:00:00Z"
     },
     {
         id: "s5",
@@ -55,7 +59,8 @@ export const MOCK_STUDENTS: Student[] = [
         status: "ARCHIVED",
         groups: [],
         lastActivityAt: "2025-05-30T12:00:00Z",
-        paymentStatus: "OK"
+        paymentStatus: "OK",
+        paidUntil: "2026-01-20T12:00:00Z"
     }
 ];
 

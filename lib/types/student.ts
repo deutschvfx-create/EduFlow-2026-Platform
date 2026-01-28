@@ -19,5 +19,6 @@ export type Student = {
     groups: StudentGroup[];
     lastActivityAt?: string; // ISO
     paymentStatus?: PaymentStatus;
+    paidUntil?: string; // ISO format: YYYY-MM-DDTHH:mm:ssZ
     notes?: string;
 };
