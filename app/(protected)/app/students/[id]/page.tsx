@@ -1,3 +1,5 @@
+'use client';
+
 import { useParams, useRouter } from "next/navigation";
 import { MOCK_STUDENTS } from "@/lib/mock/students";
 import { Button } from "@/components/ui/button";
