@@ -135,6 +135,17 @@ export function OnboardingFlow() {
     const handleRoleSelect = (role: Role) => {
         setData(d => ({ ...d, role }));
         setMascotStatus("success");
+
+        // Save onboarding data to localStorage for Settings auto-population
+        const onboardingData = {
+            userName: data.name,
+            birthDate: data.birthDate,
+            role: role,
+            language: data.language,
+            organizationType: role === 'director' ? 'university' : 'language_school'
+        };
+        localStorage.setItem('onboarding_data', JSON.stringify(onboardingData));
+
         setTimeout(() => {
             router.push(`/login?role=${role}&name=${data.name}&lang=${data.language}`);
         }, 1000);

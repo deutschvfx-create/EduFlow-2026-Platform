@@ -18,9 +18,11 @@ import {
     Megaphone,
     MessageSquare,
     BarChart3,
-    RotateCcw
+    RotateCcw,
+    Zap
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { OrganizationProfileCard } from "@/components/settings/organization-profile-card";
 
 export default function SettingsPage() {
     const { modules, toggleModule, setAllModules, resetModules, isLoaded } = useModules();
@@ -195,40 +197,58 @@ export default function SettingsPage() {
                 </div>
             </div>
 
-            {/* COMPACT PRESETS CARD */}
-            <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-4" data-help-id="settings-toggle-group">
-                <div className="flex items-center gap-3">
-                    <div className="h-10 w-1 bg-indigo-500 rounded-full" />
-                    <div>
-                        <h2 className="text-sm font-semibold text-white">Быстрая настройка</h2>
-                        <p className="text-xs text-zinc-500">Шаблоны конфигурации</p>
+            {/* ORGANIZATION PROFILE CARD */}
+            <OrganizationProfileCard onSave={() => showToast("Профиль организации сохранён")} />
+
+            {/* ENHANCED QUICK SETTINGS PANEL */}
+            <div className="relative bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-pink-500/5 border-l-4 border-indigo-500 rounded-lg p-6 shadow-lg shadow-indigo-500/5" data-help-id="settings-toggle-group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
+
+                <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                    <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                            <Zap className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                                Быстрые Настройки
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 font-black uppercase tracking-wider">
+                                    Presets
+                                </span>
+                            </h2>
+                            <p className="text-sm text-zinc-500 mt-0.5">Применить готовый шаблон конфигурации</p>
+                        </div>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                        <Button
+                            onClick={() => applyPreset('UNIVERSITY')}
+                            size="lg"
+                            className="bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 h-11 font-bold shadow-lg"
+                        >
+                            🎓 Университет
+                        </Button>
+                        <Button
+                            onClick={() => applyPreset('SCHOOL')}
+                            size="lg"
+                            className="bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 h-11 font-bold shadow-lg"
+                        >
+                            🌍 Языковой курс
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="lg"
+                            onClick={handleReset}
+                            className="text-zinc-400 hover:text-white hover:bg-zinc-800/50 h-11 font-bold gap-2"
+                        >
+                            <RotateCcw className="h-4 w-4" />
+                            Сбросить
+                        </Button>
                     </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                    <Button
-                        onClick={() => applyPreset('UNIVERSITY')}
-                        size="sm"
-                        className="bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 h-8 text-xs"
-                    >
-                        🎓 Университет
-                    </Button>
-                    <Button
-                        onClick={() => applyPreset('SCHOOL')}
-                        size="sm"
-                        className="bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 h-8 text-xs"
-                    >
-                        🌍 Языковой курс
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleReset}
-                        className="text-zinc-400 hover:text-white h-8 text-xs"
-                    >
-                        ↩️ Сбросить
-                    </Button>
-                </div>
             </div>
+
+            {/* Visual Separator */}
+            <div className="h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
 
             <Section title="Люди">
                 <ModuleCard mKey="students" label="Студенты" icon={Users} desc="" />
