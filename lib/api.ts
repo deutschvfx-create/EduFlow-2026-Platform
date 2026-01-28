@@ -11,8 +11,22 @@ const api = axios.create({
 });
 
 // Fallback for Dashboard Stats if API is down
+// Interceptors for latency reporting
+api.interceptors.request.use(config => {
+    (config as any).startTime = Date.now();
+    return config;
+});
+
 api.interceptors.response.use(
-    response => response,
+    response => {
+        const startTime = (response.config as any).startTime;
+        if (startTime && typeof window !== 'undefined') {
+            const latency = Date.now() - startTime;
+            window.dispatchEvent(new CustomEvent('connectivity:latency', { detail: latency }));
+            window.dispatchEvent(new CustomEvent('connectivity:sync'));
+        }
+        return response;
+    },
     error => {
         if (error.config?.url?.includes('/dashboard/stats')) {
             console.warn("Dashboard stats failed, returning mock stats");

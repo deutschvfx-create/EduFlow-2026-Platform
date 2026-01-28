@@ -20,7 +20,12 @@ export const withFallback = async <T>(
     });
 
     try {
-        return await Promise.race([promise, timeout]);
+        const result = await Promise.race([promise, timeout]);
+        // Trigger sync update on successful fetch
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('connectivity:sync'));
+        }
+        return result;
     } catch (e) {
         console.error("Data fetch failed, using fallback mock data.", e);
         return mockData;
