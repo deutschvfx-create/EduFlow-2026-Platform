@@ -114,13 +114,7 @@ export default function ClientSidebar({
     // Dynamic items based on role
     const dynamicSidebarItems = [...sidebarItems];
 
-    // Add specialized dashboard if it's not already there
-    if (user?.role === 'OWNER' || user?.role === 'DIRECTOR') {
-        const mainGroup = dynamicSidebarItems.find(g => g.title === "Главная");
-        if (mainGroup && !mainGroup.items.find(i => i.href === '/director')) {
-            mainGroup.items.unshift({ label: "Обзор директора", href: "/director", icon: LayoutDashboard });
-        }
-    } else if (user?.role === 'TEACHER') {
+    if (user?.role === 'TEACHER') {
         const mainGroup = dynamicSidebarItems.find(g => g.title === "Главная");
         if (mainGroup && !mainGroup.items.find(i => i.href === '/teacher')) {
             mainGroup.items.unshift({ label: "Кабинет учителя", href: "/teacher", icon: LayoutDashboard });
@@ -135,8 +129,7 @@ export default function ClientSidebar({
     // Filter Items Logic (Client Side)
     const filteredItems = dynamicSidebarItems.map(group => {
         const newItems = group.items.filter(item => {
-            if (item.href === '/director' || item.href === '/teacher' || item.href === '/student') return true;
-            if (item.href === '/app/students') return modules ? modules.students : true;
+            if (item.href === '/teacher' || item.href === '/student') return true;
             if (item.href === '/app/dashboard') return true;
             if (item.href === '/app/settings') return true;
 

@@ -6,6 +6,9 @@ import { Users, GraduationCap, Layers, BookOpen } from "lucide-react";
 import { QuickActions } from "@/components/dashboard/quick-actions";
 import { useEffect, useState } from "react";
 import { DashboardService } from "@/lib/services/firestore";
+import { getStoredUser } from "@/lib/auth-helpers";
+import { DollarSign, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function DashboardPage() {
     const [stats, setStats] = useState({
@@ -15,13 +18,18 @@ export default function DashboardPage() {
         subjects: 0
     });
 
+    const [user, setUser] = useState<any>(null);
+
     useEffect(() => {
         async function fetchStats() {
             const data = await DashboardService.getStats();
             setStats(data);
         }
         fetchStats();
+        setUser(getStoredUser());
     }, []);
+
+    const isOwner = user?.role === 'OWNER' || user?.role === 'DIRECTOR';
 
     return (
         <div className="space-y-8">
@@ -29,8 +37,17 @@ export default function DashboardPage() {
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
                     Дашборд
                 </h1>
-                <p className="text-zinc-400">Обзор ключевых показателей университета</p>
+                <p className="text-zinc-400">Обзор ключевых показателей {isOwner ? 'вашей школы' : 'университета'}</p>
             </div>
+
+            {isOwner && (
+                <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="gap-2 border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800">
+                        <Download className="h-4 w-4" />
+                        Экспорт отчета
+                    </Button>
+                </div>
+            )}
 
             <QuickActions />
 
@@ -79,6 +96,19 @@ export default function DashboardPage() {
                         <p className="text-xs text-zinc-500 mt-1">Активных курсов</p>
                     </CardContent>
                 </Card>
+
+                {isOwner && (
+                    <Card className="bg-zinc-900 border-zinc-800 border-l-emerald-500/30">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium text-emerald-400">Выручка (USD)</CardTitle>
+                            <DollarSign className="h-4 w-4 text-emerald-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-emerald-400">$12,450</div>
+                            <p className="text-xs text-zinc-500 mt-1">+15% к плану</p>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
 
             {/* Placeholder Charts Area */}

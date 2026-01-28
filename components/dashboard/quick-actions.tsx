@@ -6,6 +6,7 @@ import { CreateStudentModal } from "./create-student-modal";
 import { CreateTeacherModal } from "./create-teacher-modal";
 import { CreateCourseModal } from "./create-course-modal";
 import { CreateAnnouncementModal } from "./create-announcement-modal";
+import { InviteStudentModal } from "./invite-student-modal";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
@@ -14,6 +15,12 @@ export function QuickActions() {
     const { modules, isLoaded } = useModules();
     const router = useRouter();
     const [toast, setToast] = useState<string | null>(null);
+    const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+        const stored = localStorage.getItem('user');
+        if (stored) setUser(JSON.parse(stored));
+    }, []);
 
     // Auto-clear toast
     useEffect(() => {
@@ -57,6 +64,7 @@ export function QuickActions() {
                 {modules.announcements && (
                     <CreateAnnouncementModal onSuccess={() => handleSuccess("Объявление опубликовано", "/app/announcements")} />
                 )}
+                {(user?.role === 'OWNER' || user?.role === 'DIRECTOR') && <InviteStudentModal />}
             </div>
 
             {/* Local Toast UI */}
