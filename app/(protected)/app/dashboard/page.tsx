@@ -13,6 +13,8 @@ import { ActivityFeed } from "@/components/dashboard/activity-feed";
 import { TodaySchedule } from "@/components/dashboard/today-schedule";
 import { Loader2, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { AttendanceTrend, EnrollmentFunnel, RevenueRadial } from "@/components/dashboard/performance-charts";
+import { StudentRetentionMatrix } from "@/components/dashboard/detailed-metrics";
 
 export default function DashboardPage() {
     const [stats, setStats] = useState({
@@ -134,33 +136,24 @@ export default function DashboardPage() {
                         )}
                     </div>
 
+
                     <div className="space-y-4">
                         <QuickActions />
                     </div>
 
-                    {/* Performance Section */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <Card className="bg-zinc-900/40 border-zinc-800/50 backdrop-blur-sm rounded-2xl overflow-hidden ring-1 ring-white/5">
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-base text-zinc-300">Динамика посещаемости</CardTitle>
-                            </CardHeader>
-                            <CardContent className="flex items-center justify-center h-64">
-                                <div className="text-zinc-600 text-xs font-medium bg-zinc-950/50 px-6 py-3 rounded-full border border-zinc-800/50">
-                                    Собираем данные для анализа...
-                                </div>
-                            </CardContent>
-                        </Card>
+                    {/* Advanced Visualization Grid - NEW SECTION */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <div className="xl:col-span-2 overflow-hidden">
+                            <AttendanceTrend />
+                        </div>
+                        <div className="xl:col-span-1">
+                            <RevenueRadial />
+                        </div>
+                    </div>
 
-                        <Card className="bg-zinc-900/40 border-zinc-800/50 backdrop-blur-sm rounded-2xl overflow-hidden ring-1 ring-white/5">
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-base text-zinc-300">Успеваемость</CardTitle>
-                            </CardHeader>
-                            <CardContent className="flex items-center justify-center h-64">
-                                <div className="text-zinc-600 text-xs font-medium bg-zinc-950/50 px-6 py-3 rounded-full border border-zinc-800/50">
-                                    Нет данных для отображения
-                                </div>
-                            </CardContent>
-                        </Card>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-4">
+                        <EnrollmentFunnel />
+                        <StudentRetentionMatrix />
                     </div>
                 </div>
 
