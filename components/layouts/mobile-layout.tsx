@@ -2,10 +2,19 @@
 
 import { MobileHeader } from "@/components/navigation/mobile-header";
 import { MobileNavBar } from "@/components/navigation/mobile-nav-bar";
+import { SwipeableTabs } from "@/components/navigation/swipeable-tabs";
 
 interface MobileLayoutProps {
     children: React.ReactNode;
 }
+
+const mainTabs = [
+    { path: "/app/dashboard", component: null },
+    { path: "/app/students", component: null },
+    { path: "/app/schedule", component: null },
+    { path: "/app/chat", component: null },
+    { path: "/app/settings", component: null },
+];
 
 export function MobileLayout({ children }: MobileLayoutProps) {
     return (
@@ -13,11 +22,15 @@ export function MobileLayout({ children }: MobileLayoutProps) {
             {/* Mobile Header */}
             <MobileHeader />
 
-            {/* Main Content */}
-            <main className="flex-1 overflow-y-auto pb-20">
-                <div className="px-4 py-6">
-                    {children}
-                </div>
+            {/* Main Content with Swipe Support */}
+            <main className="flex-1 overflow-hidden pb-20">
+                <SwipeableTabs tabs={mainTabs}>
+                    <div className="h-full overflow-y-auto">
+                        <div className="px-4 py-6">
+                            {children}
+                        </div>
+                    </div>
+                </SwipeableTabs>
             </main>
 
             {/* Bottom Navigation */}

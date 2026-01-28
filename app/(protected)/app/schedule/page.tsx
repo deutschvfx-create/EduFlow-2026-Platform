@@ -99,19 +99,19 @@ export default function SchedulePage() {
 
     return (
         <ModuleGuard module="schedule">
-            <div className="space-y-6 h-full flex flex-col">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="space-y-4 lg:space-y-6 h-full flex flex-col">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 lg:gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-white mb-1">Расписание</h1>
-                        <p className="text-zinc-400">Управление занятиями и расписанием групп</p>
+                        <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-white mb-1">Расписание</h1>
+                        <p className="text-xs lg:text-sm text-zinc-400 hidden lg:block">Управление занятиями и расписанием групп</p>
                     </div>
                     <div className="flex gap-2">
                         <AddLessonModal lessons={lessons} />
                     </div>
                 </div>
 
-                {/* Stats Cards */}
-                <div className="grid gap-4 md:grid-cols-4">
+                {/* Stats Cards - 2 columns on mobile */}
+                <div className="grid gap-3 lg:gap-4 grid-cols-2 lg:grid-cols-4">
                     <Card className="bg-zinc-900 border-zinc-800">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium text-zinc-400">Всего занятий</CardTitle>
