@@ -1,25 +1,24 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-
 import QueryProvider from "@/components/providers/query-provider";
 import { AuthProvider } from "@/components/auth/auth-provider";
+import { InstallPrompt } from "@/components/pwa/install-prompt";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin", "cyrillic"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  subsets: ["latin", "cyrillic"],
 });
 
 export const metadata: Metadata = {
-  title: "EduFlow 2026",
-  description: "Next-gen Platform for Language Schools",
-  manifest: "/manifest.json",
+  title: "EduFlow 2.0",
+  description: "Современная платформа для управления учебными заведениями",
 };
 
 export default function RootLayout({
@@ -28,23 +27,28 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="ru" suppressHydrationWarning>
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#6366f1" />
+        <link rel="apple-touch-icon" href="/icon-192x192.png" />
+      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        suppressHydrationWarning
+        className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
-        <QueryProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
           <AuthProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="dark"
-              enableSystem
-              disableTransitionOnChange
-            >
+            <QueryProvider>
               {children}
-            </ThemeProvider>
+              <InstallPrompt />
+            </QueryProvider>
           </AuthProvider>
-        </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
