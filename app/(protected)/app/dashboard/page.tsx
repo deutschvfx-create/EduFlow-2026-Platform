@@ -119,7 +119,7 @@ export default function DashboardPage() {
                         {isOwner ? (
                             <KPICard
                                 title="Выручка"
-                                value={`$${(12450).toLocaleString()}`}
+                                value={isOwner ? 12450 : 0}
                                 trend="+12%"
                                 isUp={true}
                                 icon={DollarSign}
@@ -212,65 +212,60 @@ function KPICard({ title, value, trend, isUp, icon: Icon, color }: any) {
     };
 
     return (
-        <Card className={`relative overflow-hidden bg-zinc-900/60 border-zinc-800 rounded-xl group transition-all hover:bg-zinc-900 hover:border-zinc-700/50 shadow-xl ring-1 ring-white/5 h-32`}>
-            {/* Background Glow */}
-            <div className={`absolute -right-2 -top-2 h-16 w-16 rounded-full bg-gradient-to-br ${colors[color]} blur-2xl opacity-10 group-hover:opacity-30 transition-opacity`} />
+        <Card className={`relative overflow-hidden bg-zinc-900/60 border-zinc-800 rounded-2xl group transition-all hover:bg-zinc-900/80 hover:border-zinc-700/50 shadow-2xl ring-1 ring-white/5 h-[130px]`}>
+            {/* Dynamic Background Glow */}
+            <div className={`absolute -right-6 -top-6 h-28 w-28 rounded-full bg-gradient-to-br ${colors[color]} blur-3xl opacity-10 group-hover:opacity-25 transition-all duration-700`} />
 
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3 px-4">
-                <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 group-hover:text-zinc-400 transition-colors">{title}</CardTitle>
-                <div className={`p-1.5 rounded-lg border border-zinc-800/50 ${colors[color]} group-hover:scale-110 transition-transform shadow-lg shadow-black/40`}>
-                    <Icon className="h-4 w-4" />
-                </div>
-            </CardHeader>
-
-            <CardContent className="px-4 pb-3">
-                <div className="flex items-end justify-between gap-4">
-                    <div className="space-y-1">
-                        <div className="text-2xl font-black text-white tracking-tight leading-none">
-                            {title === 'Выручка' ? '$' : ''}{value.toLocaleString()}
+            <div className="relative z-10 p-4 flex flex-col h-full justify-between">
+                <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 group-hover:text-zinc-400 transition-colors">
+                            {title}
+                        </h3>
+                        <div className="text-2xl font-black text-white tracking-tighter flex items-baseline gap-1">
+                            {title === 'Выручка' && <span className="text-lg font-bold text-zinc-500">$</span>}
+                            {typeof value === 'number' ? value.toLocaleString() : value}
                         </div>
-                        <div className="flex items-center gap-1.5">
-                            <span className={`flex items-center gap-0.5 text-[10px] font-bold ${isUp ? 'text-emerald-500' : 'text-red-500'} bg-zinc-950/50 px-1.5 py-0.5 rounded-md border border-zinc-800/50`}>
-                                {isUp ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
-                                {trend}
-                            </span>
-                            <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-tighter">MoM Growth</span>
+                    </div>
+                    <div className={`p-2 rounded-xl border border-white/5 ${colors[color]} shadow-inner`}>
+                        <Icon className="h-4 w-4" />
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-4 mt-auto">
+                    <div className="flex flex-col gap-1">
+                        <div className={`flex items-center gap-1 text-[10px] font-bold ${isUp ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {isUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                            {trend}
+                            <span className="text-[9px] text-zinc-600 font-medium ml-1">vs MoM</span>
+                        </div>
+                        <div className="h-1 w-24 bg-zinc-950 rounded-full overflow-hidden border border-white/5">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: isUp ? "70%" : "30%" }}
+                                className={`h-full ${isUp ? 'bg-emerald-500/40' : 'bg-rose-500/40'}`}
+                            />
                         </div>
                     </div>
 
-                    {/* Sparkline Visualization */}
-                    <div className="h-10 w-20 relative overflow-hidden flex items-end">
-                        <svg viewBox="0 0 100 40" className="w-full h-full opacity-40 group-hover:opacity-80 transition-opacity">
+                    {/* Integrated Sparkline */}
+                    <div className="h-10 w-24 relative opacity-50 group-hover:opacity-100 transition-opacity">
+                        <svg viewBox="0 0 100 40" className="w-full h-full overflow-visible">
                             <motion.path
-                                initial={{ pathLength: 0 }}
-                                animate={{ pathLength: 1 }}
-                                transition={{ duration: 1.5, delay: 0.5 }}
-                                d={isUp ? "M0,35 L20,30 L40,32 L60,20 L80,25 L100,5" : "M0,5 L20,15 L40,10 L60,25 L80,20 L100,35"}
+                                initial={{ pathLength: 0, opacity: 0 }}
+                                animate={{ pathLength: 1, opacity: 1 }}
+                                transition={{ duration: 1.5, ease: "easeOut" }}
+                                d={isUp ? "M0,35 Q20,35 30,20 T60,15 T100,0" : "M0,5 Q20,5 30,20 T60,25 T100,40"}
                                 fill="none"
-                                stroke={isUp ? "#10b981" : "#ef4444"}
-                                strokeWidth="2.5"
+                                stroke={isUp ? "#10b981" : "#f43f5e"}
+                                strokeWidth="2"
                                 strokeLinecap="round"
-                                strokeLinejoin="round"
+                                className="drop-shadow-[0_0_5px_currentColor]"
                             />
-                            <defs>
-                                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                                    <feGaussianBlur stdDeviation="2" result="blur" />
-                                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                                </filter>
-                            </defs>
                         </svg>
                     </div>
                 </div>
-
-                {/* Progress Bar - Tiny Detail */}
-                <div className="mt-2 h-1 w-full bg-zinc-950 rounded-full overflow-hidden border border-zinc-800/30">
-                    <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: isUp ? "75%" : "30%" }}
-                        className={`h-full ${isUp ? 'bg-emerald-500/40' : 'bg-red-500/40'}`}
-                    />
-                </div>
-            </CardContent>
+            </div>
         </Card>
     );
 }
