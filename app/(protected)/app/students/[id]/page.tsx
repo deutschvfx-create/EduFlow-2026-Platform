@@ -1,7 +1,8 @@
 'use client';
 
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { MOCK_STUDENTS } from "@/lib/mock/students";
+import { MOCK_STUDENTS, MOCK_ATTENDANCE, MOCK_GRADES, MOCK_PAYMENTS } from "@/lib/mock/students";
 import { Button } from "@/components/ui/button";
 import {
     ArrowLeft,
@@ -19,7 +20,12 @@ import {
     Clock,
     CheckCircle2,
     DollarSign,
-    ExternalLink
+    ExternalLink,
+    FileText,
+    Plus,
+    X,
+    ClipboardList,
+    History
 } from "lucide-react";
 import { StudentStatusBadge } from "@/components/students/status-badge";
 import { Badge } from "@/components/ui/badge";
@@ -35,12 +41,25 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { motion } from "framer-motion";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function StudentProfilePage() {
     const params = useParams();
     const router = useRouter();
     const id = params?.id as string;
+
+    const [notes, setNotes] = useState<string>("");
+    const [isAddingNote, setIsAddingNote] = useState(false);
+    const [isDocsOpen, setIsDocsOpen] = useState(false);
 
     const student = MOCK_STUDENTS.find(s => s.id === id);
 
@@ -55,6 +74,10 @@ export default function StudentProfilePage() {
         );
     }
 
+    const attendanceSummary = MOCK_ATTENDANCE.filter(a => a.studentId === student.id);
+    const gradesSummary = MOCK_GRADES.filter(g => g.studentId === student.id);
+    const paymentsSummary = MOCK_PAYMENTS.filter(p => p.studentId === student.id);
+
     return (
         <div className="space-y-6">
             {/* Glassmorphism Hero Section */}
@@ -67,13 +90,16 @@ export default function StudentProfilePage() {
                     {/* Avatar with Camera Overlay */}
                     <div className="relative group shrink-0">
                         <div className="absolute inset-0 bg-indigo-500 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500" />
-                        <Avatar className="h-32 w-32 rounded-2xl border-2 border-zinc-800 ring-4 ring-zinc-900/50 shadow-2xl relative z-10">
+                        <Avatar className="h-32 w-32 rounded-2xl border-2 border-zinc-800 ring-4 ring-zinc-900/50 shadow-2xl relative z-10 transition-transform duration-500 group-hover:scale-105">
                             <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.firstName}${student.lastName}`} alt={student.firstName} />
                             <AvatarFallback className="bg-zinc-950 text-indigo-400 text-3xl font-black">
                                 {student.firstName[0]}{student.lastName[0]}
                             </AvatarFallback>
                         </Avatar>
-                        <button className="absolute bottom-2 right-2 z-20 h-8 w-8 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 flex items-center justify-center hover:text-white hover:bg-zinc-800 transition-all">
+                        <button
+                            onClick={() => alert("Симуляция: Режим загрузки фото активирован")}
+                            className="absolute bottom-2 right-2 z-20 h-8 w-8 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 flex items-center justify-center hover:text-white hover:bg-zinc-800 transition-all"
+                        >
                             <Camera className="h-4 w-4" />
                         </button>
                     </div>
@@ -95,10 +121,10 @@ export default function StudentProfilePage() {
                             </div>
 
                             <div className="flex gap-2">
-                                <Button className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-500/20 px-6">
+                                <Button className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-500/20 px-6 transition-all hover:scale-105 active:scale-95" onClick={() => window.open(`tel:${student.phone || '+7000000000'}`)}>
                                     <Phone className="mr-2 h-4 w-4" /> Позвонить
                                 </Button>
-                                <Button variant="outline" className="border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:text-white rounded-xl">
+                                <Button variant="outline" className="border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:text-white rounded-xl" onClick={() => window.open(`mailto:${student.email}`)}>
                                     <Mail className="h-4 w-4" />
                                 </Button>
                                 <DropdownMenu>
@@ -109,7 +135,7 @@ export default function StudentProfilePage() {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-800 text-zinc-300 min-w-[160px]">
                                         <DropdownMenuItem className="cursor-pointer py-2"><Edit className="mr-2 h-4 w-4" /> Изменить профиль</DropdownMenuItem>
-                                        <DropdownMenuItem className="cursor-pointer py-2"><Archive className="mr-2 h-4 w-4" /> В архив</DropdownMenuItem>
+                                        <DropdownMenuItem className="cursor-pointer py-2 text-zinc-400"><Archive className="mr-2 h-4 w-4" /> В архив</DropdownMenuItem>
                                         <DropdownMenuSeparator className="bg-zinc-800" />
                                         <DropdownMenuItem className="text-rose-400 cursor-pointer py-2 hover:bg-rose-500/10"><ShieldAlert className="mr-2 h-4 w-4" /> Заблокировать</DropdownMenuItem>
                                     </DropdownMenuContent>
@@ -125,7 +151,7 @@ export default function StudentProfilePage() {
                                 </div>
                                 <div>
                                     <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-600">Посещаемость</div>
-                                    <div className="text-sm font-black text-white">92%</div>
+                                    <div className="text-sm font-black text-white">{student.status === 'ACTIVE' ? '92%' : '0%'}</div>
                                 </div>
                             </div>
                             <div className="bg-zinc-950/40 border border-white/5 rounded-2xl p-3 flex items-center gap-3">
@@ -134,7 +160,7 @@ export default function StudentProfilePage() {
                                 </div>
                                 <div>
                                     <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-600">Средний балл</div>
-                                    <div className="text-sm font-black text-white">4.8</div>
+                                    <div className="text-sm font-black text-white">{gradesSummary.length > 0 ? (gradesSummary.reduce((acc, g) => acc + g.value, 0) / gradesSummary.length).toFixed(1) : '—'}</div>
                                 </div>
                             </div>
                             <div className="bg-zinc-950/40 border border-white/5 rounded-2xl p-3 flex items-center gap-3 md:col-span-2">
@@ -188,10 +214,45 @@ export default function StudentProfilePage() {
                                 </div>
                             </div>
 
-                            <Button variant="ghost" className="w-full text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-xl text-xs font-bold uppercase tracking-widest py-6 border border-dashed border-indigo-500/20 group">
-                                <ExternalLink className="mr-2 h-3.5 w-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                                Посмотреть все документы
-                            </Button>
+                            <Dialog open={isDocsOpen} onOpenChange={setIsDocsOpen}>
+                                <DialogTrigger asChild>
+                                    <Button variant="ghost" className="w-full text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-xl text-xs font-bold uppercase tracking-widest py-6 border border-dashed border-indigo-500/20 group">
+                                        <ExternalLink className="mr-2 h-3.5 w-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                                        Посмотреть все документы
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-lg rounded-3xl">
+                                    <DialogHeader>
+                                        <DialogTitle className="text-xl font-black uppercase tracking-widest">Документы студента</DialogTitle>
+                                        <DialogDescription className="text-zinc-500 text-xs font-bold uppercase">Архив личных документов и справок</DialogDescription>
+                                    </DialogHeader>
+                                    <div className="grid gap-4 py-4">
+                                        {[
+                                            { name: "Договор_обучения.pdf", date: "01.09.2025", size: "2.4 MB" },
+                                            { name: "Копия_паспорта.jpg", date: "01.09.2025", size: "1.1 MB" },
+                                            { name: "Справка_здоровье.pdf", date: "15.01.2026", size: "0.8 MB" }
+                                        ].map((doc, i) => (
+                                            <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-zinc-950/50 border border-white/5 hover:border-indigo-500/30 transition-colors cursor-pointer group">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-10 w-10 rounded-xl bg-zinc-900 flex items-center justify-center text-zinc-500 group-hover:text-indigo-400">
+                                                        <FileText className="h-5 w-5" />
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-sm font-bold text-zinc-200 group-hover:text-white">{doc.name}</div>
+                                                        <div className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">{doc.date} • {doc.size}</div>
+                                                    </div>
+                                                </div>
+                                                <Button variant="ghost" size="icon" className="text-zinc-600 hover:text-white">
+                                                    <ExternalLink className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <Button className="w-full bg-indigo-600 hover:bg-indigo-500 rounded-xl py-6 font-black uppercase tracking-widest text-xs">
+                                        <Plus className="mr-2 h-4 w-4" /> Загрузить новый документ
+                                    </Button>
+                                </DialogContent>
+                            </Dialog>
                         </CardContent>
                     </Card>
 
@@ -225,9 +286,9 @@ export default function StudentProfilePage() {
                         <div className="mt-8 space-y-6">
                             <TabsContent value="general" className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-700 outline-none">
                                 <div className="grid md:grid-cols-2 gap-4">
-                                    <Card className="bg-zinc-900/40 border-zinc-800/50 rounded-2xl p-6">
+                                    <Card className="bg-zinc-900/40 border-zinc-800/50 rounded-2xl p-6 hover:border-orange-500/30 transition-colors cursor-pointer group">
                                         <div className="flex items-center gap-3 mb-4">
-                                            <div className="h-10 w-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
+                                            <div className="h-10 w-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 group-hover:scale-110 transition-transform">
                                                 <Calendar className="h-5 w-5" />
                                             </div>
                                             <h3 className="font-black text-white uppercase text-xs tracking-widest">Ближайшее занятие</h3>
@@ -237,9 +298,9 @@ export default function StudentProfilePage() {
                                             <div className="text-xs font-bold text-orange-500 uppercase tracking-widest">English A1 — Intermediate</div>
                                         </div>
                                     </Card>
-                                    <Card className="bg-zinc-900/40 border-zinc-800/50 rounded-2xl p-6">
+                                    <Card className="bg-zinc-900/40 border-zinc-800/50 rounded-2xl p-6 hover:border-teal-500/30 transition-colors cursor-pointer group">
                                         <div className="flex items-center gap-3 mb-4">
-                                            <div className="h-10 w-10 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500">
+                                            <div className="h-10 w-10 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500 group-hover:scale-110 transition-transform">
                                                 <DollarSign className="h-5 w-5" />
                                             </div>
                                             <h3 className="font-black text-white uppercase text-xs tracking-widest">Последний платеж</h3>
@@ -251,64 +312,159 @@ export default function StudentProfilePage() {
                                     </Card>
                                 </div>
 
-                                <Card className="bg-zinc-900/40 border-zinc-800 border-dashed rounded-3xl p-10 flex flex-col items-center justify-center text-center space-y-4">
-                                    <div className="h-20 w-20 rounded-full bg-zinc-950/50 border border-zinc-800 flex items-center justify-center">
-                                        <Edit className="h-8 w-8 text-zinc-700" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <h4 className="text-white font-bold">Личные заметки</h4>
-                                        <p className="text-zinc-500 text-xs max-w-[300px]">Здесь вы можете добавить важную информацию об особенностях обучения студента.</p>
-                                    </div>
-                                    <Button variant="outline" className="border-zinc-800 text-zinc-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest">Добавить заметку</Button>
-                                </Card>
+                                <AnimatePresence mode="wait">
+                                    {isAddingNote ? (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                        >
+                                            <Card className="bg-zinc-900/40 border-indigo-500/30 rounded-3xl p-6 space-y-4">
+                                                <div className="flex justify-between items-center">
+                                                    <h4 className="text-white font-black uppercase text-xs tracking-widest">Новая заметка</h4>
+                                                    <Button variant="ghost" size="icon" onClick={() => setIsAddingNote(false)} className="h-6 w-6 text-zinc-500 hover:text-rose-500">
+                                                        <X className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                                <Textarea
+                                                    value={notes}
+                                                    onChange={(e) => setNotes(e.target.value)}
+                                                    placeholder="Введите текст заметки..."
+                                                    className="bg-zinc-950/50 border-zinc-800 rounded-xl min-h-[120px] text-zinc-200 placeholder:text-zinc-700"
+                                                />
+                                                <div className="flex justify-end gap-2">
+                                                    <Button variant="outline" onClick={() => setIsAddingNote(false)} className="rounded-xl text-xs font-bold uppercase tracking-widest border-zinc-800">Отмена</Button>
+                                                    <Button onClick={() => { setIsAddingNote(false); alert("Заметка сохранена!"); }} className="bg-indigo-600 hover:bg-indigo-500 rounded-xl text-xs font-bold uppercase tracking-widest">Сохранить</Button>
+                                                </div>
+                                            </Card>
+                                        </motion.div>
+                                    ) : (
+                                        <Card className="bg-zinc-900/40 border-zinc-800 border-dashed rounded-3xl p-10 flex flex-col items-center justify-center text-center space-y-4">
+                                            <div className="h-20 w-20 rounded-full bg-zinc-950/50 border border-zinc-800 flex items-center justify-center">
+                                                <Edit className="h-8 w-8 text-zinc-700" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <h4 className="text-white font-bold">Личные заметки</h4>
+                                                <p className="text-zinc-500 text-xs max-w-[300px]">
+                                                    {notes || "Здесь вы можете добавить важную информацию об особенностях обучения студента."}
+                                                </p>
+                                            </div>
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => setIsAddingNote(true)}
+                                                className="border-zinc-800 text-zinc-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest py-5 px-6"
+                                            >
+                                                {notes ? "Изменить заметку" : "Добавить заметку"}
+                                            </Button>
+                                        </Card>
+                                    )}
+                                </AnimatePresence>
                             </TabsContent>
 
-                            <TabsContent value="attendance" className="animate-in fade-in slide-in-from-bottom-5 duration-700 outline-none">
-                                <Card className="bg-zinc-900/40 border-zinc-800/50 rounded-3xl p-8 text-center space-y-4">
-                                    <p className="text-zinc-500 text-sm font-medium">История посещений загружается. Скоро здесь появится календарь активности ученика.</p>
-                                    <div className="grid grid-cols-7 gap-2 max-w-sm mx-auto opacity-20 filter grayscale">
-                                        {Array.from({ length: 31 }).map((_, i) => (
-                                            <div key={i} className="h-8 w-8 rounded-lg bg-zinc-800" />
-                                        ))}
-                                    </div>
-                                </Card>
+                            <TabsContent value="attendance" className="animate-in fade-in slide-in-from-bottom-5 duration-700 outline-none space-y-4">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2">
+                                        <ClipboardList className="h-4 w-4" /> Последние посещения
+                                    </h3>
+                                    <Badge variant="outline" className="text-emerald-500 border-emerald-500/20 bg-emerald-500/5 font-black uppercase text-[9px] tracking-widest">Среднее: 92%</Badge>
+                                </div>
+                                <div className="space-y-3">
+                                    {attendanceSummary.map((record) => (
+                                        <div key={record.id} className="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/40 border border-white/5 hover:border-zinc-700 transition-all">
+                                            <div className="flex items-center gap-4">
+                                                <div className="text-center min-w-[50px]">
+                                                    <div className="text-xs font-black text-white">{new Date(record.date).getDate()}</div>
+                                                    <div className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">
+                                                        {new Date(record.date).toLocaleString('ru', { month: 'short' })}
+                                                    </div>
+                                                </div>
+                                                <div className="h-8 w-[1px] bg-zinc-800" />
+                                                <div>
+                                                    <div className="text-sm font-bold text-zinc-200">{record.subject}</div>
+                                                    <div className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest text-left">{record.teacher}</div>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <div className="text-right">
+                                                    <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                                                        {new Date(record.date).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}
+                                                    </div>
+                                                </div>
+                                                <Badge className={`
+                                                    font-black uppercase text-[10px] tracking-widest rounded-lg px-3 py-1
+                                                    ${record.status === 'PRESENT' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
+                                                        record.status === 'ABSENT' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' :
+                                                            'bg-amber-500/10 text-amber-500 border-amber-500/20'}
+                                                `} variant="outline">
+                                                    {record.status === 'PRESENT' ? 'Был' : record.status === 'ABSENT' ? 'Пропуск' : 'Опоздал'}
+                                                </Badge>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <Button variant="ghost" className="w-full text-zinc-500 text-[10px] font-black uppercase tracking-widest py-6 border border-zinc-900 border-dashed rounded-2xl hover:text-white hover:bg-zinc-900/50">
+                                        <History className="mr-2 h-4 w-4" /> Посмотреть полную историю
+                                    </Button>
+                                </div>
                             </TabsContent>
 
-                            <TabsContent value="grades" className="animate-in fade-in slide-in-from-bottom-5 duration-700 outline-none">
-                                <Card className="bg-zinc-900/40 border-zinc-800/50 rounded-3xl p-8 text-center space-y-4">
-                                    <p className="text-zinc-500 text-sm font-medium">Академический прогресс скоро будет доступен. Система анализирует средний балл.</p>
-                                    <div className="h-32 w-full bg-zinc-800/20 rounded-2xl flex items-end justify-between p-4 opacity-10">
-                                        {Array.from({ length: 12 }).map((_, i) => (
-                                            <div key={i} className="w-4 bg-indigo-500" style={{ height: `${Math.random() * 80 + 20}%` }} />
-                                        ))}
-                                    </div>
-                                </Card>
+                            <TabsContent value="grades" className="animate-in fade-in slide-in-from-bottom-5 duration-700 outline-none space-y-4">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2">
+                                        <Award className="h-4 w-4" /> Успеваемость (Последние оценки)
+                                    </h3>
+                                    <Button variant="link" className="text-indigo-400 text-[10px] font-bold uppercase tracking-widest h-auto p-0">Все оценки</Button>
+                                </div>
+                                <div className="grid gap-3">
+                                    {gradesSummary.map((grade) => (
+                                        <div key={grade.id} className="flex items-center justify-between p-5 rounded-2xl bg-zinc-900/40 border border-white/5 hover:bg-zinc-900/60 transition-all">
+                                            <div className="flex items-center gap-4">
+                                                <div className={`
+                                                    h-12 w-12 rounded-xl flex items-center justify-center text-xl font-black shadow-lg
+                                                    ${grade.value === 5 ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-amber-500 text-white shadow-amber-500/20'}
+                                                `}>
+                                                    {grade.value}
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-bold text-zinc-100">{grade.type === 'EXAM' ? 'Экзаменационная работа' : 'Домашнее задание'}</div>
+                                                    <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest text-left">{grade.subject} • {new Date(grade.date).toLocaleDateString()}</div>
+                                                </div>
+                                            </div>
+                                            <div className="max-w-[200px] text-zinc-500 text-[11px] italic font-medium text-right line-clamp-2">
+                                                «{grade.comment}»
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </TabsContent>
 
                             <TabsContent value="payments" className="animate-in fade-in slide-in-from-bottom-5 duration-700 outline-none">
                                 <Card className="bg-zinc-900/40 border-zinc-800/50 rounded-3xl overflow-hidden">
                                     <div className="p-4 border-b border-zinc-800/50 bg-zinc-950/20 flex items-center justify-between">
                                         <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-500">История транзакций</h3>
-                                        <Button variant="link" className="text-indigo-400 text-[10px] font-bold uppercase tracking-widest h-auto p-0 hover:text-indigo-300">Экспорт PDF</Button>
+                                        <Button variant="link" className="text-indigo-400 text-[10px] font-bold uppercase tracking-widest h-auto p-0 hover:text-indigo-300" onClick={() => alert("Симуляция: Генерация PDF отчета...")}>Экспорт PDF</Button>
                                     </div>
                                     <div className="p-6 space-y-4">
-                                        <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-950/40 border border-white/5">
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                                                    <DollarSign className="h-5 w-5" />
+                                        {paymentsSummary.map((payment) => (
+                                            <div key={payment.id} className="flex items-center justify-between p-4 rounded-2xl bg-zinc-950/40 border border-white/5 hover:border-zinc-700 transition-all cursor-pointer">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                                                        <DollarSign className="h-5 w-5" />
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-sm font-bold text-white">{payment.description}</div>
+                                                        <div className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest text-left">
+                                                            {new Date(payment.date).toLocaleString('ru', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <div className="text-sm font-bold text-white">Оплата обучения — Февраль</div>
-                                                    <div className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">14.01.2026, 12:45</div>
+                                                <div className="text-right">
+                                                    <div className="text-sm font-black text-emerald-400">+ {payment.amount.toLocaleString()} ₽</div>
+                                                    <div className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest">{payment.method}</div>
                                                 </div>
                                             </div>
-                                            <div className="text-right">
-                                                <div className="text-sm font-black text-emerald-400">+ 12,500 ₽</div>
-                                                <div className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest">Карта (T-Pay)</div>
-                                            </div>
-                                        </div>
-                                        <div className="text-center py-10">
-                                            <p className="text-zinc-600 text-[10px] font-bold uppercase tracking-widest">Предыдущих платежей не найдено</p>
+                                        ))}
+                                        <div className="text-center py-6">
+                                            <Button variant="link" className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest hover:text-white transition-colors">Архив платежей за 2025 год</Button>
                                         </div>
                                     </div>
                                 </Card>

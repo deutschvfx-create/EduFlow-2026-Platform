@@ -71,3 +71,23 @@ export const MOCK_GROUPS = [
     { id: "g3", name: "German B1" },
     { id: "g4", name: "Robotics" }
 ];
+
+export const MOCK_ATTENDANCE = [
+    { id: "a1", studentId: "s1", scheduleId: "sc1", date: "2026-01-27T10:00:00Z", status: "PRESENT", subject: "English A1", teacher: "Mr. Wilson" },
+    { id: "a2", studentId: "s1", scheduleId: "sc2", date: "2026-01-25T10:00:00Z", status: "PRESENT", subject: "English A1", teacher: "Mr. Wilson" },
+    { id: "a3", studentId: "s1", scheduleId: "sc3", date: "2026-01-23T10:00:00Z", status: "LATE", subject: "English A1", teacher: "Mr. Wilson" },
+    { id: "a4", studentId: "s1", scheduleId: "sc4", date: "2026-01-21T10:00:00Z", status: "PRESENT", subject: "English A1", teacher: "Mr. Wilson" },
+    { id: "a5", studentId: "s1", scheduleId: "sc5", date: "2026-01-19T10:00:00Z", status: "ABSENT", subject: "English A1", teacher: "Mr. Wilson" },
+];
+
+export const MOCK_GRADES = [
+    { id: "g1", studentId: "s1", courseId: "c1", value: 5, date: "2026-01-26T14:00:00Z", type: "HOMEWORK", subject: "English A1", comment: "Excellent work on grammar!" },
+    { id: "g2", studentId: "s1", courseId: "c1", value: 4, date: "2026-01-20T14:00:00Z", type: "QUIZ", subject: "English A1", comment: "Good vocabulary usage." },
+    { id: "g3", studentId: "s1", courseId: "c1", value: 5, date: "2026-01-15T14:00:00Z", type: "EXAM", subject: "English A1", comment: "Perfect listening score." },
+];
+
+export const MOCK_PAYMENTS = [
+    { id: "p1", studentId: "s1", amount: 12500, date: "2026-01-14T12:45:00Z", status: "PAID", method: "Карта (T-Pay)", description: "Оплата обучения — Февраль" },
+    { id: "p2", studentId: "s1", amount: 12500, date: "2025-12-15T10:30:00Z", status: "PAID", method: "Наличные", description: "Оплата обучения — Январь" },
+    { id: "p3", studentId: "s1", amount: 12500, date: "2025-11-12T11:00:00Z", status: "PAID", method: "Карта (T-Pay)", description: "Оплата обучения — Декабрь" },
+];
