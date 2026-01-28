@@ -38,23 +38,23 @@ export default function DashboardPage() {
     const isOwner = user?.role === 'OWNER' || user?.role === 'DIRECTOR';
 
     return (
-        <div className="max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="max-w-[1600px] mx-auto space-y-4 lg:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-zinc-900">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 lg:gap-6 pb-2 border-b border-zinc-900">
                 <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-indigo-400 font-bold tracking-widest text-[9px] uppercase">
+                    <div className="hidden lg:flex items-center gap-2 text-indigo-400 font-bold tracking-widest text-[9px] uppercase">
                         <Activity className="h-2.5 w-2.5" />
                         Live Monitor
                     </div>
-                    <h1 className="text-4xl font-extrabold tracking-tight text-white">
+                    <h1 className="text-2xl lg:text-4xl font-extrabold tracking-tight text-white">
                         Дашборд
                     </h1>
-                    <p className="text-zinc-500 text-sm">
+                    <p className="text-zinc-500 text-xs lg:text-sm hidden lg:block">
                         {isOwner ? 'Обзор ключевых показателей вашей школы' : 'Ваш персональный центр управления'}
                     </p>
                 </div>
 
-                <div className="flex flex-1 max-w-md relative group">
+                <div className="hidden lg:flex flex-1 max-w-md relative group">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-600 group-focus-within:text-indigo-400 transition-colors" />
                     <Input
                         placeholder="Быстрый поиск по школе..."
@@ -62,7 +62,7 @@ export default function DashboardPage() {
                     />
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="hidden lg:flex items-center gap-2">
                     {isOwner && (
                         <Dialog>
                             <DialogTrigger asChild>
@@ -100,11 +100,11 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8">
                 {/* Left Area (70%) */}
-                <div className="lg:col-span-8 space-y-8">
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                <div className="lg:col-span-8 space-y-4 lg:space-y-8">
+                    {/* Stats Grid - 2 columns on mobile, 4 on desktop */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
                         <KPICard
                             title="Студентов"
                             value={stats.students}
