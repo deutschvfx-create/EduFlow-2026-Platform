@@ -54,7 +54,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return () => unsubscribe();
     }, [pathname, router]);
 
-    // Protected Routes Check
+    // Protected Routes Check - ВРЕМЕННО ОТКЛЮЧЕНО
+    // Раскомментируйте когда настроите Firebase Auth
+    /*
     useEffect(() => {
         if (loading) return;
 
@@ -72,6 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
         }
     }, [user, userData, loading, pathname, router]);
+    */
 
     return (
         <AuthContext.Provider value={{ user, userData, loading }}>
