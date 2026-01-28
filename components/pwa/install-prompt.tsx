@@ -55,24 +55,56 @@ export function InstallPrompt() {
         }
 
         if (!deferredPrompt) {
-            // Fallback for browsers that don't support beforeinstallprompt
-            alert('Для установки используйте меню браузера: "Установить приложение" или "Добавить на главный экран"');
+            // Chrome blocked reinstallation - show manual instructions
+            const instructions = `
+🔧 ИНСТРУКЦИЯ ПО УСТАНОВКЕ:
+
+Chrome заблокировал автоматическую установку.
+Используйте ручную установку:
+
+📍 СПОСОБ 1 (Рекомендуется):
+1. Нажмите три точки (⋮) в правом верхнем углу браузера
+2. Наведите на "Сохранить и поделиться"
+3. Выберите "Установить EduFlow 2.0..." или "Создать ярлык..."
+4. Отметьте "Открывать в отдельном окне"
+5. Нажмите "Установить"
+
+📍 СПОСОБ 2 (Альтернатива):
+1. Нажмите Ctrl+Shift+Delete
+2. Выберите "Всё время"
+3. Отметьте "Файлы cookie и данные сайтов"
+4. Нажмите "Удалить данные"
+5. Обновите страницу (F5)
+6. Кнопка установки появится снова
+
+📍 СПОСОБ 3 (Другой браузер):
+Попробуйте установить через Microsoft Edge или другой браузер.
+
+Скопируйте эту инструкцию!
+            `.trim();
+
+            alert(instructions);
             return;
         }
 
         // Show native install prompt
-        deferredPrompt.prompt();
+        try {
+            deferredPrompt.prompt();
 
-        // Wait for user choice
-        const { outcome } = await deferredPrompt.userChoice;
+            // Wait for user choice
+            const { outcome } = await deferredPrompt.userChoice;
 
-        if (outcome === 'accepted') {
-            console.log('PWA installed successfully');
-            setIsInstalled(true);
+            if (outcome === 'accepted') {
+                console.log('PWA installed successfully');
+                setIsInstalled(true);
+            }
+
+            // Clear the deferred prompt
+            setDeferredPrompt(null);
+        } catch (error) {
+            console.error('Installation failed:', error);
+            alert('Не удалось установить. Попробуйте через меню браузера: ⋮ → Сохранить и поделиться → Установить приложение');
         }
-
-        // Clear the deferred prompt
-        setDeferredPrompt(null);
     };
 
     const getPromptText = () => {
