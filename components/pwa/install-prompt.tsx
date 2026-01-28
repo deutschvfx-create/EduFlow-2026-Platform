@@ -28,10 +28,6 @@ export function InstallPrompt() {
     const [isTabletDevice, setIsTabletDevice] = useState(false);
 
     useEffect(() => {
-        // Check if already dismissed
-        const dismissed = localStorage.getItem('pwa_install_dismissed');
-        if (dismissed === 'true') return;
-
         // Check if already installed
         if (isPWAInstalled()) return;
 
@@ -94,7 +90,8 @@ export function InstallPrompt() {
     };
 
     const handleDismiss = () => {
-        localStorage.setItem('pwa_install_dismissed', 'true');
+        // Just hide the banner for this session
+        // It will show again on next visit
         setIsVisible(false);
     };
 
@@ -192,7 +189,7 @@ export function InstallPrompt() {
                 isOpen={showIOSInstructions}
                 onClose={() => {
                     setShowIOSInstructions(false);
-                    handleDismiss(); // Also dismiss the banner
+                    setIsVisible(false); // Just hide for this session
                 }}
             />
         </>
