@@ -1,21 +1,125 @@
 {
-    "name": "EduFlow School Manager",
+    "name": "EduFlow 2.0 - School Management Platform",
     "short_name": "EduFlow",
-    "description": "Offline-first school management system",
-    "start_url": "/app/dashboard",
+    "description": "Современная платформа для управления учебными заведениями",
+    "start_url": "/",
     "display": "standalone",
     "background_color": "#09090b",
-    "theme_color": "#09090b",
+    "theme_color": "#6366f1",
+    "orientation": "portrait-primary",
+    "scope": "/",
     "icons": [
         {
-            "src": "/android-chrome-192x192.png",
-            "sizes": "192x192",
-            "type": "image/png"
+            "src": "/icon-72x72.png",
+            "sizes": "72x72",
+            "type": "image/png",
+            "purpose": "any maskable"
         },
         {
-            "src": "/android-chrome-512x512.png",
+            "src": "/icon-96x96.png",
+            "sizes": "96x96",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icon-128x128.png",
+            "sizes": "128x128",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icon-144x144.png",
+            "sizes": "144x144",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icon-152x152.png",
+            "sizes": "152x152",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icon-384x384.png",
+            "sizes": "384x384",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icon-512x512.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any maskable"
         }
-    ]
+    ],
+    "screenshots": [
+        {
+            "src": "/screenshot-wide.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "form_factor": "wide"
+        },
+        {
+            "src": "/screenshot-narrow.png",
+            "sizes": "750x1334",
+            "type": "image/png",
+            "form_factor": "narrow"
+        }
+    ],
+    "categories": [
+        "education",
+        "productivity",
+        "business"
+    ],
+    "shortcuts": [
+        {
+            "name": "Дашборд",
+            "short_name": "Дашборд",
+            "description": "Открыть главную панель",
+            "url": "/app/dashboard",
+            "icons": [
+                {
+                    "src": "/icon-192x192.png",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                }
+            ]
+        },
+        {
+            "name": "Студенты",
+            "short_name": "Студенты",
+            "description": "Управление студентами",
+            "url": "/app/students",
+            "icons": [
+                {
+                    "src": "/icon-192x192.png",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                }
+            ]
+        },
+        {
+            "name": "Расписание",
+            "short_name": "Расписание",
+            "description": "Просмотр расписания",
+            "url": "/app/schedule",
+            "icons": [
+                {
+                    "src": "/icon-192x192.png",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                }
+            ]
+        }
+    ],
+    "prefer_related_applications": false,
+    "related_applications": [],
+    "lang": "ru",
+    "dir": "ltr"
 }

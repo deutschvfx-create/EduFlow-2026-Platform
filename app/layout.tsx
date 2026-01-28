@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import QueryProvider from "@/components/providers/query-provider";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
+import { OfflineIndicator } from "@/components/pwa/offline-indicator";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -44,6 +45,7 @@ export default function RootLayout({
         >
           <AuthProvider>
             <QueryProvider>
+              <OfflineIndicator />
               {children}
               <InstallPrompt />
             </QueryProvider>
