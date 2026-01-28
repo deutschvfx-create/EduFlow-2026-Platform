@@ -1,8 +1,6 @@
-
-"use client";
-
 import { motion } from "framer-motion";
-import { Circle, UserPlus, FileText, CheckCircle2, MessageSquare } from "lucide-react";
+import { Circle, UserPlus, FileText, CheckCircle2, MessageSquare, Megaphone } from "lucide-react";
+import Link from "next/link";
 
 const activities = [
     { id: 1, type: 'ADD', user: 'Иван Петров', item: 'Группа A1', time: '10 мин. назад', icon: UserPlus, color: 'text-indigo-400' },
@@ -10,8 +8,6 @@ const activities = [
     { id: 3, type: 'ANNOUNCE', user: 'Система', item: 'Новое расписание', time: '3 часа назад', icon: Megaphone, color: 'text-amber-400' },
     { id: 4, type: 'CHAT', user: 'Алексей Л.', item: 'Сообщение в чат', time: '5 часов назад', icon: MessageSquare, color: 'text-blue-400' },
 ];
-
-import { Megaphone } from "lucide-react";
 
 export function ActivityFeed() {
     return (
@@ -46,9 +42,9 @@ export function ActivityFeed() {
                 ))}
             </div>
 
-            <button className="w-full py-2 text-xs font-medium text-zinc-500 hover:text-indigo-400 transition-colors border border-dashed border-zinc-800 rounded-lg hover:border-indigo-500/30">
+            <Link href="/app/announcements" className="block w-full py-2 text-xs font-medium text-zinc-500 hover:text-indigo-400 transition-colors border border-dashed border-zinc-800 rounded-lg hover:border-indigo-500/30 text-center">
                 Показать все события
-            </button>
+            </Link>
         </div>
     );
 }

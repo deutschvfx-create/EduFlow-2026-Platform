@@ -1,7 +1,5 @@
-
-"use client";
-
 import { Clock, Users, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 const schedule = [
     { id: 1, time: '10:00', name: 'Deutsch A1', room: 'Audit. 302', teacher: 'М. Иванова' },
@@ -39,9 +37,9 @@ export function TodaySchedule() {
                 ))}
             </div>
 
-            <button className="text-xs text-indigo-400/80 hover:text-indigo-400 font-medium px-1">
+            <Link href="/app/schedule" className="text-xs text-indigo-400/80 hover:text-indigo-400 font-medium px-1 block w-fit">
                 Перейти в расписание →
-            </button>
+            </Link>
         </div>
     );
 }

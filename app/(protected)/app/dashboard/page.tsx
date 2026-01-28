@@ -11,6 +11,8 @@ import { DollarSign, Download, TrendingUp, TrendingDown, Activity, Calendar as C
 import { Button } from "@/components/ui/button";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";
 import { TodaySchedule } from "@/components/dashboard/today-schedule";
+import { Loader2, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 export default function DashboardPage() {
     const [stats, setStats] = useState({
@@ -38,9 +40,9 @@ export default function DashboardPage() {
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-zinc-900">
                 <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-indigo-400 font-bold tracking-widest text-[10px] uppercase">
-                        <Activity className="h-3 w-3" />
-                        Live System Monitor
+                    <div className="flex items-center gap-2 text-indigo-400 font-bold tracking-widest text-[9px] uppercase">
+                        <Activity className="h-2.5 w-2.5" />
+                        Live Monitor
                     </div>
                     <h1 className="text-4xl font-extrabold tracking-tight text-white">
                         Дашборд
@@ -50,15 +52,34 @@ export default function DashboardPage() {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-1 max-w-md relative group">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-600 group-focus-within:text-indigo-400 transition-colors" />
+                    <Input
+                        placeholder="Быстрый поиск по школе..."
+                        className="h-9 pl-10 bg-zinc-950/50 border-zinc-800 focus:border-indigo-500/50 focus:ring-indigo-500/20 rounded-lg text-xs placeholder:text-zinc-700"
+                    />
+                </div>
+
+                <div className="flex items-center gap-2">
                     {isOwner && (
-                        <Button variant="outline" size="sm" className="h-10 px-4 gap-2 border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all rounded-xl shadow-lg">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                                const toast = document.getElementById('dashboard-toast');
+                                if (toast) {
+                                    toast.classList.remove('hidden');
+                                    setTimeout(() => toast.classList.add('hidden'), 3000);
+                                }
+                            }}
+                            className="h-9 px-3 gap-2 border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all rounded-lg shadow-lg"
+                        >
                             <Download className="h-4 w-4" />
-                            Экспорт отчета
+                            <span className="text-xs">Экспорт</span>
                         </Button>
                     )}
-                    <div className="h-10 w-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-indigo-400 cursor-pointer transition-colors shadow-lg">
-                        <CalendarIcon className="h-5 w-5" />
+                    <div className="h-9 w-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-indigo-400 cursor-pointer transition-colors shadow-lg">
+                        <CalendarIcon className="h-4 w-4" />
                     </div>
                 </div>
             </div>
@@ -165,6 +186,16 @@ export default function DashboardPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Hidden Toast Container */}
+            <div id="dashboard-toast" className="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-bottom-5">
+                <div className="bg-zinc-800 text-white px-6 py-3 rounded-full shadow-2xl border border-zinc-700 flex items-center gap-4">
+                    <div className="h-6 w-6 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                    </div>
+                    <span className="font-medium text-sm">Подготовка отчета PDF...</span>
+                </div>
+            </div>
         </div>
     );
 }
@@ -178,28 +209,28 @@ function KPICard({ title, value, trend, isUp, icon: Icon, color }: any) {
     };
 
     return (
-        <Card className={`relative overflow-hidden bg-zinc-900 border-zinc-800 rounded-2xl group transition-all hover:border-zinc-700 shadow-lg ring-1 ring-white/5`}>
+        <Card className={`relative overflow-hidden bg-zinc-950/40 border-zinc-800 rounded-xl group transition-all hover:border-zinc-700/50 shadow-md ring-1 ring-white/5`}>
             {/* Background Glow */}
-            <div className={`absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br ${colors[color]} blur-3xl opacity-20 group-hover:opacity-40 transition-opacity`} />
+            <div className={`absolute -right-2 -top-2 h-16 w-16 rounded-full bg-gradient-to-br ${colors[color]} blur-2xl opacity-10 group-hover:opacity-20 transition-opacity`} />
 
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-4">
-                <CardTitle className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">{title}</CardTitle>
-                <div className={`p-2 rounded-lg ${colors[color]} group-hover:scale-110 transition-transform`}>
-                    <Icon className="h-4 w-4" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0.5 pt-2.5 px-3">
+                <CardTitle className="text-[9px] font-bold uppercase tracking-tight text-zinc-600">{title}</CardTitle>
+                <div className={`p-1 rounded-md ${colors[color]} group-hover:scale-105 transition-transform`}>
+                    <Icon className="h-3 w-3" />
                 </div>
             </CardHeader>
-            <CardContent className="pb-4">
-                <div className="text-2xl font-black text-white">{value}</div>
-                <div className="flex items-center gap-1.5 mt-1.5">
+            <CardContent className="pb-2.5 px-3">
+                <div className="text-lg font-black text-white leading-none">{value}</div>
+                <div className="flex items-center gap-1 mt-1">
                     {isUp ? (
-                        <TrendingUp className="h-3 w-3 text-emerald-500" />
+                        <TrendingUp className="h-2 w-2 text-emerald-500" />
                     ) : (
-                        <TrendingDown className="h-3 w-3 text-red-500" />
+                        <TrendingDown className="h-2 w-2 text-red-500" />
                     )}
-                    <span className={`text-[10px] font-bold ${isUp ? 'text-emerald-500' : 'text-red-500'}`}>
+                    <span className={`text-[8px] font-bold ${isUp ? 'text-emerald-500' : 'text-red-500'}`}>
                         {trend}
                     </span>
-                    <span className="text-[10px] text-zinc-600 font-medium">vs прошлый мес.</span>
+                    <span className="text-[8px] text-zinc-700 font-medium">vs MoM</span>
                 </div>
             </CardContent>
         </Card>
