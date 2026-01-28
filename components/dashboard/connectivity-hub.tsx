@@ -25,15 +25,15 @@ export function ConnectivityHub() {
 
     return (
         <div
-            className="fixed top-6 right-6 z-[100] flex flex-col items-end"
+            className="fixed top-3 right-4 z-[100] flex flex-col items-end"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
             <motion.div
                 layout
                 className={`
-                    flex items-center gap-3 px-3 py-1.5 rounded-full 
-                    bg-zinc-900/40 backdrop-blur-md border border-white/5
+                    flex items-center gap-3 px-3 py-1 rounded-full 
+                    bg-zinc-900/60 backdrop-blur-md border border-white/10
                     shadow-2xl cursor-default select-none
                 `}
             >

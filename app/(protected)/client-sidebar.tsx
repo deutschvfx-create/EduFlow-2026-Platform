@@ -258,7 +258,7 @@ export default function ClientSidebar({
                     <div className="font-bold text-lg text-white">EduFlow App</div>
                 </header>
 
-                <div className="flex-1 p-6 md:p-8 overflow-y-auto">
+                <div className="flex-1 px-6 md:px-8 pb-6 md:pb-8 pt-12 md:pt-14 overflow-y-auto">
                     {children}
                 </div>
             </main>
