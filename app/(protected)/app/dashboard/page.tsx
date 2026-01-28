@@ -13,6 +13,7 @@ import { ActivityFeed } from "@/components/dashboard/activity-feed";
 import { TodaySchedule } from "@/components/dashboard/today-schedule";
 import { Loader2, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { motion } from "framer-motion";
 import { AttendanceTrend, EnrollmentFunnel, RevenueRadial } from "@/components/dashboard/performance-charts";
 import { StudentRetentionMatrix } from "@/components/dashboard/detailed-metrics";
 
@@ -136,24 +137,33 @@ export default function DashboardPage() {
                         )}
                     </div>
 
-
                     <div className="space-y-4">
                         <QuickActions />
                     </div>
 
-                    {/* Advanced Visualization Grid - NEW SECTION */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        <div className="xl:col-span-2 overflow-hidden">
-                            <AttendanceTrend />
-                        </div>
-                        <div className="xl:col-span-1">
-                            <RevenueRadial />
-                        </div>
-                    </div>
+                    {/* Performance Section - Restored to simple style but nicer than before */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <Card className="bg-zinc-900/40 border-zinc-800/50 backdrop-blur-sm rounded-2xl overflow-hidden ring-1 ring-white/5">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Динамика посещаемости</CardTitle>
+                            </CardHeader>
+                            <CardContent className="flex items-center justify-center h-48">
+                                <div className="text-zinc-600 text-xs font-medium bg-zinc-950/20 px-6 py-3 rounded-full border border-zinc-900/50">
+                                    Анализ активности...
+                                </div>
+                            </CardContent>
+                        </Card>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-4">
-                        <EnrollmentFunnel />
-                        <StudentRetentionMatrix />
+                        <Card className="bg-zinc-900/40 border-zinc-800/50 backdrop-blur-sm rounded-2xl overflow-hidden ring-1 ring-white/5">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Успеваемость</CardTitle>
+                            </CardHeader>
+                            <CardContent className="flex items-center justify-center h-48">
+                                <div className="text-zinc-600 text-xs font-medium bg-zinc-950/20 px-6 py-3 rounded-full border border-zinc-900/50">
+                                    Загрузка данных...
+                                </div>
+                            </CardContent>
+                        </Card>
                     </div>
                 </div>
 
@@ -202,28 +212,63 @@ function KPICard({ title, value, trend, isUp, icon: Icon, color }: any) {
     };
 
     return (
-        <Card className={`relative overflow-hidden bg-zinc-950/40 border-zinc-800 rounded-xl group transition-all hover:border-zinc-700/50 shadow-md ring-1 ring-white/5`}>
+        <Card className={`relative overflow-hidden bg-zinc-900/60 border-zinc-800 rounded-xl group transition-all hover:bg-zinc-900 hover:border-zinc-700/50 shadow-xl ring-1 ring-white/5 h-32`}>
             {/* Background Glow */}
-            <div className={`absolute -right-2 -top-2 h-16 w-16 rounded-full bg-gradient-to-br ${colors[color]} blur-2xl opacity-10 group-hover:opacity-20 transition-opacity`} />
+            <div className={`absolute -right-2 -top-2 h-16 w-16 rounded-full bg-gradient-to-br ${colors[color]} blur-2xl opacity-10 group-hover:opacity-30 transition-opacity`} />
 
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0.5 pt-2.5 px-3">
-                <CardTitle className="text-[9px] font-bold uppercase tracking-tight text-zinc-600">{title}</CardTitle>
-                <div className={`p-1 rounded-md ${colors[color]} group-hover:scale-105 transition-transform`}>
-                    <Icon className="h-3 w-3" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3 px-4">
+                <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 group-hover:text-zinc-400 transition-colors">{title}</CardTitle>
+                <div className={`p-1.5 rounded-lg border border-zinc-800/50 ${colors[color]} group-hover:scale-110 transition-transform shadow-lg shadow-black/40`}>
+                    <Icon className="h-4 w-4" />
                 </div>
             </CardHeader>
-            <CardContent className="pb-2.5 px-3">
-                <div className="text-lg font-black text-white leading-none">{value}</div>
-                <div className="flex items-center gap-1 mt-1">
-                    {isUp ? (
-                        <TrendingUp className="h-2 w-2 text-emerald-500" />
-                    ) : (
-                        <TrendingDown className="h-2 w-2 text-red-500" />
-                    )}
-                    <span className={`text-[8px] font-bold ${isUp ? 'text-emerald-500' : 'text-red-500'}`}>
-                        {trend}
-                    </span>
-                    <span className="text-[8px] text-zinc-700 font-medium">vs MoM</span>
+
+            <CardContent className="px-4 pb-3">
+                <div className="flex items-end justify-between gap-4">
+                    <div className="space-y-1">
+                        <div className="text-2xl font-black text-white tracking-tight leading-none">
+                            {title === 'Выручка' ? '$' : ''}{value.toLocaleString()}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <span className={`flex items-center gap-0.5 text-[10px] font-bold ${isUp ? 'text-emerald-500' : 'text-red-500'} bg-zinc-950/50 px-1.5 py-0.5 rounded-md border border-zinc-800/50`}>
+                                {isUp ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
+                                {trend}
+                            </span>
+                            <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-tighter">MoM Growth</span>
+                        </div>
+                    </div>
+
+                    {/* Sparkline Visualization */}
+                    <div className="h-10 w-20 relative overflow-hidden flex items-end">
+                        <svg viewBox="0 0 100 40" className="w-full h-full opacity-40 group-hover:opacity-80 transition-opacity">
+                            <motion.path
+                                initial={{ pathLength: 0 }}
+                                animate={{ pathLength: 1 }}
+                                transition={{ duration: 1.5, delay: 0.5 }}
+                                d={isUp ? "M0,35 L20,30 L40,32 L60,20 L80,25 L100,5" : "M0,5 L20,15 L40,10 L60,25 L80,20 L100,35"}
+                                fill="none"
+                                stroke={isUp ? "#10b981" : "#ef4444"}
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            />
+                            <defs>
+                                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feGaussianBlur stdDeviation="2" result="blur" />
+                                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                                </filter>
+                            </defs>
+                        </svg>
+                    </div>
+                </div>
+
+                {/* Progress Bar - Tiny Detail */}
+                <div className="mt-2 h-1 w-full bg-zinc-950 rounded-full overflow-hidden border border-zinc-800/30">
+                    <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: isUp ? "75%" : "30%" }}
+                        className={`h-full ${isUp ? 'bg-emerald-500/40' : 'bg-red-500/40'}`}
+                    />
                 </div>
             </CardContent>
         </Card>
