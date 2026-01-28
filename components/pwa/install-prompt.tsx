@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronUp, Download } from "lucide-react";
+import { ChevronDown, ChevronUp, Download, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
     detectPlatform,
@@ -20,6 +20,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function InstallPrompt() {
+    const [isVisible, setIsVisible] = useState(true); // Control banner visibility
     const [isExpanded, setIsExpanded] = useState(true); // Start expanded
     const [platform, setPlatform] = useState<Platform>('unknown');
     const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -28,6 +29,13 @@ export function InstallPrompt() {
     const [isInstalled, setIsInstalled] = useState(false);
 
     useEffect(() => {
+        // Check if user dismissed the banner
+        const dismissed = localStorage.getItem('pwa-banner-dismissed');
+        if (dismissed === 'true') {
+            setIsVisible(false);
+            return;
+        }
+
         // Detect platform
         const detectedPlatform = detectPlatform();
         setPlatform(detectedPlatform);
@@ -144,7 +152,15 @@ Chrome заблокировал автоматическую установку.
         };
     };
 
+    const handleClose = () => {
+        setIsVisible(false);
+        localStorage.setItem('pwa-banner-dismissed', 'true');
+    };
+
     const promptText = getPromptText();
+
+    // Don't render if not visible
+    if (!isVisible) return null;
 
     return (
         <>
@@ -159,6 +175,15 @@ Chrome заблокировал автоматическую установку.
                     <div className="relative bg-gradient-to-r from-indigo-900/95 via-purple-900/95 to-indigo-900/95 backdrop-blur-xl border-t-2 border-indigo-500/50 rounded-2xl shadow-2xl shadow-indigo-500/20 overflow-hidden">
                         {/* Animated gradient overlay */}
                         <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 animate-pulse" />
+
+                        {/* Close Button */}
+                        <button
+                            onClick={handleClose}
+                            className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-zinc-800/50 hover:bg-zinc-700/50 flex items-center justify-center transition-colors group"
+                            aria-label="Закрыть"
+                        >
+                            <X className="h-4 w-4 text-zinc-400 group-hover:text-white" />
+                        </button>
 
                         {/* Collapse/Expand Button */}
                         <button
