@@ -8,6 +8,7 @@ import { HelpAssistant } from "@/components/help/help-assistant";
 import { useQuery } from "@tanstack/react-query";
 import { ConnectivityProvider } from "@/lib/connectivity-context";
 import { ConnectivityHub } from "@/components/dashboard/connectivity-hub";
+import { PageTransition } from "@/components/system/page-transition";
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
     // We use useQuery to fetch config on client side for consistency with other client components
@@ -20,7 +21,9 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
     return (
         <ConnectivityProvider>
             <ClientSidebar modulesConfig={modulesConfig}>
-                {children}
+                <PageTransition>
+                    {children}
+                </PageTransition>
                 <ConnectivityHub />
                 <HelpAssistant />
             </ClientSidebar>
