@@ -65,7 +65,7 @@ export default function FacultiesPage() {
         <ModuleGuard module="faculties">
             <div className="max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
                 {/* Header Section */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-zinc-900">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-zinc-900" data-help-id="faculties-header">
                     <div className="space-y-1 hidden laptop:block">
                         {/* Breadcrumbs */}
                         <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-2">

@@ -125,18 +125,28 @@ export function HelpAssistant() {
             : helpSections;
     }, [search]);
 
-    // Calculate spotlight CSS variables
+    // Calculate spotlight CSS variables with Glow intensity
     const spotlightVars = useMemo(() => {
         if (!highlightRect) return {};
         const x = highlightRect.left + highlightRect.width / 2;
         const y = highlightRect.top + highlightRect.height / 2;
         const r = Math.max(highlightRect.width, highlightRect.height) / 2 + 15;
+        const glow = r + 40; // Soft transition area
         return {
             '--x': `${x}px`,
             '--y': `${y}px`,
-            '--r': `${r}px`
+            '--r': `${r}px`,
+            '--glow': `${glow}px`
         } as React.CSSProperties;
     }, [highlightRect]);
+
+    // Confetti state
+    const [showConfetti, setShowConfetti] = useState(false);
+
+    const triggerConfetti = () => {
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 3000);
+    };
 
     return (
         <>
@@ -291,8 +301,11 @@ export function HelpAssistant() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-black/80 backdrop-blur-[1px] spotlight-mask pointer-events-auto cursor-crosshair"
-                            style={spotlightVars}
+                            className="absolute inset-0 bg-black/80 backdrop-blur-[1px] pointer-events-auto cursor-crosshair"
+                            style={{
+                                ...spotlightVars,
+                                maskImage: `radial-gradient(circle at var(--x) var(--y), transparent var(--r), black var(--glow))`
+                            } as any}
                             onClick={endTour}
                         />
 
@@ -322,9 +335,13 @@ export function HelpAssistant() {
                                 width: 300
                             }}
                         >
-                            <div className="w-full bg-zinc-900/90 backdrop-blur-xl border border-zinc-800/50 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_20px_rgba(99,102,241,0.1)] p-6 overflow-hidden relative group">
+                            <div className="w-full bg-zinc-900/95 backdrop-blur-2xl border border-zinc-800/50 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_20px_rgba(99,102,241,0.1)] p-6 overflow-hidden relative group">
                                 {/* Top Glow */}
                                 <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
+
+                                {/* Progress Indicator */}
+                                <div className="absolute top-0 left-0 h-[2px] bg-indigo-500 transition-all duration-500"
+                                    style={{ width: `${((tourStep + 1) / activeSection.steps.length) * 100}%` }} />
 
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-3">
@@ -389,7 +406,14 @@ export function HelpAssistant() {
                                     <Button
                                         variant="default"
                                         size="sm"
-                                        onClick={nextStep}
+                                        onClick={() => {
+                                            if (tourStep === activeSection.steps.length - 1) {
+                                                triggerConfetti();
+                                                setTimeout(endTour, 1000);
+                                            } else {
+                                                nextStep();
+                                            }
+                                        }}
                                         className="h-9 text-[11px] font-black uppercase tracking-widest gap-2 bg-indigo-600 hover:bg-indigo-500 px-5 min-w-[110px] rounded-xl shadow-lg shadow-indigo-600/20 active:scale-95 transition-all"
                                     >
                                         {tourStep === activeSection.steps.length - 1 ? (
@@ -400,6 +424,31 @@ export function HelpAssistant() {
                                     </Button>
                                 </div>
                             </div>
+
+                            {/* Confetti Burst Overlay */}
+                            {showConfetti && (
+                                <div className="absolute inset-0 pointer-events-none z-30">
+                                    {[...Array(12)].map((_, i) => (
+                                        <motion.div
+                                            key={i}
+                                            initial={{ x: 150, y: 150, opacity: 1, scale: 1 }}
+                                            animate={{
+                                                x: 150 + (Math.random() - 0.5) * 300,
+                                                y: 150 + (Math.random() - 0.5) * 300,
+                                                opacity: 0,
+                                                scale: 0.5
+                                            }}
+                                            transition={{ duration: 1, ease: "easeOut" }}
+                                            className="absolute w-2 h-2 rounded-full"
+                                            style={{
+                                                backgroundColor: ['#6366f1', '#a855f7', '#ec4899', '#10b981'][i % 4],
+                                                left: 0,
+                                                top: 0
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            )}
 
                             {/* Arrow Indicator */}
                             <div className={`w-5 h-5 bg-zinc-900 border-l border-t border-zinc-800/50 rotate-45 -mt-2.5 relative z-10 ${highlightRect.bottom + 40 > window.innerHeight - 250 ? 'mt-[238px] rotate-[225deg]' : ''}`} />

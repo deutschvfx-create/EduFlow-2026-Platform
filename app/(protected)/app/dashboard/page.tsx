@@ -112,6 +112,7 @@ export default function DashboardPage() {
                             isUp={true}
                             icon={Users}
                             color="indigo"
+                            helpId="dashboard-stat-students"
                         />
                         <KPICard
                             title="Преподавателей"
@@ -120,6 +121,7 @@ export default function DashboardPage() {
                             isUp={true}
                             icon={GraduationCap}
                             color="purple"
+                            helpId="dashboard-stat-teachers"
                         />
                         <KPICard
                             title="Группы"
@@ -128,6 +130,7 @@ export default function DashboardPage() {
                             isUp={true}
                             icon={Layers}
                             color="cyan"
+                            helpId="dashboard-stat-groups"
                         />
                         {isOwner ? (
                             <KPICard
@@ -137,6 +140,7 @@ export default function DashboardPage() {
                                 isUp={true}
                                 icon={DollarSign}
                                 color="emerald"
+                                helpId="dashboard-stat-revenue"
                             />
                         ) : (
                             <KPICard
@@ -146,6 +150,7 @@ export default function DashboardPage() {
                                 isUp={true}
                                 icon={BookOpen}
                                 color="emerald"
+                                helpId="dashboard-stat-revenue"
                             />
                         )}
                     </div>
@@ -206,7 +211,7 @@ export default function DashboardPage() {
     );
 }
 
-function KPICard({ title, value, trend, isUp, icon: Icon, color }: any) {
+function KPICard({ title, value, trend, isUp, icon: Icon, color, helpId }: any) {
     const colors: any = {
         indigo: 'from-indigo-500/10 to-transparent border-indigo-500/20 text-indigo-400 bg-indigo-500/5',
         purple: 'from-purple-500/10 to-transparent border-purple-500/20 text-purple-400 bg-purple-500/5',
@@ -215,7 +220,10 @@ function KPICard({ title, value, trend, isUp, icon: Icon, color }: any) {
     };
 
     return (
-        <Card className={`relative overflow-hidden bg-zinc-900/60 border-zinc-800 rounded-2xl group transition-all hover:bg-zinc-900/80 hover:border-zinc-700/50 shadow-2xl ring-1 ring-white/5 h-[130px]`}>
+        <Card
+            className={`relative overflow-hidden bg-zinc-900/60 border-zinc-800 rounded-2xl group transition-all hover:bg-zinc-900/80 hover:border-zinc-700/50 shadow-2xl ring-1 ring-white/5 h-[130px]`}
+            data-help-id={helpId}
+        >
             {/* Dynamic Background Glow */}
             <div className={`absolute -right-6 -top-6 h-28 w-28 rounded-full bg-gradient-to-br ${colors[color]} blur-3xl opacity-10 group-hover:opacity-25 transition-all duration-700`} />
 
