@@ -62,15 +62,17 @@ export function MobileHeader({
                             </div>
                         )}
 
-                        {/* Title */}
-                        <motion.h1
-                            key={pageTitle}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            className="text-lg font-bold text-white truncate"
-                        >
-                            {pageTitle}
-                        </motion.h1>
+                        {/* Title Section */}
+                        <div className="flex flex-col min-w-0">
+                            <motion.span
+                                key={pageTitle}
+                                initial={{ opacity: 0, y: 5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest truncate"
+                            >
+                                {pageTitle}
+                            </motion.span>
+                        </div>
                     </div>
 
                     {/* Right: Actions */}
