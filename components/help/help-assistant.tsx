@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
     Sparkles, Search, X, MapPin, Bot, Lightbulb, PlayCircle,
-    ChevronRight, ChevronLeft, CheckCircle2
+    ChevronRight, ChevronLeft, CheckCircle2, FastForward
 } from "lucide-react";
 import { helpSections, HelpSection } from "@/lib/help-content";
 import { Mascot } from "@/components/shared/mascot";
@@ -53,6 +53,7 @@ export function HelpAssistant() {
             }, 400);
         } else {
             console.warn(`Element with data-help-id="${targetId}" not found.`);
+            // If target missing, still set null to avoid stale highlights
             setHighlightRect(null);
         }
     }, []);
@@ -62,7 +63,6 @@ export function HelpAssistant() {
         setIsTouring(true);
         setTourStep(0);
 
-        // Find first step with targetId
         const firstStepWithTarget = section.steps.find(s => s.targetId);
         if (firstStepWithTarget) {
             updateHighlight(firstStepWithTarget.targetId!);
@@ -116,12 +116,27 @@ export function HelpAssistant() {
         };
     }, [isTouring, activeSection, tourStep]);
 
-    const filteredSections = search
-        ? helpSections.filter(s =>
-            s.title.toLowerCase().includes(search.toLowerCase()) ||
-            s.steps.some(step => step.title.toLowerCase().includes(search.toLowerCase()) || step.text.toLowerCase().includes(search.toLowerCase()))
-        )
-        : helpSections;
+    const filteredSections = useMemo(() => {
+        return search
+            ? helpSections.filter(s =>
+                s.title.toLowerCase().includes(search.toLowerCase()) ||
+                s.steps.some(step => step.title.toLowerCase().includes(search.toLowerCase()) || step.text.toLowerCase().includes(search.toLowerCase()))
+            )
+            : helpSections;
+    }, [search]);
+
+    // Calculate spotlight CSS variables
+    const spotlightVars = useMemo(() => {
+        if (!highlightRect) return {};
+        const x = highlightRect.left + highlightRect.width / 2;
+        const y = highlightRect.top + highlightRect.height / 2;
+        const r = Math.max(highlightRect.width, highlightRect.height) / 2 + 15;
+        return {
+            '--x': `${x}px`,
+            '--y': `${y}px`,
+            '--r': `${r}px`
+        } as React.CSSProperties;
+    }, [highlightRect]);
 
     return (
         <>
@@ -262,7 +277,7 @@ export function HelpAssistant() {
                             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                             <span className="text-[10px] uppercase font-black text-zinc-500 tracking-wider">Edu-Bot Online</span>
                         </div>
-                        <span className="text-[10px] font-bold text-zinc-700">v1.2.0</span>
+                        <span className="text-[10px] font-bold text-zinc-700">v1.2.5</span>
                     </div>
                 </SheetContent>
             </Sheet>
@@ -271,93 +286,123 @@ export function HelpAssistant() {
             <AnimatePresence>
                 {isTouring && highlightRect && activeSection && (
                     <div className="fixed inset-0 z-[100] pointer-events-none">
-                        {/* Dim Backdrop */}
+                        {/* Premium Spotlight Backdrop */}
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-black/60 backdrop-blur-[2px] pointer-events-auto"
+                            className="absolute inset-0 bg-black/80 backdrop-blur-[1px] spotlight-mask pointer-events-auto cursor-crosshair"
+                            style={spotlightVars}
                             onClick={endTour}
                         />
 
-                        {/* Highlight Cutout (Simulated via box-shadow) */}
+                        {/* Highlight Border with Pulse */}
                         <motion.div
                             layoutId="tour-highlight"
-                            className="absolute rounded-2xl border-4 border-indigo-400 shadow-[0_0_0_9999px_rgba(0,0,0,0.6),0_0_30px_rgba(129,140,248,0.5)] z-10 transition-all duration-500 ease-in-out"
+                            className="absolute rounded-2xl border-[3px] border-indigo-400 z-10 animate-pulse-indigo shadow-[0_0_30px_rgba(129,140,248,0.4)] pointer-events-none"
                             style={{
-                                top: highlightRect.top - 8,
-                                left: highlightRect.left - 8,
-                                width: highlightRect.width + 16,
-                                height: highlightRect.height + 16,
+                                top: highlightRect.top - 12,
+                                left: highlightRect.left - 12,
+                                width: highlightRect.width + 24,
+                                height: highlightRect.height + 24,
                             }}
                         />
 
-                        {/* Tour Info Card */}
+                        {/* Tooltip Card */}
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="absolute z-20 pointer-events-auto flex flex-col items-center"
+                            className="absolute z-20 pointer-events-auto flex flex-col items-center max-w-[90vw] sm:max-w-none"
                             style={{
-                                // Position based on the highlighted element
-                                top: highlightRect.bottom + 20 > window.innerHeight - 200
-                                    ? highlightRect.top - 220
-                                    : highlightRect.bottom + 20,
-                                left: Math.max(20, Math.min(window.innerWidth - 300, highlightRect.left + highlightRect.width / 2 - 140)),
-                                width: 280
+                                top: highlightRect.bottom + 40 > window.innerHeight - 250
+                                    ? highlightRect.top - 280
+                                    : highlightRect.bottom + 40,
+                                left: Math.max(10, Math.min(window.innerWidth - 310, highlightRect.left + highlightRect.width / 2 - 150)),
+                                width: 300
                             }}
                         >
-                            <div className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-5 overflow-hidden">
-                                {/* Header */}
-                                <div className="flex items-center justify-between mb-3">
-                                    <div className="flex items-center gap-2">
-                                        <Mascot status="thinking" className="w-8 h-8" />
-                                        <div className="bg-indigo-500/10 text-indigo-400 text-[9px] font-black px-2 py-0.5 rounded-full border border-indigo-500/20 uppercase">
+                            <div className="w-full bg-zinc-900/90 backdrop-blur-xl border border-zinc-800/50 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_20px_rgba(99,102,241,0.1)] p-6 overflow-hidden relative group">
+                                {/* Top Glow */}
+                                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
+
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="relative">
+                                            <div className="absolute inset-0 bg-indigo-500/20 blur-lg rounded-full" />
+                                            <Mascot status="thinking" className="w-10 h-10 relative z-10" />
+                                        </div>
+                                        <div className="bg-indigo-500/10 text-indigo-400 text-[9px] font-black px-2.5 py-1 rounded-full border border-indigo-500/20 uppercase tracking-tighter">
                                             Шаг {tourStep + 1} из {activeSection.steps.length}
                                         </div>
                                     </div>
-                                    <button onClick={endTour} className="text-zinc-600 hover:text-white transition-colors">
+                                    <button onClick={endTour} className="text-zinc-600 hover:text-white transition-colors p-1">
                                         <X className="h-4 w-4" />
                                     </button>
                                 </div>
 
-                                {/* Content */}
-                                <h4 className="text-sm font-black text-white uppercase mb-1 tracking-tight">
-                                    {activeSection.steps[tourStep]?.title || activeSection.title}
-                                </h4>
-                                <p className="text-xs text-zinc-400 leading-relaxed mb-4">
-                                    {activeSection.steps[tourStep]?.text || "Посмотрите на выделенную область."}
-                                </p>
+                                <motion.div
+                                    key={tourStep}
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.3 }}
+                                >
+                                    <h4 className="text-sm font-black text-white uppercase mb-1.5 tracking-tight flex items-center gap-2">
+                                        {activeSection.steps[tourStep]?.title || activeSection.title}
+                                        <Sparkles className="h-3 w-3 text-amber-400" />
+                                    </h4>
+                                    <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+                                        {activeSection.steps[tourStep]?.text}
+                                    </p>
 
-                                {/* Actions */}
-                                <div className="flex items-center justify-between gap-2 pt-2">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={prevStep}
-                                        disabled={tourStep === 0}
-                                        className="h-8 text-[10px] font-bold uppercase tracking-widest text-zinc-500 hover:text-white disabled:opacity-0"
-                                    >
-                                        <ChevronLeft className="h-3 w-3 mr-1" /> Назад
-                                    </Button>
+                                    {activeSection.steps[tourStep]?.tip && (
+                                        <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3 mb-4 flex gap-2">
+                                            <Lightbulb className="h-3.5 w-3.5 text-emerald-500 flex-none mt-0.5" />
+                                            <p className="text-[10px] font-medium text-emerald-400 italic">
+                                                {activeSection.steps[tourStep].tip}
+                                            </p>
+                                        </div>
+                                    )}
+                                </motion.div>
+
+                                <div className="flex items-center justify-between gap-3 pt-2">
+                                    <div className="flex items-center gap-1">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={prevStep}
+                                            disabled={tourStep === 0}
+                                            className="h-9 w-9 text-zinc-500 hover:text-white hover:bg-zinc-800 disabled:opacity-0 rounded-xl"
+                                        >
+                                            <ChevronLeft className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={endTour}
+                                            className="h-9 text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:text-white hover:bg-zinc-800/50 rounded-xl px-3"
+                                        >
+                                            Пропустить
+                                        </Button>
+                                    </div>
 
                                     <Button
                                         variant="default"
                                         size="sm"
                                         onClick={nextStep}
-                                        className="h-8 text-[10px] font-black uppercase tracking-widest gap-1 bg-indigo-600 hover:bg-indigo-500 px-4 min-w-[100px]"
+                                        className="h-9 text-[11px] font-black uppercase tracking-widest gap-2 bg-indigo-600 hover:bg-indigo-500 px-5 min-w-[110px] rounded-xl shadow-lg shadow-indigo-600/20 active:scale-95 transition-all"
                                     >
                                         {tourStep === activeSection.steps.length - 1 ? (
-                                            <>Завершить <CheckCircle2 className="h-3 w-3" /></>
+                                            <>Готово <CheckCircle2 className="h-3.5 w-3.5" /></>
                                         ) : (
-                                            <>Далее <ChevronRight className="h-3 w-3" /></>
+                                            <>Далее <ChevronRight className="h-3.5 w-3.5" /></>
                                         )}
                                     </Button>
                                 </div>
                             </div>
 
                             {/* Arrow Indicator */}
-                            <div className={`w-4 h-4 bg-zinc-900 border-l border-t border-zinc-800 rotate-45 -mt-2 ${highlightRect.bottom + 20 > window.innerHeight - 200 ? 'mt-[178px] rotate-[225deg]' : ''}`} />
+                            <div className={`w-5 h-5 bg-zinc-900 border-l border-t border-zinc-800/50 rotate-45 -mt-2.5 relative z-10 ${highlightRect.bottom + 40 > window.innerHeight - 250 ? 'mt-[238px] rotate-[225deg]' : ''}`} />
                         </motion.div>
                     </div>
                 )}

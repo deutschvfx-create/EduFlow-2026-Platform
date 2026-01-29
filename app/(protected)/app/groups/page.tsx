@@ -68,12 +68,12 @@ export default function GroupsPage() {
     return (
         <ModuleGuard module="groups">
             <div className="space-y-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4" data-help-id="groups-header">
                     <div className="hidden laptop:block">
                         <h1 className="text-3xl font-bold tracking-tight text-white mb-1">Группы</h1>
                         <p className="text-zinc-400">Управление потоками, студентами и преподавателями</p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2" data-help-id="groups-create-btn">
                         <AddGroupModal />
                     </div>
                 </div>

@@ -2,6 +2,7 @@ export type HelpStep = {
     title: string;
     text: string;
     targetId?: string; // ID of the element to highlight for this specific step
+    tip?: string;      // Optional extra advice from Edu-Bot
 }
 
 export type HelpImage = {
@@ -28,17 +29,20 @@ export const helpSections: HelpSection[] = [
             {
                 title: "Боковое меню",
                 text: "Здесь находятся все основные модули системы. Используйте его для навигации.",
-                targetId: "mobile-nav-menu"
+                targetId: "mobile-nav-menu",
+                tip: "Нажмите на иконку меню, чтобы открыть список всех доступных модулей."
             },
             {
                 title: "Главный экран",
                 text: "Вернитесь на дашборд в любое время одной кнопкой.",
-                targetId: "mobile-nav-главная"
+                targetId: "mobile-nav-главная",
+                tip: "Дашборд — это ваше рабочее место №1."
             },
             {
                 title: "Edu-Bot",
                 text: "Я всегда здесь, чтобы помочь вам разобраться с функциями.",
-                targetId: "mobile-help-trigger"
+                targetId: "mobile-help-trigger",
+                tip: "Если вы заблудились, просто позовите меня!"
             }
         ]
     },
@@ -52,17 +56,20 @@ export const helpSections: HelpSection[] = [
             {
                 title: "Заголовок",
                 text: "Здесь отображается текущее состояние системы и быстрый поиск.",
-                targetId: "dashboard-header"
+                targetId: "dashboard-header",
+                tip: "Используйте поиск для нахождения студентов по имени или номеру."
             },
             {
                 title: "Статистика",
                 text: "Ключевые показатели вашей школы в реальном времени.",
-                targetId: "dashboard-stats"
+                targetId: "dashboard-stats",
+                tip: "Нажмите на карточку, чтобы увидеть детальную аналитику."
             },
             {
                 title: "Быстрые действия",
                 text: "Создавайте студентов, группы и учителей в один клик.",
-                targetId: "dashboard-actions"
+                targetId: "dashboard-actions",
+                tip: "Это самый быстрый способ начать работу с новыми данными."
             }
         ]
     },
@@ -76,17 +83,20 @@ export const helpSections: HelpSection[] = [
             {
                 title: "Список студентов",
                 text: "Здесь отображаются все студенты с их статусами.",
-                targetId: "students-header"
+                targetId: "students-header",
+                tip: "Вы можете фильтровать список по группам или статусу оплаты."
             },
             {
                 title: "Добавление",
                 text: "Нажмите сюда, чтобы зарегистрировать нового ученика.",
-                targetId: "students-add-btn"
+                targetId: "students-add-btn",
+                tip: "Заполните профиль полностью, чтобы система могла строить отчеты."
             },
             {
                 title: "QR Сканер",
                 text: "Быстрый поиск студента по его персональному коду.",
-                targetId: "students-qr-btn"
+                targetId: "students-qr-btn",
+                tip: "Это очень удобно для отметки посещаемости на входе."
             }
         ],
         images: [
@@ -103,12 +113,20 @@ export const helpSections: HelpSection[] = [
             {
                 title: "Штат сотрудников",
                 text: "Управляйте ролями и доступом ваших учителей.",
-                targetId: "teachers-header"
+                targetId: "teachers-header",
+                tip: "Здесь можно назначить куратора для конкретной учебной группы."
             },
             {
                 title: "Приглашение",
                 text: "Отправьте ссылку на регистрацию новому преподавателю.",
-                targetId: "teachers-invite-btn"
+                targetId: "teachers-invite-btn",
+                tip: "Преподаватель получит письмо с данными для входа."
+            },
+            {
+                title: "Контроль доступа",
+                text: "Настройте права для каждого сотрудника системы.",
+                targetId: "teachers-control-mode",
+                tip: "Ограничьте доступ к финансовым отчетам для рядовых учителей."
             }
         ],
         images: [
@@ -142,9 +160,21 @@ export const helpSections: HelpSection[] = [
         id: "groups",
         title: "Группы",
         route: "/app/groups",
+        highlightId: "groups-header",
+        highlightText: "Управление группами",
         steps: [
-            { title: "Формирование", text: "Создайте учебную группу и назначьте куратора." },
-            { title: "Наполнение", text: "Добавляйте студентов в группу через их профили или массово." }
+            {
+                title: "Все группы",
+                text: "Список ваших учебных классов и потоков.",
+                targetId: "groups-header",
+                tip: "Группы — это основа расписания и журнала оценок."
+            },
+            {
+                title: "Создание",
+                text: "Сформируйте новую группу и выберите курс.",
+                targetId: "groups-create-btn",
+                tip: "Сначала создайте 'Предмет' в соответствующем модуле."
+            }
         ]
     },
     {
@@ -212,12 +242,21 @@ export const helpSections: HelpSection[] = [
         id: "settings",
         title: "Настройки",
         route: "/app/settings",
-        highlightId: "settings-toggle-group",
-        highlightText: "Переключатели модулей",
+        highlightId: "settings-header",
+        highlightText: "Конфигурация",
         steps: [
-            { title: "Модульность", text: "Включайте только то, что нужно вашей организации." },
-            { title: "Шаблоны", text: "Используйте «Университет» или «Языковой курс» для быстрой настройки." },
-            { title: "Зависимости", text: "Отключение родительского модуля (например, Группы) отключит зависимые (Расписание)." }
+            {
+                title: "Модульность",
+                text: "Включайте только то, что нужно вашей организации.",
+                targetId: "settings-toggle-group",
+                tip: "Отключайте 'Оценки' или 'Факультеты', если они вам не нужны."
+            },
+            {
+                title: "Шаблоны",
+                text: "Используйте готовые пресеты для быстрой настройки под ваш бизнес.",
+                targetId: "settings-templates",
+                tip: "Шаблон 'Языковая школа' идеально подходит для малых курсов."
+            }
         ],
         images: [
             { caption: "Переключатели", src: "/help/settings-toggle.png" }

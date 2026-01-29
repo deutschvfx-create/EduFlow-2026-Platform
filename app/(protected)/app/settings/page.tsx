@@ -190,7 +190,7 @@ export default function SettingsPage() {
                 </div>
             )}
 
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pt-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pt-4" data-help-id="settings-header">
                 <div className="hidden laptop:block">
                     <h1 className="text-2xl font-bold tracking-tight text-white">Настройки</h1>
                     <p className="text-sm text-zinc-400">Управление модулями</p>
@@ -219,7 +219,7 @@ export default function SettingsPage() {
                             <p className="text-sm text-zinc-500 mt-0.5">Применить готовый шаблон конфигурации</p>
                         </div>
                     </div>
-                    <div className="flex flex-wrap gap-3">
+                    <div className="flex flex-wrap gap-3" data-help-id="settings-templates">
                         <Button
                             onClick={() => applyPreset('UNIVERSITY')}
                             size="lg"

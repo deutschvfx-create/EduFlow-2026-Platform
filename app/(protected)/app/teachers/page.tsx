@@ -184,6 +184,7 @@ export default function TeachersPage() {
                             size="sm"
                             onClick={toggleControlMode}
                             className={`mr-2 gap-2 ${controlMode ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-white'}`}
+                            data-help-id="teachers-control-mode"
                         >
                             <ShieldCheck className="h-4 w-4" />
                             {controlMode ? "Контроль" : "Обычный"}
