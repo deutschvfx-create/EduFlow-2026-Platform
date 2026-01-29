@@ -57,7 +57,9 @@ export function MobileHeader({
                                 <ArrowLeft className="h-5 w-5" />
                             </Button>
                         ) : (
-                            <MobileDrawer />
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shrink-0">
+                                <span className="text-white font-black text-sm">E</span>
+                            </div>
                         )}
 
                         {/* Title */}
