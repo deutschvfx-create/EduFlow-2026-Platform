@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { MobileHeader } from "@/components/navigation/mobile-header";
 import { MobileNavBar } from "@/components/navigation/mobile-nav-bar";
 import { SwipeableTabs } from "@/components/navigation/swipeable-tabs";
+import { MobileDrawer } from "@/components/navigation/mobile-drawer";
 
 interface MobileLayoutProps {
     children: React.ReactNode;
@@ -17,6 +19,8 @@ const mainTabs = [
 ];
 
 export function MobileLayout({ children }: MobileLayoutProps) {
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
     return (
         <div className="min-h-screen bg-zinc-950 flex flex-col lg:hidden">
             {/* Mobile Header */}
@@ -34,7 +38,13 @@ export function MobileLayout({ children }: MobileLayoutProps) {
             </main>
 
             {/* Bottom Navigation */}
-            <MobileNavBar />
+            <MobileNavBar onOpenMenu={() => setIsDrawerOpen(true)} />
+
+            {/* Global Drawer (Rendered at top level to avoid clipping) */}
+            <MobileDrawer
+                open={isDrawerOpen}
+                onOpenChange={setIsDrawerOpen}
+            />
         </div>
     );
 }

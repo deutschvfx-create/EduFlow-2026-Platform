@@ -54,10 +54,18 @@ const allMenuItems = [
 
 interface MobileDrawerProps {
     trigger?: React.ReactNode;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
 }
 
-export function MobileDrawer({ trigger }: MobileDrawerProps) {
-    const [isOpen, setIsOpen] = useState(false);
+export function MobileDrawer({ trigger, open: controlledOpen, onOpenChange }: MobileDrawerProps) {
+    const [internalOpen, setInternalOpen] = useState(false);
+    const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
+    const setIsOpen = (value: boolean) => {
+        if (onOpenChange) onOpenChange(value);
+        setInternalOpen(value);
+    };
+
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const pathname = usePathname();
@@ -77,7 +85,7 @@ export function MobileDrawer({ trigger }: MobileDrawerProps) {
         <>
             {/* Trigger button */}
             {trigger ? (
-                <div onClick={() => setIsOpen(true)} className="w-full h-full flex items-center justify-center">{trigger}</div>
+                <div onClick={() => setIsOpen(true)} className="cursor-pointer">{trigger}</div>
             ) : (
                 <Button
                     variant="ghost"
@@ -241,8 +249,8 @@ function DrawerItem({ item, pathname, onClose }: { item: any, pathname: string, 
             href={item.href}
             onClick={onClose}
             className={`flex items-center justify-between group px-3 py-2.5 rounded-xl transition-all ${isActive
-                    ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-lg shadow-indigo-500/5'
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900 border border-transparent'
+                ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-lg shadow-indigo-500/5'
+                : 'text-zinc-400 hover:text-white hover:bg-zinc-900 border border-transparent'
                 }`}
         >
             <div className="flex items-center gap-3">

@@ -12,7 +12,6 @@ import {
     Settings
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { MobileDrawer } from "./mobile-drawer";
 
 const navItems = [
     {
@@ -42,7 +41,11 @@ const navItems = [
     },
 ];
 
-export function MobileNavBar() {
+interface MobileNavBarProps {
+    onOpenMenu?: () => void;
+}
+
+export function MobileNavBar({ onOpenMenu }: MobileNavBarProps) {
     const pathname = usePathname();
 
     const renderItem = (item: any) => {
@@ -50,7 +53,14 @@ export function MobileNavBar() {
         const Icon = item.icon;
 
         const content = (
-            <div className={`relative flex flex-col items-center justify-center min-w-[56px] py-1.5 px-2 rounded-xl transition-all duration-200 active:scale-95 cursor-pointer ${item.isDrawer ? 'text-zinc-500' : ''}`}>
+            <div
+                onClick={() => {
+                    if (item.isDrawer && onOpenMenu) {
+                        onOpenMenu();
+                    }
+                }}
+                className={`relative flex flex-col items-center justify-center min-w-[56px] py-1.5 px-2 rounded-xl transition-all duration-200 active:scale-95 cursor-pointer ${item.isDrawer ? 'text-zinc-500' : ''}`}
+            >
                 {/* Active indicator */}
                 {isActive && (
                     <motion.div
@@ -93,10 +103,9 @@ export function MobileNavBar() {
 
         if (item.isDrawer) {
             return (
-                <MobileDrawer
-                    key="mobile-menu-drawer"
-                    trigger={content}
-                />
+                <div key="mobile-menu-drawer">
+                    {content}
+                </div>
             );
         }
 
