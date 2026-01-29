@@ -20,9 +20,21 @@ export type HelpSection = {
 
 export const helpSections: HelpSection[] = [
     {
+        id: "general",
+        title: "Основы интерфейса",
+        route: "all",
+        steps: [
+            { title: "Боковое меню", text: "Здесь находятся все основные модули системы. Используйте его для навигации." },
+            { title: "Поиск", text: "Вверху каждой страницы есть поиск для быстрого нахождения данных." },
+            { title: "Edu-Bot", text: "Я всегда здесь, чтобы помочь вам разобраться с функциями." }
+        ]
+    },
+    {
         id: "dashboard",
         title: "Дашборд",
         route: "/app/dashboard",
+        highlightId: "dashboard-stats",
+        highlightText: "Важные показатели",
         steps: [
             { title: "Обзор", text: "Здесь вы видите ключевые показатели вашей школы/университета." },
             { title: "Статистика", text: "Графики показывают динамику посещаемости и финансов." }

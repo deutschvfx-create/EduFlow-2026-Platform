@@ -104,7 +104,7 @@ export default function DashboardPage() {
                 {/* Left Area (70%) */}
                 <div className="laptop:col-span-8 space-y-4 laptop:space-y-8">
                     {/* Stats Grid - 2 columns on mobile, 3 on tablet, 4 on laptop+ */}
-                    <div className="grid grid-cols-2 tablet:grid-cols-3 laptop:grid-cols-4 gap-3 laptop:gap-4">
+                    <div className="grid grid-cols-2 tablet:grid-cols-3 laptop:grid-cols-4 gap-3 laptop:gap-4" data-help-id="dashboard-stats">
                         <KPICard
                             title="Студентов"
                             value={stats.students}

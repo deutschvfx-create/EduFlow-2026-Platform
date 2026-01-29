@@ -9,7 +9,8 @@ import {
     MessageSquare,
     Menu,
     LayoutDashboard,
-    Settings
+    Settings,
+    Wand2
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -35,9 +36,9 @@ const navItems = [
         icon: Calendar
     },
     {
-        label: "Чаты",
-        href: "/app/chat",
-        icon: MessageSquare
+        label: "Гайд",
+        isHelp: true,
+        icon: Wand2
     },
 ];
 
@@ -57,9 +58,11 @@ export function MobileNavBar({ onOpenMenu }: MobileNavBarProps) {
                 onClick={() => {
                     if (item.isDrawer && onOpenMenu) {
                         onOpenMenu();
+                    } else if (item.isHelp) {
+                        window.dispatchEvent(new CustomEvent('open-help'));
                     }
                 }}
-                className={`relative flex flex-col items-center justify-center min-w-[56px] py-1.5 px-2 rounded-xl transition-all duration-200 active:scale-95 cursor-pointer ${item.isDrawer ? 'text-zinc-500' : ''}`}
+                className={`relative flex flex-col items-center justify-center min-w-[56px] py-1.5 px-2 rounded-xl transition-all duration-200 active:scale-95 cursor-pointer ${(item.isDrawer || item.isHelp) ? 'text-zinc-500' : ''}`}
             >
                 {/* Active indicator */}
                 {isActive && (
@@ -101,9 +104,9 @@ export function MobileNavBar({ onOpenMenu }: MobileNavBarProps) {
             </div>
         );
 
-        if (item.isDrawer) {
+        if (item.isDrawer || item.isHelp) {
             return (
-                <div key="mobile-menu-drawer">
+                <div key={item.isDrawer ? "mobile-menu-drawer" : "mobile-help-trigger"}>
                     {content}
                 </div>
             );
