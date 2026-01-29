@@ -179,19 +179,19 @@ export function OnboardingFlow() {
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-500/5 rounded-full blur-[120px] -z-10" />
 
             {/* Mascot Section */}
-            <div className="mb-12">
-                <Mascot status={mascotStatus} className="w-48 h-48" />
+            <div className="mb-6 md:mb-12">
+                <Mascot status={mascotStatus} className="w-32 h-32 md:w-48 md:h-48" />
             </div>
 
-            <main className="w-full max-w-2xl bg-zinc-900/40 border border-white/5 backdrop-blur-2xl rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden">
+            <main className="w-full max-w-2xl bg-zinc-900/40 border border-white/5 backdrop-blur-2xl rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
 
                 <AnimatePresence mode="wait">
                     {step === 0 && (
-                        <motion.div key="step0" {...stepTransition} className="space-y-8 text-center">
-                            <div className="space-y-4">
-                                <h2 className="text-4xl font-black text-white tracking-tight">{t.welcome}</h2>
-                                <p className="text-zinc-500 font-medium h-12">{t.welcome_sub}</p>
+                        <motion.div key="step0" {...stepTransition} className="space-y-6 md:space-y-8 text-center">
+                            <div className="space-y-3 md:space-y-4">
+                                <h2 className="text-2xl md:text-4xl font-black text-white tracking-tight">{t.welcome}</h2>
+                                <p className="text-zinc-500 font-medium h-10 md:h-12 text-sm md:text-base">{t.welcome_sub}</p>
                             </div>
 
                             <div className="grid grid-cols-2 laptop:grid-cols-4 gap-4">
@@ -204,13 +204,13 @@ export function OnboardingFlow() {
                                     <button
                                         key={lang.code}
                                         onClick={() => setData(d => ({ ...d, language: lang.code }))}
-                                        className={`p-6 rounded-3xl border transition-all duration-300 flex flex-col items-center gap-3 group
+                                        className={`p-4 md:p-6 rounded-2xl md:rounded-3xl border transition-all duration-300 flex flex-col items-center gap-2 md:gap-3 group
                                             ${data.language === lang.code
                                                 ? 'bg-indigo-600 border-indigo-500 shadow-lg shadow-indigo-500/20 text-white'
                                                 : 'bg-zinc-950/50 border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'}`}
                                     >
-                                        <span className="text-3xl grayscale group-hover:grayscale-0 transition-all">{lang.icon}</span>
-                                        <span className="text-sm font-black uppercase tracking-widest">{lang.label}</span>
+                                        <span className="text-2xl md:text-3xl grayscale group-hover:grayscale-0 transition-all">{lang.icon}</span>
+                                        <span className="text-xs md:text-sm font-black uppercase tracking-widest">{lang.label}</span>
                                     </button>
                                 ))}
                             </div>
@@ -218,7 +218,7 @@ export function OnboardingFlow() {
                             <Button
                                 size="lg"
                                 onClick={nextStep}
-                                className="w-full h-16 rounded-2xl bg-white text-zinc-950 hover:bg-zinc-200 transition-all font-black uppercase tracking-widest gap-3 text-lg"
+                                className="w-full h-14 md:h-16 rounded-xl md:rounded-2xl bg-white text-zinc-950 hover:bg-zinc-200 transition-all font-black uppercase tracking-widest gap-3 text-base md:text-lg"
                             >
                                 {t.start} <ArrowRight className="h-5 w-5" />
                             </Button>
@@ -226,14 +226,14 @@ export function OnboardingFlow() {
                     )}
 
                     {step === 1 && (
-                        <motion.div key="step1" {...stepTransition} className="space-y-8 text-center">
+                        <motion.div key="step1" {...stepTransition} className="space-y-6 md:space-y-8 text-center">
                             <div className="space-y-2">
-                                <h2 className="text-3xl font-black text-white uppercase tracking-tight">{t.ask_name}</h2>
-                                <p className="text-zinc-500 text-sm font-bold uppercase tracking-widest">{TRANSLATIONS[data.language].choose_lang}</p>
+                                <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">{t.ask_name}</h2>
+                                <p className="text-zinc-500 text-[10px] md:text-sm font-bold uppercase tracking-widest">{TRANSLATIONS[data.language].choose_lang}</p>
                             </div>
 
                             <div className="relative max-w-md mx-auto">
-                                <User className={`absolute left-5 top-1/2 -translate-y-1/2 h-6 w-6 transition-colors ${data.name ? 'text-indigo-400' : 'text-zinc-700'}`} />
+                                <User className={`absolute left-4 md:left-5 top-1/2 -translate-y-1/2 h-5 md:h-6 w-5 md:w-6 transition-colors ${data.name ? 'text-indigo-400' : 'text-zinc-700'}`} />
                                 <Input
                                     value={data.name}
                                     onChange={(e) => {
@@ -242,7 +242,7 @@ export function OnboardingFlow() {
                                     }}
                                     onBlur={() => setMascotStatus("idle")}
                                     placeholder={t.placeholder_name}
-                                    className="h-20 pl-16 pr-8 bg-zinc-950/50 border-zinc-800 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 rounded-[1.5rem] text-xl font-bold text-white placeholder:text-zinc-800"
+                                    className="h-14 md:h-20 pl-12 md:pl-16 pr-6 md:pr-8 bg-zinc-950/50 border-zinc-800 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 rounded-xl md:rounded-[1.5rem] text-lg md:text-xl font-bold text-white placeholder:text-zinc-800"
                                 />
                             </div>
 
@@ -250,7 +250,7 @@ export function OnboardingFlow() {
                                 size="lg"
                                 disabled={data.name.length < 2}
                                 onClick={nextStep}
-                                className="w-full h-16 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white transition-all font-black uppercase tracking-widest gap-3 text-lg shadow-xl shadow-indigo-500/20"
+                                className="w-full h-14 md:h-16 rounded-xl md:rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white transition-all font-black uppercase tracking-widest gap-3 text-base md:text-lg shadow-xl shadow-indigo-500/20"
                             >
                                 {t.next} <ArrowRight className="h-5 w-5" />
                             </Button>
@@ -258,22 +258,22 @@ export function OnboardingFlow() {
                     )}
 
                     {step === 2 && (
-                        <motion.div key="step2" {...stepTransition} className="space-y-8 text-center">
+                        <motion.div key="step2" {...stepTransition} className="space-y-6 md:space-y-8 text-center">
                             <div className="space-y-2">
-                                <h2 className="text-3xl font-black text-white uppercase tracking-tight">
+                                <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">
                                     {t.nice_to_meet.replace('{name}', data.name)}
                                 </h2>
-                                <p className="text-zinc-500 text-sm font-bold uppercase tracking-widest">{t.ask_age}</p>
+                                <p className="text-zinc-500 text-[10px] md:text-sm font-bold uppercase tracking-widest">{t.ask_age}</p>
                             </div>
 
                             <div className="relative max-w-[280px] mx-auto">
-                                <Calendar className={`absolute left-5 top-1/2 -translate-y-1/2 h-6 w-6 transition-colors ${data.birthDate?.length === 10 ? 'text-emerald-400' : 'text-zinc-700'}`} />
+                                <Calendar className={`absolute left-4 md:left-5 top-1/2 -translate-y-1/2 h-5 md:h-6 w-5 md:w-6 transition-colors ${data.birthDate?.length === 10 ? 'text-emerald-400' : 'text-zinc-700'}`} />
                                 <Input
                                     value={data.birthDate}
                                     onChange={(e) => handleDateChange(e.target.value)}
                                     onBlur={() => setMascotStatus("idle")}
                                     placeholder="DD MM YYYY"
-                                    className="h-20 pl-16 pr-8 bg-zinc-950/50 border-zinc-800 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-[1.5rem] text-center text-3xl font-black tracking-[0.1em] text-white placeholder:text-zinc-800"
+                                    className="h-14 md:h-20 pl-12 md:pl-16 pr-6 md:pr-8 bg-zinc-950/50 border-zinc-800 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl md:rounded-[1.5rem] text-center text-xl md:text-3xl font-black tracking-[0.1em] text-white placeholder:text-zinc-800"
                                 />
                             </div>
 
@@ -281,7 +281,7 @@ export function OnboardingFlow() {
                                 size="lg"
                                 disabled={!data.birthDate || data.birthDate.length < 10}
                                 onClick={nextStep}
-                                className="w-full h-16 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white transition-all font-black uppercase tracking-widest gap-3 text-lg shadow-xl shadow-emerald-500/20"
+                                className="w-full h-14 md:h-16 rounded-xl md:rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white transition-all font-black uppercase tracking-widest gap-3 text-base md:text-lg shadow-xl shadow-emerald-500/20"
                             >
                                 {t.next} <ArrowRight className="h-5 w-5" />
                             </Button>
@@ -289,10 +289,10 @@ export function OnboardingFlow() {
                     )}
 
                     {step === 3 && (
-                        <motion.div key="step3" {...stepTransition} className="space-y-10">
+                        <motion.div key="step3" {...stepTransition} className="space-y-6 md:space-y-10">
                             <div className="text-center space-y-2">
-                                <h2 className="text-3xl font-black text-white uppercase tracking-tight">{t.ask_role}</h2>
-                                <p className="text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em]">Это поможет нам персонализировать ваш опыт</p>
+                                <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">{t.ask_role}</h2>
+                                <p className="text-zinc-600 text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em]">Это поможет нам персонализировать ваш опыт</p>
                             </div>
 
                             <div className="grid gap-4">
@@ -327,17 +327,17 @@ export function OnboardingFlow() {
                                         onClick={() => handleRoleSelect(role.id)}
                                         onMouseEnter={() => setMascotStatus("thinking")}
                                         onMouseLeave={() => setMascotStatus("idle")}
-                                        className="group relative flex items-center p-6 rounded-3xl bg-zinc-950/50 border border-zinc-800 hover:border-white/20 transition-all duration-300 text-left overflow-hidden"
+                                        className="group relative flex items-center p-4 md:p-6 rounded-2xl md:rounded-3xl bg-zinc-950/50 border border-zinc-800 hover:border-white/20 transition-all duration-300 text-left overflow-hidden"
                                     >
                                         <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        <div className={`p-4 rounded-2xl bg-zinc-900 border border-zinc-800 transition-colors duration-300 ${role.bg} mr-6`}>
-                                            <role.icon className={`h-8 w-8 transition-colors ${role.color} group-hover:text-white`} />
+                                        <div className={`p-3 md:p-4 rounded-xl md:rounded-2xl bg-zinc-900 border border-zinc-800 transition-colors duration-300 ${role.bg} mr-4 md:mr-6`}>
+                                            <role.icon className={`h-6 md:h-8 w-6 md:w-8 transition-colors ${role.color} group-hover:text-white`} />
                                         </div>
-                                        <div className="flex-1 space-y-1">
-                                            <h3 className="text-lg font-black text-white group-hover:text-white transition-colors uppercase tracking-tight">{role.label}</h3>
-                                            <p className="text-xs text-zinc-500 font-medium group-hover:text-zinc-400 transition-colors leading-relaxed line-clamp-1">{role.desc}</p>
+                                        <div className="flex-1 space-y-0.5 md:space-y-1">
+                                            <h3 className="text-base md:text-lg font-black text-white group-hover:text-white transition-colors uppercase tracking-tight">{role.label}</h3>
+                                            <p className="text-[10px] md:text-xs text-zinc-500 font-medium group-hover:text-zinc-400 transition-colors leading-relaxed line-clamp-1">{role.desc}</p>
                                         </div>
-                                        <ArrowRight className="h-5 w-5 text-zinc-800 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                                        <ArrowRight className="h-4 md:h-5 w-4 md:w-5 text-zinc-800 group-hover:text-white group-hover:translate-x-1 transition-all" />
                                     </button>
                                 ))}
                             </div>
@@ -346,9 +346,9 @@ export function OnboardingFlow() {
                 </AnimatePresence>
             </main>
 
-            <footer className="mt-12 flex items-center gap-6 text-zinc-700 font-black uppercase text-[10px] tracking-[0.2em]">
+            <footer className="mt-8 md:mt-12 flex items-center gap-4 md:gap-6 text-zinc-700 font-black uppercase text-[8px] md:text-[10px] tracking-[0.2em]">
                 <div className="flex items-center gap-2">
-                    <Sparkles className="h-3 w-3" /> EduFlow Core v2.0
+                    <Sparkles className="h-2.5 md:h-3 w-2.5 md:w-3" /> EduFlow Core v2.0
                 </div>
                 <div className="h-3 w-[1px] bg-zinc-800" />
                 <button onClick={() => router.push('/login')} className="hover:text-zinc-500 underline underline-offset-4">Я уже зарегистрирован</button>
