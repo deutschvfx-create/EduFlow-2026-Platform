@@ -143,11 +143,32 @@ export function HelpAssistant() {
     }, [pathname, open]);
 
     // Global toggle listener
+    // Global toggle listener & Hardware Back Button
     useEffect(() => {
         const handleOpenHelp = () => setOpen(true);
         window.addEventListener('open-help', handleOpenHelp);
+
         return () => window.removeEventListener('open-help', handleOpenHelp);
     }, []);
+
+    // Handle Back Button to Close Sheet
+    useEffect(() => {
+        if (open) {
+            // Push state when opened
+            window.history.pushState({ helpOpen: true }, '');
+
+            const handlePopState = (event: PopStateEvent) => {
+                // If user presses back, close the sheet
+                setOpen(false);
+            };
+
+            window.addEventListener('popstate', handlePopState);
+            return () => {
+                window.removeEventListener('popstate', handlePopState);
+                // Clean up state if needed, though browser handles pop
+            };
+        }
+    }, [open]);
 
     const updateHighlight = useCallback((targetId: string) => {
         const el = document.querySelector(`[data-help-id="${targetId}"]`);
@@ -266,7 +287,7 @@ export function HelpAssistant() {
             <Sheet open={open} onOpenChange={setOpen}>
                 <SheetContent
                     side="right"
-                    className="w-full sm:w-[540px] bg-zinc-950/98 backdrop-blur-2xl border-l border-zinc-900 text-zinc-100 p-0 flex flex-col z-50 md:rounded-l-3xl shadow-2xl"
+                    className="w-[85vw] sm:w-[540px] bg-zinc-950/98 backdrop-blur-2xl border-l border-zinc-900 text-zinc-100 p-0 flex flex-col z-50 md:rounded-l-3xl shadow-2xl h-full"
                 >
                     <div className="absolute top-4 right-4 z-20">
                         <Button variant="ghost" size="icon" onClick={() => setOpen(false)} className="rounded-full bg-zinc-900/50 hover:bg-zinc-800 transition-colors h-8 w-8">
@@ -274,14 +295,14 @@ export function HelpAssistant() {
                         </Button>
                     </div>
 
-                    <SheetHeader className="p-6 md:p-8 border-b border-zinc-900/50 bg-zinc-950/50 relative overflow-hidden">
+                    <SheetHeader className="p-4 md:p-8 border-b border-zinc-900/50 bg-zinc-950/50 relative overflow-hidden flex-none">
                         {/* Background Decoration */}
                         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-[120px] rounded-full -mr-32 -mt-32" />
 
-                        <div className="flex items-center gap-4 md:gap-6 mb-6 relative z-10">
-                            <div className="relative w-16 h-16 md:w-20 md:h-20 flex-none group">
+                        <div className="flex items-center gap-3 md:gap-6 mb-4 md:mb-6 relative z-10">
+                            <div className="relative w-12 h-12 md:w-20 md:h-20 flex-none group">
                                 <div className={`absolute inset-0 blur-2xl rounded-full transition-all duration-500 ${hasNewFeatures ? 'bg-indigo-500/40 animate-discovery-glow' : 'bg-indigo-500/20 group-hover:bg-indigo-500/30'}`} />
-                                <Mascot status={open ? "thinking" : (hasNewFeatures ? "surprised" : "idle")} className="w-full h-full relative z-10" />
+                                <Mascot status={open ? "thinking" : (hasNewFeatures ? "surprised" : "idle")} className="w-12 h-12 md:w-full md:h-full relative z-10" />
                                 {hasNewFeatures && (
                                     <div className="absolute -top-1 -right-1 w-5 h-5 bg-indigo-500 rounded-full border-2 border-zinc-950 flex items-center justify-center animate-bounce z-20">
                                         <Sparkles className="h-3 w-3 text-white" />
