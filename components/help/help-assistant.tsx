@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
+// import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
     Sparkles, Search, X, MapPin, Bot, Lightbulb, PlayCircle,
@@ -333,8 +333,8 @@ export function HelpAssistant() {
                         </div>
                     </SheetHeader>
 
-                    <ScrollArea className="flex-1 p-4 md:p-6">
-                        <div className="space-y-6">
+                    <div className="flex-1 overflow-y-auto p-4 md:p-6 scroll-smooth">
+                        <div className="space-y-6 pb-20">
                             {/* CURRENT PAGE CONTEXT */}
                             {!search && activeSection && (
                                 <motion.div
@@ -418,7 +418,7 @@ export function HelpAssistant() {
                                 )}
                             </div>
                         </div>
-                    </ScrollArea>
+                    </div>
 
                     {/* Bottom Status */}
                     <div className="p-4 border-t border-zinc-900/50 bg-zinc-950 flex items-center justify-between">
