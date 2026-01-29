@@ -19,6 +19,7 @@ export type HelpSection = {
     images?: HelpImage[];
     highlightId?: string; // Main element to highlight for this section (Start button target)
     highlightText?: string;
+    moduleKey?: string;
 }
 
 export const helpSections: HelpSection[] = [
@@ -98,6 +99,7 @@ export const helpSections: HelpSection[] = [
         route: "/app/students",
         highlightId: "students-header",
         highlightText: "Обзор модуля",
+        moduleKey: "students",
         steps: [
             {
                 title: "Список студентов",
@@ -128,6 +130,7 @@ export const helpSections: HelpSection[] = [
         route: "/app/teachers",
         highlightId: "teachers-header",
         highlightText: "Обзор модуля",
+        moduleKey: "teachers",
         steps: [
             {
                 title: "Штат сотрудников",
@@ -159,6 +162,7 @@ export const helpSections: HelpSection[] = [
         route: "/app/faculties",
         highlightId: "faculties-header",
         highlightText: "Обзор факультетов",
+        moduleKey: "faculties",
         steps: [
             {
                 title: "Учебные направления",
@@ -181,6 +185,7 @@ export const helpSections: HelpSection[] = [
         id: "departments",
         title: "Кафедры",
         route: "/app/departments",
+        moduleKey: "departments",
         steps: [
             { title: "Структура", text: "Кафедры привязаны к факультетам. В настройках они зависят от модуля «Факультеты»." },
             { title: "Создание", text: "Укажите название и выберите родительский факультет." }
@@ -192,6 +197,7 @@ export const helpSections: HelpSection[] = [
         route: "/app/groups",
         highlightId: "groups-header",
         highlightText: "Управление группами",
+        moduleKey: "groups",
         steps: [
             {
                 title: "Все группы",
@@ -211,6 +217,7 @@ export const helpSections: HelpSection[] = [
         id: "courses",
         title: "Предметы",
         route: "/app/courses",
+        moduleKey: "courses",
         steps: [
             { title: "Дисциплины", text: "Создайте предметы, которые будут в расписании." },
             { title: "Привязка", text: "Назначьте предметы конкретным группам." }
@@ -220,6 +227,7 @@ export const helpSections: HelpSection[] = [
         id: "schedule",
         title: "Расписание",
         route: "/app/schedule",
+        moduleKey: "schedule",
         steps: [
             { title: "Урок", text: "Выберите день, время, преподавателя и аудиторию." },
             { title: "Зависимости", text: "Требует наличия Групп и Предметов." }
@@ -229,6 +237,7 @@ export const helpSections: HelpSection[] = [
         id: "attendance",
         title: "Посещаемость",
         route: "/app/attendance",
+        moduleKey: "attendance",
         steps: [
             { title: "Отметка", text: "Отмечайте присутствие студентов на занятиях." },
             { title: "Экспорт", text: "Выгружайте отчеты о посещаемости." }
@@ -238,6 +247,7 @@ export const helpSections: HelpSection[] = [
         id: "grades",
         title: "Оценки",
         route: "/app/grades",
+        moduleKey: "grades",
         steps: [
             { title: "Журнал", text: "Выставляйте оценки за уроки, домашние задания и экзамены." },
             { title: "Настройки", text: "Этот модуль можно отключить в настройках, если оценки не нужны." }
@@ -247,6 +257,7 @@ export const helpSections: HelpSection[] = [
         id: "announcements",
         title: "Объявления",
         route: "/app/announcements",
+        moduleKey: "announcements",
         steps: [
             { title: "Рассылка", text: "Создавайте новости для всех студентов или преподавателей." },
             { title: "Закрепление", text: "Важные объявления можно закрепить вверху списка." }
@@ -256,16 +267,9 @@ export const helpSections: HelpSection[] = [
         id: "chat",
         title: "Чаты",
         route: "/app/chat",
+        moduleKey: "chat",
         steps: [
             { title: "Общение", text: "Создавайте беседы с группами или личные чаты." }
-        ]
-    },
-    {
-        id: "reports",
-        title: "Отчёты",
-        route: "/app/reports",
-        steps: [
-            { title: "KPI", text: "Смотрите сводную аналитику по успеваемости и посещаемости." }
         ]
     },
     {
@@ -298,6 +302,7 @@ export const helpSections: HelpSection[] = [
         route: "/app/reports",
         highlightId: "reports-header",
         highlightText: "Начать обзор",
+        moduleKey: "reports",
         steps: [
             {
                 title: "Аналитика",

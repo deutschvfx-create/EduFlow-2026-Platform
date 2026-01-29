@@ -165,11 +165,13 @@ export default function SettingsPage() {
                         */}
                     </div>
                 </div>
-                <Switch
-                    checked={modules[mKey]}
-                    onCheckedChange={() => handleToggle(mKey)}
-                    className="scale-90"
-                />
+                <div className="flex items-center" data-help-id={`module-toggle-${mKey}`}>
+                    <Switch
+                        checked={modules[mKey]}
+                        onCheckedChange={() => handleToggle(mKey)}
+                        className="scale-90"
+                    />
+                </div>
             </div>
         );
     };

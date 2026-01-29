@@ -13,10 +13,15 @@ import {
 } from "lucide-react";
 import { helpSections, HelpSection } from "@/lib/help-content";
 import { Mascot } from "@/components/shared/mascot";
+import { useModules } from "@/hooks/use-modules";
+import { ModuleKey } from "@/lib/config/modules";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from 'framer-motion';
 
 export function HelpAssistant() {
     const pathname = usePathname();
+    const router = useRouter(); // [SMART NAV]
+    const { modules } = useModules(); // [SMART NAV]
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState("");
     const [activeSection, setActiveSection] = useState<HelpSection | null>(null);
@@ -34,6 +39,39 @@ export function HelpAssistant() {
     // Voice / TTS State
     const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
+
+    // Smart Navigation State
+    const [blockedModule, setBlockedModule] = useState<ModuleKey | null>(null);
+    const [pendingTourSection, setPendingTourSection] = useState<HelpSection | null>(null);
+
+    // Watch for module enablement
+    useEffect(() => {
+        if (blockedModule && pendingTourSection && modules[blockedModule]) {
+            // Module just enabled!
+            if (isVoiceEnabled) {
+                speak("Отлично! Модуль включен. Переходим к нему.");
+            }
+
+            setBlockedModule(null);
+
+            // Navigate back and start tour
+            if (pendingTourSection.route !== pathname) {
+                router.push(pendingTourSection.route);
+                // Tour will be picked up by checking pendingTourSection in a separate effect or re-triggering
+                // But simply calling startTour here might be lost if route changes
+
+                // We need to persist this intention. 
+                // Let's rely on the fact we are unlocked now.
+                // We can set a timeout to start tour
+                setTimeout(() => {
+                    startTour(pendingTourSection, true);
+                }, 800);
+            } else {
+                startTour(pendingTourSection, true);
+            }
+            setPendingTourSection(null);
+        }
+    }, [modules, blockedModule, pendingTourSection, pathname, isVoiceEnabled]);
 
     useEffect(() => {
         const voicePref = localStorage.getItem('eduflow_voice_enabled');
@@ -184,7 +222,40 @@ export function HelpAssistant() {
         }
     }, []);
 
-    const startTour = (section: HelpSection) => {
+    const startTour = (section: HelpSection, force = false) => {
+        // [SMART NAV] Check Module Lock
+        if (!force && section.moduleKey && !modules[section.moduleKey as ModuleKey]) {
+            // Module is locked!
+            const text = "Этот раздел сейчас отключен в настройках. Я покажу вам, где его включить.";
+            if (isVoiceEnabled) speak(text);
+
+            setBlockedModule(section.moduleKey as ModuleKey);
+            setPendingTourSection(section);
+
+            setOpen(false); // Close main sheet
+            router.push('/app/settings');
+
+            // Highlight the toggle after navigation (using a delay since we don't have route completion event easily)
+            setTimeout(() => {
+                updateHighlight(`module-toggle-${section.moduleKey}`);
+                // Maybe show a small bubble or speak again?
+                if (isVoiceEnabled) speak("Включите этот переключатель, чтобы активировать модуль.");
+            }, 800);
+
+            return;
+        }
+
+        // Standard Tour Start
+        if (!force && section.route !== "all" && section.route !== pathname && section.route.startsWith('/app')) {
+            // If not on the right page, go there first
+            setOpen(false);
+            router.push(section.route);
+            setTimeout(() => {
+                startTour(section, true);
+            }, 800);
+            return;
+        }
+
         setOpen(false);
         setIsTouring(true);
         setTourStep(0);
@@ -287,7 +358,7 @@ export function HelpAssistant() {
             <Sheet open={open} onOpenChange={setOpen}>
                 <SheetContent
                     side="right"
-                    className="w-[85vw] sm:w-[540px] bg-zinc-950/98 backdrop-blur-2xl border-l border-zinc-900 text-zinc-100 p-0 flex flex-col z-50 md:rounded-l-3xl shadow-2xl h-full"
+                    className="w-[85vw] sm:w-[540px] bg-zinc-950/98 backdrop-blur-2xl border-l border-zinc-900 text-zinc-100 p-0 flex flex-col z-[100] md:rounded-l-3xl shadow-2xl h-full"
                 >
                     <div className="absolute top-4 right-4 z-20">
                         <Button variant="ghost" size="icon" onClick={() => setOpen(false)} className="rounded-full bg-zinc-900/50 hover:bg-zinc-800 transition-colors h-8 w-8">
@@ -403,6 +474,9 @@ export function HelpAssistant() {
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-1.5 h-1.5 rounded-full transition-colors ${activeSection?.id === section.id ? "bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)]" : "bg-zinc-700"}`} />
                                                 <span className="text-sm font-medium">{section.title}</span>
+                                                {section.moduleKey && !modules[section.moduleKey as ModuleKey] && (
+                                                    <span className="text-[9px] uppercase font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">Выкл</span>
+                                                )}
                                             </div>
                                             {section.route === pathname && (
                                                 <MapPin className="h-3.5 w-3.5 text-indigo-500/50" />
