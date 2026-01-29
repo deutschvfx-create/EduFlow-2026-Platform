@@ -140,15 +140,15 @@ export function OrganizationProfileCard({ onSave }: OrganizationProfileCardProps
                             transition={{ duration: 0.3 }}
                             className="overflow-hidden"
                         >
-                            <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-6 pt-4">
+                            <div className="grid grid-cols-1 laptop:grid-cols-[200px_1fr] gap-6 pt-4">
                                 {/* Logo Upload Zone - Smaller */}
                                 <div className="flex flex-col items-center gap-3">
                                     <div
                                         className={`relative w-full aspect-square rounded-xl border-2 ${dragActive
-                                                ? 'border-indigo-500 bg-indigo-500/10'
-                                                : profile.logo
-                                                    ? 'border-zinc-700 bg-zinc-800/50'
-                                                    : 'border-dashed border-zinc-700 bg-zinc-900/50'
+                                            ? 'border-indigo-500 bg-indigo-500/10'
+                                            : profile.logo
+                                                ? 'border-zinc-700 bg-zinc-800/50'
+                                                : 'border-dashed border-zinc-700 bg-zinc-900/50'
                                             } transition-all cursor-pointer group overflow-hidden`}
                                         onDragOver={(e) => {
                                             e.preventDefault();

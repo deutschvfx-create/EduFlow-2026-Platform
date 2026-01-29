@@ -9,7 +9,7 @@ interface DesktopLayoutProps {
 
 export function DesktopLayout({ children, modulesConfig }: DesktopLayoutProps) {
     return (
-        <div className="hidden lg:block">
+        <div className="hidden laptop:block">
             <ClientSidebar modulesConfig={modulesConfig}>
                 {children}
             </ClientSidebar>

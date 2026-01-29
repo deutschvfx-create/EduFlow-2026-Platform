@@ -38,23 +38,23 @@ export default function DashboardPage() {
     const isOwner = user?.role === 'OWNER' || user?.role === 'DIRECTOR';
 
     return (
-        <div className="max-w-[1600px] mx-auto space-y-4 lg:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="max-w-[1600px] mx-auto space-y-4 laptop:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 lg:gap-6 pb-2 border-b border-zinc-900">
-                <div className="space-y-1">
-                    <div className="hidden lg:flex items-center gap-2 text-indigo-400 font-bold tracking-widest text-[9px] uppercase">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 laptop:gap-6 pb-2 border-b border-zinc-900">
+                <div className="space-y-1 hidden laptop:block">
+                    <div className="hidden laptop:flex items-center gap-2 text-indigo-400 font-bold tracking-widest text-[9px] uppercase">
                         <Activity className="h-2.5 w-2.5" />
                         Live Monitor
                     </div>
-                    <h1 className="text-2xl lg:text-4xl font-extrabold tracking-tight text-white">
+                    <h1 className="text-2xl laptop:text-4xl font-extrabold tracking-tight text-white">
                         Дашборд
                     </h1>
-                    <p className="text-zinc-500 text-xs lg:text-sm hidden lg:block">
+                    <p className="text-zinc-500 text-xs laptop:text-sm hidden laptop:block">
                         {isOwner ? 'Обзор ключевых показателей вашей школы' : 'Ваш персональный центр управления'}
                     </p>
                 </div>
 
-                <div className="hidden lg:flex flex-1 max-w-md relative group">
+                <div className="hidden laptop:flex flex-1 max-w-md relative group">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-600 group-focus-within:text-indigo-400 transition-colors" />
                     <Input
                         placeholder="Быстрый поиск по школе..."
@@ -62,7 +62,7 @@ export default function DashboardPage() {
                     />
                 </div>
 
-                <div className="hidden lg:flex items-center gap-2">
+                <div className="hidden laptop:flex items-center gap-2">
                     {isOwner && (
                         <Dialog>
                             <DialogTrigger asChild>
@@ -100,11 +100,11 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8">
+            <div className="grid grid-cols-1 laptop:grid-cols-12 gap-4 laptop:gap-8">
                 {/* Left Area (70%) */}
-                <div className="lg:col-span-8 space-y-4 lg:space-y-8">
-                    {/* Stats Grid - 2 columns on mobile, 4 on desktop */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+                <div className="laptop:col-span-8 space-y-4 laptop:space-y-8">
+                    {/* Stats Grid - 2 columns on mobile, 3 on tablet, 4 on laptop+ */}
+                    <div className="grid grid-cols-2 tablet:grid-cols-3 laptop:grid-cols-4 gap-3 laptop:gap-4">
                         <KPICard
                             title="Студентов"
                             value={stats.students}
@@ -122,7 +122,7 @@ export default function DashboardPage() {
                             color="purple"
                         />
                         <KPICard
-                            title="Групп"
+                            title="Группы"
                             value={stats.groups}
                             trend="24 активных"
                             isUp={true}
@@ -140,7 +140,7 @@ export default function DashboardPage() {
                             />
                         ) : (
                             <KPICard
-                                title="Предметов"
+                                title="Предметы"
                                 value={stats.subjects}
                                 trend="Без изменений"
                                 isUp={true}
@@ -181,7 +181,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Right Area (30%) - Fixed or Scrollable sidebar feel */}
-                <div className="lg:col-span-4 space-y-8">
+                <div className="laptop:col-span-4 space-y-8">
                     <Card className="bg-zinc-900/60 border-zinc-800/50 rounded-2xl p-6 shadow-xl ring-1 ring-white/5">
                         <TodaySchedule />
                     </Card>

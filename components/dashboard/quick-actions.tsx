@@ -42,14 +42,14 @@ export function QuickActions() {
     };
 
     return (
-        <div className="space-y-3 lg:space-y-4">
+        <div className="space-y-3 laptop:space-y-4">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-xs lg:text-sm font-bold uppercase tracking-widest text-zinc-500">Быстрые действия</h2>
+                    <h2 className="text-xs laptop:text-sm font-bold uppercase tracking-widest text-zinc-500">Быстрые действия</h2>
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 lg:gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 laptop:grid-cols-6 gap-2 laptop:gap-3">
                 {modules.groups && (
                     <CreateGroupModal onSuccess={() => handleSuccess("Группа создана", "/app/groups")} />
                 )}

@@ -72,7 +72,7 @@ export function SwipeableTabs({ tabs, children }: SwipeableTabsProps) {
     };
 
     return (
-        <div className="relative h-full overflow-hidden lg:overflow-visible">
+        <div className="relative h-full overflow-hidden laptop:overflow-visible">
             <AnimatePresence initial={false} custom={direction} mode="wait">
                 <motion.div
                     key={pathname}

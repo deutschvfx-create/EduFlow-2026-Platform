@@ -120,7 +120,7 @@ export function MobileNavBar({ onOpenMenu }: MobileNavBarProps) {
     };
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden">
+        <nav className="fixed bottom-0 left-0 right-0 z-40 laptop:hidden">
             {/* Glassmorphic background */}
             <div className="relative bg-zinc-900/95 backdrop-blur-xl border-t border-zinc-800 shadow-2xl">
                 {/* Gradient overlay */}

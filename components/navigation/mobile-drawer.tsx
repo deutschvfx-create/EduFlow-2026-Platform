@@ -91,7 +91,7 @@ export function MobileDrawer({ trigger, open: controlledOpen, onOpenChange }: Mo
                     variant="ghost"
                     size="icon"
                     onClick={() => setIsOpen(true)}
-                    className="lg:hidden text-zinc-400 hover:text-white"
+                    className="laptop:hidden text-zinc-400 hover:text-white"
                 >
                     <Menu className="h-6 w-6" />
                 </Button>
@@ -106,7 +106,7 @@ export function MobileDrawer({ trigger, open: controlledOpen, onOpenChange }: Mo
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setIsOpen(false)}
-                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] lg:hidden"
+                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] laptop:hidden"
                         />
 
                         {/* Drawer */}
@@ -115,7 +115,7 @@ export function MobileDrawer({ trigger, open: controlledOpen, onOpenChange }: Mo
                             animate={{ x: 0 }}
                             exit={{ x: "-100%" }}
                             transition={{ type: "spring", damping: 25, stiffness: 240 }}
-                            className="fixed left-0 top-0 bottom-0 w-[85%] max-w-[340px] bg-zinc-950 border-r border-zinc-800 z-[101] lg:hidden flex flex-col"
+                            className="fixed left-0 top-0 bottom-0 w-[85%] max-w-[340px] bg-zinc-950 border-r border-zinc-800 z-[101] laptop:hidden flex flex-col"
                         >
                             {/* Header */}
                             <div className="flex items-center justify-between p-4 bg-zinc-900/50">

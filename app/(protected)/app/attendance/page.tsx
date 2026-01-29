@@ -204,13 +204,13 @@ export default function AttendancePage() {
     return (
         <ModuleGuard module="attendance">
             <div className="space-y-6 flex flex-col h-full">
-                <div className="flex flex-col gap-2">
+                <div className="hidden laptop:flex flex-col gap-2">
                     <h1 className="text-3xl font-bold tracking-tight text-white">Посещаемость</h1>
                     <p className="text-zinc-400">Отметки посещения по занятиям и группам</p>
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid gap-4 md:grid-cols-4">
+                <div className="grid gap-4 md:grid-cols-2 laptop:grid-cols-4">
                     <Card className="bg-zinc-900 border-zinc-800">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium text-zinc-400">Ожидается (на дату)</CardTitle>

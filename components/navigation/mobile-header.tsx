@@ -37,7 +37,7 @@ export function MobileHeader({
     };
 
     return (
-        <header className="sticky top-0 z-30 lg:hidden">
+        <header className="sticky top-0 z-30 laptop:hidden">
             {/* Glassmorphic background */}
             <div className="relative bg-zinc-900/95 backdrop-blur-xl border-b border-zinc-800">
                 {/* Gradient overlay */}

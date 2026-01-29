@@ -44,6 +44,19 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+  /* Custom Screen Sizes matched to requirements */
+  --breakpoint-xs: 360px;
+  --breakpoint-sm: 480px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1440px;
+  --breakpoint-2xl: 1920px;
+
+  /* Semantic breakpoints */
+  --breakpoint-mobile-large: 481px;
+  --breakpoint-tablet: 769px;
+  --breakpoint-laptop: 1025px;
+  --breakpoint-desktop: 1441px;
 }
 
 :root {
@@ -83,42 +96,47 @@
 
 .dark {
   /* Slate 950 for background */
-  --background: oklch(0.15 0.02 260); 
+  --background: oklch(0.15 0.02 260);
   /* Slate 50 for text */
   --foreground: oklch(0.95 0.01 260);
-  
+
   /* Slate 900 for cards */
-  --card: oklch(0.20 0.03 260); 
+  --card: oklch(0.20 0.03 260);
   --card-foreground: oklch(0.95 0.01 260);
-  
+
   --popover: oklch(0.20 0.03 260);
   --popover-foreground: oklch(0.95 0.01 260);
-  
+
   /* Neon Indigo */
   --primary: oklch(0.65 0.25 285);
   --primary-foreground: oklch(1 0 0);
-  
+
   --secondary: oklch(0.30 0.03 260);
   --secondary-foreground: oklch(0.95 0.01 260);
-  
+
   --muted: oklch(0.30 0.03 260);
   --muted-foreground: oklch(0.70 0.05 260);
-  
+
   --accent: oklch(0.65 0.25 285);
   --accent-foreground: oklch(1 0 0);
-  
+
   --destructive: oklch(0.704 0.191 22.216);
-  
+
   --border: oklch(0.30 0.03 260);
   --input: oklch(0.30 0.03 260);
   --ring: oklch(0.65 0.25 285);
-  
-  --chart-1: oklch(0.65 0.25 285); /* Indigo */
-  --chart-2: oklch(0.75 0.20 180); /* Cyan */
-  --chart-3: oklch(0.60 0.20 310); /* Purple */
-  --chart-4: oklch(0.70 0.15 240); /* Blue */
-  --chart-5: oklch(0.80 0.10 50);  /* Orange */
-  
+
+  --chart-1: oklch(0.65 0.25 285);
+  /* Indigo */
+  --chart-2: oklch(0.75 0.20 180);
+  /* Cyan */
+  --chart-3: oklch(0.60 0.20 310);
+  /* Purple */
+  --chart-4: oklch(0.70 0.15 240);
+  /* Blue */
+  --chart-5: oklch(0.80 0.10 50);
+  /* Orange */
+
   --sidebar: oklch(0.20 0.03 260);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.65 0.25 285);
@@ -133,6 +151,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }

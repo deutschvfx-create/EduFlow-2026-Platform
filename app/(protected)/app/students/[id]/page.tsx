@@ -209,7 +209,7 @@ export default function StudentProfilePage() {
                         </div>
 
                         {/* Performance Quick Dashboard */}
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 laptop:grid-cols-4 gap-4">
                             <div className="bg-zinc-950/40 border border-white/5 rounded-2xl p-3 flex items-center gap-3">
                                 <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
                                     <CheckCircle2 className="h-4 w-4" />
@@ -243,7 +243,7 @@ export default function StudentProfilePage() {
             </div>
 
             {/* Main Content Sections */}
-            <div className="grid lg:grid-cols-3 gap-6">
+            <div className="grid laptop:grid-cols-3 gap-6">
                 {/* Sidebar Info */}
                 <div className="space-y-6">
                     <Card className="bg-zinc-900/60 border-zinc-800/50 rounded-3xl overflow-hidden shadow-xl ring-1 ring-white/5">
@@ -339,7 +339,7 @@ export default function StudentProfilePage() {
                 </div>
 
                 {/* Main Content Tabs */}
-                <div className="lg:col-span-2">
+                <div className="laptop:col-span-2">
                     <Tabs defaultValue="general" className="w-full">
                         <TabsList className="w-full justify-between bg-zinc-900/60 p-1.5 rounded-2xl border border-white/5 h-auto overflow-x-auto gap-2">
                             <TabsTrigger value="general" className="flex-1 rounded-xl py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-indigo-600 data-[state=active]:text-white transition-all">Обзор</TabsTrigger>

@@ -22,7 +22,7 @@ export function MobileLayout({ children }: MobileLayoutProps) {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
     return (
-        <div className="min-h-screen bg-zinc-950 flex flex-col lg:hidden">
+        <div className="min-h-screen bg-zinc-950 flex flex-col laptop:hidden">
             {/* Mobile Header */}
             <MobileHeader />
 

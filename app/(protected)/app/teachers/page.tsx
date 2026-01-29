@@ -170,7 +170,7 @@ export default function TeachersPage() {
 
             <div className="space-y-6">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
+                    <div className="hidden laptop:block">
                         <h1 className="text-3xl font-bold tracking-tight text-white mb-1">
                             Преподаватели
                             {controlMode && <Badge className="ml-3 bg-indigo-500 text-white border-none">Control Mode</Badge>}
@@ -219,7 +219,7 @@ export default function TeachersPage() {
 
                 {/* Stats Cards (Hidden in Control Mode for compactness, or keep?) - keeping for now */}
                 {!controlMode && (
-                    <div className="grid gap-4 md:grid-cols-4">
+                    <div className="grid gap-4 md:grid-cols-2 laptop:grid-cols-4">
                         <Card className="bg-zinc-900 border-zinc-800">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium text-zinc-400">Всего преподавателей</CardTitle>

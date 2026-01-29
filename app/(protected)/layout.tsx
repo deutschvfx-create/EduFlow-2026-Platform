@@ -18,8 +18,8 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
 
     return (
         <ConnectivityProvider>
-            {/* Mobile Layout (< 1024px) */}
-            <div className="lg:hidden">
+            {/* Mobile & Tablet Layout (< 1025px) */}
+            <div className="laptop:hidden">
                 <MobileLayout>
                     <PageTransition>
                         {children}
@@ -27,8 +27,8 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
                 </MobileLayout>
             </div>
 
-            {/* Desktop Layout (≥ 1024px) */}
-            <div className="hidden lg:block">
+            {/* Laptop & Desktop Layout (≥ 1025px) */}
+            <div className="hidden laptop:block">
                 <DesktopLayout modulesConfig={modulesConfig}>
                     <PageTransition>
                         {children}

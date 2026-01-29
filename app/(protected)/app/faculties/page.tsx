@@ -66,7 +66,7 @@ export default function FacultiesPage() {
             <div className="max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-zinc-900">
-                    <div className="space-y-1">
+                    <div className="space-y-1 hidden laptop:block">
                         {/* Breadcrumbs */}
                         <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-2">
                             <span>Главная</span>
@@ -98,7 +98,7 @@ export default function FacultiesPage() {
                 </div>
 
                 {/* Gradient Stats Grid */}
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-6 md:grid-cols-2 laptop:grid-cols-4">
                     <GradientKPICard
                         title="Всего факультетов"
                         value={total}
@@ -144,7 +144,7 @@ export default function FacultiesPage() {
                         <AnimatePresence mode="popLayout">
                             {filteredFaculties.length > 0 ? (
                                 <motion.div
-                                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                                    className="grid grid-cols-1 md:grid-cols-2 tablet:grid-cols-2 laptop:grid-cols-3 desktop:grid-cols-4 gap-6"
                                     layout
                                 >
                                     {filteredFaculties.map((f) => (

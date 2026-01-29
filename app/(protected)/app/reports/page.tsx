@@ -107,13 +107,13 @@ export default function ReportsPage() {
     return (
         <ModuleGuard module="reports">
             <div className="space-y-6">
-                <div className="flex flex-col gap-2">
+                <div className="hidden laptop:flex flex-col gap-2">
                     <h1 className="text-3xl font-bold tracking-tight text-white">Отчёты</h1>
                     <p className="text-zinc-400">Аналитика по студентам, группам и преподавателям</p>
                 </div>
 
                 {/* KPI Cards */}
-                <div className="grid gap-4 md:grid-cols-4">
+                <div className="grid gap-4 md:grid-cols-2 laptop:grid-cols-4">
                     <Card className="bg-zinc-900 border-zinc-800">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium text-zinc-400">Всего студентов</CardTitle>
@@ -164,7 +164,7 @@ export default function ReportsPage() {
                 />
 
                 {/* Chart Placeholders */}
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid md:grid-cols-1 laptop:grid-cols-2 gap-6">
                     <Card className="bg-zinc-900 border-zinc-800">
                         <CardHeader>
                             <CardTitle className="text-sm font-medium text-white flex gap-2 items-center">
@@ -208,7 +208,7 @@ export default function ReportsPage() {
                 </div>
 
                 {/* Tables Grid */}
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 laptop:grid-cols-2 gap-6">
                     <AttendanceReportTable data={attendanceReportData} />
                     <GradesReportTable data={gradesReportData} />
                 </div>

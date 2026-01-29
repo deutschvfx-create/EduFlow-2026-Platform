@@ -52,19 +52,19 @@ export default function StudentsPage() {
 
     return (
         <ModuleGuard module="students">
-            <div className="space-y-4 lg:space-y-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 lg:gap-4">
-                    <div className="flex items-center gap-3 lg:gap-4">
-                        <div className="h-10 w-10 lg:h-12 lg:w-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-                            <Users className="h-5 w-5 lg:h-6 lg:w-6 text-indigo-400" />
+            <div className="space-y-4 laptop:space-y-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 laptop:gap-4">
+                    <div className="hidden laptop:flex items-center gap-3 laptop:gap-4">
+                        <div className="h-10 w-10 laptop:h-12 laptop:w-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+                            <Users className="h-5 w-5 laptop:h-6 laptop:w-6 text-indigo-400" />
                         </div>
                         <div>
-                            <h1 className="text-2xl lg:text-3xl font-black tracking-tighter text-white">Студенты</h1>
-                            <p className="text-[10px] lg:text-xs font-bold uppercase tracking-widest text-zinc-500 hidden lg:block">Система контроля контингента</p>
+                            <h1 className="text-2xl laptop:text-3xl font-black tracking-tighter text-white">Студенты</h1>
+                            <p className="text-[10px] laptop:text-xs font-bold uppercase tracking-widest text-zinc-500 hidden laptop:block">Система контроля контингента</p>
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <Button variant="outline" className="hidden lg:flex gap-2 border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl" data-help-id="students-qr-btn">
+                        <Button variant="outline" className="hidden laptop:flex gap-2 border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl" data-help-id="students-qr-btn">
                             <Search className="h-4 w-4" /> Сканировать QR
                         </Button>
                         <div data-help-id="students-add-btn">
@@ -74,7 +74,7 @@ export default function StudentsPage() {
                 </div>
 
                 {/* High-Density Stats Cards - 2 columns on mobile */}
-                <div className="grid gap-3 lg:gap-4 grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-3 laptop:gap-4 grid-cols-2 laptop:grid-cols-4">
                     <KPICard
                         title="Всего студентов"
                         value={total}

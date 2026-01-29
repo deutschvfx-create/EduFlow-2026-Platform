@@ -60,7 +60,7 @@ export function StudentsTable({ students }: StudentsTableProps) {
                         <TableHead className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Студент</TableHead>
                         <TableHead className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 hidden md:table-cell">Возраст / Дата рождения</TableHead>
                         <TableHead className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Статус</TableHead>
-                        <TableHead className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 hidden lg:table-cell">Группы / Курсы</TableHead>
+                        <TableHead className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 hidden laptop:table-cell">Группы / Курсы</TableHead>
                         <TableHead className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Баланс (время)</TableHead>
                         <TableHead className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Оплата</TableHead>
                         <TableHead className="text-right text-[10px] font-bold uppercase tracking-widest text-zinc-500 px-4">Управление</TableHead>
@@ -108,7 +108,7 @@ export function StudentsTable({ students }: StudentsTableProps) {
                             <TableCell>
                                 <StudentStatusBadge status={student.status} />
                             </TableCell>
-                            <TableCell className="hidden lg:table-cell">
+                            <TableCell className="hidden laptop:table-cell">
                                 <div className="flex flex-wrap gap-1 max-w-[200px]">
                                     {(student.groups?.length || 0) > 0 ? (
                                         student.groups.map(g => (

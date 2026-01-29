@@ -159,28 +159,28 @@ export default function ClientSidebar({
             {/* Mobile Sidebar Overlay */}
             {mobileOpen && (
                 <div
-                    className="fixed inset-0 bg-black/80 z-40 lg:hidden"
+                    className="fixed inset-0 bg-black/80 z-40 laptop:hidden"
                     onClick={() => setMobileOpen(false)}
                 />
             )}
 
             {/* Sidebar */}
             <aside
-                className={`fixed lg:sticky top-0 h-screen z-50 flex flex-col bg-zinc-900 border-r border-zinc-800 transition-all duration-300 transform 
-                ${mobileOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0'} 
-                ${isOpen ? 'lg:w-64' : 'lg:w-20'}
+                className={`fixed laptop:sticky top-0 h-screen z-50 flex flex-col bg-zinc-900 border-r border-zinc-800 transition-all duration-300 transform 
+                ${mobileOpen ? 'translate-x-0 w-64' : '-translate-x-full laptop:translate-x-0'} 
+                ${isOpen ? 'laptop:w-64' : 'laptop:w-20'}
                 `}
             >
                 {/* Header */}
                 <div className="h-16 flex items-center justify-between px-4 border-b border-zinc-800">
-                    <div className={`font-bold text-xl bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent transition-all duration-300 ${!isOpen && 'lg:opacity-0 lg:w-0 overflow-hidden'}`}>
+                    <div className={`font-bold text-xl bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent transition-all duration-300 ${!isOpen && 'laptop:opacity-0 laptop:w-0 overflow-hidden'}`}>
                         EduFlow
                     </div>
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => setMobileOpen(false)}
-                        className="lg:hidden text-zinc-400"
+                        className="laptop:hidden text-zinc-400"
                     >
                         <X className="h-5 w-5" />
                     </Button>
@@ -211,7 +211,7 @@ export default function ClientSidebar({
                                             >
                                                 {/* Icon rendering needs care if coming from server */}
                                                 <item.icon className={`h-5 w-5 ${isActive ? 'text-indigo-400' : 'text-zinc-500'}`} />
-                                                <span className={`transition-all duration-300 ${!isOpen && 'lg:hidden'}`}>
+                                                <span className={`transition-all duration-300 ${!isOpen && 'laptop:hidden'}`}>
                                                     {item.label}
                                                 </span>
                                             </Link>
@@ -227,11 +227,11 @@ export default function ClientSidebar({
                 <div className="p-4 border-t border-zinc-800">
                     <Button
                         variant="ghost"
-                        className={`w-full justify-start text-zinc-400 hover:text-red-400 hover:bg-red-500/10 gap-3 ${!isOpen && 'lg:justify-center px-0'}`}
+                        className={`w-full justify-start text-zinc-400 hover:text-red-400 hover:bg-red-500/10 gap-3 ${!isOpen && 'laptop:justify-center px-0'}`}
                         onClick={handleLogout}
                     >
                         <LogOut className="h-5 w-5" />
-                        <span className={`${!isOpen && 'lg:hidden'}`}>Выйти</span>
+                        <span className={`${!isOpen && 'laptop:hidden'}`}>Выйти</span>
                     </Button>
                 </div>
             </aside>
@@ -239,7 +239,7 @@ export default function ClientSidebar({
             {/* Main Content */}
             <main className="flex-1 min-w-0 flex flex-col">
                 {/* Mobile Header */}
-                <header className="h-16 lg:hidden flex items-center px-4 border-b border-zinc-800 bg-zinc-900 sticky top-0 z-30">
+                <header className="h-16 laptop:hidden flex items-center px-4 border-b border-zinc-800 bg-zinc-900 sticky top-0 z-30">
                     <Button
                         variant="ghost"
                         size="icon"

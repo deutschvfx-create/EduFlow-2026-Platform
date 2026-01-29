@@ -194,7 +194,7 @@ export function OnboardingFlow() {
                                 <p className="text-zinc-500 font-medium h-12">{t.welcome_sub}</p>
                             </div>
 
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-2 laptop:grid-cols-4 gap-4">
                                 {[
                                     { code: 'ru' as Language, label: 'Русский', icon: '🇷🇺' },
                                     { code: 'en' as Language, label: 'English', icon: '🇺🇸' },

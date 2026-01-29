@@ -125,7 +125,7 @@ export default function SettingsPage() {
     const Section = ({ title, children }: { title: string, children: React.ReactNode }) => (
         <div className="space-y-3">
             <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider px-1">{title}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 laptop:grid-cols-3 gap-3">
                 {children}
             </div>
         </div>
@@ -191,7 +191,7 @@ export default function SettingsPage() {
             )}
 
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pt-4">
-                <div>
+                <div className="hidden laptop:block">
                     <h1 className="text-2xl font-bold tracking-tight text-white">Настройки</h1>
                     <p className="text-sm text-zinc-400">Управление модулями</p>
                 </div>
