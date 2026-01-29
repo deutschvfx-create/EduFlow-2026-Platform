@@ -107,7 +107,7 @@ export default function ReportsPage() {
     return (
         <ModuleGuard module="reports">
             <div className="space-y-6">
-                <div className="hidden laptop:flex flex-col gap-2">
+                <div className="hidden laptop:flex flex-col gap-2" data-help-id="reports-header">
                     <h1 className="text-3xl font-bold tracking-tight text-white">Отчёты</h1>
                     <p className="text-zinc-400">Аналитика по студентам, группам и преподавателям</p>
                 </div>

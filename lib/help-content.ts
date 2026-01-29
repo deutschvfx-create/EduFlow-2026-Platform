@@ -3,6 +3,7 @@ export type HelpStep = {
     text: string;
     targetId?: string; // ID of the element to highlight for this specific step
     tip?: string;      // Optional extra advice from Edu-Bot
+    details?: string;  // Detailed deep dive explanation
 }
 
 export type HelpImage = {
@@ -144,7 +145,8 @@ export const helpSections: HelpSection[] = [
                 title: "Контроль доступа",
                 text: "Настройте права для каждого сотрудника системы.",
                 targetId: "teachers-control-mode",
-                tip: "Ограничьте доступ к финансовым отчетам для рядовых учителей."
+                tip: "Ограничьте доступ к финансовым отчетам для рядовых учителей.",
+                details: "Режим контроля позволяет переключаться между базовым видом списка и расширенным управлением правами. В режиме контроля вы можете массово изменять доступ к модулям, блокировать учетные записи или назначать роли (Учитель, Менеджер, Администратор)."
             }
         ],
         images: [
@@ -288,6 +290,22 @@ export const helpSections: HelpSection[] = [
         ],
         images: [
             { caption: "Переключатели", src: "/help/settings-toggle.png" }
+        ]
+    },
+    {
+        id: "reports",
+        title: "Отчёты",
+        route: "/app/reports",
+        highlightId: "reports-header",
+        highlightText: "Начать обзор",
+        steps: [
+            {
+                title: "Аналитика",
+                text: "Здесь собраны все ключевые показатели вашей школы.",
+                targetId: "reports-header",
+                tip: "Используйте фильтры сверху, чтобы уточнить данные по группам или учителям.",
+                details: "Раздел отчетов агрегирует данные из всех модулей системы. Вы можете отслеживать посещаемость, успеваемость и нагрузку преподавателей в реальном времени. Графики в центре страницы показывают динамику за выбранный период (неделя, месяц или год)."
+            }
         ]
     }
 ];

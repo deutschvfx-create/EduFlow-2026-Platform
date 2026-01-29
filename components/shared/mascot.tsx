@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 
 interface MascotProps {
-    status?: "idle" | "typing" | "success" | "looking_away" | "thinking";
+    status?: "idle" | "typing" | "success" | "looking_away" | "thinking" | "surprised";
     className?: string;
 }
 
@@ -25,6 +25,7 @@ export function Mascot({ status = "idle", className = "" }: MascotProps) {
     const getEyeScaleY = () => {
         if (status === "looking_away") return 0.2;
         if (status === "thinking") return 0.6;
+        if (status === "surprised") return 1.4;
         return 1;
     };
 
@@ -43,7 +44,11 @@ export function Mascot({ status = "idle", className = "" }: MascotProps) {
             transition: { duration: 0.5, repeat: 3 }
         },
         thinking: { rotate: -5 },
-        typing: { y: 5 }
+        typing: { y: 5 },
+        surprised: {
+            y: [0, -5, 0],
+            transition: { duration: 0.4, repeat: Infinity, repeatDelay: 2 }
+        }
     };
 
     const midSectionVariants = {

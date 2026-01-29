@@ -8,7 +8,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
     Sparkles, Search, X, MapPin, Bot, Lightbulb, PlayCircle,
-    ChevronRight, ChevronLeft, CheckCircle2, FastForward
+    ChevronRight, ChevronLeft, CheckCircle2, FastForward,
+    ChevronDown, ChevronUp, Info
 } from "lucide-react";
 import { helpSections, HelpSection } from "@/lib/help-content";
 import { Mascot } from "@/components/shared/mascot";
@@ -24,6 +25,41 @@ export function HelpAssistant() {
     const [isTouring, setIsTouring] = useState(false);
     const [tourStep, setTourStep] = useState(0);
     const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null);
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    // Discovery State
+    const [discoveredFeatures, setDiscoveredFeatures] = useState<string[]>([]);
+    const [hasNewFeatures, setHasNewFeatures] = useState(false);
+
+    useEffect(() => {
+        const saved = localStorage.getItem('eduflow_discovered_features');
+        if (saved) setDiscoveredFeatures(JSON.parse(saved));
+    }, []);
+
+    useEffect(() => {
+        // Auto-scan for data-help-id on the current page to detect "new" things
+        const elements = document.querySelectorAll('[data-help-id]');
+        const idsOnPage = Array.from(elements).map(el => el.getAttribute('data-help-id')!);
+
+        // Find if any ID is in helpSections but not in discoveredFeatures
+        const allTargetIds = helpSections.flatMap(s => [
+            s.highlightId,
+            ...s.steps.map(step => step.targetId)
+        ]).filter(Boolean) as string[];
+
+        const unseenAvailable = idsOnPage.filter(id =>
+            allTargetIds.includes(id) && !discoveredFeatures.includes(id)
+        );
+
+        setHasNewFeatures(unseenAvailable.length > 0);
+    }, [pathname, discoveredFeatures, open]);
+
+    const markAsDiscovered = (id: string) => {
+        if (!id || discoveredFeatures.includes(id)) return;
+        const next = [...discoveredFeatures, id];
+        setDiscoveredFeatures(next);
+        localStorage.setItem('eduflow_discovered_features', JSON.stringify(next));
+    };
 
     // Auto-select section based on route
     useEffect(() => {
@@ -62,22 +98,28 @@ export function HelpAssistant() {
         setOpen(false);
         setIsTouring(true);
         setTourStep(0);
+        setIsExpanded(false);
 
-        const firstStepWithTarget = section.steps.find(s => s.targetId);
-        if (firstStepWithTarget) {
-            updateHighlight(firstStepWithTarget.targetId!);
-        } else if (section.highlightId) {
-            updateHighlight(section.highlightId);
+        const firstStep = section.steps[0];
+        const targetId = firstStep?.targetId || section.highlightId;
+
+        if (targetId) {
+            updateHighlight(targetId);
+            markAsDiscovered(targetId);
         }
     };
 
     const nextStep = () => {
         if (!activeSection) return;
         const nextIdx = tourStep + 1;
+        setIsExpanded(false);
         if (nextIdx < activeSection.steps.length) {
             setTourStep(nextIdx);
             const targetId = activeSection.steps[nextIdx].targetId;
-            if (targetId) updateHighlight(targetId);
+            if (targetId) {
+                updateHighlight(targetId);
+                markAsDiscovered(targetId);
+            }
         } else {
             endTour();
         }
@@ -87,6 +129,7 @@ export function HelpAssistant() {
         if (!activeSection || tourStep === 0) return;
         const prevIdx = tourStep - 1;
         setTourStep(prevIdx);
+        setIsExpanded(false);
         const targetId = activeSection.steps[prevIdx].targetId;
         if (targetId) updateHighlight(targetId);
     };
@@ -95,6 +138,7 @@ export function HelpAssistant() {
         setIsTouring(false);
         setHighlightRect(null);
         setTourStep(0);
+        setIsExpanded(false);
     };
 
     // Handle Resize/Scroll for Highlight Reposition
@@ -167,8 +211,13 @@ export function HelpAssistant() {
 
                         <div className="flex items-center gap-4 md:gap-6 mb-6 relative z-10">
                             <div className="relative w-16 h-16 md:w-20 md:h-20 flex-none group">
-                                <div className="absolute inset-0 bg-indigo-500/20 blur-2xl rounded-full group-hover:bg-indigo-500/30 transition-all duration-500" />
-                                <Mascot status={open ? "thinking" : "idle"} className="w-full h-full relative z-10" />
+                                <div className={`absolute inset-0 blur-2xl rounded-full transition-all duration-500 ${hasNewFeatures ? 'bg-indigo-500/40 animate-discovery-glow' : 'bg-indigo-500/20 group-hover:bg-indigo-500/30'}`} />
+                                <Mascot status={open ? "thinking" : (hasNewFeatures ? "surprised" : "idle")} className="w-full h-full relative z-10" />
+                                {hasNewFeatures && (
+                                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-indigo-500 rounded-full border-2 border-zinc-950 flex items-center justify-center animate-bounce z-20">
+                                        <Sparkles className="h-3 w-3 text-white" />
+                                    </div>
+                                )}
                             </div>
                             <div className="space-y-1">
                                 <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[9px] md:text-[10px] font-black uppercase text-indigo-400">
@@ -329,7 +378,7 @@ export function HelpAssistant() {
                             className="absolute z-20 pointer-events-auto flex flex-col items-center max-w-[90vw] sm:max-w-none"
                             style={{
                                 top: highlightRect.bottom + 40 > window.innerHeight - 250
-                                    ? highlightRect.top - 280
+                                    ? highlightRect.top - (isExpanded ? 380 : 280)
                                     : highlightRect.bottom + 40,
                                 left: Math.max(10, Math.min(window.innerWidth - 310, highlightRect.left + highlightRect.width / 2 - 150)),
                                 width: 300
@@ -378,6 +427,40 @@ export function HelpAssistant() {
                                             <p className="text-[10px] font-medium text-emerald-400 italic">
                                                 {activeSection.steps[tourStep].tip}
                                             </p>
+                                        </div>
+                                    )}
+
+                                    {activeSection.steps[tourStep]?.details && (
+                                        <div className="mb-4">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setIsExpanded(!isExpanded)}
+                                                className="w-full justify-between h-8 text-[10px] font-bold uppercase tracking-widest text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/5 p-0"
+                                            >
+                                                <span className="flex items-center gap-2">
+                                                    <Info className="h-3 w-3" />
+                                                    {isExpanded ? "Свернуть" : "Подробнее"}
+                                                </span>
+                                                {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                                            </Button>
+
+                                            <AnimatePresence>
+                                                {isExpanded && (
+                                                    <motion.div
+                                                        initial={{ height: 0, opacity: 0 }}
+                                                        animate={{ height: "auto", opacity: 1 }}
+                                                        exit={{ height: 0, opacity: 0 }}
+                                                        className="overflow-hidden"
+                                                    >
+                                                        <div className="pt-2 pb-1 border-t border-zinc-800/50 mt-2">
+                                                            <p className="text-[10px] text-zinc-400 leading-relaxed italic">
+                                                                {activeSection.steps[tourStep].details}
+                                                            </p>
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
                                         </div>
                                     )}
                                 </motion.div>
