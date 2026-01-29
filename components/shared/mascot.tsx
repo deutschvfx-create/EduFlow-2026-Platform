@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 
 interface MascotProps {
-    status?: "idle" | "typing" | "success" | "looking_away" | "thinking" | "surprised";
+    status?: "idle" | "typing" | "success" | "looking_away" | "thinking" | "surprised" | "speaking";
     className?: string;
 }
 
@@ -48,6 +48,10 @@ export function Mascot({ status = "idle", className = "" }: MascotProps) {
         surprised: {
             y: [0, -5, 0],
             transition: { duration: 0.4, repeat: Infinity, repeatDelay: 2 }
+        },
+        speaking: {
+            y: [0, -2, 0],
+            transition: { duration: 0.2, repeat: Infinity }
         }
     };
 
@@ -122,7 +126,14 @@ export function Mascot({ status = "idle", className = "" }: MascotProps) {
                             stroke="#e0f2fe"
                             strokeWidth="2"
                             fill="none"
-                            animate={status === "success" ? { d: "M70 95 Q100 125, 130 95" } : {}}
+                            animate={
+                                status === "success"
+                                    ? { d: "M70 95 Q100 125, 130 95" }
+                                    : status === "speaking"
+                                        ? { d: ["M75 100 Q100 105, 125 100", "M75 100 Q100 125, 125 100", "M75 100 Q100 105, 125 100"] }
+                                        : {}
+                            }
+                            transition={status === "speaking" ? { duration: 0.2, repeat: Infinity } : {}}
                         />
                         <rect x="92" y="100" width="16" height="12" rx="2" fill="#ffffff" stroke="#e0f2fe" strokeWidth="0.5" />
 
@@ -155,7 +166,14 @@ export function Mascot({ status = "idle", className = "" }: MascotProps) {
                         <motion.path
                             d="M100 70 L140 80 L100 90 Z"
                             fill="#f97316"
-                            animate={status === "typing" ? { rotate: 5, y: 2 } : {}}
+                            animate={
+                                status === "typing"
+                                    ? { rotate: 5, y: 2 }
+                                    : status === "speaking"
+                                        ? { x: [0, 2, 0], rotate: [0, 5, 0] }
+                                        : {}
+                            }
+                            transition={status === "speaking" ? { duration: 0.2, repeat: Infinity } : {}}
                         />
 
                         {/* Hair Twigs */}

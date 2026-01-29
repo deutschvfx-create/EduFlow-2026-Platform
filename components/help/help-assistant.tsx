@@ -9,7 +9,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import {
     Sparkles, Search, X, MapPin, Bot, Lightbulb, PlayCircle,
     ChevronRight, ChevronLeft, CheckCircle2, FastForward,
-    ChevronDown, ChevronUp, Info
+    ChevronDown, ChevronUp, Info, Volume2, VolumeX
 } from "lucide-react";
 import { helpSections, HelpSection } from "@/lib/help-content";
 import { Mascot } from "@/components/shared/mascot";
@@ -30,6 +30,75 @@ export function HelpAssistant() {
     // Discovery State
     const [discoveredFeatures, setDiscoveredFeatures] = useState<string[]>([]);
     const [hasNewFeatures, setHasNewFeatures] = useState(false);
+
+    // Voice / TTS State
+    const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
+    const [isSpeaking, setIsSpeaking] = useState(false);
+
+    useEffect(() => {
+        const voicePref = localStorage.getItem('eduflow_voice_enabled');
+        if (voicePref) setIsVoiceEnabled(JSON.parse(voicePref));
+    }, []);
+
+    const toggleVoice = () => {
+        const next = !isVoiceEnabled;
+        setIsVoiceEnabled(next);
+        localStorage.setItem('eduflow_voice_enabled', JSON.stringify(next));
+        if (!next) {
+            window.speechSynthesis.cancel();
+            setIsSpeaking(false);
+        } else if (activeSection && isTouring) {
+            // Immediately speak current step if turned on
+            const step = activeSection.steps[tourStep];
+            if (step) speak(step.title + ". " + step.text);
+        }
+    };
+
+    const speak = useCallback((text: string) => {
+        if (!isVoiceEnabled || typeof window === 'undefined') return;
+
+        // Cancel previous speech
+        window.speechSynthesis.cancel();
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.1; // Slightly faster natural usage
+        utterance.pitch = 1.0;
+
+        // Try to find a Russian voice
+        const voices = window.speechSynthesis.getVoices();
+        const ruVoice = voices.find(v => v.lang.includes('ru')) || voices[0];
+        if (ruVoice) utterance.voice = ruVoice;
+
+        utterance.onstart = () => setIsSpeaking(true);
+        utterance.onend = () => setIsSpeaking(false);
+        utterance.onerror = () => setIsSpeaking(false);
+
+        window.speechSynthesis.speak(utterance);
+    }, [isVoiceEnabled]);
+
+    // Cleanup speech on unmount or tour end
+    useEffect(() => {
+        return () => {
+            window.speechSynthesis.cancel();
+        };
+    }, []);
+
+    // Speak when step changes
+    useEffect(() => {
+        if (isTouring && activeSection) {
+            const step = activeSection.steps[tourStep];
+            if (step) {
+                // Small delay to allow transition
+                const timer = setTimeout(() => {
+                    speak(step.title + ". " + step.text);
+                }, 500);
+                return () => clearTimeout(timer);
+            }
+        } else {
+            window.speechSynthesis.cancel();
+            setIsSpeaking(false);
+        }
+    }, [tourStep, isTouring, activeSection, speak]);
 
     useEffect(() => {
         const saved = localStorage.getItem('eduflow_discovered_features');
@@ -396,15 +465,33 @@ export function HelpAssistant() {
                                     <div className="flex items-center gap-3">
                                         <div className="relative">
                                             <div className="absolute inset-0 bg-indigo-500/20 blur-lg rounded-full" />
-                                            <Mascot status="thinking" className="w-10 h-10 relative z-10" />
+                                            <Mascot status={isSpeaking ? "speaking" : "thinking"} className="w-10 h-10 relative z-10" />
+                                            {isSpeaking && (
+                                                <div className="absolute -right-2 top-1/2 -translate-y-1/2 flex gap-0.5 h-3 items-center">
+                                                    <div className="sound-bar" style={{ animationDelay: '0s' }} />
+                                                    <div className="sound-bar" style={{ animationDelay: '0.2s' }} />
+                                                    <div className="sound-bar" style={{ animationDelay: '0.4s' }} />
+                                                </div>
+                                            )}
                                         </div>
-                                        <div className="bg-indigo-500/10 text-indigo-400 text-[9px] font-black px-2.5 py-1 rounded-full border border-indigo-500/20 uppercase tracking-tighter">
-                                            Шаг {tourStep + 1} из {activeSection.steps.length}
+                                        <div className="flex flex-col">
+                                            <div className="bg-indigo-500/10 text-indigo-400 text-[9px] font-black px-2.5 py-1 rounded-full border border-indigo-500/20 uppercase tracking-tighter self-start mb-1">
+                                                Шаг {tourStep + 1} из {activeSection.steps.length}
+                                            </div>
                                         </div>
                                     </div>
-                                    <button onClick={endTour} className="text-zinc-600 hover:text-white transition-colors p-1">
-                                        <X className="h-4 w-4" />
-                                    </button>
+                                    <div className="flex items-center gap-1">
+                                        <button
+                                            onClick={toggleVoice}
+                                            className={`p-1.5 rounded-full transition-colors ${isVoiceEnabled ? 'text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20' : 'text-zinc-600 hover:text-zinc-400'}`}
+                                            title={isVoiceEnabled ? "Выключить озвучку" : "Включить озвучку"}
+                                        >
+                                            {isVoiceEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                                        </button>
+                                        <button onClick={endTour} className="text-zinc-600 hover:text-white transition-colors p-1.5 rounded-full hover:bg-zinc-800">
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <motion.div
