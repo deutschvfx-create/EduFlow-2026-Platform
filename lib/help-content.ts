@@ -1,6 +1,7 @@
 export type HelpStep = {
     title: string;
     text: string;
+    targetId?: string; // ID of the element to highlight for this specific step
 }
 
 export type HelpImage = {
@@ -14,7 +15,7 @@ export type HelpSection = {
     route: string; // Matches current pathname to auto-open
     steps: HelpStep[];
     images?: HelpImage[];
-    highlightId?: string; // Main element to highlight for this section
+    highlightId?: string; // Main element to highlight for this section (Start button target)
     highlightText?: string;
 }
 
@@ -24,32 +25,69 @@ export const helpSections: HelpSection[] = [
         title: "Основы интерфейса",
         route: "all",
         steps: [
-            { title: "Боковое меню", text: "Здесь находятся все основные модули системы. Используйте его для навигации." },
-            { title: "Поиск", text: "Вверху каждой страницы есть поиск для быстрого нахождения данных." },
-            { title: "Edu-Bot", text: "Я всегда здесь, чтобы помочь вам разобраться с функциями." }
+            {
+                title: "Боковое меню",
+                text: "Здесь находятся все основные модули системы. Используйте его для навигации.",
+                targetId: "mobile-nav-menu"
+            },
+            {
+                title: "Главный экран",
+                text: "Вернитесь на дашборд в любое время одной кнопкой.",
+                targetId: "mobile-nav-главная"
+            },
+            {
+                title: "Edu-Bot",
+                text: "Я всегда здесь, чтобы помочь вам разобраться с функциями.",
+                targetId: "mobile-help-trigger"
+            }
         ]
     },
     {
         id: "dashboard",
         title: "Дашборд",
         route: "/app/dashboard",
-        highlightId: "dashboard-stats",
-        highlightText: "Важные показатели",
+        highlightId: "dashboard-header",
+        highlightText: "Начать обзор",
         steps: [
-            { title: "Обзор", text: "Здесь вы видите ключевые показатели вашей школы/университета." },
-            { title: "Статистика", text: "Графики показывают динамику посещаемости и финансов." }
+            {
+                title: "Заголовок",
+                text: "Здесь отображается текущее состояние системы и быстрый поиск.",
+                targetId: "dashboard-header"
+            },
+            {
+                title: "Статистика",
+                text: "Ключевые показатели вашей школы в реальном времени.",
+                targetId: "dashboard-stats"
+            },
+            {
+                title: "Быстрые действия",
+                text: "Создавайте студентов, группы и учителей в один клик.",
+                targetId: "dashboard-actions"
+            }
         ]
     },
     {
         id: "students",
         title: "Студенты",
         route: "/app/students",
-        highlightId: "students-add-btn",
-        highlightText: "Кнопка добавления",
+        highlightId: "students-header",
+        highlightText: "Обзор модуля",
         steps: [
-            { title: "Добавить студента", text: "Нажмите кнопку «Добавить студента» в верхнем правом углу." },
-            { title: "Сканировать QR", text: "Используйте сканер для быстрого поиска или регистрации." },
-            { title: "Статус", text: "Управляйте статусом (Активен/Ожидает/Заблокирован) в таблице." }
+            {
+                title: "Список студентов",
+                text: "Здесь отображаются все студенты с их статусами.",
+                targetId: "students-header"
+            },
+            {
+                title: "Добавление",
+                text: "Нажмите сюда, чтобы зарегистрировать нового ученика.",
+                targetId: "students-add-btn"
+            },
+            {
+                title: "QR Сканер",
+                text: "Быстрый поиск студента по его персональному коду.",
+                targetId: "students-qr-btn"
+            }
         ],
         images: [
             { caption: "Добавление студента", src: "/help/students-add.png" }
@@ -59,12 +97,19 @@ export const helpSections: HelpSection[] = [
         id: "teachers",
         title: "Преподаватели",
         route: "/app/teachers",
-        highlightId: "teachers-invite-btn",
-        highlightText: "Пригласить преподавателя",
+        highlightId: "teachers-header",
+        highlightText: "Обзор модуля",
         steps: [
-            { title: "Приглашение", text: "Отправьте приглашение по Email через кнопку «Пригласить»." },
-            { title: "Роли", text: "Назначайте роли: Учитель (ведет занятия), Куратор (управляет группой), Админ." },
-            { title: "Блокировка", text: "Вы можете временно ограничить доступ преподавателю." }
+            {
+                title: "Штат сотрудников",
+                text: "Управляйте ролями и доступом ваших учителей.",
+                targetId: "teachers-header"
+            },
+            {
+                title: "Приглашение",
+                text: "Отправьте ссылку на регистрацию новому преподавателю.",
+                targetId: "teachers-invite-btn"
+            }
         ],
         images: [
             { caption: "Приглашение", src: "/help/teachers-invite.png" }

@@ -49,7 +49,7 @@ export function QuickActions() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 laptop:grid-cols-6 gap-2 laptop:gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 laptop:grid-cols-6 gap-2 laptop:gap-3" data-help-id="dashboard-actions">
                 {modules.groups && (
                     <CreateGroupModal onSuccess={() => handleSuccess("Группа создана", "/app/groups")} />
                 )}

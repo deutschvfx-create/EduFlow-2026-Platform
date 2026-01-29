@@ -106,7 +106,7 @@ export function MobileNavBar({ onOpenMenu }: MobileNavBarProps) {
 
         if (item.isDrawer || item.isHelp) {
             return (
-                <div key={item.isDrawer ? "mobile-menu-drawer" : "mobile-help-trigger"}>
+                <div key={item.isDrawer ? "mobile-menu-drawer" : "mobile-help-trigger"} data-help-id={item.isDrawer ? "mobile-nav-menu" : "mobile-help-trigger"}>
                     {content}
                 </div>
             );
@@ -116,6 +116,7 @@ export function MobileNavBar({ onOpenMenu }: MobileNavBarProps) {
             <Link
                 key={item.href}
                 href={item.href}
+                data-help-id={`mobile-nav-${item.label.toLowerCase()}`}
             >
                 {content}
             </Link>
@@ -123,7 +124,7 @@ export function MobileNavBar({ onOpenMenu }: MobileNavBarProps) {
     };
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 z-40 laptop:hidden">
+        <nav className="fixed bottom-0 left-0 right-0 z-40 laptop:hidden" data-help-id="mobile-nav">
             {/* Glassmorphic background */}
             <div className="relative bg-zinc-900/95 backdrop-blur-xl border-t border-zinc-800 shadow-2xl">
                 {/* Gradient overlay */}

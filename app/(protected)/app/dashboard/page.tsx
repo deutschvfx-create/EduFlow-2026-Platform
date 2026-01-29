@@ -40,7 +40,7 @@ export default function DashboardPage() {
     return (
         <div className="max-w-[1600px] mx-auto space-y-4 laptop:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 laptop:gap-6 pb-2 border-b border-zinc-900">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 laptop:gap-6 pb-2 border-b border-zinc-900" data-help-id="dashboard-header">
                 <div className="space-y-1 hidden laptop:block">
                     <div className="hidden laptop:flex items-center gap-2 text-indigo-400 font-bold tracking-widest text-[9px] uppercase">
                         <Activity className="h-2.5 w-2.5" />
@@ -54,7 +54,7 @@ export default function DashboardPage() {
                     </p>
                 </div>
 
-                <div className="hidden laptop:flex flex-1 max-w-md relative group">
+                <div className="hidden laptop:flex flex-1 max-w-md relative group" data-help-id="dashboard-search">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-600 group-focus-within:text-indigo-400 transition-colors" />
                     <Input
                         placeholder="Быстрый поиск по школе..."

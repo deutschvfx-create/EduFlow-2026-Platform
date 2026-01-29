@@ -53,7 +53,7 @@ export default function StudentsPage() {
     return (
         <ModuleGuard module="students">
             <div className="space-y-4 laptop:space-y-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 laptop:gap-4">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 laptop:gap-4" data-help-id="students-header">
                     <div className="hidden laptop:flex items-center gap-3 laptop:gap-4">
                         <div className="h-10 w-10 laptop:h-12 laptop:w-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
                             <Users className="h-5 w-5 laptop:h-6 laptop:w-6 text-indigo-400" />
