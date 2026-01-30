@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from 'framer-motion';
 import { CursorPuppet } from './cursor-puppet';
 import { FloatingBotTrigger } from './floating-bot-trigger';
+import { generateSpeech } from '@/app/actions/speech';
 
 export function HelpAssistant() {
     const pathname = usePathname();
@@ -560,31 +561,53 @@ export function HelpAssistant() {
         }
     }, []);
 
-    const speak = useCallback((text: string) => {
-        if (!isVoiceEnabled || typeof window === 'undefined' || !window.speechSynthesis) return;
+    const speak = useCallback(async (text: string) => {
+        if (!isVoiceEnabled) return;
 
-        // Cancel previous speech
-        try {
-            window.speechSynthesis.cancel();
-        } catch (e) {
-            console.warn("Speech synthesis cancel failed", e);
-            return;
+        // Stop current audio if playing
+        const currentAudio = document.getElementById('bot-audio-player') as HTMLAudioElement;
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
         }
 
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 1.1; // Slightly faster natural usage
-        utterance.pitch = 1.0;
+        setIsSpeaking(true);
 
-        // Try to find a Russian voice
-        const voices = window.speechSynthesis.getVoices();
-        const ruVoice = voices.length > 0 ? (voices.find(v => v.lang.includes('ru')) || voices[0]) : null;
-        if (ruVoice) utterance.voice = ruVoice;
+        try {
+            // Call Server Action
+            const result = await generateSpeech(text);
 
-        utterance.onstart = () => setIsSpeaking(true);
-        utterance.onend = () => setIsSpeaking(false);
-        utterance.onerror = () => setIsSpeaking(false);
+            if (result.success && result.audio) {
+                const audioSrc = `data:audio/mp3;base64,${result.audio}`;
 
-        window.speechSynthesis.speak(utterance);
+                // Use a persistent audio element
+                let audio = document.getElementById('bot-audio-player') as HTMLAudioElement;
+                if (!audio) {
+                    audio = document.createElement('audio');
+                    audio.id = 'bot-audio-player';
+                    document.body.appendChild(audio);
+                }
+
+                audio.src = audioSrc;
+                audio.volume = 1.0;
+
+                audio.onended = () => setIsSpeaking(false);
+                audio.onerror = () => setIsSpeaking(false);
+
+                await audio.play();
+            } else {
+                console.warn('TTS Generation failed, falling back to browser');
+                // Fallback to browser TTS
+                if (typeof window !== 'undefined' && window.speechSynthesis) {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.onend = () => setIsSpeaking(false);
+                    window.speechSynthesis.speak(utterance);
+                }
+            }
+        } catch (error) {
+            console.error('Speech playback error:', error);
+            setIsSpeaking(false);
+        }
     }, [isVoiceEnabled]);
 
     const toggleVoice = useCallback(() => {
@@ -592,6 +615,10 @@ export function HelpAssistant() {
         setIsVoiceEnabled(next);
         localStorage.setItem('eduflow_voice_enabled', JSON.stringify(next));
         if (!next) {
+            const currentAudio = document.getElementById('bot-audio-player') as HTMLAudioElement;
+            if (currentAudio) {
+                currentAudio.pause();
+            }
             if (typeof window !== 'undefined' && window.speechSynthesis) {
                 window.speechSynthesis.cancel();
             }
@@ -605,6 +632,11 @@ export function HelpAssistant() {
     // Cleanup speech on unmount or tour end
     useEffect(() => {
         return () => {
+            const currentAudio = document.getElementById('bot-audio-player') as HTMLAudioElement;
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.remove();
+            }
             if (typeof window !== 'undefined' && window.speechSynthesis) {
                 window.speechSynthesis.cancel();
             }
