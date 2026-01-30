@@ -180,9 +180,9 @@ export function OnboardingFlow() {
             <div className="absolute inset-0 z-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#6366f1 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[120px] -z-10" />
 
-            {/* Mascot Section */}
-            <div className="mb-6">
-                <Mascot status={mascotStatus} className="w-24 h-24 md:w-32 md:h-32" />
+            {/* Mascot Section - Reduced Dominance */}
+            <div className="mb-4 md:mb-6 opacity-90 transition-opacity">
+                <Mascot status={mascotStatus} className="w-20 h-20 md:w-28 md:h-28" />
             </div>
 
             <main className="w-full max-w-lg bg-zinc-900/40 border border-white/5 backdrop-blur-2xl rounded-[2rem] p-6 md:p-8 shadow-2xl relative overflow-hidden">
@@ -297,7 +297,7 @@ export function OnboardingFlow() {
                                 <p className="text-zinc-400 text-sm font-medium">Это поможет нам персонализировать ваш опыт</p>
                             </div>
 
-                            <div className="grid gap-4">
+                            <div className="grid gap-3">
                                 {[
                                     {
                                         id: 'director' as Role,
@@ -329,15 +329,15 @@ export function OnboardingFlow() {
                                         onClick={() => handleRoleSelect(role.id)}
                                         onMouseEnter={() => setMascotStatus("thinking")}
                                         onMouseLeave={() => setMascotStatus("idle")}
-                                        className="group relative flex items-center p-3.5 rounded-xl bg-white/5 border border-white/5 hover:border-white/20 transition-all duration-300 text-left overflow-hidden hover:bg-white/10"
+                                        className="group relative flex items-center p-2.5 md:p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/20 transition-all duration-300 text-left overflow-hidden hover:bg-white/10"
                                     >
                                         <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        <div className={`p-2 rounded-lg bg-zinc-900/50 border border-white/5 transition-colors duration-300 ${role.bg} mr-3.5`}>
-                                            <role.icon className={`h-5 w-5 transition-colors ${role.color} group-hover:text-white`} />
+                                        <div className={`p-2 rounded-lg bg-zinc-900/50 border border-white/5 transition-colors duration-300 ${role.bg} mr-3`}>
+                                            <role.icon className={`h-[18px] w-[18px] md:h-5 md:w-5 transition-colors ${role.color} group-hover:text-white`} />
                                         </div>
                                         <div className="flex-1 space-y-0.5">
                                             <h3 className="text-sm font-semibold text-white group-hover:text-white transition-colors tracking-tight">{role.label}</h3>
-                                            <p className="text-[11px] text-zinc-400 font-medium group-hover:text-zinc-300 transition-colors leading-relaxed line-clamp-1">{role.desc}</p>
+                                            <p className="text-[11px] text-zinc-500 font-medium group-hover:text-zinc-400 transition-colors leading-relaxed line-clamp-1">{role.desc}</p>
                                         </div>
                                         <ArrowRight className="h-4 w-4 text-zinc-600 group-hover:text-white group-hover:translate-x-1 transition-all" />
                                     </button>
