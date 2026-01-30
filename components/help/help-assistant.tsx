@@ -18,6 +18,7 @@ import { ModuleKey } from "@/lib/config/modules";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from 'framer-motion';
 import { CursorPuppet } from './cursor-puppet';
+import { FloatingBotTrigger } from './floating-bot-trigger';
 
 export function HelpAssistant() {
     const pathname = usePathname();
@@ -890,6 +891,16 @@ export function HelpAssistant() {
                             <div className={`w-5 h-5 bg-zinc-900 border-l border-t border-zinc-800/50 rotate-45 -mt-2.5 relative z-10 ${highlightRect.bottom + 40 > window.innerHeight - 250 ? 'mt-[238px] rotate-[225deg]' : ''}`} />
                         </motion.div>
                     </div>
+                )}
+            </AnimatePresence>
+
+            {/* FLOATING TRIGGER */}
+            <AnimatePresence>
+                {!open && !isTouring && (
+                    <FloatingBotTrigger
+                        onClick={() => setOpen(true)}
+                        hasNewFeatures={hasNewFeatures}
+                    />
                 )}
             </AnimatePresence>
 

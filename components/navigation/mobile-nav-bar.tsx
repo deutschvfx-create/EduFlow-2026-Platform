@@ -9,8 +9,7 @@ import {
     MessageSquare,
     Menu,
     LayoutDashboard,
-    Settings,
-    Wand2
+    Settings
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -35,11 +34,7 @@ const navItems = [
         href: "/app/schedule",
         icon: Calendar
     },
-    {
-        label: "Гайд",
-        isHelp: true,
-        icon: Wand2
-    },
+
 ];
 
 interface MobileNavBarProps {
