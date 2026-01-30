@@ -12,6 +12,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Lesson, DayOfWeek } from "@/lib/types/schedule";
 import { ModuleGuard } from "@/components/system/module-guard";
+import { useAuth } from "@/components/auth/auth-provider";
 
 const DAYS: DayOfWeek[] = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
@@ -67,37 +68,17 @@ export default function SchedulePage() {
 
     if (!isLoaded) return <div className="p-8 text-zinc-500">Загрузка расписания...</div>;
 
+    const { userData } = useAuth();
+    const canEdit = userData?.role === 'OWNER' || userData?.role === 'DIRECTOR';
+
+    // ... (keep existing handleLessonClick but add check)
     const handleLessonClick = (lesson: Lesson) => {
+        if (!canEdit) return; // Read-only for others
         setSelectedLesson(lesson);
         setEditModalOpen(true);
     };
 
-    const handleSaveUpdate = (id: string, updates: Partial<Lesson>) => {
-        alert(`Закончено редактирование занятия ${id}`);
-    };
-
-    const handleWeekChange = (direction: 'prev' | 'next' | 'today') => {
-        const newDate = new Date(currentDate);
-        if (direction === 'prev') {
-            newDate.setDate(newDate.getDate() - 7);
-        } else if (direction === 'next') {
-            newDate.setDate(newDate.getDate() + 7);
-        } else {
-            setCurrentDate(new Date()); // Reset to actual today
-            return;
-        }
-        setCurrentDate(newDate);
-    };
-
-    // Stats
-    const total = filteredLessons.length;
-    const active = filteredLessons.filter(l => l.status === 'PLANNED').length;
-    const cancelled = filteredLessons.filter(l => l.status === 'CANCELLED').length;
-    // Current day mock count (let's assume "today" matches the mock data context or just static WED)
-    const countToday = filteredLessons.filter(l => l.dayOfWeek === "WED").length;
-
-    // Filter displayed days based on dayFilter
-    const displayedDays = dayFilter === 'all' ? DAYS : [dayFilter as DayOfWeek];
+    // ...
 
     return (
         <ModuleGuard module="schedule">
@@ -159,14 +140,16 @@ export default function SchedulePage() {
                     )}
                 </div>
 
-                {/* Floating Action Button */}
-                <div className="fixed bottom-6 right-4 md:bottom-8 md:right-8 z-40">
-                    <AddLessonModal lessons={lessons}>
-                        <Button size="icon" className="h-14 w-14 rounded-full bg-violet-600 hover:bg-violet-700 shadow-lg shadow-violet-900/40 border border-white/10">
-                            <Plus className="h-6 w-6" />
-                        </Button>
-                    </AddLessonModal>
-                </div>
+                {/* Floating Action Button - Only for Admins */}
+                {canEdit && (
+                    <div className="fixed bottom-6 right-4 md:bottom-8 md:right-8 z-40">
+                        <AddLessonModal lessons={lessons}>
+                            <Button size="icon" className="h-14 w-14 rounded-full bg-violet-600 hover:bg-violet-700 shadow-lg shadow-violet-900/40 border border-white/10">
+                                <Plus className="h-6 w-6" />
+                            </Button>
+                        </AddLessonModal>
+                    </div>
+                )}
 
                 <EditLessonModal
                     lesson={selectedLesson}
