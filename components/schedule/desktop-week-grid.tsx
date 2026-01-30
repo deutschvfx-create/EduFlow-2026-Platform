@@ -319,44 +319,22 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
                                                 <div className="p-4 space-y-3">
 
                                                     {/* Time Selector Row */}
-                                                    <div className="grid grid-cols-2 gap-2">
-                                                        <div className="space-y-1">
-                                                            <Label className="text-xs text-zinc-400">Начало</Label>
-                                                            <Popover>
-                                                                <PopoverTrigger asChild>
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        className="w-full h-8 text-xs bg-zinc-950 border-zinc-800 font-mono justify-start px-2"
-                                                                    >
-                                                                        {formData.startTime}
-                                                                    </Button>
-                                                                </PopoverTrigger>
-                                                                <PopoverContent className="w-auto p-0 border-none bg-transparent shadow-none" side="bottom" align="start">
-                                                                    <IOSStyleTimePicker
-                                                                        value={formData.startTime}
-                                                                        onChange={(v) => setFormData(prev => ({ ...prev, startTime: v }))}
-                                                                    />
-                                                                </PopoverContent>
-                                                            </Popover>
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div className="space-y-1.5 flex flex-col items-center">
+                                                            <Label className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Начало</Label>
+                                                            <IOSStyleTimePicker
+                                                                value={formData.startTime}
+                                                                onChange={(v) => setFormData(prev => ({ ...prev, startTime: v }))}
+                                                                className="w-full h-32 border-zinc-800/50 bg-black/40"
+                                                            />
                                                         </div>
-                                                        <div className="space-y-1">
-                                                            <Label className="text-xs text-zinc-400">Конец</Label>
-                                                            <Popover>
-                                                                <PopoverTrigger asChild>
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        className="w-full h-8 text-xs bg-zinc-950 border-zinc-800 font-mono justify-start px-2"
-                                                                    >
-                                                                        {formData.endTime}
-                                                                    </Button>
-                                                                </PopoverTrigger>
-                                                                <PopoverContent className="w-auto p-0 border-none bg-transparent shadow-none" side="bottom" align="end">
-                                                                    <IOSStyleTimePicker
-                                                                        value={formData.endTime}
-                                                                        onChange={(v) => setFormData(prev => ({ ...prev, endTime: v }))}
-                                                                    />
-                                                                </PopoverContent>
-                                                            </Popover>
+                                                        <div className="space-y-1.5 flex flex-col items-center">
+                                                            <Label className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Конец</Label>
+                                                            <IOSStyleTimePicker
+                                                                value={formData.endTime}
+                                                                onChange={(v) => setFormData(prev => ({ ...prev, endTime: v }))}
+                                                                className="w-full h-32 border-zinc-800/50 bg-black/40"
+                                                            />
                                                         </div>
                                                     </div>
 

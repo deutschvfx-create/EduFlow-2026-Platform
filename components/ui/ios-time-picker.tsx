@@ -16,8 +16,9 @@ export function IOSStyleTimePicker({
     onChange,
     minHour = 8,
     maxHour = 22,
-    minuteStep = 15
-}: TimePickerProps) {
+    minuteStep = 15,
+    className
+}: TimePickerProps & { className?: string }) {
     const [selectedHour, setSelectedHour] = React.useState<number>(parseInt(value.split(':')[0]) || 9);
     const [selectedMinute, setSelectedMinute] = React.useState<number>(parseInt(value.split(':')[1]) || 0);
 
@@ -42,7 +43,7 @@ export function IOSStyleTimePicker({
     };
 
     return (
-        <div className="flex bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl w-48 h-40 select-none relative">
+        <div className={cn("flex bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl w-48 h-40 select-none relative", className)}>
             <div className="absolute top-1/2 left-0 right-0 h-10 -mt-5 bg-white/5 pointer-events-none z-10 border-y border-white/10" />
 
             <div className="flex-1 overflow-y-auto no-scrollbar snap-y snap-mandatory py-[60px] relative scroll-smooth">
