@@ -48,31 +48,33 @@ export function MobileDateStrip({ currentDate, onDateSelect }: MobileDateStripPr
                             data-selected={isSelected}
                             onClick={() => onDateSelect(date)}
                             className={cn(
-                                "flex flex-col items-center justify-center min-w-[50px] h-[64px] rounded-2xl snap-center transition-all duration-200 border",
+                                "flex flex-col items-center justify-center min-w-[56px] h-[72px] rounded-2xl snap-center transition-all duration-300 relative",
                                 isSelected
-                                    ? "bg-violet-600 border-violet-500 text-white shadow-lg shadow-violet-900/20 scale-105"
-                                    : "bg-zinc-900/50 border-zinc-800/50 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+                                    ? "bg-violet-600 text-white shadow-md shadow-violet-900/30"
+                                    : "bg-transparent text-zinc-500 hover:text-zinc-300"
                             )}
                         >
-                            <span className="text-[10px] font-medium uppercase tracking-wider opacity-80">
+                            <span className={cn(
+                                "text-[11px] font-medium uppercase tracking-wider mb-0.5",
+                                isSelected ? "text-violet-100" : "text-zinc-500"
+                            )}>
                                 {format(date, 'EEE', { locale: ru })}
                             </span>
                             <span className={cn(
-                                "text-xl font-bold leading-none mt-1",
-                                isToday && !isSelected && "text-violet-400"
+                                "text-2xl font-bold leading-none",
+                                isSelected ? "text-white" : "text-zinc-400"
                             )}>
                                 {format(date, 'd')}
                             </span>
-                            {isToday && (
-                                <span className={cn(
-                                    "w-1 h-1 rounded-full mt-1",
-                                    isSelected ? "bg-white/50" : "bg-violet-500"
-                                )} />
+                            {isToday && !isSelected && (
+                                <span className="absolute bottom-2 w-1 h-1 rounded-full bg-violet-500" />
                             )}
                         </button>
                     );
                 })}
             </div>
+            {/* Gradient fade for scrolling hint */}
+            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-black/80 to-transparent pointer-events-none" />
         </div>
     );
 }

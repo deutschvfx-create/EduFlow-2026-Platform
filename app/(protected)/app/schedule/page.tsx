@@ -152,9 +152,9 @@ export default function SchedulePage() {
                                 ))}
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center h-[300px] text-zinc-500 border border-dashed border-zinc-800 rounded-xl bg-zinc-900/20">
-                            <h3 className="font-medium text-zinc-400 mb-1">Нет занятий</h3>
-                            <p className="text-xs">На этот день ничего не запланировано</p>
+                        <div className="flex flex-col items-center justify-center h-[300px] text-zinc-600">
+                            <h3 className="font-medium text-zinc-400 mb-1">На этот день занятий нет</h3>
+                            <p className="text-xs">Попробуйте выбрать другую дату</p>
                         </div>
                     )}
                 </div>
