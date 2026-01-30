@@ -342,6 +342,8 @@ export function HelpAssistant() {
                 if (mobileMenuTrigger && isVisible(mobileMenuTrigger)) {
                     // Step 1: Click Menu
                     // Move hand to menu from center
+                    // Step 1: Click Menu
+                    // Move hand to menu logic
                     const menuRect = mobileMenuTrigger.getBoundingClientRect();
                     setPuppetRect(menuRect);
 
@@ -356,54 +358,59 @@ export function HelpAssistant() {
                             setIsPuppetClicking(false);
                             (mobileMenuTrigger as HTMLElement).click();
 
-                            // Step 2: Wait for Drawer (Needs ample time for animation + DOM mount)
+                            // Step 2: Wait for Drawer
                             setTimeout(() => {
+                                // "Scan" animation
+                                const windowWidth = window.innerWidth;
+                                const windowHeight = window.innerHeight;
+                                setPuppetRect({
+                                    left: windowWidth / 2,
+                                    top: windowHeight / 3,
+                                    width: 0,
+                                    height: 0,
+                                    right: windowWidth / 2,
+                                    bottom: windowHeight / 3,
+                                    x: windowWidth / 2,
+                                    y: windowHeight / 3,
+                                    toJSON: () => { }
+                                });
+
                                 if (isVoiceEnabled) speak("Ищу нужный раздел...");
 
-                                // Re-query for link inside drawer
-                                // NOTE: We need to wait for AnimatePresence/framer-motion to render children
-                                targetEl = document.querySelector(`[data-help-id="${sidebarLinkId}"]`);
+                                setTimeout(() => {
+                                    targetEl = document.querySelector(`[data-help-id="${sidebarLinkId}"]`);
 
-                                if (targetEl) {
-                                    // SCROLL INTO VIEW (Crucial for mobile)
-                                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    if (targetEl) {
+                                        targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-                                    // Wait for scroll to finish
-                                    setTimeout(() => {
-                                        // Recalculate position after scroll
-                                        setPuppetRect(targetEl!.getBoundingClientRect()); // Force non-null assertion as we found it
-
-                                        // Move hand to item
                                         setTimeout(() => {
-                                            setIsPuppetClicking(true);
+                                            setPuppetRect(targetEl!.getBoundingClientRect());
 
-                                            // Click Item
                                             setTimeout(() => {
-                                                setIsPuppetClicking(false);
-                                                // setIsPuppetVisible(false); // Hide hand before nav
-                                                (targetEl as HTMLElement).click();
+                                                setIsPuppetClicking(true);
 
-                                                // Wait for route change
                                                 setTimeout(() => {
-                                                    setIsPuppetVisible(false);
-                                                    startTour(section, true);
-                                                }, 1500);
-                                            }, 500); // Hold click
-                                        }, 800); // Move duration
-                                    }, 500); // Scroll duration
-                                } else {
-                                    // Fallback: If still not found (e.g. filtered out?)
-                                    console.warn("Target link not found in drawer:", sidebarLinkId);
-                                    // Shake animation or just leave?
-                                    if (isVoiceEnabled) speak("Не могу найти кнопку меню. Пробую перейти напрямую.");
+                                                    setIsPuppetClicking(false);
+                                                    (targetEl as HTMLElement).click();
 
-                                    setIsPuppetVisible(false);
-                                    router.push(section.route);
-                                    setTimeout(() => startTour(section, true), 800);
-                                }
-                            }, 1000); // 1s wait for drawer open animation
-                        }, 400); // Click duration
-                    }, 800); // Initial move duration to menu
+                                                    setTimeout(() => {
+                                                        setIsPuppetVisible(false);
+                                                        startTour(section, true);
+                                                    }, 1500);
+                                                }, 500);
+                                            }, 800);
+                                        }, 800);
+                                    } else {
+                                        console.warn("Target link not found in drawer:", sidebarLinkId);
+                                        if (isVoiceEnabled) speak("Не вижу кнопку. Перехожу автоматически.");
+                                        setIsPuppetVisible(false);
+                                        router.push(section.route);
+                                        setTimeout(() => startTour(section, true), 800);
+                                    }
+                                }, 1000);
+                            }, 1000);
+                        }, 400);
+                    }, 800);
 
                     return;
                 }
