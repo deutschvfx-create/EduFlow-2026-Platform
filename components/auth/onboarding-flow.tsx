@@ -196,7 +196,7 @@ export function OnboardingFlow() {
                                 <p className="text-zinc-400 font-medium text-base">{t.welcome_sub}</p>
                             </div>
 
-                            <div className="grid grid-cols-2 laptop:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-2 laptop:grid-cols-4 gap-3">
                                 {[
                                     { code: 'ru' as Language, label: 'Русский', icon: '🇷🇺' },
                                     { code: 'en' as Language, label: 'English', icon: '🇺🇸' },
@@ -206,13 +206,13 @@ export function OnboardingFlow() {
                                     <button
                                         key={lang.code}
                                         onClick={() => setData(d => ({ ...d, language: lang.code }))}
-                                        className={`p-4 md:p-6 rounded-2xl md:rounded-3xl border transition-all duration-300 flex flex-col items-center gap-2 md:gap-3 group
+                                        className={`h-11 px-4 rounded-xl border transition-all duration-200 flex flex-row items-center justify-center gap-2 group
                                             ${data.language === lang.code
-                                                ? 'bg-indigo-600 border-indigo-500 shadow-lg shadow-indigo-500/20 text-white'
+                                                ? 'bg-indigo-600 border-indigo-500 shadow-md shadow-indigo-500/10 text-white'
                                                 : 'bg-white/5 hover:bg-white/10 border-white/5 hover:border-white/10 text-zinc-400 hover:text-zinc-200'}`}
                                     >
-                                        <span className="text-2xl md:text-3xl grayscale group-hover:grayscale-0 transition-all">{lang.icon}</span>
-                                        <span className="text-xs md:text-sm font-semibold">{lang.label}</span>
+                                        <span className="text-lg leading-none grayscale group-hover:grayscale-0 transition-all">{lang.icon}</span>
+                                        <span className="text-sm font-medium leading-none pt-0.5">{lang.label}</span>
                                     </button>
                                 ))}
                             </div>
@@ -220,9 +220,9 @@ export function OnboardingFlow() {
                             <Button
                                 size="lg"
                                 onClick={nextStep}
-                                className="w-full h-14 rounded-2xl bg-white text-zinc-950 hover:bg-zinc-200 transition-all font-bold tracking-wide gap-2 text-base"
+                                className="w-full h-11 rounded-xl bg-white text-zinc-950 hover:bg-zinc-200 transition-all font-semibold tracking-wide gap-2 text-sm"
                             >
-                                {t.start} <ArrowRight className="h-5 w-5" />
+                                {t.start} <ArrowRight className="h-4 w-4" />
                             </Button>
                         </motion.div>
                     )}
@@ -235,7 +235,7 @@ export function OnboardingFlow() {
                             </div>
 
                             <div className="relative max-w-md mx-auto">
-                                <User className={`absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 transition-colors ${data.name ? 'text-indigo-400' : 'text-zinc-700'}`} />
+                                <User className={`absolute left-4 top-1/2 -translate-y-1/2 h-[18px] w-[18px] transition-colors ${data.name ? 'text-indigo-400' : 'text-zinc-600'}`} />
                                 <Input
                                     value={data.name}
                                     onChange={(e) => {
@@ -244,7 +244,7 @@ export function OnboardingFlow() {
                                     }}
                                     onBlur={() => setMascotStatus("idle")}
                                     placeholder={t.placeholder_name}
-                                    className="h-14 pl-12 pr-6 bg-zinc-900/80 border-zinc-700/50 hover:border-zinc-600 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 rounded-2xl text-lg font-medium text-white placeholder:text-zinc-600 transition-all"
+                                    className="h-11 pl-10 pr-4 bg-zinc-900/80 border-zinc-700/50 hover:border-zinc-600 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 rounded-xl text-base font-medium text-white placeholder:text-zinc-600 transition-all"
                                 />
                             </div>
 
@@ -252,9 +252,9 @@ export function OnboardingFlow() {
                                 size="lg"
                                 disabled={data.name.length < 2}
                                 onClick={nextStep}
-                                className="w-full h-14 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white transition-all font-bold tracking-wide gap-2 text-base shadow-xl shadow-indigo-500/20"
+                                className="w-full h-11 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-all font-semibold tracking-wide gap-2 text-sm shadow-lg shadow-indigo-500/20"
                             >
-                                {t.next} <ArrowRight className="h-5 w-5" />
+                                {t.next} <ArrowRight className="h-4 w-4" />
                             </Button>
                         </motion.div>
                     )}
@@ -268,14 +268,14 @@ export function OnboardingFlow() {
                                 <p className="text-zinc-400 text-sm font-medium">{t.ask_age}</p>
                             </div>
 
-                            <div className="relative max-w-[280px] mx-auto">
-                                <Calendar className={`absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 transition-colors ${data.birthDate?.length === 10 ? 'text-emerald-400' : 'text-zinc-700'}`} />
+                            <div className="relative max-w-[240px] mx-auto">
+                                <Calendar className={`absolute left-4 top-1/2 -translate-y-1/2 h-[18px] w-[18px] transition-colors ${data.birthDate?.length === 10 ? 'text-emerald-400' : 'text-zinc-600'}`} />
                                 <Input
                                     value={data.birthDate}
                                     onChange={(e) => handleDateChange(e.target.value)}
                                     onBlur={() => setMascotStatus("idle")}
                                     placeholder="DD MM YYYY"
-                                    className="h-14 pl-12 pr-6 bg-zinc-900/80 border-zinc-700/50 hover:border-zinc-600 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-2xl text-center text-xl font-bold tracking-[0.1em] text-white placeholder:text-zinc-600 transition-all"
+                                    className="h-11 pl-10 pr-4 bg-zinc-900/80 border-zinc-700/50 hover:border-zinc-600 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl text-center text-lg font-bold tracking-[0.1em] text-white placeholder:text-zinc-600 transition-all"
                                 />
                             </div>
 
@@ -283,9 +283,9 @@ export function OnboardingFlow() {
                                 size="lg"
                                 disabled={!data.birthDate || data.birthDate.length < 10}
                                 onClick={nextStep}
-                                className="w-full h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white transition-all font-bold tracking-wide gap-2 text-base shadow-xl shadow-emerald-500/20"
+                                className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition-all font-semibold tracking-wide gap-2 text-sm shadow-lg shadow-emerald-500/20"
                             >
-                                {t.next} <ArrowRight className="h-5 w-5" />
+                                {t.next} <ArrowRight className="h-4 w-4" />
                             </Button>
                         </motion.div>
                     )}
@@ -329,17 +329,17 @@ export function OnboardingFlow() {
                                         onClick={() => handleRoleSelect(role.id)}
                                         onMouseEnter={() => setMascotStatus("thinking")}
                                         onMouseLeave={() => setMascotStatus("idle")}
-                                        className="group relative flex items-center p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/20 transition-all duration-300 text-left overflow-hidden hover:bg-white/10"
+                                        className="group relative flex items-center p-3.5 rounded-xl bg-white/5 border border-white/5 hover:border-white/20 transition-all duration-300 text-left overflow-hidden hover:bg-white/10"
                                     >
                                         <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        <div className={`p-3 rounded-xl bg-zinc-900/50 border border-white/5 transition-colors duration-300 ${role.bg} mr-4`}>
-                                            <role.icon className={`h-6 w-6 transition-colors ${role.color} group-hover:text-white`} />
+                                        <div className={`p-2 rounded-lg bg-zinc-900/50 border border-white/5 transition-colors duration-300 ${role.bg} mr-3.5`}>
+                                            <role.icon className={`h-5 w-5 transition-colors ${role.color} group-hover:text-white`} />
                                         </div>
-                                        <div className="flex-1 space-y-1">
-                                            <h3 className="text-base font-bold text-white group-hover:text-white transition-colors tracking-tight">{role.label}</h3>
-                                            <p className="text-xs text-zinc-400 font-medium group-hover:text-zinc-300 transition-colors leading-relaxed line-clamp-2">{role.desc}</p>
+                                        <div className="flex-1 space-y-0.5">
+                                            <h3 className="text-sm font-semibold text-white group-hover:text-white transition-colors tracking-tight">{role.label}</h3>
+                                            <p className="text-[11px] text-zinc-400 font-medium group-hover:text-zinc-300 transition-colors leading-relaxed line-clamp-1">{role.desc}</p>
                                         </div>
-                                        <ArrowRight className="h-5 w-5 text-zinc-600 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                                        <ArrowRight className="h-4 w-4 text-zinc-600 group-hover:text-white group-hover:translate-x-1 transition-all" />
                                     </button>
                                 ))}
                             </div>
