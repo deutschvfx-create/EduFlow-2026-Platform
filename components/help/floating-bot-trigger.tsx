@@ -70,6 +70,7 @@ export function FloatingBotTrigger({ onClick, hasNewFeatures }: FloatingBotTrigg
                     scale: isDragging ? 0.95 : 1,
                     filter: isIdle ? 'grayscale(70%)' : 'grayscale(0%)',
                 }}
+                exit={{ scale: 0, opacity: 0 }}
                 whileHover={{ scale: 1.05, opacity: 1, filter: 'grayscale(0%)' }}
                 whileTap={{ scale: 0.9 }}
                 className="absolute pointer-events-auto cursor-grab active:cursor-grabbing group"
