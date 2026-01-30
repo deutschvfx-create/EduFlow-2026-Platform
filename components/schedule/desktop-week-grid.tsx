@@ -30,8 +30,15 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
 
     // Interaction State
     const [editorOpen, setEditorOpen] = useState(false);
-    const [selectedSlot, setSelectedSlot] = useState<{ day: DayOfWeek, time: string } | null>(null);
-    const [formData, setFormData] = useState({ groupId: "", courseId: "", teacherId: "", room: "" });
+    const [selectedSlot, setSelectedSlot] = useState<{ day: DayOfWeek, time: string } | null>(null);    // Form State for Inline Editor
+    const [formData, setFormData] = useState({
+        groupId: "",
+        courseId: "",
+        teacherId: "",
+        room: "",
+        startTime: "",
+        endTime: ""
+    });
 
     // Drag & Resize State
     const [isDragging, setIsDragging] = useState(false);
@@ -54,8 +61,16 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
     const handleSlotClick = (day: DayOfWeek, hour: number) => {
         if (isDragging) return; // Ignore if dropping
         const time = `${hour.toString().padStart(2, '0')}:00`;
+        const endTime = `${(hour + 1).toString().padStart(2, '0')}:30`; // Default +1.5h
         setSelectedSlot({ day, time });
-        setFormData({ groupId: "", courseId: "", teacherId: "", room: "" });
+        setFormData({
+            groupId: "",
+            courseId: "",
+            teacherId: "",
+            room: "",
+            startTime: time,
+            endTime: endTime
+        });
         setEditorOpen(true);
     };
 
@@ -66,8 +81,8 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
             teacherId: formData.teacherId,
             courseId: formData.courseId,
             dayOfWeek: selectedSlot?.day,
-            startTime: selectedSlot?.time,
-            endTime: selectedSlot ? `${parseInt(selectedSlot.time.split(':')[0]) + 1}:30` : "00:00",
+            startTime: formData.startTime, // Use user selected time
+            endTime: formData.endTime,     // Use user selected time
             room: "101"
         };
         if (onLessonAdd) onLessonAdd(newLesson);
@@ -293,14 +308,45 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
                                                 />
                                             </PopoverTrigger>
                                             <PopoverContent className="w-80 bg-zinc-900 border-zinc-800 p-0 shadow-2xl shadow-black/80">
-                                                {/* Popover Content (Same as before) */}
+                                                {/* Popover Content */}
                                                 <div className="p-3 border-b border-zinc-800 text-sm font-semibold text-white flex justify-between items-center">
-                                                    <span>Новый урок ({selectedSlot?.time})</span>
+                                                    <span>Новый урок</span>
                                                     <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditorOpen(false)}>
                                                         <X className="h-4 w-4" />
                                                     </Button>
                                                 </div>
                                                 <div className="p-4 space-y-3">
+
+                                                    {/* Time Selector Row */}
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs text-zinc-400">Начало</Label>
+                                                            <Select value={formData.startTime} onValueChange={(v) => setFormData({ ...formData, startTime: v })}>
+                                                                <SelectTrigger className="h-8 text-xs bg-zinc-950 border-zinc-800 font-mono"><SelectValue /></SelectTrigger>
+                                                                <SelectContent className="max-h-[200px]">
+                                                                    {Array.from({ length: 29 }, (_, i) => {
+                                                                        const h = Math.floor(i / 2) + 8;
+                                                                        const m = (i % 2) * 30;
+                                                                        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+                                                                    }).map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label className="text-xs text-zinc-400">Конец</Label>
+                                                            <Select value={formData.endTime} onValueChange={(v) => setFormData({ ...formData, endTime: v })}>
+                                                                <SelectTrigger className="h-8 text-xs bg-zinc-950 border-zinc-800 font-mono"><SelectValue /></SelectTrigger>
+                                                                <SelectContent className="max-h-[200px]">
+                                                                    {Array.from({ length: 29 }, (_, i) => {
+                                                                        const h = Math.floor(i / 2) + 9; // End times shifted slightly
+                                                                        const m = (i % 2) * 30;
+                                                                        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+                                                                    }).map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                    </div>
+
                                                     <div className="space-y-1">
                                                         <Label className="text-xs text-zinc-400">Предмет</Label>
                                                         <Select onValueChange={(v) => setFormData({ ...formData, courseId: v })}>
@@ -358,7 +404,7 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
                                             onMouseDown={(e) => handleDragStart(e, lesson, 'move')}
                                             style={style}
                                             className={cn(
-                                                "absolute rounded border shadow-sm transition-opacity hover:z-40 hover:shadow-lg flex flex-col overflow-hidden group/card",
+                                                "absolute rounded border shadow-sm transition-all duration-500 ease-out hover:z-40 hover:shadow-lg flex flex-col overflow-hidden group/card animate-in fade-in zoom-in-95 slide-in-from-top-2",
                                                 lesson.status === 'CANCELLED'
                                                     ? "bg-red-950/80 border-red-900/50 text-red-200"
                                                     : "bg-indigo-900/80 border-indigo-700/50 text-indigo-100"
