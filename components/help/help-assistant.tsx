@@ -19,9 +19,6 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from 'framer-motion';
 import { CursorPuppet } from './cursor-puppet';
 import { FloatingBotTrigger } from './floating-bot-trigger';
-import { BotChat } from './bot-chat';
-
-type HelpTab = 'tours' | 'chat';
 
 export function HelpAssistant() {
     const pathname = usePathname();
@@ -30,7 +27,6 @@ export function HelpAssistant() {
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState("");
     const [activeSection, setActiveSection] = useState<HelpSection | null>(null);
-    const [activeTab, setActiveTab] = useState<HelpTab>('tours');
 
     // Sequential Tour State
     const [isTouring, setIsTouring] = useState(false);
@@ -1143,162 +1139,125 @@ export function HelpAssistant() {
                             </div>
                         </div>
 
-                        {/* TAB SYSTEM */}
-                        <div className="flex gap-1 p-1 bg-zinc-900/50 rounded-2xl mx-4 md:mx-8 mb-4 relative z-10">
-                            <button
-                                onClick={() => setActiveTab('tours')}
-                                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${activeTab === 'tours'
-                                    ? 'bg-zinc-800 text-indigo-400 shadow-lg'
-                                    : 'text-zinc-500 hover:text-zinc-300'
-                                    }`}
-                            >
-                                <PlayCircle className={`h-3.5 w-3.5 ${activeTab === 'tours' ? 'text-indigo-400' : 'text-zinc-600'}`} />
-                                Гиды и Туры
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('chat')}
-                                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${activeTab === 'chat'
-                                    ? 'bg-zinc-800 text-indigo-400 shadow-lg'
-                                    : 'text-zinc-500 hover:text-zinc-300'
-                                    }`}
-                            >
-                                <Bot className={`h-3.5 w-3.5 ${activeTab === 'chat' ? 'text-indigo-400' : 'text-zinc-600'}`} />
-                                AI Чат GPT
-                            </button>
-                        </div>
 
                         <AnimatePresence mode="wait">
-                            {activeTab === 'tours' && (
-                                <motion.div
-                                    key="search-bar"
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    className="relative z-10 px-4 md:px-8 pb-4"
-                                >
-                                    <div className="relative">
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                                            <Search className="h-4 w-4 text-zinc-600" />
-                                        </div>
-                                        <Input
-                                            placeholder="Поиск по разделам помощи..."
-                                            value={search}
-                                            onChange={(e) => setSearch(e.target.value)}
-                                            className="h-12 pl-11 bg-zinc-900/50 border-zinc-900 focus:bg-zinc-900 transition-all rounded-2xl text-sm placeholder:text-zinc-700"
-                                        />
+                            <motion.div
+                                key="search-bar"
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="relative z-10 px-4 md:px-8 pb-4"
+                            >
+                                <div className="relative">
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                                        <Search className="h-4 w-4 text-zinc-600" />
                                     </div>
-                                </motion.div>
-                            )}
+                                    <Input
+                                        placeholder="Поиск по разделам помощи..."
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        className="h-12 pl-11 bg-zinc-900/50 border-zinc-900 focus:bg-zinc-900 transition-all rounded-2xl text-sm placeholder:text-zinc-700"
+                                    />
+                                </div>
+                            </motion.div>
                         </AnimatePresence>
                     </SheetHeader>
 
                     {/* Content Area */}
                     <div className="flex-1 overflow-y-auto min-h-0 bg-zinc-950/30">
                         <AnimatePresence mode="wait">
-                            {activeTab === 'tours' ? (
-                                <motion.div
-                                    key="tours-content"
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -20 }}
-                                    className="p-4 md:p-8"
-                                >
-                                    <div className="space-y-8">
-                                        {/* FEATURED / ACTIVE SECTION */}
-                                        {!search && activeSection && (
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                className="relative group/card"
-                                            >
-                                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-3xl blur-xl group-hover/card:blur-2xl transition-all" />
-                                                <div className="relative bg-zinc-900/50 backdrop-blur-xl border border-indigo-500/20 rounded-3xl p-6 shadow-xl">
-                                                    <div className="flex items-start justify-between mb-4">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-                                                                <Sparkles className="h-5 w-5" />
+                            <motion.div
+                                key="tours-content"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                className="p-4 md:p-8"
+                            >
+                                <div className="space-y-8">
+                                    {/* FEATURED / ACTIVE SECTION */}
+                                    {!search && activeSection && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="relative group/card"
+                                        >
+                                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-3xl blur-xl group-hover/card:blur-2xl transition-all" />
+                                            <div className="relative bg-zinc-900/50 backdrop-blur-xl border border-indigo-500/20 rounded-3xl p-6 shadow-xl">
+                                                <div className="flex items-start justify-between mb-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                                                            <Sparkles className="h-5 w-5" />
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">Активный раздел</div>
+                                                            <h4 className="text-base font-bold text-white leading-none">{activeSection.title}</h4>
+                                                        </div>
+                                                    </div>
+                                                    <Button
+                                                        variant="default"
+                                                        size="sm"
+                                                        className="h-8 text-[10px] px-4 font-black uppercase tracking-widest gap-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all shadow-lg shadow-indigo-500/20"
+                                                        onClick={() => startTour(activeSection)}
+                                                    >
+                                                        <PlayCircle className="h-3.5 w-3.5" />
+                                                        {activeSection.highlightText || "Запустить гид"}
+                                                    </Button>
+                                                </div>
+
+                                                <div className="space-y-3 relative z-10">
+                                                    {activeSection.steps.map((step, idx) => (
+                                                        <div key={idx} className="flex gap-3 items-start group/step">
+                                                            <div className="flex-none flex items-center justify-center w-5 h-5 rounded-md bg-zinc-900 text-[10px] font-bold text-indigo-400 border border-zinc-800 mt-0.5 group-hover/step:border-indigo-500/50 transition-colors">
+                                                                {idx + 1}
                                                             </div>
                                                             <div>
-                                                                <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">Активный раздел</div>
-                                                                <h4 className="text-base font-bold text-white leading-none">{activeSection.title}</h4>
+                                                                <h4 className="text-xs font-bold text-zinc-200 mb-0.5">{step.title}</h4>
+                                                                <p className="text-[11px] text-zinc-500 leading-relaxed">{step.text}</p>
                                                             </div>
                                                         </div>
-                                                        <Button
-                                                            variant="default"
-                                                            size="sm"
-                                                            className="h-8 text-[10px] px-4 font-black uppercase tracking-widest gap-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all shadow-lg shadow-indigo-500/20"
-                                                            onClick={() => startTour(activeSection)}
-                                                        >
-                                                            <PlayCircle className="h-3.5 w-3.5" />
-                                                            {activeSection.highlightText || "Запустить гид"}
-                                                        </Button>
-                                                    </div>
-
-                                                    <div className="space-y-3 relative z-10">
-                                                        {activeSection.steps.map((step, idx) => (
-                                                            <div key={idx} className="flex gap-3 items-start group/step">
-                                                                <div className="flex-none flex items-center justify-center w-5 h-5 rounded-md bg-zinc-900 text-[10px] font-bold text-indigo-400 border border-zinc-800 mt-0.5 group-hover/step:border-indigo-500/50 transition-colors">
-                                                                    {idx + 1}
-                                                                </div>
-                                                                <div>
-                                                                    <h4 className="text-xs font-bold text-zinc-200 mb-0.5">{step.title}</h4>
-                                                                    <p className="text-[11px] text-zinc-500 leading-relaxed">{step.text}</p>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
+                                                    ))}
                                                 </div>
-                                            </motion.div>
-                                        )}
-
-                                        {/* ALL SECTIONS */}
-                                        <div className="space-y-3">
-                                            <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] px-1">
-                                                {search ? "Результаты поиска" : "Все разделы помощи"}
-                                            </h3>
-                                            <div className="grid gap-2">
-                                                {filteredSections.map(section => (
-                                                    <button
-                                                        key={section.id}
-                                                        onClick={() => setActiveSection(section)}
-                                                        className={`group w-full text-left p-3 rounded-xl border transition-all duration-300 flex items-center justify-between ${activeSection?.id === section.id
-                                                            ? "bg-indigo-950/20 border-indigo-500/30 text-indigo-300"
-                                                            : "bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800/50 hover:text-zinc-200"
-                                                            }`}
-                                                    >
-                                                        <div className="flex items-center gap-3">
-                                                            <div className={`w-1.5 h-1.5 rounded-full transition-colors ${activeSection?.id === section.id ? "bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)]" : "bg-zinc-700"}`} />
-                                                            <span className="text-sm font-medium">{section.title}</span>
-                                                            {section.moduleKey && !modules[section.moduleKey as ModuleKey] && (
-                                                                <span className="text-[9px] uppercase font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">Выкл</span>
-                                                            )}
-                                                        </div>
-                                                        {section.route === pathname && (
-                                                            <MapPin className="h-3.5 w-3.5 text-indigo-500/50" />
-                                                        )}
-                                                    </button>
-                                                ))}
                                             </div>
-                                            {filteredSections.length === 0 && (
-                                                <div className="text-zinc-600 text-center py-12 flex flex-col items-center gap-3">
-                                                    <Search className="h-8 w-8 opacity-20" />
-                                                    <p className="text-sm font-medium">Ничего не найдено</p>
-                                                </div>
-                                            )}
+                                        </motion.div>
+                                    )}
+
+                                    {/* ALL SECTIONS */}
+                                    <div className="space-y-3">
+                                        <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] px-1">
+                                            {search ? "Результаты поиска" : "Все разделы помощи"}
+                                        </h3>
+                                        <div className="grid gap-2">
+                                            {filteredSections.map(section => (
+                                                <button
+                                                    key={section.id}
+                                                    onClick={() => setActiveSection(section)}
+                                                    className={`group w-full text-left p-3 rounded-xl border transition-all duration-300 flex items-center justify-between ${activeSection?.id === section.id
+                                                        ? "bg-indigo-950/20 border-indigo-500/30 text-indigo-300"
+                                                        : "bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800/50 hover:text-zinc-200"
+                                                        }`}
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-1.5 h-1.5 rounded-full transition-colors ${activeSection?.id === section.id ? "bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)]" : "bg-zinc-700"}`} />
+                                                        <span className="text-sm font-medium">{section.title}</span>
+                                                        {section.moduleKey && !modules[section.moduleKey as ModuleKey] && (
+                                                            <span className="text-[9px] uppercase font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">Выкл</span>
+                                                        )}
+                                                    </div>
+                                                    {section.route === pathname && (
+                                                        <MapPin className="h-3.5 w-3.5 text-indigo-500/50" />
+                                                    )}
+                                                </button>
+                                            ))}
                                         </div>
+                                        {filteredSections.length === 0 && (
+                                            <div className="text-zinc-600 text-center py-12 flex flex-col items-center gap-3">
+                                                <Search className="h-8 w-8 opacity-20" />
+                                                <p className="text-sm font-medium">Ничего не найдено</p>
+                                            </div>
+                                        )}
                                     </div>
-                                </motion.div>
-                            ) : (
-                                <motion.div
-                                    key="chat-content"
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: 20 }}
-                                    className="h-full p-4 md:p-6"
-                                >
-                                    <BotChat />
-                                </motion.div>
-                            )}
+                                </div>
+                            </motion.div>
                         </AnimatePresence>
                     </div>
 
