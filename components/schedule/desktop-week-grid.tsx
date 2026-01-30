@@ -325,7 +325,8 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
                                                             <IOSStyleTimePicker
                                                                 value={formData.startTime}
                                                                 onChange={(v) => setFormData(prev => ({ ...prev, startTime: v }))}
-                                                                className="w-full h-32 border-zinc-800/50 bg-black/40"
+                                                                className="w-full h-24 border-zinc-800/50 bg-black/40"
+                                                                minuteStep={5}
                                                             />
                                                         </div>
                                                         <div className="space-y-1.5 flex flex-col items-center">
@@ -333,7 +334,8 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
                                                             <IOSStyleTimePicker
                                                                 value={formData.endTime}
                                                                 onChange={(v) => setFormData(prev => ({ ...prev, endTime: v }))}
-                                                                className="w-full h-32 border-zinc-800/50 bg-black/40"
+                                                                className="w-full h-24 border-zinc-800/50 bg-black/40"
+                                                                minuteStep={5}
                                                             />
                                                         </div>
                                                     </div>
