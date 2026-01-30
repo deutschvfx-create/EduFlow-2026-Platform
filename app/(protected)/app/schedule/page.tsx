@@ -112,6 +112,34 @@ export default function SchedulePage() {
 
     // ...
 
+    const handleLessonAdd = (newLessonData: any) => {
+        // Mock implementation of adding a lesson
+        const id = Math.random().toString(36).substr(2, 9);
+        const group = groups.find(g => g.id === newLessonData.groupId);
+        const teacher = teachers.find(t => t.id === newLessonData.teacherId);
+        const course = courses.find(c => c.id === newLessonData.courseId);
+
+        const newLesson: Lesson = {
+            id,
+            status: 'PLANNED',
+            createdAt: new Date().toISOString(),
+            // Mapped Data
+            groupId: newLessonData.groupId,
+            groupName: group?.name || "Group",
+            teacherId: newLessonData.teacherId,
+            teacherName: teacher ? `${teacher.firstName} ${teacher.lastName}` : "Teacher",
+            courseId: newLessonData.courseId,
+            courseName: course?.name || "Course",
+            // Timing
+            dayOfWeek: newLessonData.dayOfWeek,
+            startTime: newLessonData.startTime,
+            endTime: newLessonData.endTime,
+            room: newLessonData.room
+        };
+
+        setLessons(prev => [...prev, newLesson]);
+    };
+
     return (
         <ModuleGuard module="schedule">
             <div className="space-y-4 laptop:space-y-6 h-full flex flex-col">
@@ -162,6 +190,7 @@ export default function SchedulePage() {
                             lessons={filteredLessons}
                             currentDate={currentDate}
                             onLessonClick={handleLessonClick}
+                            onLessonAdd={handleLessonAdd}
                         />
                     </div>
                 ) : (

@@ -18,12 +18,13 @@ interface DesktopWeekGridProps {
     lessons: Lesson[];
     currentDate: Date;
     onLessonClick: (lesson: Lesson) => void;
+    onLessonAdd?: (lesson: any) => void;
 }
 
 const HOURS = Array.from({ length: 15 }, (_, i) => i + 8); // 08:00 to 22:00
 const DAYS: DayOfWeek[] = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
-export function DesktopWeekGrid({ lessons, currentDate, onLessonClick }: DesktopWeekGridProps) {
+export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonAdd }: DesktopWeekGridProps) {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
     const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
@@ -48,10 +49,25 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick }: Desktop
 
     const handleQuickSave = () => {
         if (!formData.groupId || !formData.teacherId || !formData.courseId) {
-            alert("Заполните обязательные поля");
+            // alert("Заполните обязательные поля");
             return;
         }
-        alert(`Урок создан: ${formData.courseId} для ${formData.groupId}`);
+
+        // Construct partial lesson
+        const newLesson = {
+            groupId: formData.groupId,
+            teacherId: formData.teacherId,
+            courseId: formData.courseId,
+            dayOfWeek: selectedSlot?.day,
+            startTime: selectedSlot?.time,
+            endTime: selectedSlot ? `${parseInt(selectedSlot.time.split(':')[0]) + 1}:30` : "00:00", // Default 1.5h
+            room: "101"
+        };
+
+        if (onLessonAdd) {
+            onLessonAdd(newLesson);
+        }
+
         setEditorOpen(false);
     };
 
