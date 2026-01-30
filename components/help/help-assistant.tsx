@@ -289,41 +289,84 @@ export function HelpAssistant() {
 
         // Standard Tour Start
         if (!force && section.route !== "all" && section.route !== pathname && section.route.startsWith('/app')) {
-            // [INTERACTIVE NAV] Try to find sidebar link and click it
             const sidebarLinkId = `sidebar-item-${section.route}`;
-            const sidebarLink = document.querySelector(`[data-help-id="${sidebarLinkId}"]`);
+            let targetEl = document.querySelector(`[data-help-id="${sidebarLinkId}"]`);
 
-            if (sidebarLink) {
-                // We found the link! Let's animate.
-                setOpen(false); // Close sheet immediately
+            // [HELPER] Function to execute the click with puppet
+            const executeClick = (element: Element) => {
+                setOpen(false);
                 setIsPuppetVisible(true);
-
-                // Move hand to link
-                const rect = sidebarLink.getBoundingClientRect();
+                const rect = element.getBoundingClientRect();
                 setPuppetRect(rect);
-
-                // Speak context
                 if (isVoiceEnabled) speak("Переходим в нужный раздел...");
 
-                // Click sequence
                 setTimeout(() => {
                     setIsPuppetClicking(true);
                     setTimeout(() => {
                         setIsPuppetClicking(false);
-                        setIsPuppetVisible(false); // Hide hand during transition
-                        (sidebarLink as HTMLElement).click();
+                        setIsPuppetVisible(false);
+                        (element as HTMLElement).click();
 
-                        // Fallback resume if route change is slow or fails
+                        // Wait for nav
                         setTimeout(() => {
                             startTour(section, true);
                         }, 1200);
-                    }, 300);
+                    }, 400);
                 }, 800);
+            };
+
+            // 1. Try direct click (Desktop)
+            if (targetEl) {
+                executeClick(targetEl);
+                return;
+            }
+
+            // 2. Try Mobile Menu Macro
+            const mobileMenuTrigger = document.querySelector('[data-help-id="mobile-nav-menu"]');
+            if (mobileMenuTrigger) {
+                // Step 1: Click Menu
+                setOpen(false);
+                setIsPuppetVisible(true);
+                setPuppetRect(mobileMenuTrigger.getBoundingClientRect());
+
+                setTimeout(() => {
+                    setIsPuppetClicking(true);
+                    setTimeout(() => {
+                        setIsPuppetClicking(false);
+                        (mobileMenuTrigger as HTMLElement).click();
+
+                        // Step 2: Wait for Drawer & Click Link
+                        setTimeout(() => {
+                            // Re-query for link inside drawer
+                            targetEl = document.querySelector(`[data-help-id="${sidebarLinkId}"]`);
+                            if (targetEl) {
+                                // Update hand position to new target
+                                setPuppetRect(targetEl.getBoundingClientRect());
+                                setTimeout(() => {
+                                    setIsPuppetClicking(true);
+                                    setTimeout(() => {
+                                        setIsPuppetClicking(false);
+                                        setIsPuppetVisible(false);
+                                        (targetEl as HTMLElement).click();
+
+                                        setTimeout(() => {
+                                            startTour(section, true);
+                                        }, 1200);
+                                    }, 400);
+                                }, 600);
+                            } else {
+                                // Fallback if still not found
+                                router.push(section.route);
+                                setTimeout(() => startTour(section, true), 800);
+                            }
+                        }, 600); // Wait for drawer animation
+                    }, 300);
+                }, 600);
 
                 return;
             }
 
-            // Fallback: If link hidden (mobile?) or not found
+            // Fallback: If link hidden or not found
             setOpen(false);
             router.push(section.route);
             setTimeout(() => {

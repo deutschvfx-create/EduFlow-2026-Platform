@@ -248,6 +248,7 @@ function DrawerItem({ item, pathname, onClose }: { item: any, pathname: string, 
         <Link
             href={item.href}
             onClick={onClose}
+            data-help-id={`sidebar-item-${item.href}`}
             className={`flex items-center justify-between group px-3 py-2.5 rounded-xl transition-all ${isActive
                 ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-lg shadow-indigo-500/5'
                 : 'text-zinc-400 hover:text-white hover:bg-zinc-900 border border-transparent'
