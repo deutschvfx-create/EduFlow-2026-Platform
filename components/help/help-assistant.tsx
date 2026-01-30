@@ -40,7 +40,7 @@ export function HelpAssistant() {
     const [hasNewFeatures, setHasNewFeatures] = useState(false);
 
     // Voice / TTS State
-    const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
+    const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
     const [isSpeaking, setIsSpeaking] = useState(false);
 
     // Smart Navigation State
@@ -628,6 +628,18 @@ export function HelpAssistant() {
             if (step) speak(step.title + ". " + step.text);
         }
     }, [isVoiceEnabled, activeSection, isTouring, tourStep, speak]);
+
+    // [VOICE FIX] Robust initialization
+    useEffect(() => {
+        const saved = localStorage.getItem('eduflow_voice_enabled');
+        if (saved !== null) {
+            setIsVoiceEnabled(JSON.parse(saved));
+        } else {
+            console.log('[Bot] Voice setting not found, defaulting to TRUE');
+            setIsVoiceEnabled(true);
+            localStorage.setItem('eduflow_voice_enabled', 'true');
+        }
+    }, []);
 
     // Cleanup speech on unmount or tour end
     useEffect(() => {
