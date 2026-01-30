@@ -27,6 +27,9 @@ const DayLabels: Record<DayOfWeek, string> = {
 }
 
 export default function SchedulePage() {
+    const { userData } = useAuth();
+    const canEdit = userData?.role === 'OWNER' || userData?.role === 'DIRECTOR';
+
     const [groupFilter, setGroupFilter] = useState("all");
     const [teacherFilter, setTeacherFilter] = useState("all");
     const [courseFilter, setCourseFilter] = useState("all");
@@ -85,10 +88,6 @@ export default function SchedulePage() {
 
     if (!isLoaded) return <div className="p-8 text-zinc-500">Загрузка расписания...</div>;
 
-    const { userData } = useAuth();
-    const canEdit = userData?.role === 'OWNER' || userData?.role === 'DIRECTOR';
-
-    // ... (keep existing handleLessonClick but add check)
     const handleLessonClick = (lesson: Lesson) => {
         if (!canEdit) return; // Read-only for others
         setSelectedLesson(lesson);
