@@ -51,59 +51,414 @@ export function HelpAssistant() {
     const [isPuppetClicking, setIsPuppetClicking] = useState(false);
     const [isPuppetVisible, setIsPuppetVisible] = useState(false);
 
-    // Watch for module enablement
-    useEffect(() => {
-        if (blockedModule && pendingTourSection && modules[blockedModule]) {
-            // Module just enabled!
-            if (isVoiceEnabled) {
-                speak("Отлично! Модуль включен. Переходим к нему.");
-            }
+    // UI/Mount State
+    const [componentMounted, setComponentMounted] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
 
-            setBlockedModule(null);
-
-            // Navigate back and start tour
-            if (pendingTourSection.route !== pathname) {
-                router.push(pendingTourSection.route);
-                // Tour will be picked up by checking pendingTourSection in a separate effect or re-triggering
-                // But simply calling startTour here might be lost if route changes
-
-                // We need to persist this intention. 
-                // Let's rely on the fact we are unlocked now.
-                // We can set a timeout to start tour
-                setTimeout(() => {
-                    startTour(pendingTourSection, true);
-                }, 800);
-            } else {
-                startTour(pendingTourSection, true);
-            }
-            setPendingTourSection(null);
-        }
-    }, [modules, blockedModule, pendingTourSection, pathname, isVoiceEnabled]);
-
-    useEffect(() => {
-        const voicePref = localStorage.getItem('eduflow_voice_enabled');
-        if (voicePref) setIsVoiceEnabled(JSON.parse(voicePref));
+    const triggerConfetti = useCallback(() => {
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 3000);
     }, []);
 
-    const toggleVoice = () => {
-        const next = !isVoiceEnabled;
-        setIsVoiceEnabled(next);
-        localStorage.setItem('eduflow_voice_enabled', JSON.stringify(next));
-        if (!next) {
-            window.speechSynthesis.cancel();
-            setIsSpeaking(false);
-        } else if (activeSection && isTouring) {
-            // Immediately speak current step if turned on
-            const step = activeSection.steps[tourStep];
-            if (step) speak(step.title + ". " + step.text);
+    const sidebarLinkId = (section: HelpSection) => `sidebar-item-${section.route}`;
+
+    // ============================================================================
+    // HUMAN-LIKE INTERACTION SYSTEM
+    // ============================================================================
+
+    /**
+     * Ensures the window has focus before performing actions
+     * Critical for reliable click events
+     */
+    const ensureFocus = useCallback(async (): Promise<boolean> => {
+        if (typeof window === 'undefined') return false;
+
+        if (!document.hasFocus()) {
+            window.focus();
+            // Wait for focus to be acquired
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            // Verify focus was acquired
+            if (!document.hasFocus()) {
+                console.warn('[Bot] Failed to acquire window focus');
+                return false;
+            }
         }
-    };
+        return true;
+    }, []);
+
+    /**
+     * Generates a random human-like delay between min and max ms
+     */
+    const randomDelay = useCallback((min: number = 300, max: number = 800): Promise<void> => {
+        const delay = Math.floor(Math.random() * (max - min + 1)) + min;
+        return new Promise(resolve => setTimeout(resolve, delay));
+    }, []);
+
+    /**
+     * Checks if element is truly visible and interactable
+     */
+    const isElementInteractable = useCallback((element: HTMLElement): boolean => {
+        if (!element) return false;
+
+        // Check if element exists in DOM
+        if (!document.body.contains(element)) return false;
+
+        // Check offsetParent (null means display:none or not in DOM)
+        if (element.offsetParent === null) return false;
+
+        // Check computed style
+        const style = window.getComputedStyle(element);
+        if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+            return false;
+        }
+
+        // Check dimensions
+        const rect = element.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return false;
+
+        // Check if disabled
+        if (element.hasAttribute('disabled') || element.getAttribute('aria-disabled') === 'true') {
+            return false;
+        }
+
+        return true;
+    }, []);
+
+    /**
+     * Checks if element is in viewport
+     */
+    const isInViewport = useCallback((element: HTMLElement): boolean => {
+        const rect = element.getBoundingClientRect();
+        return (
+            rect.top >= 0 &&
+            rect.left >= 0 &&
+            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+            rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+        );
+    }, []);
+
+    /**
+     * Comprehensive element validation with retries
+     */
+    const validateElement = useCallback(async (
+        selector: string | ((el: Element) => boolean),
+        options: {
+            timeout?: number;
+            mustBeVisible?: boolean;
+            mustBeEnabled?: boolean;
+            mustBeInViewport?: boolean;
+        } = {}
+    ): Promise<HTMLElement | null> => {
+        const {
+            timeout = 5000,
+            mustBeVisible = true,
+            mustBeEnabled = true,
+            mustBeInViewport = false
+        } = options;
+
+        const start = Date.now();
+
+        while (Date.now() - start < timeout) {
+            let element: HTMLElement | null = null;
+
+            // Find element
+            if (typeof selector === 'string') {
+                element = document.querySelector(selector) as HTMLElement;
+            } else {
+                const allWithHelpId = document.querySelectorAll('[data-help-id]');
+                element = Array.from(allWithHelpId).find(selector) as HTMLElement;
+            }
+
+            if (!element) {
+                await new Promise(resolve => requestAnimationFrame(resolve));
+                continue;
+            }
+
+            // Validate interactability
+            if (mustBeVisible && !isElementInteractable(element)) {
+                await new Promise(resolve => requestAnimationFrame(resolve));
+                continue;
+            }
+
+            // Validate viewport position if required
+            if (mustBeInViewport && !isInViewport(element)) {
+                await new Promise(resolve => requestAnimationFrame(resolve));
+                continue;
+            }
+
+            // All checks passed
+            return element;
+        }
+
+        return null;
+    }, [isElementInteractable, isInViewport]);
+
+    /**
+     * Safely scrolls element into view and waits for scroll to complete
+     */
+    const scrollIntoViewSafe = useCallback(async (element: HTMLElement): Promise<void> => {
+        if (!element) return;
+
+        const initialScrollY = window.scrollY;
+
+        element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'center'
+        });
+
+        // Wait for scroll animation to complete
+        await new Promise<void>(resolve => {
+            let lastScrollY = window.scrollY;
+            let sameCount = 0;
+
+            const checkScroll = () => {
+                if (Math.abs(window.scrollY - lastScrollY) < 1) {
+                    sameCount++;
+                    if (sameCount > 3) {
+                        resolve();
+                        return;
+                    }
+                } else {
+                    sameCount = 0;
+                }
+                lastScrollY = window.scrollY;
+                requestAnimationFrame(checkScroll);
+            };
+
+            requestAnimationFrame(checkScroll);
+        });
+
+        // Additional safety delay
+        await new Promise(resolve => setTimeout(resolve, 200));
+    }, []);
+
+    /**
+     * Hovers over element to trigger :hover states
+     */
+    const hoverElement = useCallback(async (element: HTMLElement): Promise<void> => {
+        if (!element) return;
+
+        const rect = element.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        // Dispatch mouse events
+        const mouseEnter = new MouseEvent('mouseenter', {
+            view: window,
+            bubbles: true,
+            cancelable: true,
+            clientX: centerX,
+            clientY: centerY
+        });
+
+        const mouseOver = new MouseEvent('mouseover', {
+            view: window,
+            bubbles: true,
+            cancelable: true,
+            clientX: centerX,
+            clientY: centerY
+        });
+
+        element.dispatchEvent(mouseEnter);
+        element.dispatchEvent(mouseOver);
+
+        // Wait for hover effects to apply
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }, []);
+
+    /**
+     * Performs a reliable, human-like click on a DOM element
+     */
+    const performClick = useCallback(async (element: HTMLElement): Promise<boolean> => {
+        try {
+            // 1. Ensure window focus
+            const hasFocus = await ensureFocus();
+            if (!hasFocus) {
+                console.error('[Bot] Cannot click: window focus failed');
+                return false;
+            }
+
+            // 2. Validate element is still interactable
+            if (!isElementInteractable(element)) {
+                console.error('[Bot] Cannot click: element not interactable');
+                return false;
+            }
+
+            // 3. Scroll into view if needed
+            if (!isInViewport(element)) {
+                await scrollIntoViewSafe(element);
+            }
+
+            // 4. Re-validate after scroll
+            if (!isElementInteractable(element)) {
+                console.error('[Bot] Cannot click: element not interactable after scroll');
+                return false;
+            }
+
+            // 5. Hover over element
+            await hoverElement(element);
+
+            // 6. Human-like delay
+            await randomDelay(300, 600);
+
+            // 7. Dispatch real click event
+            const rect = element.getBoundingClientRect();
+            const clickEvent = new MouseEvent('click', {
+                view: window,
+                bubbles: true,
+                cancelable: true,
+                clientX: rect.left + rect.width / 2,
+                clientY: rect.top + rect.height / 2
+            });
+
+            element.dispatchEvent(clickEvent);
+
+            // 8. Also trigger native click for compatibility
+            element.click();
+
+            return true;
+        } catch (error) {
+            console.error('[Bot] Click failed:', error);
+            return false;
+        }
+    }, [ensureFocus, isElementInteractable, isInViewport, scrollIntoViewSafe, hoverElement, randomDelay]);
+
+    /**
+     * Verifies that a click produced the expected result
+     */
+    const verifyClickResult = useCallback(async (
+        verification: {
+            type: 'modal_open' | 'route_change' | 'element_appear' | 'element_disappear' | 'state_change';
+            selector?: string;
+            route?: string;
+            timeout?: number;
+        }
+    ): Promise<boolean> => {
+        const { type, selector, route, timeout = 3000 } = verification;
+        const start = Date.now();
+
+        while (Date.now() - start < timeout) {
+            switch (type) {
+                case 'modal_open':
+                case 'element_appear':
+                    if (selector) {
+                        const element = document.querySelector(selector);
+                        if (element && isElementInteractable(element as HTMLElement)) {
+                            return true;
+                        }
+                    }
+                    break;
+
+                case 'element_disappear':
+                    if (selector) {
+                        const element = document.querySelector(selector);
+                        if (!element || !isElementInteractable(element as HTMLElement)) {
+                            return true;
+                        }
+                    }
+                    break;
+
+                case 'route_change':
+                    if (route && window.location.pathname === route) {
+                        return true;
+                    }
+                    break;
+
+                case 'state_change':
+                    // Generic state change - just wait a bit
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    return true;
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        console.warn(`[Bot] Verification failed: ${type}`, { selector, route });
+        return false;
+    }, [isElementInteractable]);
+
+    /**
+     * Performs a click with automatic retries and verification
+     */
+    const retryableClick = useCallback(async (
+        element: HTMLElement,
+        verification?: {
+            type: 'modal_open' | 'route_change' | 'element_appear' | 'element_disappear' | 'state_change';
+            selector?: string;
+            route?: string;
+            timeout?: number;
+        },
+        maxRetries: number = 3
+    ): Promise<boolean> => {
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
+            if (attempt > 0) {
+                console.log(`[Bot] Retry attempt ${attempt + 1}/${maxRetries}`);
+                // Exponential backoff
+                await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 500));
+            }
+
+            const clickSuccess = await performClick(element);
+            if (!clickSuccess) {
+                continue;
+            }
+
+            // If no verification needed, consider it successful
+            if (!verification) {
+                return true;
+            }
+
+            // Verify the click produced expected result
+            const verified = await verifyClickResult(verification);
+            if (verified) {
+                return true;
+            }
+        }
+
+        console.error('[Bot] All retry attempts failed');
+        return false;
+    }, [performClick, verifyClickResult]);
+
+    // Legacy compatibility: keep waitForElement as alias to validateElement
+    const waitForElement = useCallback(async (selector: string | ((el: Element) => boolean), timeout = 5000): Promise<HTMLElement | null> => {
+        return validateElement(selector, { timeout });
+    }, [validateElement]);
+
+    const markAsDiscovered = useCallback((id: string) => {
+        if (!id || discoveredFeatures.includes(id)) return;
+        setDiscoveredFeatures(prev => {
+            if (prev.includes(id)) return prev;
+            const next = [...prev, id];
+            localStorage.setItem('eduflow_discovered_features', JSON.stringify(next));
+            return next;
+        });
+    }, [discoveredFeatures]);
+
+    const updateHighlight = useCallback((targetId: string) => {
+        const el = document.querySelector(`[data-help-id="${targetId}"]`);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => {
+                setHighlightRect(el.getBoundingClientRect());
+            }, 400);
+        } else {
+            console.warn(`Element with data-help-id="${targetId}" not found.`);
+            // If target missing, still set null to avoid stale highlights
+            setHighlightRect(null);
+        }
+    }, []);
 
     const speak = useCallback((text: string) => {
-        if (!isVoiceEnabled || typeof window === 'undefined') return;
+        if (!isVoiceEnabled || typeof window === 'undefined' || !window.speechSynthesis) return;
 
         // Cancel previous speech
-        window.speechSynthesis.cancel();
+        try {
+            window.speechSynthesis.cancel();
+        } catch (e) {
+            console.warn("Speech synthesis cancel failed", e);
+            return;
+        }
 
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 1.1; // Slightly faster natural usage
@@ -111,7 +466,7 @@ export function HelpAssistant() {
 
         // Try to find a Russian voice
         const voices = window.speechSynthesis.getVoices();
-        const ruVoice = voices.find(v => v.lang.includes('ru')) || voices[0];
+        const ruVoice = voices.length > 0 ? (voices.find(v => v.lang.includes('ru')) || voices[0]) : null;
         if (ruVoice) utterance.voice = ruVoice;
 
         utterance.onstart = () => setIsSpeaking(true);
@@ -121,65 +476,112 @@ export function HelpAssistant() {
         window.speechSynthesis.speak(utterance);
     }, [isVoiceEnabled]);
 
+    const toggleVoice = useCallback(() => {
+        const next = !isVoiceEnabled;
+        setIsVoiceEnabled(next);
+        localStorage.setItem('eduflow_voice_enabled', JSON.stringify(next));
+        if (!next) {
+            if (typeof window !== 'undefined' && window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+            }
+            setIsSpeaking(false);
+        } else if (activeSection && isTouring) {
+            const step = activeSection.steps[tourStep];
+            if (step) speak(step.title + ". " + step.text);
+        }
+    }, [isVoiceEnabled, activeSection, isTouring, tourStep, speak]);
+
     // Cleanup speech on unmount or tour end
     useEffect(() => {
         return () => {
-            window.speechSynthesis.cancel();
+            if (typeof window !== 'undefined' && window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+            }
         };
     }, []);
 
     // Speak when step changes
     useEffect(() => {
-        if (isTouring && activeSection) {
+        let timer: NodeJS.Timeout | null = null;
+
+        const handleStepAction = async () => {
+            if (!isTouring || !activeSection) return;
+
             const step = activeSection.steps[tourStep];
-            if (step) {
-                // [INTERACTIVE STEP]
-                if (step.action) {
-                    const targetId = step.actionTargetId || step.targetId;
-                    if (targetId) {
-                        const el = document.querySelector(`[data-help-id="${targetId}"]`);
-                        if (el) {
-                            setIsPuppetVisible(true);
-                            // Move to element
-                            // Small delay to ensure layout is stable
-                            setTimeout(() => {
-                                setPuppetRect(el.getBoundingClientRect());
-                            }, 100);
+            if (!step) return;
 
-                            // Perform Action
-                            if (step.action === 'click') {
-                                setTimeout(() => {
-                                    setIsPuppetClicking(true);
-                                    // Visual click only?
-                                    setTimeout(() => {
-                                        setIsPuppetClicking(false);
-                                        if (!step.preventInteraction) {
-                                            (el as HTMLElement).click();
-                                        }
-                                    }, 400); // Click hold duration
-                                }, (step.actionDelay || 1000));
-                            } else if (step.action === 'wait') {
-                                // Just hover
+            // [INTERACTIVE STEP]
+            if (step.action) {
+                const targetId = step.actionTargetId || step.targetId;
+                if (targetId) {
+                    // Validate and wait for element
+                    const el = await validateElement(`[data-help-id="${targetId}"]`, {
+                        timeout: 3000,
+                        mustBeVisible: true,
+                        mustBeEnabled: true
+                    });
+
+                    if (el) {
+                        setIsPuppetVisible(true);
+
+                        // Update puppet position
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        setPuppetRect(el.getBoundingClientRect());
+
+                        // Perform Action
+                        if (step.action === 'click') {
+                            const actionDelay = step.actionDelay || 1000;
+
+                            await new Promise(resolve => setTimeout(resolve, actionDelay));
+                            setIsPuppetClicking(true);
+
+                            await new Promise(resolve => setTimeout(resolve, 400));
+                            setIsPuppetClicking(false);
+
+                            if (!step.preventInteraction) {
+                                // Use new reliable click system
+                                const verification = step.targetId === 'students-table-row'
+                                    ? {
+                                        type: 'modal_open' as const,
+                                        selector: '[role="dialog"]',
+                                        timeout: 2000
+                                    }
+                                    : undefined;
+
+                                const success = await retryableClick(el, verification, 2);
+
+                                if (!success) {
+                                    console.warn('[Bot] Click action failed for step:', step.title);
+                                }
                             }
+                        } else if (step.action === 'wait') {
+                            // Just hover - already done by showing puppet
                         }
+                    } else {
+                        console.warn('[Bot] Element not found for step:', targetId);
                     }
-                } else {
-                    // Hide puppet if no action
-                    setIsPuppetVisible(false);
                 }
-
-                // Small delay to allow transition
-                const timer = setTimeout(() => {
-                    speak(step.title + ". " + step.text);
-                }, 500);
-                return () => clearTimeout(timer);
+            } else {
+                // Hide puppet if no action
+                setIsPuppetVisible(false);
             }
-        } else {
-            window.speechSynthesis.cancel();
+
+            // Speak after action
+            timer = setTimeout(() => {
+                speak(step.title + ". " + step.text);
+            }, 500);
+        };
+
+        handleStepAction();
+
+        return () => {
+            if (timer) clearTimeout(timer);
+            if (typeof window !== 'undefined' && window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+            }
             setIsSpeaking(false);
-            setIsPuppetVisible(false);
-        }
-    }, [tourStep, isTouring, activeSection, speak]);
+        };
+    }, [tourStep, isTouring, activeSection, speak, validateElement, retryableClick]);
 
     useEffect(() => {
         const saved = localStorage.getItem('eduflow_discovered_features');
@@ -204,12 +606,29 @@ export function HelpAssistant() {
         setHasNewFeatures(unseenAvailable.length > 0);
     }, [pathname, discoveredFeatures, open]);
 
-    const markAsDiscovered = (id: string) => {
-        if (!id || discoveredFeatures.includes(id)) return;
-        const next = [...discoveredFeatures, id];
-        setDiscoveredFeatures(next);
-        localStorage.setItem('eduflow_discovered_features', JSON.stringify(next));
-    };
+    // [NAVIGATION FIX] Persist tour intention across route changes
+    useEffect(() => {
+        const savedTour = sessionStorage.getItem('eduflow_pending_tour');
+        if (savedTour) {
+            const { sectionId, step } = JSON.parse(savedTour);
+            const section = helpSections.find(s => s.id === sectionId);
+            if (section) {
+                // Wait for page to stabilize
+                setTimeout(() => {
+                    sessionStorage.removeItem('eduflow_pending_tour');
+                    setActiveSection(section);
+                    setIsTouring(true);
+                    setTourStep(step || 0);
+
+                    // Trigger highlight for current step
+                    const targetId = section.steps[step || 0]?.targetId || section.highlightId;
+                    if (targetId) {
+                        updateHighlight(targetId);
+                    }
+                }, 1000);
+            }
+        }
+    }, [pathname, updateHighlight]);
 
     // Auto-select section based on route
     useEffect(() => {
@@ -251,21 +670,14 @@ export function HelpAssistant() {
         }
     }, [open]);
 
-    const updateHighlight = useCallback((targetId: string) => {
-        const el = document.querySelector(`[data-help-id="${targetId}"]`);
-        if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            setTimeout(() => {
-                setHighlightRect(el.getBoundingClientRect());
-            }, 400);
-        } else {
-            console.warn(`Element with data-help-id="${targetId}" not found.`);
-            // If target missing, still set null to avoid stale highlights
-            setHighlightRect(null);
-        }
-    }, []);
+    const endTour = () => {
+        setIsTouring(false);
+        setHighlightRect(null);
+        setTourStep(0);
+        setIsExpanded(false);
+    };
 
-    const startTour = (section: HelpSection, force = false) => {
+    const startTour = async (section: HelpSection, force = false) => {
         // [SMART NAV] Check Module Lock
         if (!force && section.moduleKey && !modules[section.moduleKey as ModuleKey]) {
             // Module is locked!
@@ -291,37 +703,35 @@ export function HelpAssistant() {
         // Standard Tour Start
         if (!force && section.route !== "all" && section.route !== pathname && section.route.startsWith('/app')) {
             const sidebarLinkId = `sidebar-item-${section.route}`;
-            let targetEl = document.querySelector(`[data-help-id="${sidebarLinkId}"]`);
 
-            // [HELPER] Function to execute the click with puppet
-            const executeClick = (element: Element) => {
+            // [HELPER] Function to execute the click with puppet and verification
+            const executeNavigationClick = async (element: HTMLElement): Promise<boolean> => {
                 setOpen(false);
                 setIsPuppetVisible(true);
                 const rect = element.getBoundingClientRect();
                 setPuppetRect(rect);
                 if (isVoiceEnabled) speak("Переходим в нужный раздел...");
 
-                setTimeout(() => {
-                    setIsPuppetClicking(true);
-                    setTimeout(() => {
-                        setIsPuppetClicking(false);
-                        // DO NOT HIDE PUPPET YET - Wait for route change to clear it naturally via unmount or effect
-                        // setIsPuppetVisible(false); 
-                        (element as HTMLElement).click();
+                // Store intent before click
+                sessionStorage.setItem('eduflow_pending_tour', JSON.stringify({
+                    sectionId: section.id,
+                    step: 0
+                }));
 
-                        // Wait for nav
-                        setTimeout(() => {
-                            startTour(section, true);
-                        }, 1200);
-                    }, 400);
-                }, 800);
-            };
+                // Visual click animation
+                await randomDelay(600, 800);
+                setIsPuppetClicking(true);
+                await new Promise(resolve => setTimeout(resolve, 400));
+                setIsPuppetClicking(false);
 
-            // 1. Try direct click (Desktop/Visible Link)
-            // Check visibility using offsetParent (null if display: none) or zero rect
-            const isVisible = (el: Element) => {
-                if (!(el instanceof HTMLElement)) return false;
-                return el.offsetParent !== null && el.getBoundingClientRect().width > 0;
+                // Perform reliable click with route change verification
+                const success = await retryableClick(element, {
+                    type: 'route_change',
+                    route: section.route,
+                    timeout: 3000
+                }, 2);
+
+                return success;
             };
 
             // [ALWAYS SHOW HAND] Start by showing hand in center
@@ -330,104 +740,122 @@ export function HelpAssistant() {
             setPuppetRect(null); // Triggers center position in CursorPuppet
 
             // Wait a moment for "Arrival" animation
-            setTimeout(() => {
-                if (targetEl && isVisible(targetEl)) {
-                    executeClick(targetEl);
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // 1. Try direct click (Desktop/Visible Link)
+            const targetEl = await validateElement(`[data-help-id="${sidebarLinkId}"]`, {
+                timeout: 500,
+                mustBeVisible: true
+            });
+
+            if (targetEl) {
+                const success = await executeNavigationClick(targetEl);
+                if (success) return;
+                console.warn('[Bot] Direct navigation click failed, trying mobile menu');
+            }
+
+            // 2. Try Mobile Menu Macro
+            const mobileMenuTrigger = await validateElement('[data-help-id="mobile-nav-menu"]', {
+                timeout: 500,
+                mustBeVisible: true
+            });
+
+            if (mobileMenuTrigger) {
+                // Step 1: Click Menu
+                const menuRect = mobileMenuTrigger.getBoundingClientRect();
+                setPuppetRect(menuRect);
+
+                if (isVoiceEnabled) speak("Открываю меню...");
+
+                await randomDelay(600, 800);
+                setIsPuppetClicking(true);
+                await new Promise(resolve => setTimeout(resolve, 400));
+                setIsPuppetClicking(false);
+
+                // Click menu with drawer opening verification
+                const menuSuccess = await retryableClick(mobileMenuTrigger, {
+                    type: 'element_appear',
+                    selector: '[data-help-id="mobile-nav-menu"] + div', // Drawer appears
+                    timeout: 2000
+                }, 2);
+
+                if (!menuSuccess) {
+                    console.warn('[Bot] Mobile menu click failed');
+                    // Fallback to direct navigation
+                    setIsPuppetVisible(false);
+                    sessionStorage.setItem('eduflow_pending_tour', JSON.stringify({
+                        sectionId: section.id,
+                        step: 0
+                    }));
+                    router.push(section.route);
                     return;
                 }
 
-                // 2. Try Mobile Menu Macro
-                const mobileMenuTrigger = document.querySelector('[data-help-id="mobile-nav-menu"]');
+                // Step 2: Wait for Drawer and Link
+                if (isVoiceEnabled) speak("Ищу нужный раздел...");
 
-                // Only try mobile macro if desktop link is NOT visible AND mobile menu trigger IS visible
-                if (mobileMenuTrigger && isVisible(mobileMenuTrigger)) {
-                    // Step 1: Click Menu
-                    // Move hand to menu from center
-                    // Step 1: Click Menu
-                    // Move hand to menu logic
-                    const menuRect = mobileMenuTrigger.getBoundingClientRect();
-                    setPuppetRect(menuRect);
+                // Scan animation
+                const windowWidth = window.innerWidth;
+                const windowHeight = window.innerHeight;
+                setPuppetRect({
+                    left: windowWidth / 2,
+                    top: windowHeight / 3,
+                    width: 0,
+                    height: 0,
+                    right: windowWidth / 2,
+                    bottom: windowHeight / 3,
+                    x: windowWidth / 2,
+                    y: windowHeight / 3,
+                    toJSON: () => { }
+                } as DOMRect);
 
-                    if (isVoiceEnabled) speak("Открываю меню...");
+                const drawerTarget = await validateElement(`[data-help-id="${sidebarLinkId}"]`, {
+                    timeout: 3000,
+                    mustBeVisible: true
+                });
 
-                    // Move delay
-                    setTimeout(() => {
-                        setIsPuppetClicking(true);
+                if (drawerTarget) {
+                    // Scroll into view safely
+                    await scrollIntoViewSafe(drawerTarget);
 
-                        // Click Menu
-                        setTimeout(() => {
-                            setIsPuppetClicking(false);
-                            (mobileMenuTrigger as HTMLElement).click();
+                    // Update puppet position
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    setPuppetRect(drawerTarget.getBoundingClientRect());
 
-                            // Step 2: Wait for Drawer
-                            setTimeout(() => {
-                                // "Scan" animation
-                                const windowWidth = window.innerWidth;
-                                const windowHeight = window.innerHeight;
-                                setPuppetRect({
-                                    left: windowWidth / 2,
-                                    top: windowHeight / 3,
-                                    width: 0,
-                                    height: 0,
-                                    right: windowWidth / 2,
-                                    bottom: windowHeight / 3,
-                                    x: windowWidth / 2,
-                                    y: windowHeight / 3,
-                                    toJSON: () => { }
-                                });
+                    // Execute click with verification
+                    const success = await executeNavigationClick(drawerTarget);
+                    if (success) return;
 
-                                if (isVoiceEnabled) speak("Ищу нужный раздел...");
-
-                                setTimeout(() => {
-                                    targetEl = document.querySelector(`[data-help-id="${sidebarLinkId}"]`);
-
-                                    if (targetEl) {
-                                        targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                                        setTimeout(() => {
-                                            setPuppetRect(targetEl!.getBoundingClientRect());
-
-                                            setTimeout(() => {
-                                                setIsPuppetClicking(true);
-
-                                                setTimeout(() => {
-                                                    setIsPuppetClicking(false);
-                                                    (targetEl as HTMLElement).click();
-
-                                                    setTimeout(() => {
-                                                        setIsPuppetVisible(false);
-                                                        startTour(section, true);
-                                                    }, 1500);
-                                                }, 500);
-                                            }, 800);
-                                        }, 800);
-                                    } else {
-                                        console.warn("Target link not found in drawer:", sidebarLinkId);
-                                        if (isVoiceEnabled) speak("Не вижу кнопку. Перехожу автоматически.");
-                                        setIsPuppetVisible(false);
-                                        router.push(section.route);
-                                        setTimeout(() => startTour(section, true), 800);
-                                    }
-                                }, 1000);
-                            }, 1000);
-                        }, 400);
-                    }, 800);
-
-                    return;
+                    console.warn('[Bot] Drawer link click failed');
                 }
 
-                // Fallback: If nothing works
-                if (isVoiceEnabled) speak("Перехожу в раздел.");
+                // If drawer target not found or click failed
+                console.warn("Target link not found or click failed in drawer:", sidebarLinkId);
+                if (isVoiceEnabled) speak("Не вижу кнопку. Перехожу автоматически.");
                 setIsPuppetVisible(false);
-                router.push(section.route);
-                setTimeout(() => {
-                    startTour(section, true);
-                }, 800);
-            }, 500); // Initial appearance delay
 
+                sessionStorage.setItem('eduflow_pending_tour', JSON.stringify({
+                    sectionId: section.id,
+                    step: 0
+                }));
+                router.push(section.route);
+                return;
+            }
+
+            // Fallback: If nothing works
+            console.warn('[Bot] All navigation methods failed, using router.push');
+            if (isVoiceEnabled) speak("Перехожу в раздел.");
+            setIsPuppetVisible(false);
+
+            sessionStorage.setItem('eduflow_pending_tour', JSON.stringify({
+                sectionId: section.id,
+                step: 0
+            }));
+            router.push(section.route);
             return;
         }
 
+        // Already on correct page - start tour immediately
         setOpen(false);
         setIsTouring(true);
         setTourStep(0);
@@ -441,6 +869,31 @@ export function HelpAssistant() {
             markAsDiscovered(targetId);
         }
     };
+
+    // Watch for module enablement
+    useEffect(() => {
+        if (blockedModule && pendingTourSection && modules[blockedModule as ModuleKey]) {
+            // Module just enabled!
+            if (isVoiceEnabled) {
+                speak("Отлично! Модуль включен. Переходим к нему.");
+            }
+
+            setBlockedModule(null);
+
+            // Navigate back and start tour
+            if (pendingTourSection.route !== pathname) {
+                router.push(pendingTourSection.route);
+                setTimeout(() => {
+                    startTour(pendingTourSection, true);
+                }, 800);
+            } else {
+                startTour(pendingTourSection, true);
+            }
+            setPendingTourSection(null);
+        }
+    }, [modules, blockedModule, pendingTourSection, pathname, isVoiceEnabled, speak, startTour]);
+
+
 
     const nextStep = () => {
         if (!activeSection) return;
@@ -467,21 +920,21 @@ export function HelpAssistant() {
         if (targetId) updateHighlight(targetId);
     };
 
-    const endTour = () => {
-        setIsTouring(false);
-        setHighlightRect(null);
-        setTourStep(0);
-        setIsExpanded(false);
-    };
 
-    // Handle Resize/Scroll for Highlight Reposition
     useEffect(() => {
         const handleUpdate = () => {
             if (isTouring && activeSection) {
                 const targetId = activeSection.steps[tourStep]?.targetId || activeSection.highlightId;
                 if (targetId) {
                     const el = document.querySelector(`[data-help-id="${targetId}"]`);
-                    if (el) setHighlightRect(el.getBoundingClientRect());
+                    if (el) {
+                        const rect = el.getBoundingClientRect();
+                        setHighlightRect(rect);
+                        // [REALISM FIX] Update puppet position too if it's visible and tied to this element
+                        if (isPuppetVisible) {
+                            setPuppetRect(rect);
+                        }
+                    }
                 }
             }
         };
@@ -491,7 +944,7 @@ export function HelpAssistant() {
             window.removeEventListener('resize', handleUpdate);
             window.removeEventListener('scroll', handleUpdate, true);
         };
-    }, [isTouring, activeSection, tourStep]);
+    }, [isTouring, activeSection, tourStep, isPuppetVisible]);
 
     const filteredSections = useMemo(() => {
         return search
@@ -517,13 +970,7 @@ export function HelpAssistant() {
         } as React.CSSProperties;
     }, [highlightRect]);
 
-    // Confetti state
-    const [showConfetti, setShowConfetti] = useState(false);
-
-    const triggerConfetti = () => {
-        setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 3000);
-    };
+    if (!componentMounted) return null;
 
     return (
         <>
@@ -713,10 +1160,10 @@ export function HelpAssistant() {
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
                             className="absolute z-20 pointer-events-auto flex flex-col items-center max-w-[90vw] sm:max-w-none"
                             style={{
-                                top: highlightRect.bottom + 40 > window.innerHeight - 250
+                                top: highlightRect.bottom + 40 > (typeof window !== 'undefined' ? window.innerHeight : 800) - 250
                                     ? highlightRect.top - (isExpanded ? 380 : 280)
                                     : highlightRect.bottom + 40,
-                                left: Math.max(10, Math.min(window.innerWidth - 310, highlightRect.left + highlightRect.width / 2 - 150)),
+                                left: Math.max(10, Math.min((typeof window !== 'undefined' ? window.innerWidth : 1000) - 310, highlightRect.left + highlightRect.width / 2 - 150)),
                                 width: 300
                             }}
                         >
@@ -888,7 +1335,7 @@ export function HelpAssistant() {
                             )}
 
                             {/* Arrow Indicator */}
-                            <div className={`w-5 h-5 bg-zinc-900 border-l border-t border-zinc-800/50 rotate-45 -mt-2.5 relative z-10 ${highlightRect.bottom + 40 > window.innerHeight - 250 ? 'mt-[238px] rotate-[225deg]' : ''}`} />
+                            <div className={`w-5 h-5 bg-zinc-900 border-l border-t border-zinc-800/50 rotate-45 -mt-2.5 relative z-10 ${highlightRect.bottom + 40 > (typeof window !== 'undefined' ? window.innerHeight : 800) - 250 ? 'mt-[238px] rotate-[225deg]' : ''}`} />
                         </motion.div>
                     </div>
                 )}
