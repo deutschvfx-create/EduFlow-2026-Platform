@@ -58,6 +58,23 @@ export default function SchedulePage() {
         });
     }, []);
 
+    // Role based filtering
+    useEffect(() => {
+        if (!userData) return;
+
+        if (userData.role === 'TEACHER') {
+            setTeacherFilter(userData.uid);
+        }
+        // TODO: For students we need their groupId. 
+        // For now we just restrict editing.
+    }, [userData]);
+
+    const handleSaveUpdate = async (id: string, updates: Partial<Lesson>) => {
+        // Here we would call the API
+        console.log("Saving updates", id, updates);
+        setEditModalOpen(false);
+    };
+
     const filteredLessons = lessons.filter(l => {
         const matchesGroup = groupFilter === 'all' || l.groupId === groupFilter;
         const matchesTeacher = teacherFilter === 'all' || l.teacherId === teacherFilter;
