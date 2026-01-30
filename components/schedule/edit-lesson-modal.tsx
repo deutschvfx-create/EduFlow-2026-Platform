@@ -209,50 +209,51 @@ export function EditLessonModal({ lesson, open, onOpenChange, onSave }: EditLess
                                 </Button>
                             </div>
                         </div>
-                    </div>    <div className="space-y-2">
-                        <Label>Аудитория</Label>
-                        <Input
-                            className="bg-zinc-950 border-zinc-800"
-                            value={room}
-                            onChange={(e) => setRoom(e.target.value)}
-                        />
+
+                        <div className="space-y-2">
+                            <Label>Аудитория</Label>
+                            <Input
+                                className="bg-zinc-950 border-zinc-800"
+                                value={room}
+                                onChange={(e) => setRoom(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2 pt-2 border-t border-zinc-800">
+                        <div className="text-zinc-400 text-sm mb-2">Действия</div>
+                        <div className="flex gap-4">
+                            {status !== 'CANCELLED' ? (
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    className="w-full bg-red-900/30 hover:bg-red-900/50 text-red-500 border border-red-900"
+                                    onClick={() => setStatus('CANCELLED')}
+                                >
+                                    <XCircle className="mr-2 h-4 w-4" /> Отменить занятие
+                                </Button>
+                            ) : (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="w-full border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                                    onClick={() => setStatus('PLANNED')}
+                                >
+                                    <Loader2 className="mr-2 h-4 w-4" /> Восстановить занятие
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </div>
 
-                <div className="space-y-2 pt-2 border-t border-zinc-800">
-                    <div className="text-zinc-400 text-sm mb-2">Действия</div>
-                    <div className="flex gap-4">
-                        {status !== 'CANCELLED' ? (
-                            <Button
-                                type="button"
-                                variant="destructive"
-                                className="w-full bg-red-900/30 hover:bg-red-900/50 text-red-500 border border-red-900"
-                                onClick={() => setStatus('CANCELLED')}
-                            >
-                                <XCircle className="mr-2 h-4 w-4" /> Отменить занятие
-                            </Button>
-                        ) : (
-                            <Button
-                                type="button"
-                                variant="outline"
-                                className="w-full border-zinc-700 text-zinc-300 hover:bg-zinc-800"
-                                onClick={() => setStatus('PLANNED')}
-                            >
-                                <Loader2 className="mr-2 h-4 w-4" /> Восстановить занятие
-                            </Button>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            <DialogFooter>
-                <Button variant="ghost" onClick={() => onOpenChange(false)}>Отмена</Button>
-                <Button onClick={handleSubmit} disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Сохранить
-                </Button>
-            </DialogFooter>
-        </DialogContent>
+                <DialogFooter>
+                    <Button variant="ghost" onClick={() => onOpenChange(false)}>Отмена</Button>
+                    <Button onClick={handleSubmit} disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Сохранить
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
         </Dialog >
     );
 }
