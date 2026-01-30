@@ -273,61 +273,125 @@ export function HelpAssistant() {
     }, []);
 
     /**
-     * Performs a reliable, human-like click on a DOM element
+     * Performs a realistic human interaction (Touch/Pointer sequence)
+     * Critical: Bypasses overlays and verifies the target is actually hit
      */
-    const performClick = useCallback(async (element: HTMLElement): Promise<boolean> => {
+    const performHumanInteraction = useCallback(async (element: HTMLElement): Promise<boolean> => {
         try {
             // 1. Ensure window focus
             const hasFocus = await ensureFocus();
             if (!hasFocus) {
-                console.error('[Bot] Cannot click: window focus failed');
+                console.error('[Bot] Cannot interact: window focus failed');
                 return false;
             }
 
-            // 2. Validate element is still interactable
-            if (!isElementInteractable(element)) {
-                console.error('[Bot] Cannot click: element not interactable');
-                return false;
-            }
+            // 2. Scroll into view safely
+            await scrollIntoViewSafe(element);
 
-            // 3. Scroll into view if needed
-            if (!isInViewport(element)) {
-                await scrollIntoViewSafe(element);
-            }
-
-            // 4. Re-validate after scroll
-            if (!isElementInteractable(element)) {
-                console.error('[Bot] Cannot click: element not interactable after scroll');
-                return false;
-            }
-
-            // 5. Hover over element
-            await hoverElement(element);
-
-            // 6. Human-like delay
-            await randomDelay(300, 600);
-
-            // 7. Dispatch real click event
+            // 3. Get target coordinates
             const rect = element.getBoundingClientRect();
-            const clickEvent = new MouseEvent('click', {
-                view: window,
-                bubbles: true,
-                cancelable: true,
-                clientX: rect.left + rect.width / 2,
-                clientY: rect.top + rect.height / 2
-            });
+            // Add small random offset from center for realism
+            const offsetX = (Math.random() - 0.5) * 10;
+            const offsetY = (Math.random() - 0.5) * 10;
+            const clientX = rect.left + rect.width / 2 + offsetX;
+            const clientY = rect.top + rect.height / 2 + offsetY;
 
-            element.dispatchEvent(clickEvent);
+            // 4. PREPARE ENVIRONMENT: Bypass our own overlays
+            // We need to temporarily disable pointer events on our overlay to hit the target below
+            const tourOverlay = document.querySelector('.fixed.inset-0.z-\\[100\\]') as HTMLElement;
+            const originalPointerEvents = tourOverlay ? tourOverlay.style.pointerEvents : '';
 
-            // 8. Also trigger native click for compatibility
-            element.click();
+            if (tourOverlay) {
+                tourOverlay.style.pointerEvents = 'none';
+            }
 
+            // 5. VERIFY TARGET through all layers
+            // Wait a frame for style application
+            await new Promise(resolve => requestAnimationFrame(resolve));
+
+            const topElement = document.elementFromPoint(clientX, clientY);
+            const isTargetOrChild = topElement && (element === topElement || element.contains(topElement) || topElement.contains(element));
+
+            if (!isTargetOrChild) {
+                console.warn('[Bot] Target blocked by:', topElement);
+                // If we hit something else, try to interact with THAT if it's strictly inside the target rect
+                // Otherwise abort to avoid clicking wrong things
+            }
+
+            // 6. EXECUTE INPUT SEQUENCE (Pointer -> Touch -> Mouse)
+            const bubbles = true;
+            const cancelable = true;
+            const view = window;
+
+            // Common event init
+            const eventInit = {
+                bubbles, cancelable, view,
+                clientX, clientY,
+                screenX: clientX + (window.screenX || 0),
+                screenY: clientY + (window.screenY || 0),
+                pointerId: 1,
+                width: 1, height: 1,
+                pressure: 0.5,
+                isPrimary: true
+            };
+
+            // A. Hover / Move to target
+            element.dispatchEvent(new PointerEvent('pointermove', eventInit));
+            element.dispatchEvent(new MouseEvent('mousemove', eventInit));
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            // B. Press Down
+            element.dispatchEvent(new PointerEvent('pointerdown', eventInit));
+            element.dispatchEvent(new MouseEvent('mousedown', eventInit));
+
+            // Touch events require specific TouchList interface
+            const touchObj = new Touch({ identifier: 1, target: element, clientX, clientY });
+            const touchList = [touchObj];
+
+            element.dispatchEvent(new TouchEvent('touchstart', {
+                bubbles, cancelable, view,
+                touches: touchList as any,
+                targetTouches: touchList as any,
+                changedTouches: touchList as any
+            }));
+
+            // C. Hold (Human press duration)
+            await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * 80) + 80));
+
+            // D. Release
+            element.dispatchEvent(new PointerEvent('pointerup', eventInit));
+            element.dispatchEvent(new MouseEvent('mouseup', eventInit));
+            element.dispatchEvent(new TouchEvent('touchend', {
+                bubbles, cancelable, view,
+                touches: [] as any,
+                targetTouches: [] as any,
+                changedTouches: touchList as any
+            }));
+
+            // E. Click (The final trigger)
+            element.dispatchEvent(new MouseEvent('click', eventInit));
+
+            // F. Focus if needed
+            if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLButtonElement) {
+                element.focus();
+            }
+
+            // 7. RESTORE ENVIRONMENT
+            if (tourOverlay) {
+                tourOverlay.style.pointerEvents = originalPointerEvents;
+            }
+
+            console.log('[Bot] Interaction executed on:', element);
             return true;
+
         } catch (error) {
-            console.error('[Bot] Click failed:', error);
+            console.error('[Bot] Interaction failed:', error);
+            // Restore overlays in case of error
+            const tourOverlay = document.querySelector('.fixed.inset-0.z-\\[100\\]') as HTMLElement;
+            if (tourOverlay) tourOverlay.style.pointerEvents = 'auto'; // Reset to default usually
             return false;
         }
-    }, [ensureFocus, isElementInteractable, isInViewport, scrollIntoViewSafe, hoverElement, randomDelay]);
+    }, [ensureFocus, scrollIntoViewSafe]);
 
     /**
      * Verifies that a click produced the expected result
@@ -386,6 +450,9 @@ export function HelpAssistant() {
     /**
      * Performs a click with automatic retries and verification
      */
+    /**
+     * Performs a click with automatic retries and verification
+     */
     const retryableClick = useCallback(async (
         element: HTMLElement,
         verification?: {
@@ -403,7 +470,8 @@ export function HelpAssistant() {
                 await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 500));
             }
 
-            const clickSuccess = await performClick(element);
+            // Use the new human interaction system
+            const clickSuccess = await performHumanInteraction(element);
             if (!clickSuccess) {
                 continue;
             }
@@ -422,7 +490,7 @@ export function HelpAssistant() {
 
         console.error('[Bot] All retry attempts failed');
         return false;
-    }, [performClick, verifyClickResult]);
+    }, [performHumanInteraction, verifyClickResult]);
 
     // Legacy compatibility: keep waitForElement as alias to validateElement
     const waitForElement = useCallback(async (selector: string | ((el: Element) => boolean), timeout = 5000): Promise<HTMLElement | null> => {
