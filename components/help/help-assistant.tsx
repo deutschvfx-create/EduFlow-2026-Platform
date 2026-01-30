@@ -55,6 +55,10 @@ export function HelpAssistant() {
     const [componentMounted, setComponentMounted] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
 
+    useEffect(() => {
+        setComponentMounted(true);
+    }, []);
+
     const triggerConfetti = useCallback(() => {
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 3000);
