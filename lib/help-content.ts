@@ -10,6 +10,12 @@ export type HelpStep = {
     actionTargetId?: string; // If different from highlighted element
     preventInteraction?: boolean; // If true, only simulate visual click
     actionDelay?: number;
+
+    // Logical Logic (New Stability Layer)
+    version?: string;          // Version of the UI logic this step belongs to
+    template_id?: string;      // Optional template context
+    accessibilityId?: string;  // Priority logical identifier
+    dataAction?: string;       // Action-specific logical identifier
 }
 
 export type HelpImage = {
@@ -26,6 +32,7 @@ export type HelpSection = {
     highlightId?: string; // Main element to highlight for this section (Start button target)
     highlightText?: string;
     moduleKey?: string;
+    version?: string; // Section version
 }
 
 export const helpSections: HelpSection[] = [
@@ -33,6 +40,7 @@ export const helpSections: HelpSection[] = [
         id: "general",
         title: "Основы интерфейса",
         route: "all",
+        version: "2.0.0",
         steps: [
             {
                 title: "Боковое меню",
@@ -106,31 +114,38 @@ export const helpSections: HelpSection[] = [
         highlightId: "students-header",
         highlightText: "Обзор модуля",
         moduleKey: "students",
+        version: "2.0.0",
         steps: [
             {
                 title: "Список студентов",
                 text: "Здесь отображаются все студенты с их статусами.",
                 targetId: "students-header",
+                accessibilityId: "students-title-view",
                 tip: "Вы можете фильтровать список по группам или статусу оплаты."
             },
             {
                 title: "Добавление",
                 text: "Нажмите кнопку добавления, чтобы открыть форму регистрации.",
                 targetId: "students-add-btn",
+                accessibilityId: "add-student-trigger",
+                dataAction: "open-registration-form",
                 tip: "Кнопка всегда находится в правом верхнем углу.",
-                action: 'click'
+                action: 'click',
+                version: "2.0.0"
             },
             {
                 title: "QR Сканер",
                 text: "Быстрый поиск студента по его персональному коду.",
                 targetId: "students-qr-btn",
+                accessibilityId: "qr-scanner-trigger",
                 tip: "Это очень удобно для отметки посещаемости на входе."
             },
             {
                 title: "Возврат",
                 text: "Вернемся к списку студентов.",
                 targetId: "students-header",
-                action: 'wait'
+                action: 'wait',
+                version: "2.0.0"
             }
         ],
         images: [

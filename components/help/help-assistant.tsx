@@ -19,6 +19,9 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from 'framer-motion';
 import { CursorPuppet } from './cursor-puppet';
 import { FloatingBotTrigger } from './floating-bot-trigger';
+import { BotChat } from './bot-chat';
+
+type HelpTab = 'tours' | 'chat';
 
 export function HelpAssistant() {
     const pathname = usePathname();
@@ -27,6 +30,7 @@ export function HelpAssistant() {
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState("");
     const [activeSection, setActiveSection] = useState<HelpSection | null>(null);
+    const [activeTab, setActiveTab] = useState<HelpTab>('tours');
 
     // Sequential Tour State
     const [isTouring, setIsTouring] = useState(false);
@@ -166,10 +170,12 @@ export function HelpAssistant() {
         while (Date.now() - start < timeout) {
             let element: HTMLElement | null = null;
 
-            // Find element
+            // Find element with prioritized logical identifiers
             if (typeof selector === 'string') {
+                // Priority 1: Direct selector (could be a complex selector)
                 element = document.querySelector(selector) as HTMLElement;
             } else {
+                // Priority 2: Function-based search (legacy)
                 const allWithHelpId = document.querySelectorAll('[data-help-id]');
                 element = Array.from(allWithHelpId).find(selector) as HTMLElement;
             }
@@ -621,14 +627,38 @@ export function HelpAssistant() {
 
             // [INTERACTIVE STEP]
             if (step.action) {
+                // 1. ACTION VALIDATION
+                const allowedActions = ['click', 'wait', 'type'];
+                if (!allowedActions.includes(step.action)) {
+                    console.error(`[Bot] Action "${step.action}" is not allowed.`);
+                    return;
+                }
+
+                // 2. VERSION & TEMPLATE VALIDATION
+                const currentSystemVersion = "2.0.0"; // Should be synced with app version
+                if (step.version && step.version !== currentSystemVersion) {
+                    console.warn(`[Bot] Version mismatch: Step version ${step.version} vs System version ${currentSystemVersion}. Proceeding with caution.`);
+                }
+
                 const targetId = step.actionTargetId || step.targetId;
                 if (targetId) {
-                    // Validate and wait for element
-                    const el = await validateElement(`[data-help-id="${targetId}"]`, {
-                        timeout: 3000,
-                        mustBeVisible: true,
-                        mustBeEnabled: true
-                    });
+                    // 3. PRIORITIZED ELEMENT SELECTION
+                    // Priority order: accessibilityId > dataAction > data-help-id
+                    const selectors = [
+                        step.accessibilityId ? `[accessibilityId="${step.accessibilityId}"]` : null,
+                        step.dataAction ? `[data-action="${step.dataAction}"]` : null,
+                        `[data-help-id="${targetId}"]`
+                    ].filter(Boolean) as string[];
+
+                    let el: HTMLElement | null = null;
+                    for (const selector of selectors) {
+                        el = await validateElement(selector, {
+                            timeout: selectors.indexOf(selector) === 0 ? 3000 : 500, // Longer for first, fast for fallbacks
+                            mustBeVisible: true,
+                            mustBeEnabled: true
+                        });
+                        if (el) break;
+                    }
 
                     if (el) {
                         setIsPuppetVisible(true);
@@ -1113,111 +1143,167 @@ export function HelpAssistant() {
                             </div>
                         </div>
 
-                        <div className="relative z-10">
-                            <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                                <Search className="h-4 w-4 text-zinc-600" />
-                            </div>
-                            <Input
-                                placeholder="Поиск по функциям..."
-                                className="h-10 md:h-11 pl-11 bg-zinc-900/50 border-zinc-800/50 focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 rounded-xl text-white text-sm placeholder:text-zinc-700 transition-all"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                            />
+                        {/* TAB SYSTEM */}
+                        <div className="flex gap-1 p-1 bg-zinc-900/50 rounded-2xl mx-4 md:mx-8 mb-4 relative z-10">
+                            <button
+                                onClick={() => setActiveTab('tours')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${activeTab === 'tours'
+                                    ? 'bg-zinc-800 text-indigo-400 shadow-lg'
+                                    : 'text-zinc-500 hover:text-zinc-300'
+                                    }`}
+                            >
+                                <PlayCircle className={`h-3.5 w-3.5 ${activeTab === 'tours' ? 'text-indigo-400' : 'text-zinc-600'}`} />
+                                Гиды и Туры
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('chat')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${activeTab === 'chat'
+                                    ? 'bg-zinc-800 text-indigo-400 shadow-lg'
+                                    : 'text-zinc-500 hover:text-zinc-300'
+                                    }`}
+                            >
+                                <Bot className={`h-3.5 w-3.5 ${activeTab === 'chat' ? 'text-indigo-400' : 'text-zinc-600'}`} />
+                                AI Чат GPT
+                            </button>
                         </div>
-                    </SheetHeader>
 
-                    <div className="flex-1 overflow-y-auto p-4 md:p-6 scroll-smooth">
-                        <div className="space-y-6 pb-20">
-                            {/* CURRENT PAGE CONTEXT */}
-                            {!search && activeSection && (
+                        <AnimatePresence mode="wait">
+                            {activeTab === 'tours' && (
                                 <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
+                                    key="search-bar"
+                                    initial={{ opacity: 0, y: -10 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="space-y-4 mb-2"
+                                    exit={{ opacity: 0, y: -10 }}
+                                    className="relative z-10 px-4 md:px-8 pb-4"
                                 >
-                                    <div className="p-4 md:p-5 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 space-y-4 relative overflow-hidden group">
-                                        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                                            <Sparkles className="h-12 w-12 text-indigo-500" />
+                                    <div className="relative">
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                                            <Search className="h-4 w-4 text-zinc-600" />
                                         </div>
-
-                                        <div className="flex items-center justify-between relative z-10">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-9 h-9 rounded-xl bg-indigo-500/20 flex items-center justify-center border border-indigo-500/20">
-                                                    <Lightbulb className="h-5 w-5 text-indigo-400" />
-                                                </div>
-                                                <div>
-                                                    <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest leading-none mb-1">Обучение</h3>
-                                                    <h4 className="text-base font-bold text-white leading-none">{activeSection.title}</h4>
-                                                </div>
-                                            </div>
-                                            <Button
-                                                variant="default"
-                                                size="sm"
-                                                className="h-8 text-[10px] px-4 font-black uppercase tracking-widest gap-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all shadow-lg shadow-indigo-500/20"
-                                                onClick={() => startTour(activeSection)}
-                                            >
-                                                <PlayCircle className="h-3.5 w-3.5" />
-                                                {activeSection.highlightText || "Запустить гид"}
-                                            </Button>
-                                        </div>
-
-                                        <div className="space-y-3 relative z-10">
-                                            {activeSection.steps.map((step, idx) => (
-                                                <div key={idx} className="flex gap-3 items-start group/step">
-                                                    <div className="flex-none flex items-center justify-center w-5 h-5 rounded-md bg-zinc-900 text-[10px] font-bold text-indigo-400 border border-zinc-800 mt-0.5 group-hover/step:border-indigo-500/50 transition-colors">
-                                                        {idx + 1}
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="text-xs font-bold text-zinc-200 mb-0.5">{step.title}</h4>
-                                                        <p className="text-[11px] text-zinc-500 leading-relaxed">{step.text}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
+                                        <Input
+                                            placeholder="Поиск по разделам помощи..."
+                                            value={search}
+                                            onChange={(e) => setSearch(e.target.value)}
+                                            className="h-12 pl-11 bg-zinc-900/50 border-zinc-900 focus:bg-zinc-900 transition-all rounded-2xl text-sm placeholder:text-zinc-700"
+                                        />
                                     </div>
                                 </motion.div>
                             )}
+                        </AnimatePresence>
+                    </SheetHeader>
 
-                            {/* ALL SECTIONS */}
-                            <div className="space-y-3">
-                                <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] px-1">
-                                    {search ? "Результаты поиска" : "Все разделы помощи"}
-                                </h3>
-                                <div className="grid gap-2">
-                                    {filteredSections.map(section => (
-                                        <button
-                                            key={section.id}
-                                            onClick={() => setActiveSection(section)}
-                                            className={`group w-full text-left p-3 rounded-xl border transition-all duration-300 flex items-center justify-between ${activeSection?.id === section.id
-                                                ? "bg-indigo-950/20 border-indigo-500/30 text-indigo-300"
-                                                : "bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800/50 hover:text-zinc-200"
-                                                }`}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-1.5 h-1.5 rounded-full transition-colors ${activeSection?.id === section.id ? "bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)]" : "bg-zinc-700"}`} />
-                                                <span className="text-sm font-medium">{section.title}</span>
-                                                {section.moduleKey && !modules[section.moduleKey as ModuleKey] && (
-                                                    <span className="text-[9px] uppercase font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">Выкл</span>
-                                                )}
+                    {/* Content Area */}
+                    <div className="flex-1 overflow-y-auto min-h-0 bg-zinc-950/30">
+                        <AnimatePresence mode="wait">
+                            {activeTab === 'tours' ? (
+                                <motion.div
+                                    key="tours-content"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    className="p-4 md:p-8"
+                                >
+                                    <div className="space-y-8">
+                                        {/* FEATURED / ACTIVE SECTION */}
+                                        {!search && activeSection && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                className="relative group/card"
+                                            >
+                                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-3xl blur-xl group-hover/card:blur-2xl transition-all" />
+                                                <div className="relative bg-zinc-900/50 backdrop-blur-xl border border-indigo-500/20 rounded-3xl p-6 shadow-xl">
+                                                    <div className="flex items-start justify-between mb-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                                                                <Sparkles className="h-5 w-5" />
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">Активный раздел</div>
+                                                                <h4 className="text-base font-bold text-white leading-none">{activeSection.title}</h4>
+                                                            </div>
+                                                        </div>
+                                                        <Button
+                                                            variant="default"
+                                                            size="sm"
+                                                            className="h-8 text-[10px] px-4 font-black uppercase tracking-widest gap-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all shadow-lg shadow-indigo-500/20"
+                                                            onClick={() => startTour(activeSection)}
+                                                        >
+                                                            <PlayCircle className="h-3.5 w-3.5" />
+                                                            {activeSection.highlightText || "Запустить гид"}
+                                                        </Button>
+                                                    </div>
+
+                                                    <div className="space-y-3 relative z-10">
+                                                        {activeSection.steps.map((step, idx) => (
+                                                            <div key={idx} className="flex gap-3 items-start group/step">
+                                                                <div className="flex-none flex items-center justify-center w-5 h-5 rounded-md bg-zinc-900 text-[10px] font-bold text-indigo-400 border border-zinc-800 mt-0.5 group-hover/step:border-indigo-500/50 transition-colors">
+                                                                    {idx + 1}
+                                                                </div>
+                                                                <div>
+                                                                    <h4 className="text-xs font-bold text-zinc-200 mb-0.5">{step.title}</h4>
+                                                                    <p className="text-[11px] text-zinc-500 leading-relaxed">{step.text}</p>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        )}
+
+                                        {/* ALL SECTIONS */}
+                                        <div className="space-y-3">
+                                            <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] px-1">
+                                                {search ? "Результаты поиска" : "Все разделы помощи"}
+                                            </h3>
+                                            <div className="grid gap-2">
+                                                {filteredSections.map(section => (
+                                                    <button
+                                                        key={section.id}
+                                                        onClick={() => setActiveSection(section)}
+                                                        className={`group w-full text-left p-3 rounded-xl border transition-all duration-300 flex items-center justify-between ${activeSection?.id === section.id
+                                                            ? "bg-indigo-950/20 border-indigo-500/30 text-indigo-300"
+                                                            : "bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800/50 hover:text-zinc-200"
+                                                            }`}
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={`w-1.5 h-1.5 rounded-full transition-colors ${activeSection?.id === section.id ? "bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)]" : "bg-zinc-700"}`} />
+                                                            <span className="text-sm font-medium">{section.title}</span>
+                                                            {section.moduleKey && !modules[section.moduleKey as ModuleKey] && (
+                                                                <span className="text-[9px] uppercase font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">Выкл</span>
+                                                            )}
+                                                        </div>
+                                                        {section.route === pathname && (
+                                                            <MapPin className="h-3.5 w-3.5 text-indigo-500/50" />
+                                                        )}
+                                                    </button>
+                                                ))}
                                             </div>
-                                            {section.route === pathname && (
-                                                <MapPin className="h-3.5 w-3.5 text-indigo-500/50" />
+                                            {filteredSections.length === 0 && (
+                                                <div className="text-zinc-600 text-center py-12 flex flex-col items-center gap-3">
+                                                    <Search className="h-8 w-8 opacity-20" />
+                                                    <p className="text-sm font-medium">Ничего не найдено</p>
+                                                </div>
                                             )}
-                                        </button>
-                                    ))}
-                                </div>
-                                {filteredSections.length === 0 && (
-                                    <div className="text-zinc-600 text-center py-12 flex flex-col items-center gap-3">
-                                        <Search className="h-8 w-8 opacity-20" />
-                                        <p className="text-sm font-medium">Ничего не найдено</p>
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                        </div>
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    key="chat-content"
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 20 }}
+                                    className="h-full p-4 md:p-6"
+                                >
+                                    <BotChat />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
 
                     {/* Bottom Status */}
-                    <div className="p-4 border-t border-zinc-900/50 bg-zinc-950 flex items-center justify-between">
+                    <div className="p-4 border-t border-zinc-900/50 bg-zinc-950 flex items-center justify-between flex-none">
                         <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                             <span className="text-[10px] uppercase font-black text-zinc-500 tracking-wider">Edu-Bot Online</span>
@@ -1229,233 +1315,237 @@ export function HelpAssistant() {
 
             {/* TOUR OVERLAY */}
             <AnimatePresence>
-                {isTouring && highlightRect && activeSection && (
-                    <div className="fixed inset-0 z-[100] pointer-events-none">
-                        {/* Premium Spotlight Backdrop */}
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-black/80 backdrop-blur-[1px] pointer-events-auto cursor-crosshair"
-                            style={{
-                                ...spotlightVars,
-                                maskImage: `radial-gradient(circle at var(--x) var(--y), transparent var(--r), black var(--glow))`
-                            } as any}
-                            onClick={endTour}
-                        />
+                {
+                    isTouring && highlightRect && activeSection && (
+                        <div className="fixed inset-0 z-[100] pointer-events-none">
+                            {/* Premium Spotlight Backdrop */}
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute inset-0 bg-black/80 backdrop-blur-[1px] pointer-events-auto cursor-crosshair"
+                                style={{
+                                    ...spotlightVars,
+                                    maskImage: `radial-gradient(circle at var(--x) var(--y), transparent var(--r), black var(--glow))`
+                                } as any}
+                                onClick={endTour}
+                            />
 
-                        {/* Highlight Border with Pulse */}
-                        <motion.div
-                            layoutId="tour-highlight"
-                            className="absolute rounded-2xl border-[3px] border-indigo-400 z-10 animate-pulse-indigo shadow-[0_0_30px_rgba(129,140,248,0.4)] pointer-events-none"
-                            style={{
-                                top: highlightRect.top - 12,
-                                left: highlightRect.left - 12,
-                                width: highlightRect.width + 24,
-                                height: highlightRect.height + 24,
-                            }}
-                        />
+                            {/* Highlight Border with Pulse */}
+                            <motion.div
+                                layoutId="tour-highlight"
+                                className="absolute rounded-2xl border-[3px] border-indigo-400 z-10 animate-pulse-indigo shadow-[0_0_30px_rgba(129,140,248,0.4)] pointer-events-none"
+                                style={{
+                                    top: highlightRect.top - 12,
+                                    left: highlightRect.left - 12,
+                                    width: highlightRect.width + 24,
+                                    height: highlightRect.height + 24,
+                                }}
+                            />
 
-                        {/* Tooltip Card */}
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="absolute z-20 pointer-events-auto flex flex-col items-center max-w-[90vw] sm:max-w-none"
-                            style={{
-                                top: highlightRect.bottom + 40 > (typeof window !== 'undefined' ? window.innerHeight : 800) - 250
-                                    ? highlightRect.top - (isExpanded ? 380 : 280)
-                                    : highlightRect.bottom + 40,
-                                left: Math.max(10, Math.min((typeof window !== 'undefined' ? window.innerWidth : 1000) - 310, highlightRect.left + highlightRect.width / 2 - 150)),
-                                width: 300
-                            }}
-                        >
-                            <div className="w-full bg-zinc-900/95 backdrop-blur-2xl border border-zinc-800/50 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_20px_rgba(99,102,241,0.1)] p-6 overflow-hidden relative group">
-                                {/* Top Glow */}
-                                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
+                            {/* Tooltip Card */}
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                                className="absolute z-20 pointer-events-auto flex flex-col items-center max-w-[90vw] sm:max-w-none"
+                                style={{
+                                    top: highlightRect.bottom + 40 > (typeof window !== 'undefined' ? window.innerHeight : 800) - 250
+                                        ? highlightRect.top - (isExpanded ? 380 : 280)
+                                        : highlightRect.bottom + 40,
+                                    left: Math.max(10, Math.min((typeof window !== 'undefined' ? window.innerWidth : 1000) - 310, highlightRect.left + highlightRect.width / 2 - 150)),
+                                    width: 300
+                                }}
+                            >
+                                <div className="w-full bg-zinc-900/95 backdrop-blur-2xl border border-zinc-800/50 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_20px_rgba(99,102,241,0.1)] p-6 overflow-hidden relative group">
+                                    {/* Top Glow */}
+                                    <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
 
-                                {/* Progress Indicator */}
-                                <div className="absolute top-0 left-0 h-[2px] bg-indigo-500 transition-all duration-500"
-                                    style={{ width: `${((tourStep + 1) / activeSection.steps.length) * 100}%` }} />
+                                    {/* Progress Indicator */}
+                                    <div className="absolute top-0 left-0 h-[2px] bg-indigo-500 transition-all duration-500"
+                                        style={{ width: `${((tourStep + 1) / activeSection.steps.length) * 100}%` }} />
 
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="relative">
-                                            <div className="absolute inset-0 bg-indigo-500/20 blur-lg rounded-full" />
-                                            <Mascot status={isSpeaking ? "speaking" : "thinking"} className="w-10 h-10 relative z-10" />
-                                            {isSpeaking && (
-                                                <div className="absolute -right-2 top-1/2 -translate-y-1/2 flex gap-0.5 h-3 items-center">
-                                                    <div className="sound-bar" style={{ animationDelay: '0s' }} />
-                                                    <div className="sound-bar" style={{ animationDelay: '0.2s' }} />
-                                                    <div className="sound-bar" style={{ animationDelay: '0.4s' }} />
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="relative">
+                                                <div className="absolute inset-0 bg-indigo-500/20 blur-lg rounded-full" />
+                                                <Mascot status={isSpeaking ? "speaking" : "thinking"} className="w-10 h-10 relative z-10" />
+                                                {isSpeaking && (
+                                                    <div className="absolute -right-2 top-1/2 -translate-y-1/2 flex gap-0.5 h-3 items-center">
+                                                        <div className="sound-bar" style={{ animationDelay: '0s' }} />
+                                                        <div className="sound-bar" style={{ animationDelay: '0.2s' }} />
+                                                        <div className="sound-bar" style={{ animationDelay: '0.4s' }} />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <div className="bg-indigo-500/10 text-indigo-400 text-[9px] font-black px-2.5 py-1 rounded-full border border-indigo-500/20 uppercase tracking-tighter self-start mb-1">
+                                                    Шаг {tourStep + 1} из {activeSection.steps.length}
                                                 </div>
-                                            )}
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <div className="bg-indigo-500/10 text-indigo-400 text-[9px] font-black px-2.5 py-1 rounded-full border border-indigo-500/20 uppercase tracking-tighter self-start mb-1">
-                                                Шаг {tourStep + 1} из {activeSection.steps.length}
                                             </div>
                                         </div>
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                        <button
-                                            onClick={toggleVoice}
-                                            className={`p-1.5 rounded-full transition-colors ${isVoiceEnabled ? 'text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20' : 'text-zinc-600 hover:text-zinc-400'}`}
-                                            title={isVoiceEnabled ? "Выключить озвучку" : "Включить озвучку"}
-                                        >
-                                            {isVoiceEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-                                        </button>
-                                        <button onClick={endTour} className="text-zinc-600 hover:text-white transition-colors p-1.5 rounded-full hover:bg-zinc-800">
-                                            <X className="h-4 w-4" />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <motion.div
-                                    key={tourStep}
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ duration: 0.3 }}
-                                >
-                                    <h4 className="text-sm font-black text-white uppercase mb-1.5 tracking-tight flex items-center gap-2">
-                                        {activeSection.steps[tourStep]?.title || activeSection.title}
-                                        <Sparkles className="h-3 w-3 text-amber-400" />
-                                    </h4>
-                                    <p className="text-xs text-zinc-400 leading-relaxed mb-4">
-                                        {activeSection.steps[tourStep]?.text}
-                                    </p>
-
-                                    {activeSection.steps[tourStep]?.tip && (
-                                        <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3 mb-4 flex gap-2">
-                                            <Lightbulb className="h-3.5 w-3.5 text-emerald-500 flex-none mt-0.5" />
-                                            <p className="text-[10px] font-medium text-emerald-400 italic">
-                                                {activeSection.steps[tourStep].tip}
-                                            </p>
+                                        <div className="flex items-center gap-1">
+                                            <button
+                                                onClick={toggleVoice}
+                                                className={`p-1.5 rounded-full transition-colors ${isVoiceEnabled ? 'text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20' : 'text-zinc-600 hover:text-zinc-400'}`}
+                                                title={isVoiceEnabled ? "Выключить озвучку" : "Включить озвучку"}
+                                            >
+                                                {isVoiceEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                                            </button>
+                                            <button onClick={endTour} className="text-zinc-600 hover:text-white transition-colors p-1.5 rounded-full hover:bg-zinc-800">
+                                                <X className="h-4 w-4" />
+                                            </button>
                                         </div>
-                                    )}
+                                    </div>
 
-                                    {activeSection.steps[tourStep]?.details && (
-                                        <div className="mb-4">
+                                    <motion.div
+                                        key={tourStep}
+                                        initial={{ opacity: 0, x: 20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ duration: 0.3 }}
+                                    >
+                                        <h4 className="text-sm font-black text-white uppercase mb-1.5 tracking-tight flex items-center gap-2">
+                                            {activeSection.steps[tourStep]?.title || activeSection.title}
+                                            <Sparkles className="h-3 w-3 text-amber-400" />
+                                        </h4>
+                                        <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+                                            {activeSection.steps[tourStep]?.text}
+                                        </p>
+
+                                        {activeSection.steps[tourStep]?.tip && (
+                                            <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3 mb-4 flex gap-2">
+                                                <Lightbulb className="h-3.5 w-3.5 text-emerald-500 flex-none mt-0.5" />
+                                                <p className="text-[10px] font-medium text-emerald-400 italic">
+                                                    {activeSection.steps[tourStep].tip}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {activeSection.steps[tourStep]?.details && (
+                                            <div className="mb-4">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => setIsExpanded(!isExpanded)}
+                                                    className="w-full justify-between h-8 text-[10px] font-bold uppercase tracking-widest text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/5 p-0"
+                                                >
+                                                    <span className="flex items-center gap-2">
+                                                        <Info className="h-3 w-3" />
+                                                        {isExpanded ? "Свернуть" : "Подробнее"}
+                                                    </span>
+                                                    {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                                                </Button>
+
+                                                <AnimatePresence>
+                                                    {isExpanded && (
+                                                        <motion.div
+                                                            initial={{ height: 0, opacity: 0 }}
+                                                            animate={{ height: "auto", opacity: 1 }}
+                                                            exit={{ height: 0, opacity: 0 }}
+                                                            className="overflow-hidden"
+                                                        >
+                                                            <div className="pt-2 pb-1 border-t border-zinc-800/50 mt-2">
+                                                                <p className="text-[10px] text-zinc-400 leading-relaxed italic">
+                                                                    {activeSection.steps[tourStep].details}
+                                                                </p>
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+                                            </div>
+                                        )}
+                                    </motion.div>
+
+                                    <div className="flex items-center justify-between gap-3 pt-2">
+                                        <div className="flex items-center gap-1">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={prevStep}
+                                                disabled={tourStep === 0}
+                                                className="h-9 w-9 text-zinc-500 hover:text-white hover:bg-zinc-800 disabled:opacity-0 rounded-xl"
+                                            >
+                                                <ChevronLeft className="h-4 w-4" />
+                                            </Button>
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                onClick={() => setIsExpanded(!isExpanded)}
-                                                className="w-full justify-between h-8 text-[10px] font-bold uppercase tracking-widest text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/5 p-0"
+                                                onClick={endTour}
+                                                className="h-9 text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:text-white hover:bg-zinc-800/50 rounded-xl px-3"
                                             >
-                                                <span className="flex items-center gap-2">
-                                                    <Info className="h-3 w-3" />
-                                                    {isExpanded ? "Свернуть" : "Подробнее"}
-                                                </span>
-                                                {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                                                Пропустить
                                             </Button>
-
-                                            <AnimatePresence>
-                                                {isExpanded && (
-                                                    <motion.div
-                                                        initial={{ height: 0, opacity: 0 }}
-                                                        animate={{ height: "auto", opacity: 1 }}
-                                                        exit={{ height: 0, opacity: 0 }}
-                                                        className="overflow-hidden"
-                                                    >
-                                                        <div className="pt-2 pb-1 border-t border-zinc-800/50 mt-2">
-                                                            <p className="text-[10px] text-zinc-400 leading-relaxed italic">
-                                                                {activeSection.steps[tourStep].details}
-                                                            </p>
-                                                        </div>
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
                                         </div>
-                                    )}
-                                </motion.div>
 
-                                <div className="flex items-center justify-between gap-3 pt-2">
-                                    <div className="flex items-center gap-1">
                                         <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={prevStep}
-                                            disabled={tourStep === 0}
-                                            className="h-9 w-9 text-zinc-500 hover:text-white hover:bg-zinc-800 disabled:opacity-0 rounded-xl"
-                                        >
-                                            <ChevronLeft className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
+                                            variant="default"
                                             size="sm"
-                                            onClick={endTour}
-                                            className="h-9 text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:text-white hover:bg-zinc-800/50 rounded-xl px-3"
+                                            onClick={() => {
+                                                if (tourStep === activeSection.steps.length - 1) {
+                                                    triggerConfetti();
+                                                    setTimeout(endTour, 1000);
+                                                } else {
+                                                    nextStep();
+                                                }
+                                            }}
+                                            className="h-9 text-[11px] font-black uppercase tracking-widest gap-2 bg-indigo-600 hover:bg-indigo-500 px-5 min-w-[110px] rounded-xl shadow-lg shadow-indigo-600/20 active:scale-95 transition-all"
                                         >
-                                            Пропустить
+                                            {tourStep === activeSection.steps.length - 1 ? (
+                                                <>Готово <CheckCircle2 className="h-3.5 w-3.5" /></>
+                                            ) : (
+                                                <>Далее <ChevronRight className="h-3.5 w-3.5" /></>
+                                            )}
                                         </Button>
                                     </div>
-
-                                    <Button
-                                        variant="default"
-                                        size="sm"
-                                        onClick={() => {
-                                            if (tourStep === activeSection.steps.length - 1) {
-                                                triggerConfetti();
-                                                setTimeout(endTour, 1000);
-                                            } else {
-                                                nextStep();
-                                            }
-                                        }}
-                                        className="h-9 text-[11px] font-black uppercase tracking-widest gap-2 bg-indigo-600 hover:bg-indigo-500 px-5 min-w-[110px] rounded-xl shadow-lg shadow-indigo-600/20 active:scale-95 transition-all"
-                                    >
-                                        {tourStep === activeSection.steps.length - 1 ? (
-                                            <>Готово <CheckCircle2 className="h-3.5 w-3.5" /></>
-                                        ) : (
-                                            <>Далее <ChevronRight className="h-3.5 w-3.5" /></>
-                                        )}
-                                    </Button>
                                 </div>
-                            </div>
 
-                            {/* Confetti Burst Overlay */}
-                            {showConfetti && (
-                                <div className="absolute inset-0 pointer-events-none z-30">
-                                    {[...Array(12)].map((_, i) => (
-                                        <motion.div
-                                            key={i}
-                                            initial={{ x: 150, y: 150, opacity: 1, scale: 1 }}
-                                            animate={{
-                                                x: 150 + (Math.random() - 0.5) * 300,
-                                                y: 150 + (Math.random() - 0.5) * 300,
-                                                opacity: 0,
-                                                scale: 0.5
-                                            }}
-                                            transition={{ duration: 1, ease: "easeOut" }}
-                                            className="absolute w-2 h-2 rounded-full"
-                                            style={{
-                                                backgroundColor: ['#6366f1', '#a855f7', '#ec4899', '#10b981'][i % 4],
-                                                left: 0,
-                                                top: 0
-                                            }}
-                                        />
-                                    ))}
-                                </div>
-                            )}
+                                {/* Confetti Burst Overlay */}
+                                {showConfetti && (
+                                    <div className="absolute inset-0 pointer-events-none z-30">
+                                        {[...Array(12)].map((_, i) => (
+                                            <motion.div
+                                                key={i}
+                                                initial={{ x: 150, y: 150, opacity: 1, scale: 1 }}
+                                                animate={{
+                                                    x: 150 + (Math.random() - 0.5) * 300,
+                                                    y: 150 + (Math.random() - 0.5) * 300,
+                                                    opacity: 0,
+                                                    scale: 0.5
+                                                }}
+                                                transition={{ duration: 1, ease: "easeOut" }}
+                                                className="absolute w-2 h-2 rounded-full"
+                                                style={{
+                                                    backgroundColor: ['#6366f1', '#a855f7', '#ec4899', '#10b981'][i % 4],
+                                                    left: 0,
+                                                    top: 0
+                                                }}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
 
-                            {/* Arrow Indicator */}
-                            <div className={`w-5 h-5 bg-zinc-900 border-l border-t border-zinc-800/50 rotate-45 -mt-2.5 relative z-10 ${highlightRect.bottom + 40 > (typeof window !== 'undefined' ? window.innerHeight : 800) - 250 ? 'mt-[238px] rotate-[225deg]' : ''}`} />
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+                                {/* Arrow Indicator */}
+                                <div className={`w-5 h-5 bg-zinc-900 border-l border-t border-zinc-800/50 rotate-45 -mt-2.5 relative z-10 ${highlightRect.bottom + 40 > (typeof window !== 'undefined' ? window.innerHeight : 800) - 250 ? 'mt-[238px] rotate-[225deg]' : ''}`} />
+                            </motion.div>
+                        </div>
+                    )
+                }
+            </AnimatePresence >
 
             {/* FLOATING TRIGGER */}
             <AnimatePresence>
-                {!open && !isTouring && (
-                    <FloatingBotTrigger
-                        onClick={() => setOpen(true)}
-                        hasNewFeatures={hasNewFeatures}
-                    />
-                )}
-            </AnimatePresence>
+                {
+                    !open && !isTouring && (
+                        <FloatingBotTrigger
+                            onClick={() => setOpen(true)}
+                            hasNewFeatures={hasNewFeatures}
+                        />
+                    )
+                }
+            </AnimatePresence >
 
             {/* CURSOR PUPPET */}
-            <CursorPuppet
+            < CursorPuppet
                 targetRect={puppetRect}
                 isClicking={isPuppetClicking}
                 isVisible={isPuppetVisible}

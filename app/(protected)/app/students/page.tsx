@@ -59,15 +59,15 @@ export default function StudentsPage() {
                             <Users className="h-5 w-5 laptop:h-6 laptop:w-6 text-indigo-400" />
                         </div>
                         <div>
-                            <h1 className="text-2xl laptop:text-3xl font-black tracking-tighter text-white">Студенты</h1>
+                            <h1 className="text-2xl laptop:text-3xl font-black tracking-tighter text-white" accessibilityId="students-title-view">Студенты</h1>
                             <p className="text-[10px] laptop:text-xs font-bold uppercase tracking-widest text-zinc-500 hidden laptop:block">Система контроля контингента</p>
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <Button variant="outline" className="hidden laptop:flex gap-2 border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl" data-help-id="students-qr-btn">
+                        <Button variant="outline" className="hidden laptop:flex gap-2 border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl" data-help-id="students-qr-btn" accessibilityId="qr-scanner-trigger">
                             <Search className="h-4 w-4" /> Сканировать QR
                         </Button>
-                        <div data-help-id="students-add-btn">
+                        <div data-help-id="students-add-btn" accessibilityId="add-student-trigger" data-action="open-registration-form">
                             <AddStudentModal />
                         </div>
                     </div>
