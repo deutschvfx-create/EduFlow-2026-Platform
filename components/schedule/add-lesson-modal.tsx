@@ -12,7 +12,7 @@ import { MOCK_TEACHERS } from "@/lib/mock/teachers";
 import { MOCK_COURSES } from "@/lib/mock/courses";
 import { DayOfWeek, Lesson } from "@/lib/types/schedule";
 
-export function AddLessonModal({ lessons }: { lessons: Lesson[] }) {
+export function AddLessonModal({ lessons, children }: { lessons: Lesson[], children?: React.ReactNode }) {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -77,10 +77,12 @@ export function AddLessonModal({ lessons }: { lessons: Lesson[] }) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2">
-                    <Plus className="h-4 w-4" />
-                    Добавить занятие
-                </Button>
+                {children ? children : (
+                    <Button className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2">
+                        <Plus className="h-4 w-4" />
+                        Добавить занятие
+                    </Button>
+                )}
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px] bg-zinc-900 border-zinc-800 text-zinc-100">
                 <DialogHeader>

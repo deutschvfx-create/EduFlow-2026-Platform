@@ -7,7 +7,9 @@ import { AddLessonModal } from "@/components/schedule/add-lesson-modal";
 import { EditLessonModal } from "@/components/schedule/edit-lesson-modal";
 import { LessonCard } from "@/components/schedule/lesson-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, CheckCircle2, XCircle, LayoutGrid } from "lucide-react";
+import { MobileDateStrip } from "@/components/schedule/mobile-date-strip";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Lesson, DayOfWeek } from "@/lib/types/schedule";
 import { ModuleGuard } from "@/components/system/module-guard";
 
@@ -100,111 +102,70 @@ export default function SchedulePage() {
     return (
         <ModuleGuard module="schedule">
             <div className="space-y-4 laptop:space-y-6 h-full flex flex-col">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 laptop:gap-4">
-                    <div className="hidden laptop:block">
-                        <h1 className="text-2xl laptop:text-3xl font-bold tracking-tight text-white mb-1">Расписание</h1>
-                        <p className="text-xs laptop:text-sm text-zinc-400 hidden laptop:block">Управление занятиями и расписанием групп</p>
-                    </div>
+                {/* Header Actions */}
+                <div className="flex items-center justify-between px-1">
+                    <h1 className="text-xl font-bold text-white">Расписание</h1>
                     <div className="flex gap-2">
-                        <AddLessonModal lessons={lessons} />
+                        <ScheduleFilters
+                            groups={groups}
+                            teachers={teachers}
+                            courses={courses}
+                            groupFilter={groupFilter}
+                            onGroupChange={setGroupFilter}
+                            teacherFilter={teacherFilter}
+                            onTeacherChange={setTeacherFilter}
+                            courseFilter={courseFilter}
+                            onCourseChange={setCourseFilter}
+                            dayFilter={dayFilter}
+                            onDayChange={setDayFilter}
+                        />
                     </div>
                 </div>
 
-                {/* Stats Cards - 2 columns on mobile */}
-                <div className="grid gap-3 laptop:gap-4 grid-cols-2 laptop:grid-cols-4">
-                    <Card className="bg-zinc-900 border-zinc-800">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-zinc-400">Всего занятий</CardTitle>
-                            <CalendarDays className="h-4 w-4 text-zinc-500" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-white">{total}</div>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-zinc-900 border-zinc-800">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-emerald-400">В среду</CardTitle>
-                            <LayoutGrid className="h-4 w-4 text-emerald-500" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-white">{countToday}</div>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-zinc-900 border-zinc-800">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-indigo-400">Активные</CardTitle>
-                            <CheckCircle2 className="h-4 w-4 text-indigo-500" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-white">{active}</div>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-zinc-900 border-zinc-800">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-red-400">Отменены</CardTitle>
-                            <XCircle className="h-4 w-4 text-red-500" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-white">{cancelled}</div>
-                        </CardContent>
-                    </Card>
+                {/* Mobile Calendar Strip */}
+                <div className="-mx-4 md:mx-0 sticky top-0 z-30">
+                    <MobileDateStrip
+                        currentDate={currentDate}
+                        onDateSelect={setCurrentDate}
+                    />
                 </div>
 
-                <div className="bg-zinc-950/50 p-4 border border-zinc-800 rounded-lg flex-1">
-                    <ScheduleFilters
-                        groups={groups}
-                        teachers={teachers}
-                        courses={courses}
-                        groupFilter={groupFilter}
-                        onGroupChange={setGroupFilter}
-                        teacherFilter={teacherFilter}
-                        onTeacherChange={setTeacherFilter}
-                        courseFilter={courseFilter}
-                        onCourseChange={setCourseFilter}
-                        dayFilter={dayFilter}
-                        onDayChange={setDayFilter}
-                        currentDate={currentDate}
-                        onWeekChange={handleWeekChange}
-                    />
+                {/* Content Area */}
+                <div className="flex-1 overflow-y-auto min-h-[400px] pb-20">
+                    {/* Summary Line */}
+                    <div className="flex items-center gap-2 text-xs text-zinc-500 mb-4 px-1">
+                        <span className="font-medium text-zinc-300">{filteredLessons.length} занятий</span>
+                        <span>•</span>
+                        <span>{filteredLessons.filter(l => l.status === 'PLANNED').length} активных</span>
+                    </div>
 
-                    {/* Week Grid */}
                     {filteredLessons.length > 0 ? (
-                        <div className={`grid gap-4 min-h-[500px] ${dayFilter === 'all' ? 'grid-cols-1 md:grid-cols-7' : 'grid-cols-1'}`}>
-                            {displayedDays.map(day => {
-                                const dayLessons = filteredLessons
-                                    .filter(l => l.dayOfWeek === day)
-                                    .sort((a, b) => a.startTime.localeCompare(b.startTime));
-
-                                return (
-                                    <div key={day} className="flex flex-col gap-2 min-w-[140px]">
-                                        <div className="text-center py-2 bg-zinc-900/80 border border-zinc-800 rounded mb-2">
-                                            <div className="text-sm font-bold text-zinc-200">{DayLabels[day]}</div>
-                                        </div>
-                                        <div className="flex flex-col gap-2 h-full bg-zinc-950/30 rounded p-1">
-                                            {dayLessons.map(lesson => (
-                                                <LessonCard
-                                                    key={lesson.id}
-                                                    lesson={lesson}
-                                                    onClick={handleLessonClick}
-                                                />
-                                            ))}
-                                            {dayLessons.length === 0 && (
-                                                <div className="flex-1 flex items-center justify-center text-zinc-700 text-xs italic min-h-[100px] border-2 border-dashed border-zinc-900 rounded">
-                                                    Нет занятий
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )
-                            })}
+                        <div className="grid grid-cols-1 gap-3">
+                            {filteredLessons
+                                .sort((a, b) => a.startTime.localeCompare(b.startTime))
+                                .map(lesson => (
+                                    <LessonCard
+                                        key={lesson.id}
+                                        lesson={lesson}
+                                        onClick={handleLessonClick}
+                                    />
+                                ))}
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center h-[400px] text-zinc-500">
-                            <CalendarDays className="h-12 w-12 mb-4 opacity-20" />
-                            <p className="text-lg font-medium">Нет занятий по выбранным фильтрам</p>
-                            <p className="text-sm">Попробуйте изменить параметры поиска</p>
+                        <div className="flex flex-col items-center justify-center h-[300px] text-zinc-500 border border-dashed border-zinc-800 rounded-xl bg-zinc-900/20">
+                            <h3 className="font-medium text-zinc-400 mb-1">Нет занятий</h3>
+                            <p className="text-xs">На этот день ничего не запланировано</p>
                         </div>
                     )}
+                </div>
+
+                {/* Floating Action Button */}
+                <div className="fixed bottom-6 right-4 md:bottom-8 md:right-8 z-40">
+                    <AddLessonModal lessons={lessons}>
+                        <Button size="icon" className="h-14 w-14 rounded-full bg-violet-600 hover:bg-violet-700 shadow-lg shadow-violet-900/40 border border-white/10">
+                            <Plus className="h-6 w-6" />
+                        </Button>
+                    </AddLessonModal>
                 </div>
 
                 <EditLessonModal
