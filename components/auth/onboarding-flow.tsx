@@ -189,10 +189,10 @@ export function OnboardingFlow() {
 
                 <AnimatePresence mode="wait">
                     {step === 0 && (
-                        <motion.div key="step0" {...stepTransition} className="space-y-5 text-center">
+                        <motion.div key="step0" {...stepTransition} className="space-y-6 text-center">
                             <div className="space-y-2">
                                 <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">{t.welcome}</h2>
-                                <p className="text-zinc-500 font-medium text-sm">{t.welcome_sub}</p>
+                                <p className="text-zinc-400 font-medium text-sm">{t.welcome_sub}</p>
                             </div>
 
                             <div className="grid grid-cols-2 laptop:grid-cols-4 gap-4">
@@ -347,12 +347,12 @@ export function OnboardingFlow() {
                 </AnimatePresence>
             </main>
 
-            <footer className="mt-8 md:mt-12 flex items-center gap-4 md:gap-6 text-zinc-700 font-black uppercase text-[8px] md:text-[10px] tracking-[0.2em]">
+            <footer className="mt-8 md:mt-10 flex items-center gap-4 md:gap-6 text-zinc-600 font-bold uppercase text-[10px] md:text-xs tracking-[0.15em]">
                 <div className="flex items-center gap-2">
-                    <Sparkles className="h-2.5 md:h-3 w-2.5 md:w-3" /> EduFlow Core v2.0
+                    <Sparkles className="h-3 w-3" /> EduFlow Core v2.0
                 </div>
                 <div className="h-3 w-[1px] bg-zinc-800" />
-                <button onClick={() => router.push('/login')} className="hover:text-zinc-500 underline underline-offset-4">Я уже зарегистрирован</button>
+                <button onClick={() => router.push('/login')} className="hover:text-zinc-400 transition-colors underline underline-offset-4">Я уже зарегистрирован</button>
             </footer>
         </div>
     );
