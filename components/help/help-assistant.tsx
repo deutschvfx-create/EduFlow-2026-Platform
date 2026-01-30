@@ -336,7 +336,7 @@ export function HelpAssistant() {
             if (!isTargetOrChild) {
                 console.warn('[Bot] Target blocked by:', topElement);
                 // If it's the drawer content itself (z-101), we might need to click deeper or bypass its container
-                if (topElement?.classList.contains('z-[101]') || topElement?.closest('.z-[101]')) {
+                if (topElement?.classList.contains('z-[101]') || topElement?.closest('.z-\\[101\\]')) {
                     console.log('[Bot] Blocked by drawer container, trying to click through');
                     (topElement as HTMLElement).style.pointerEvents = 'none';
                     // Re-verify after bypassing one more layer
