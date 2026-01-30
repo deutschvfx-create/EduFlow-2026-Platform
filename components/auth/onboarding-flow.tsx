@@ -175,24 +175,24 @@ export function OnboardingFlow() {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-[600px] w-full max-w-4xl mx-auto p-4 relative overflow-hidden">
+        <div className="flex flex-col items-center justify-center min-h-[500px] w-full max-w-2xl mx-auto p-4 relative overflow-hidden">
             {/* Background Aura */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-500/5 rounded-full blur-[120px] -z-10" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/5 rounded-full blur-[100px] -z-10" />
 
             {/* Mascot Section */}
-            <div className="mb-6 md:mb-12">
-                <Mascot status={mascotStatus} className="w-32 h-32 md:w-48 md:h-48" />
+            <div className="mb-6">
+                <Mascot status={mascotStatus} className="w-24 h-24 md:w-32 md:h-32" />
             </div>
 
-            <main className="w-full max-w-2xl bg-zinc-900/40 border border-white/5 backdrop-blur-2xl rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-2xl relative overflow-hidden">
+            <main className="w-full max-w-lg bg-zinc-900/40 border border-white/5 backdrop-blur-2xl rounded-[2rem] p-6 md:p-8 shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
 
                 <AnimatePresence mode="wait">
                     {step === 0 && (
-                        <motion.div key="step0" {...stepTransition} className="space-y-6 md:space-y-8 text-center">
-                            <div className="space-y-3 md:space-y-4">
-                                <h2 className="text-2xl md:text-4xl font-black text-white tracking-tight">{t.welcome}</h2>
-                                <p className="text-zinc-500 font-medium h-10 md:h-12 text-sm md:text-base">{t.welcome_sub}</p>
+                        <motion.div key="step0" {...stepTransition} className="space-y-5 text-center">
+                            <div className="space-y-2">
+                                <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">{t.welcome}</h2>
+                                <p className="text-zinc-500 font-medium text-sm">{t.welcome_sub}</p>
                             </div>
 
                             <div className="grid grid-cols-2 laptop:grid-cols-4 gap-4">
@@ -219,22 +219,22 @@ export function OnboardingFlow() {
                             <Button
                                 size="lg"
                                 onClick={nextStep}
-                                className="w-full h-14 md:h-16 rounded-xl md:rounded-2xl bg-white text-zinc-950 hover:bg-zinc-200 transition-all font-black uppercase tracking-widest gap-3 text-base md:text-lg"
+                                className="w-full h-12 rounded-xl bg-white text-zinc-950 hover:bg-zinc-200 transition-all font-black uppercase tracking-widest gap-2 text-sm"
                             >
-                                {t.start} <ArrowRight className="h-5 w-5" />
+                                {t.start} <ArrowRight className="h-4 w-4" />
                             </Button>
                         </motion.div>
                     )}
 
                     {step === 1 && (
-                        <motion.div key="step1" {...stepTransition} className="space-y-6 md:space-y-8 text-center">
+                        <motion.div key="step1" {...stepTransition} className="space-y-5 text-center">
                             <div className="space-y-2">
-                                <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">{t.ask_name}</h2>
-                                <p className="text-zinc-500 text-[10px] md:text-sm font-bold uppercase tracking-widest">{TRANSLATIONS[data.language].choose_lang}</p>
+                                <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight">{t.ask_name}</h2>
+                                <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">{TRANSLATIONS[data.language].choose_lang}</p>
                             </div>
 
                             <div className="relative max-w-md mx-auto">
-                                <User className={`absolute left-4 md:left-5 top-1/2 -translate-y-1/2 h-5 md:h-6 w-5 md:w-6 transition-colors ${data.name ? 'text-indigo-400' : 'text-zinc-700'}`} />
+                                <User className={`absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 transition-colors ${data.name ? 'text-indigo-400' : 'text-zinc-700'}`} />
                                 <Input
                                     value={data.name}
                                     onChange={(e) => {
@@ -243,7 +243,7 @@ export function OnboardingFlow() {
                                     }}
                                     onBlur={() => setMascotStatus("idle")}
                                     placeholder={t.placeholder_name}
-                                    className="h-14 md:h-20 pl-12 md:pl-16 pr-6 md:pr-8 bg-zinc-950/50 border-zinc-800 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 rounded-xl md:rounded-[1.5rem] text-lg md:text-xl font-bold text-white placeholder:text-zinc-800"
+                                    className="h-12 pl-12 pr-6 bg-zinc-950/50 border-zinc-800 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 rounded-xl text-base font-bold text-white placeholder:text-zinc-800"
                                 />
                             </div>
 
@@ -251,30 +251,30 @@ export function OnboardingFlow() {
                                 size="lg"
                                 disabled={data.name.length < 2}
                                 onClick={nextStep}
-                                className="w-full h-14 md:h-16 rounded-xl md:rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white transition-all font-black uppercase tracking-widest gap-3 text-base md:text-lg shadow-xl shadow-indigo-500/20"
+                                className="w-full h-12 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-all font-black uppercase tracking-widest gap-2 text-sm shadow-xl shadow-indigo-500/20"
                             >
-                                {t.next} <ArrowRight className="h-5 w-5" />
+                                {t.next} <ArrowRight className="h-4 w-4" />
                             </Button>
                         </motion.div>
                     )}
 
                     {step === 2 && (
-                        <motion.div key="step2" {...stepTransition} className="space-y-6 md:space-y-8 text-center">
+                        <motion.div key="step2" {...stepTransition} className="space-y-5 text-center">
                             <div className="space-y-2">
-                                <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">
+                                <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight">
                                     {t.nice_to_meet.replace('{name}', data.name)}
                                 </h2>
-                                <p className="text-zinc-500 text-[10px] md:text-sm font-bold uppercase tracking-widest">{t.ask_age}</p>
+                                <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">{t.ask_age}</p>
                             </div>
 
                             <div className="relative max-w-[280px] mx-auto">
-                                <Calendar className={`absolute left-4 md:left-5 top-1/2 -translate-y-1/2 h-5 md:h-6 w-5 md:w-6 transition-colors ${data.birthDate?.length === 10 ? 'text-emerald-400' : 'text-zinc-700'}`} />
+                                <Calendar className={`absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 transition-colors ${data.birthDate?.length === 10 ? 'text-emerald-400' : 'text-zinc-700'}`} />
                                 <Input
                                     value={data.birthDate}
                                     onChange={(e) => handleDateChange(e.target.value)}
                                     onBlur={() => setMascotStatus("idle")}
                                     placeholder="DD MM YYYY"
-                                    className="h-14 md:h-20 pl-12 md:pl-16 pr-6 md:pr-8 bg-zinc-950/50 border-zinc-800 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl md:rounded-[1.5rem] text-center text-xl md:text-3xl font-black tracking-[0.1em] text-white placeholder:text-zinc-800"
+                                    className="h-12 pl-12 pr-6 bg-zinc-950/50 border-zinc-800 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl text-center text-xl font-black tracking-[0.1em] text-white placeholder:text-zinc-800"
                                 />
                             </div>
 
@@ -282,18 +282,18 @@ export function OnboardingFlow() {
                                 size="lg"
                                 disabled={!data.birthDate || data.birthDate.length < 10}
                                 onClick={nextStep}
-                                className="w-full h-14 md:h-16 rounded-xl md:rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white transition-all font-black uppercase tracking-widest gap-3 text-base md:text-lg shadow-xl shadow-emerald-500/20"
+                                className="w-full h-12 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition-all font-black uppercase tracking-widest gap-2 text-sm shadow-xl shadow-emerald-500/20"
                             >
-                                {t.next} <ArrowRight className="h-5 w-5" />
+                                {t.next} <ArrowRight className="h-4 w-4" />
                             </Button>
                         </motion.div>
                     )}
 
                     {step === 3 && (
-                        <motion.div key="step3" {...stepTransition} className="space-y-6 md:space-y-10">
+                        <motion.div key="step3" {...stepTransition} className="space-y-5">
                             <div className="text-center space-y-2">
-                                <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">{t.ask_role}</h2>
-                                <p className="text-zinc-600 text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em]">Это поможет нам персонализировать ваш опыт</p>
+                                <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight">{t.ask_role}</h2>
+                                <p className="text-zinc-600 text-[10px] font-black uppercase tracking-wider">Это поможет нам персонализировать ваш опыт</p>
                             </div>
 
                             <div className="grid gap-4">
@@ -328,17 +328,17 @@ export function OnboardingFlow() {
                                         onClick={() => handleRoleSelect(role.id)}
                                         onMouseEnter={() => setMascotStatus("thinking")}
                                         onMouseLeave={() => setMascotStatus("idle")}
-                                        className="group relative flex items-center p-4 md:p-6 rounded-2xl md:rounded-3xl bg-zinc-950/50 border border-zinc-800 hover:border-white/20 transition-all duration-300 text-left overflow-hidden"
+                                        className="group relative flex items-center p-4 rounded-2xl bg-zinc-950/50 border border-zinc-800 hover:border-white/20 transition-all duration-300 text-left overflow-hidden"
                                     >
                                         <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        <div className={`p-3 md:p-4 rounded-xl md:rounded-2xl bg-zinc-900 border border-zinc-800 transition-colors duration-300 ${role.bg} mr-4 md:mr-6`}>
-                                            <role.icon className={`h-6 md:h-8 w-6 md:w-8 transition-colors ${role.color} group-hover:text-white`} />
+                                        <div className={`p-3 rounded-xl bg-zinc-900 border border-zinc-800 transition-colors duration-300 ${role.bg} mr-4`}>
+                                            <role.icon className={`h-6 w-6 transition-colors ${role.color} group-hover:text-white`} />
                                         </div>
-                                        <div className="flex-1 space-y-0.5 md:space-y-1">
-                                            <h3 className="text-base md:text-lg font-black text-white group-hover:text-white transition-colors uppercase tracking-tight">{role.label}</h3>
-                                            <p className="text-[10px] md:text-xs text-zinc-500 font-medium group-hover:text-zinc-400 transition-colors leading-relaxed line-clamp-1">{role.desc}</p>
+                                        <div className="flex-1 space-y-0.5">
+                                            <h3 className="text-sm font-black text-white group-hover:text-white transition-colors uppercase tracking-tight">{role.label}</h3>
+                                            <p className="text-[10px] text-zinc-500 font-medium group-hover:text-zinc-400 transition-colors leading-relaxed line-clamp-1">{role.desc}</p>
                                         </div>
-                                        <ArrowRight className="h-4 md:h-5 w-4 md:w-5 text-zinc-800 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                                        <ArrowRight className="h-4 w-4 text-zinc-800 group-hover:text-white group-hover:translate-x-1 transition-all" />
                                     </button>
                                 ))}
                             </div>
