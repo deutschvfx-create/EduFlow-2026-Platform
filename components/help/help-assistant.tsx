@@ -380,11 +380,12 @@ export function HelpAssistant() {
                                             // Click Item
                                             setTimeout(() => {
                                                 setIsPuppetClicking(false);
-                                                setIsPuppetVisible(false); // Hide hand before nav
+                                                // setIsPuppetVisible(false); // Hide hand before nav
                                                 (targetEl as HTMLElement).click();
 
                                                 // Wait for route change
                                                 setTimeout(() => {
+                                                    setIsPuppetVisible(false);
                                                     startTour(section, true);
                                                 }, 1500);
                                             }, 500); // Hold click
