@@ -28,8 +28,8 @@ const DayLabels: Record<DayOfWeek, string> = {
 }
 
 export default function SchedulePage() {
-    // const { userData } = useAuth(); // Handled in replace block above
-    // const canEdit = ... 
+    const { userData } = useAuth();
+    const canEdit = userData?.role === 'OWNER' || userData?.role === 'DIRECTOR';
 
     const [groupFilter, setGroupFilter] = useState("all");
     const [teacherFilter, setTeacherFilter] = useState("all");
