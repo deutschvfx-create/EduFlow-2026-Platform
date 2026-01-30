@@ -323,50 +323,77 @@ export function HelpAssistant() {
 
             // 2. Try Mobile Menu Macro
             const mobileMenuTrigger = document.querySelector('[data-help-id="mobile-nav-menu"]');
-            if (mobileMenuTrigger) {
-                // Step 1: Click Menu
-                setOpen(false);
-                setIsPuppetVisible(true);
-                setPuppetRect(mobileMenuTrigger.getBoundingClientRect());
 
+            // Only try mobile macro if desktop link is NOT found AND mobile menu trigger IS found
+            if (!targetEl && mobileMenuTrigger) {
+                // Step 1: Click Menu
+                setOpen(false); // Close Assistant Sheet
+                setIsPuppetVisible(true);
+
+                // Ensure menu button is visible
+                const menuRect = mobileMenuTrigger.getBoundingClientRect();
+                setPuppetRect(menuRect);
+
+                if (isVoiceEnabled) speak("Открываю меню...");
+
+                // Initial Delay (Move hand to menu)
                 setTimeout(() => {
                     setIsPuppetClicking(true);
+
+                    // Click Menu
                     setTimeout(() => {
                         setIsPuppetClicking(false);
                         (mobileMenuTrigger as HTMLElement).click();
 
-                        // Step 2: Wait for Drawer & Click Link
+                        // Step 2: Wait for Drawer (Needs ample time for animation + DOM mount)
                         setTimeout(() => {
-                            // Re-query for link inside drawer
-                            targetEl = document.querySelector(`[data-help-id="${sidebarLinkId}"]`);
-                            if (targetEl) {
-                                // Update hand position to new target
-                                setPuppetRect(targetEl.getBoundingClientRect());
-                                setTimeout(() => {
-                                    setIsPuppetClicking(true);
-                                    setTimeout(() => {
-                                        setIsPuppetClicking(false);
-                                        setIsPuppetVisible(false);
-                                        (targetEl as HTMLElement).click();
+                            if (isVoiceEnabled) speak("Ищу нужный раздел...");
 
+                            // Re-query for link inside drawer
+                            // NOTE: We need to wait for AnimatePresence/framer-motion to render children
+                            targetEl = document.querySelector(`[data-help-id="${sidebarLinkId}"]`);
+
+                            if (targetEl) {
+                                // SCROLL INTO VIEW (Crucial for mobile)
+                                targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                                // Wait for scroll to finish
+                                setTimeout(() => {
+                                    // Recalculate position after scroll
+                                    setPuppetRect(targetEl!.getBoundingClientRect()); // Force non-null assertion as we found it
+
+                                    // Move hand to item
+                                    setTimeout(() => {
+                                        setIsPuppetClicking(true);
+
+                                        // Click Item
                                         setTimeout(() => {
-                                            startTour(section, true);
-                                        }, 1200);
-                                    }, 400);
-                                }, 600);
+                                            setIsPuppetClicking(false);
+                                            setIsPuppetVisible(false); // Hide hand before nav
+                                            (targetEl as HTMLElement).click();
+
+                                            // Wait for route change
+                                            setTimeout(() => {
+                                                startTour(section, true);
+                                            }, 1500);
+                                        }, 500); // Hold click
+                                    }, 800); // Move duration
+                                }, 500); // Scroll duration
                             } else {
-                                // Fallback if still not found
+                                // Fallback: If still not found (e.g. filtered out?)
+                                console.warn("Target link not found in drawer:", sidebarLinkId);
+                                setIsPuppetVisible(false);
                                 router.push(section.route);
                                 setTimeout(() => startTour(section, true), 800);
                             }
-                        }, 600); // Wait for drawer animation
-                    }, 300);
-                }, 600);
+                        }, 1000); // 1s wait for drawer open animation
+                    }, 400); // Click duration
+                }, 800); // Initial move duration
 
                 return;
             }
 
-            // Fallback: If link hidden or not found
+            // Fallback: If link hidden or not found and no mobile menu
             setOpen(false);
             router.push(section.route);
             setTimeout(() => {
