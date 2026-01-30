@@ -1,8 +1,18 @@
+"use client";
+
+import { useState } from "react";
 import { Lesson, DayOfWeek } from "@/lib/types/schedule";
 import { cn } from "@/lib/utils";
-import { Clock, MapPin, Users, GraduationCap } from "lucide-react";
+import { Clock, MapPin, Users, GraduationCap, X, Plus } from "lucide-react";
 import { format, startOfWeek, addDays, isSameDay } from "date-fns";
 import { ru } from "date-fns/locale";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MOCK_GROUPS_FULL } from "@/lib/mock/groups";
+import { MOCK_TEACHERS } from "@/lib/mock/teachers";
+import { MOCK_COURSES } from "@/lib/mock/courses";
 
 interface DesktopWeekGridProps {
     lessons: Lesson[];
