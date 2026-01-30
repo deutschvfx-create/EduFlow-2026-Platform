@@ -35,7 +35,7 @@ export default function DashboardPage() {
         setUser(getStoredUser());
     }, []);
 
-    const isOwner = user?.role === 'OWNER' || user?.role === 'DIRECTOR';
+    const isOwner = user ? (user.role === 'OWNER' || user.role === 'DIRECTOR') : false;
 
     return (
         <div className="max-w-[1600px] mx-auto space-y-4 laptop:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">

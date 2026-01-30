@@ -204,38 +204,52 @@ export function HelpAssistant() {
     const scrollIntoViewSafe = useCallback(async (element: HTMLElement): Promise<void> => {
         if (!element) return;
 
-        const initialScrollY = window.scrollY;
-
         element.scrollIntoView({
             behavior: 'smooth',
             block: 'center',
             inline: 'center'
         });
 
-        // Wait for scroll animation to complete
+        // Wait for element's position to stabilize relative to viewport
+        // This is much more robust than checking window.scrollY as it works for container scrolls too
         await new Promise<void>(resolve => {
-            let lastScrollY = window.scrollY;
+            let lastX = element.getBoundingClientRect().left;
+            let lastY = element.getBoundingClientRect().top;
             let sameCount = 0;
+            const startTime = Date.now();
 
-            const checkScroll = () => {
-                if (Math.abs(window.scrollY - lastScrollY) < 1) {
+            const checkPos = () => {
+                const rect = element.getBoundingClientRect();
+                const currentX = rect.left;
+                const currentY = rect.top;
+
+                // Check if position changed
+                if (Math.abs(currentX - lastX) < 0.5 && Math.abs(currentY - lastY) < 0.5) {
                     sameCount++;
-                    if (sameCount > 3) {
+                    if (sameCount > 10) { // Stable for ~160ms (at 60fps)
                         resolve();
                         return;
                     }
                 } else {
                     sameCount = 0;
                 }
-                lastScrollY = window.scrollY;
-                requestAnimationFrame(checkScroll);
+
+                lastX = currentX;
+                lastY = currentY;
+
+                // Safety timeout
+                if (Date.now() - startTime > 2500) {
+                    resolve();
+                    return;
+                }
+                requestAnimationFrame(checkPos);
             };
 
-            requestAnimationFrame(checkScroll);
+            requestAnimationFrame(checkPos);
         });
 
-        // Additional safety delay
-        await new Promise(resolve => setTimeout(resolve, 200));
+        // Additional settling time
+        await new Promise(resolve => setTimeout(resolve, 150));
     }, []);
 
     /**
@@ -288,25 +302,32 @@ export function HelpAssistant() {
             // 2. Scroll into view safely
             await scrollIntoViewSafe(element);
 
-            // 3. Get target coordinates
+            // SYNC PUPPET: After scroll, the element position changed.
+            // We must update the visual puppet to stay on top of the real target.
+            const initialRect = element.getBoundingClientRect();
+            setPuppetRect(initialRect);
+            // Small pause for the hand to actually move there visually
+            await new Promise(resolve => setTimeout(resolve, 250));
+
+            // 3. Get target coordinates (re-calculate in case of minor shifts)
             const rect = element.getBoundingClientRect();
             // Add small random offset from center for realism
-            const offsetX = (Math.random() - 0.5) * 10;
-            const offsetY = (Math.random() - 0.5) * 10;
+            const offsetX = (Math.random() - 0.5) * 6;
+            const offsetY = (Math.random() - 0.5) * 6;
             const clientX = rect.left + rect.width / 2 + offsetX;
             const clientY = rect.top + rect.height / 2 + offsetY;
 
-            // 4. PREPARE ENVIRONMENT: Bypass our own overlays
-            // We need to temporarily disable pointer events on our overlay to hit the target below
-            const tourOverlay = document.querySelector('.fixed.inset-0.z-\\[100\\]') as HTMLElement;
-            const originalPointerEvents = tourOverlay ? tourOverlay.style.pointerEvents : '';
+            // 4. PREPARE ENVIRONMENT: Bypass multiple potential overlay layers
+            // We bypass z-100 (backdrop), z-50 (our trigger), and potentially z-101 (drawer structure if needed)
+            const overlays = document.querySelectorAll('.z-\\[100\\], .z-\\[50\\]');
+            const originalStates = Array.from(overlays).map(el => (el as HTMLElement).style.pointerEvents);
 
-            if (tourOverlay) {
-                tourOverlay.style.pointerEvents = 'none';
-            }
+            overlays.forEach(el => {
+                (el as HTMLElement).style.pointerEvents = 'none';
+            });
 
             // 5. VERIFY TARGET through all layers
-            // Wait a frame for style application
+            // Wait a frame for style application and potential layout stabilization
             await new Promise(resolve => requestAnimationFrame(resolve));
 
             const topElement = document.elementFromPoint(clientX, clientY);
@@ -314,8 +335,16 @@ export function HelpAssistant() {
 
             if (!isTargetOrChild) {
                 console.warn('[Bot] Target blocked by:', topElement);
-                // If we hit something else, try to interact with THAT if it's strictly inside the target rect
-                // Otherwise abort to avoid clicking wrong things
+                // If it's the drawer content itself (z-101), we might need to click deeper or bypass its container
+                if (topElement?.classList.contains('z-[101]') || topElement?.closest('.z-[101]')) {
+                    console.log('[Bot] Blocked by drawer container, trying to click through');
+                    (topElement as HTMLElement).style.pointerEvents = 'none';
+                    // Re-verify after bypassing one more layer
+                    await new Promise(resolve => requestAnimationFrame(resolve));
+                    const nextTop = document.elementFromPoint(clientX, clientY);
+                    console.log('[Bot] Next top element:', nextTop);
+                    if (topElement) (topElement as HTMLElement).style.pointerEvents = 'auto'; // Will be restored anyway by loop but for safety
+                }
             }
 
             // 6. EXECUTE INPUT SEQUENCE (Pointer -> Touch -> Mouse)
@@ -341,6 +370,7 @@ export function HelpAssistant() {
             await new Promise(resolve => setTimeout(resolve, 100));
 
             // B. Press Down
+            setIsPuppetClicking(true);
             element.dispatchEvent(new PointerEvent('pointerdown', eventInit));
             element.dispatchEvent(new MouseEvent('mousedown', eventInit));
 
@@ -356,7 +386,7 @@ export function HelpAssistant() {
             }));
 
             // C. Hold (Human press duration)
-            await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * 80) + 80));
+            await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * 80) + 120));
 
             // D. Release
             element.dispatchEvent(new PointerEvent('pointerup', eventInit));
@@ -368,18 +398,25 @@ export function HelpAssistant() {
                 changedTouches: touchList as any
             }));
 
+            setIsPuppetClicking(false);
+
             // E. Click (The final trigger)
             element.dispatchEvent(new MouseEvent('click', eventInit));
 
-            // F. Focus if needed
+            // F. Fallback: Native click if the element didn't react
+            if (typeof element.click === 'function') {
+                element.click();
+            }
+
+            // G. Focus if needed
             if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLButtonElement) {
                 element.focus();
             }
 
             // 7. RESTORE ENVIRONMENT
-            if (tourOverlay) {
-                tourOverlay.style.pointerEvents = originalPointerEvents;
-            }
+            overlays.forEach((el, i) => {
+                (el as HTMLElement).style.pointerEvents = originalStates[i];
+            });
 
             console.log('[Bot] Interaction executed on:', element);
             return true;
@@ -602,16 +639,11 @@ export function HelpAssistant() {
 
                         // Perform Action
                         if (step.action === 'click') {
-                            const actionDelay = step.actionDelay || 1000;
-
+                            const actionDelay = step.actionDelay || 800;
                             await new Promise(resolve => setTimeout(resolve, actionDelay));
-                            setIsPuppetClicking(true);
-
-                            await new Promise(resolve => setTimeout(resolve, 400));
-                            setIsPuppetClicking(false);
 
                             if (!step.preventInteraction) {
-                                // Use new reliable click system
+                                // Use the unified interaction system (handles scroll, visual state, and events)
                                 const verification = step.targetId === 'students-table-row'
                                     ? {
                                         type: 'modal_open' as const,
@@ -790,17 +822,12 @@ export function HelpAssistant() {
                     step: 0
                 }));
 
-                // Visual click animation
-                await randomDelay(600, 800);
-                setIsPuppetClicking(true);
-                await new Promise(resolve => setTimeout(resolve, 400));
-                setIsPuppetClicking(false);
-
                 // Perform reliable click with route change verification
+                // This now handles the visual click state, scrolling, and events in one go
                 const success = await retryableClick(element, {
                     type: 'route_change',
                     route: section.route,
-                    timeout: 3000
+                    timeout: 4000
                 }, 2);
 
                 return success;
@@ -847,11 +874,15 @@ export function HelpAssistant() {
                 // Click menu with drawer opening verification
                 const menuSuccess = await retryableClick(mobileMenuTrigger, {
                     type: 'element_appear',
-                    selector: '[data-help-id="mobile-nav-menu"] + div', // Drawer appears
+                    selector: '[data-help-id="mobile-drawer"]',
                     timeout: 2000
                 }, 2);
 
-                if (!menuSuccess) {
+                if (menuSuccess) {
+                    // Critical: Wait for drawer animation to finish (at least partially)
+                    // so coordinates are stable
+                    await new Promise(resolve => setTimeout(resolve, 600));
+                } else {
                     console.warn('[Bot] Mobile menu click failed');
                     // Fallback to direct navigation
                     setIsPuppetVisible(false);

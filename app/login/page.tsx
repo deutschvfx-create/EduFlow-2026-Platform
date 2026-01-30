@@ -8,6 +8,8 @@ import { useState, useEffect, Suspense } from "react"
 import { Mascot } from "@/components/shared/mascot"
 import { motion, AnimatePresence } from "framer-motion"
 import { Mail, Lock, ArrowRight, Sparkles, Terminal } from "lucide-react"
+import { setStoredUser } from "@/lib/auth-helpers"
+import { safeSet } from "@/lib/storage"
 
 function LoginForm() {
     const router = useRouter()
@@ -57,11 +59,11 @@ function LoginForm() {
 
         if (email) {
             setMascotStatus("success")
-            localStorage.setItem('user', JSON.stringify({
+            setStoredUser({
                 email: email,
                 role: targetRole,
                 name: 'Raj Latipov'
-            }));
+            }, "mock-token-login"); // Pass a mock token for development bypass
             router.push(redirectUrl)
         } else {
             setMascotStatus("looking_away")
@@ -72,11 +74,11 @@ function LoginForm() {
 
     const skipAuth = async (role: 'director' | 'student') => {
         setMascotStatus("success")
-        localStorage.setItem('user', JSON.stringify({
+        setStoredUser({
             email: role === 'director' ? 'director@eduflow.com' : 'student@eduflow.com',
             role: role.toUpperCase() === 'DIRECTOR' ? 'OWNER' : 'STUDENT',
             name: 'Demo User'
-        }));
+        }, "mock-token-skip");
         await new Promise(r => setTimeout(r, 800));
         router.push(role === 'director' ? '/app/dashboard' : '/student');
     }

@@ -8,6 +8,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GraduationCap } from "lucide-react";
+import { generateId } from "@/lib/utils";
 
 interface CreateTeacherModalProps {
     onSuccess: () => void;
@@ -23,7 +24,7 @@ export function CreateTeacherModal({ onSuccess }: CreateTeacherModalProps) {
 
         import("@/lib/data/teachers.repo").then(({ teachersRepo }) => {
             teachersRepo.add({
-                id: crypto.randomUUID(),
+                id: generateId(),
                 firstName,
                 lastName,
                 email: `${firstName.toLowerCase()}@eduflow.com`,

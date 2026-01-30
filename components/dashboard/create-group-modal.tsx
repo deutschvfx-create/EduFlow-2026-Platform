@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { MOCK_TEACHERS } from '@/lib/mock/teachers';
 import { Layers } from "lucide-react";
+import { generateId } from "@/lib/utils";
 // import { toast } from "sonner";
 const toast = { success: (m: string) => alert(m), error: (m: string) => alert(m) }; // Using custom toast or this if available, reverting to alert if needed or custom hook from settings? 
 // Actually user asked for "show toast 'Создано'". Since I set up custom toast in settings page locally, 
@@ -40,7 +41,7 @@ export function CreateGroupModal({ onSuccess }: CreateGroupModalProps) {
 
         import("@/lib/data/groups.repo").then(({ groupsRepo }) => {
             groupsRepo.add({
-                id: crypto.randomUUID(),
+                id: generateId(),
                 name,
                 curatorTeacherId: teacher || undefined,
                 studentsCount: 0,

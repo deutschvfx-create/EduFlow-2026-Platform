@@ -34,16 +34,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             if (firebaseUser) {
                 // Fetch extended user data from Firestore
-                const data = await UserService.getUser(firebaseUser.uid);
-                setUserData(data);
+                try {
+                    const data = await UserService.getUser(firebaseUser.uid);
+                    setUserData(data);
 
-                // Basic Route Protection
-                if (data) {
-                    if (pathname === '/login' || pathname === '/register') {
-                        // Redirect if already logged in
-                        if (data.role === 'STUDENT') router.push('/student');
-                        else if (['OWNER', 'DIRECTOR', 'ADMIN'].includes(data.role)) router.push('/director');
+                    // Basic Route Protection - Only redirect if we are on login/register
+                    // AND not already handled by the page logic
+                    if (data && (pathname === '/login' || pathname === '/register')) {
+                        const target = data.role === 'STUDENT' ? '/student' : '/app/dashboard';
+                        router.push(target);
                     }
+                } catch (e) {
+                    console.error("Failed to fetch user data in AuthProvider:", e);
                 }
             } else {
                 setUserData(null);

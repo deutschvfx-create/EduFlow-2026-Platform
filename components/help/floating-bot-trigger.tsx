@@ -27,9 +27,15 @@ export function FloatingBotTrigger({ onClick, hasNewFeatures }: FloatingBotTrigg
     };
 
     const [mounted, setMounted] = useState(false);
+    const [initialCoords, setInitialCoords] = useState<{ x: number, y: number } | null>(null);
 
     useEffect(() => {
         setMounted(true);
+        // Calculate initial position only on client to avoid hydration mismatch
+        setInitialCoords({
+            x: window.innerWidth - 80,
+            y: window.innerHeight - 150
+        });
         resetIdle();
         window.addEventListener('mousemove', resetIdle);
         window.addEventListener('touchstart', resetIdle);
@@ -40,7 +46,7 @@ export function FloatingBotTrigger({ onClick, hasNewFeatures }: FloatingBotTrigg
         };
     }, []);
 
-    if (!mounted) return null;
+    if (!mounted || !initialCoords) return null;
 
     return (
         <div className="fixed inset-0 pointer-events-none z-[50] overflow-hidden">
@@ -63,8 +69,8 @@ export function FloatingBotTrigger({ onClick, hasNewFeatures }: FloatingBotTrigg
                 onClick={() => {
                     if (!isDragging) onClick();
                 }}
-                // Initial Position: Bottom Right (Client-side only)
-                initial={{ x: window.innerWidth - 80, y: window.innerHeight - 150 }}
+                // Initial Position: Bottom Right (Safe for WebView)
+                initial={initialCoords}
                 animate={{
                     opacity: isIdle ? 0.35 : 1,
                     scale: isDragging ? 0.95 : 1,

@@ -17,6 +17,7 @@ import {
     Sparkles
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { safeSet } from "@/lib/storage";
 
 type Language = 'ru' | 'en' | 'de' | 'tj';
 type Role = 'student' | 'teacher' | 'parent' | 'director';
@@ -144,7 +145,7 @@ export function OnboardingFlow() {
             language: data.language,
             organizationType: role === 'director' ? 'university' : 'language_school'
         };
-        localStorage.setItem('onboarding_data', JSON.stringify(onboardingData));
+        safeSet('onboarding_data', onboardingData);
 
         setTimeout(() => {
             router.push(`/login?role=${role}&name=${data.name}&lang=${data.language}`);

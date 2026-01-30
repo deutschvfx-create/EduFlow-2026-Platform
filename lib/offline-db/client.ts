@@ -80,7 +80,7 @@ export const db = {
 
         // 2. Write to Outbox
         const event: OutboxEvent = {
-            id: crypto.randomUUID(),
+            id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(7),
             entity: storeName,
             action: 'CREATE',
             payload: item,
@@ -102,7 +102,7 @@ export const db = {
         tx.objectStore(storeName).put(item);
 
         const event: OutboxEvent = {
-            id: crypto.randomUUID(),
+            id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(7),
             entity: storeName,
             action: 'UPDATE',
             payload: item,
@@ -124,7 +124,7 @@ export const db = {
         tx.objectStore(storeName).delete(id);
 
         const event: OutboxEvent = {
-            id: crypto.randomUUID(),
+            id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(7),
             entity: storeName,
             action: 'DELETE',
             payload: { id },

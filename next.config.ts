@@ -154,7 +154,14 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  transpilePackages: [
+    "zod",
+    "framer-motion",
+    "lucide-react",
+    "date-fns",
+    "zxing-wasm",
+    "smob",
+  ],
 };
 
 export default withPWA(nextConfig);

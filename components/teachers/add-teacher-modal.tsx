@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Mail, Loader2, Copy } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TeacherRole } from "@/lib/types/teacher";
+import { generateId } from "@/lib/utils";
 
 export function AddTeacherModal() {
     const [open, setOpen] = useState(false);
@@ -37,7 +38,7 @@ export function AddTeacherModal() {
         try {
             const { teachersRepo } = await import("@/lib/data/teachers.repo");
             teachersRepo.add({
-                id: crypto.randomUUID(),
+                id: generateId(),
                 firstName,
                 lastName,
                 specialization,

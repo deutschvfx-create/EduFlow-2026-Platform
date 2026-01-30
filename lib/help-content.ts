@@ -118,8 +118,7 @@ export const helpSections: HelpSection[] = [
                 text: "Нажмите кнопку добавления, чтобы открыть форму регистрации.",
                 targetId: "students-add-btn",
                 tip: "Кнопка всегда находится в правом верхнем углу.",
-                action: 'click',
-                preventInteraction: true // Demo mode: don't actually open the modal to avoid confusion
+                action: 'click'
             },
             {
                 title: "QR Сканер",

@@ -3,8 +3,8 @@ export type Platform = 'windows' | 'macos' | 'android' | 'ios' | 'linux' | 'unkn
 export function detectPlatform(): Platform {
     if (typeof window === 'undefined') return 'unknown';
 
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    const platform = window.navigator.platform?.toLowerCase() || '';
+    const userAgent = window.navigator?.userAgent?.toLowerCase() || '';
+    const platform = window.navigator?.platform?.toLowerCase() || '';
 
     // iOS detection
     if (/iphone|ipad|ipod/.test(userAgent)) {
@@ -35,10 +35,15 @@ export function detectPlatform(): Platform {
 }
 
 export function isPWAInstalled(): boolean {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === 'undefined' || !window.navigator) return false;
 
     // Check if running in standalone mode
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    let isStandalone = false;
+    try {
+        isStandalone = window.matchMedia?.('(display-mode: standalone)').matches || false;
+    } catch (e) {
+        console.warn("matchMedia check failed", e);
+    }
 
     // Check for iOS standalone
     const isIOSStandalone = (window.navigator as any).standalone === true;
@@ -54,8 +59,9 @@ export function canInstallPWA(): boolean {
     // iOS Safari doesn't support beforeinstallprompt
     if (platform === 'ios') {
         // Check if it's Safari and not already installed
-        const isSafari = /safari/.test(window.navigator.userAgent.toLowerCase()) &&
-            !/chrome|crios|fxios/.test(window.navigator.userAgent.toLowerCase());
+        const userAgent = window.navigator?.userAgent?.toLowerCase() || '';
+        const isSafari = /safari/.test(userAgent) &&
+            !/chrome|crios|fxios/.test(userAgent);
         return isSafari && !isPWAInstalled();
     }
 
@@ -65,9 +71,9 @@ export function canInstallPWA(): boolean {
 }
 
 export function isTablet(): boolean {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === 'undefined' || !window.navigator) return false;
 
-    const userAgent = window.navigator.userAgent.toLowerCase();
+    const userAgent = window.navigator.userAgent?.toLowerCase() || '';
 
     // Check for tablet-specific keywords
     const isTabletUA = /ipad|android(?!.*mobile)|tablet|kindle|playbook|silk/.test(userAgent);

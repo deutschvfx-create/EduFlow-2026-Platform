@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { MOCK_FACULTIES } from "@/lib/mock/faculties";
 import { MOCK_DEPARTMENTS } from "@/lib/mock/departments";
+import { generateId } from "@/lib/utils";
 
 export function AddCourseModal() {
     const [open, setOpen] = useState(false);
@@ -51,7 +52,7 @@ export function AddCourseModal() {
         try {
             const { coursesRepo } = await import("@/lib/data/courses.repo");
             coursesRepo.add({
-                id: crypto.randomUUID(),
+                id: generateId(),
                 name,
                 code,
                 facultyId,

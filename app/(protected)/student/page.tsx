@@ -25,7 +25,9 @@ export default function StudentDashboard() {
     const isLanguageSchool = APP_CONFIG.orgType === 'LanguageSchool';
 
     // Get Today's Schedule (Mock logic: showing all for now or filtering by "MON" to simulate today)
-    const todayLessons = MOCK_SCHEDULE.filter(l => l.groupId === student.groups[0]?.id).slice(0, 3); // Simulating today's lessons
+    const todayLessons = student.groups?.[0]
+        ? MOCK_SCHEDULE.filter(l => l.groupId === student.groups[0]?.id).slice(0, 3)
+        : [];
 
     return (
         <div className="flex flex-col gap-6 p-4 md:p-6 min-h-[calc(100vh-4rem)] max-w-md mx-auto w-full">

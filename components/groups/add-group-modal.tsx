@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MOCK_TEACHERS } from "@/lib/mock/teachers";
 import { MOCK_FACULTIES } from "@/lib/mock/faculties";
 import { MOCK_DEPARTMENTS } from "@/lib/mock/departments";
+import { generateId } from "@/lib/utils";
 
 export function AddGroupModal() {
     const [open, setOpen] = useState(false);
@@ -53,7 +54,7 @@ export function AddGroupModal() {
         try {
             const { groupsRepo } = await import("@/lib/data/groups.repo");
             groupsRepo.add({
-                id: crypto.randomUUID(),
+                id: generateId(),
                 name,
                 code,
                 facultyId,

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Megaphone } from "lucide-react";
 import { Textarea } from '@/components/ui/textarea';
+import { generateId } from "@/lib/utils";
 
 interface CreateAnnouncementModalProps {
     onSuccess: () => void;
@@ -23,7 +24,7 @@ export function CreateAnnouncementModal({ onSuccess }: CreateAnnouncementModalPr
 
         import("@/lib/data/announcements.repo").then(({ announcementsRepo }) => {
             announcementsRepo.add({
-                id: crypto.randomUUID(),
+                id: generateId(),
                 title,
                 content: (document.getElementById('content') as HTMLTextAreaElement)?.value || '',
                 status: 'PUBLISHED',

@@ -8,6 +8,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Users } from "lucide-react";
+import { generateId } from "@/lib/utils";
 
 interface CreateStudentModalProps {
     onSuccess: () => void;
@@ -23,7 +24,7 @@ export function CreateStudentModal({ onSuccess }: CreateStudentModalProps) {
 
         import("@/lib/data/students.repo").then(({ studentsRepo }) => {
             studentsRepo.add({
-                id: crypto.randomUUID(),
+                id: generateId(),
                 firstName,
                 lastName,
                 birthDate: '2000-01-01',

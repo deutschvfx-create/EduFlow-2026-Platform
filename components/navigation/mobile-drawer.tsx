@@ -115,6 +115,7 @@ export function MobileDrawer({ trigger, open: controlledOpen, onOpenChange }: Mo
                             animate={{ x: 0 }}
                             exit={{ x: "-100%" }}
                             transition={{ type: "spring", damping: 25, stiffness: 240 }}
+                            data-help-id="mobile-drawer"
                             className="fixed left-0 top-0 bottom-0 w-[85%] max-w-[340px] bg-zinc-950 border-r border-zinc-800 z-[101] laptop:hidden flex flex-col"
                         >
                             {/* Header */}

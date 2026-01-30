@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, QrCode, Mail, Camera, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MOCK_GROUPS } from "@/lib/mock/students";
+import { generateId } from "@/lib/utils";
 
 export function AddStudentModal() {
     const [open, setOpen] = useState(false);
@@ -41,7 +42,7 @@ export function AddStudentModal() {
         try {
             const { studentsRepo } = await import("@/lib/data/students.repo");
             studentsRepo.add({
-                id: crypto.randomUUID(),
+                id: generateId(),
                 firstName,
                 lastName,
                 birthDate: new Date(birthDate).toISOString(),

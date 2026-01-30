@@ -9,6 +9,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { createUserWithEmailAndPassword } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { UserService } from "@/lib/services/firestore"
+import { setStoredUser } from "@/lib/auth-helpers"
 import { GraduationCap, Briefcase, Mail, Lock, User as UserIcon, ArrowRight, Sparkles } from "lucide-react"
 import { Mascot } from "@/components/shared/mascot"
 import { motion, AnimatePresence } from "framer-motion"
@@ -52,10 +53,15 @@ function RegisterForm() {
             await UserService.createUser(uid, userData)
 
             setMascotStatus("success")
+
+            // Persist session for WebView/Client components
+            const token = await userCredential.user.getIdToken()
+            setStoredUser(userData, token)
+
             await new Promise(r => setTimeout(r, 1000))
 
             if (role === 'DIRECTOR') {
-                router.push('/director')
+                router.push('/app/dashboard')
             } else {
                 router.push('/student')
             }
