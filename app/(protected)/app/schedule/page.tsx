@@ -30,6 +30,21 @@ const DayLabels: Record<DayOfWeek, string> = {
 export default function SchedulePage() {
     const { userData } = useAuth();
     const canEdit = userData?.role === 'OWNER' || userData?.role === 'DIRECTOR';
+    const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
+
+    // Auto-switch view mode on desktop/mobile
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth >= 1024) { // laptop breakpoint
+                setViewMode('week');
+            } else {
+                setViewMode('day');
+            }
+        };
+        handleResize(); // Initial check
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const [groupFilter, setGroupFilter] = useState("all");
     const [teacherFilter, setTeacherFilter] = useState("all");
