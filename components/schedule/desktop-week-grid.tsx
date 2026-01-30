@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MOCK_GROUPS_FULL } from "@/lib/mock/groups";
 import { MOCK_TEACHERS } from "@/lib/mock/teachers";
 import { MOCK_COURSES } from "@/lib/mock/courses";
+import { IOSStyleTimePicker } from "@/components/ui/ios-time-picker";
 
 interface DesktopWeekGridProps {
     lessons: Lesson[];
@@ -321,29 +322,41 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
                                                     <div className="grid grid-cols-2 gap-2">
                                                         <div className="space-y-1">
                                                             <Label className="text-xs text-zinc-400">Начало</Label>
-                                                            <Select value={formData.startTime} onValueChange={(v) => setFormData({ ...formData, startTime: v })}>
-                                                                <SelectTrigger className="h-8 text-xs bg-zinc-950 border-zinc-800 font-mono"><SelectValue /></SelectTrigger>
-                                                                <SelectContent className="max-h-[200px]">
-                                                                    {Array.from({ length: 29 }, (_, i) => {
-                                                                        const h = Math.floor(i / 2) + 8;
-                                                                        const m = (i % 2) * 30;
-                                                                        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-                                                                    }).map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                                                                </SelectContent>
-                                                            </Select>
+                                                            <Popover>
+                                                                <PopoverTrigger asChild>
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        className="w-full h-8 text-xs bg-zinc-950 border-zinc-800 font-mono justify-start px-2"
+                                                                    >
+                                                                        {formData.startTime}
+                                                                    </Button>
+                                                                </PopoverTrigger>
+                                                                <PopoverContent className="w-auto p-0 border-none bg-transparent shadow-none" side="bottom" align="start">
+                                                                    <IOSStyleTimePicker
+                                                                        value={formData.startTime}
+                                                                        onChange={(v) => setFormData(prev => ({ ...prev, startTime: v }))}
+                                                                    />
+                                                                </PopoverContent>
+                                                            </Popover>
                                                         </div>
                                                         <div className="space-y-1">
                                                             <Label className="text-xs text-zinc-400">Конец</Label>
-                                                            <Select value={formData.endTime} onValueChange={(v) => setFormData({ ...formData, endTime: v })}>
-                                                                <SelectTrigger className="h-8 text-xs bg-zinc-950 border-zinc-800 font-mono"><SelectValue /></SelectTrigger>
-                                                                <SelectContent className="max-h-[200px]">
-                                                                    {Array.from({ length: 29 }, (_, i) => {
-                                                                        const h = Math.floor(i / 2) + 9; // End times shifted slightly
-                                                                        const m = (i % 2) * 30;
-                                                                        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-                                                                    }).map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                                                                </SelectContent>
-                                                            </Select>
+                                                            <Popover>
+                                                                <PopoverTrigger asChild>
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        className="w-full h-8 text-xs bg-zinc-950 border-zinc-800 font-mono justify-start px-2"
+                                                                    >
+                                                                        {formData.endTime}
+                                                                    </Button>
+                                                                </PopoverTrigger>
+                                                                <PopoverContent className="w-auto p-0 border-none bg-transparent shadow-none" side="bottom" align="end">
+                                                                    <IOSStyleTimePicker
+                                                                        value={formData.endTime}
+                                                                        onChange={(v) => setFormData(prev => ({ ...prev, endTime: v }))}
+                                                                    />
+                                                                </PopoverContent>
+                                                            </Popover>
                                                         </div>
                                                     </div>
 
