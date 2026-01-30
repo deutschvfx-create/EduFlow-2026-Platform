@@ -4,6 +4,12 @@ export type HelpStep = {
     targetId?: string; // ID of the element to highlight for this specific step
     tip?: string;      // Optional extra advice from Edu-Bot
     details?: string;  // Detailed deep dive explanation
+
+    // Automation / Interaction
+    action?: 'click' | 'wait' | 'type';
+    actionTargetId?: string; // If different from highlighted element
+    preventInteraction?: boolean; // If true, only simulate visual click
+    actionDelay?: number;
 }
 
 export type HelpImage = {
@@ -109,15 +115,23 @@ export const helpSections: HelpSection[] = [
             },
             {
                 title: "Добавление",
-                text: "Нажмите сюда, чтобы зарегистрировать нового ученика.",
+                text: "Нажмите кнопку добавления, чтобы открыть форму регистрации.",
                 targetId: "students-add-btn",
-                tip: "Заполните профиль полностью, чтобы система могла строить отчеты."
+                tip: "Кнопка всегда находится в правом верхнем углу.",
+                action: 'click',
+                preventInteraction: true // Demo mode: don't actually open the modal to avoid confusion
             },
             {
                 title: "QR Сканер",
                 text: "Быстрый поиск студента по его персональному коду.",
                 targetId: "students-qr-btn",
                 tip: "Это очень удобно для отметки посещаемости на входе."
+            },
+            {
+                title: "Возврат",
+                text: "Вернемся к списку студентов.",
+                targetId: "students-header",
+                action: 'wait'
             }
         ],
         images: [

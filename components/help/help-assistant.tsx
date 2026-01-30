@@ -17,6 +17,7 @@ import { useModules } from "@/hooks/use-modules";
 import { ModuleKey } from "@/lib/config/modules";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from 'framer-motion';
+import { CursorPuppet } from './cursor-puppet';
 
 export function HelpAssistant() {
     const pathname = usePathname();
@@ -43,6 +44,11 @@ export function HelpAssistant() {
     // Smart Navigation State
     const [blockedModule, setBlockedModule] = useState<ModuleKey | null>(null);
     const [pendingTourSection, setPendingTourSection] = useState<HelpSection | null>(null);
+
+    // Puppet State
+    const [puppetRect, setPuppetRect] = useState<DOMRect | null>(null);
+    const [isPuppetClicking, setIsPuppetClicking] = useState(false);
+    const [isPuppetVisible, setIsPuppetVisible] = useState(false);
 
     // Watch for module enablement
     useEffect(() => {
@@ -126,6 +132,41 @@ export function HelpAssistant() {
         if (isTouring && activeSection) {
             const step = activeSection.steps[tourStep];
             if (step) {
+                // [INTERACTIVE STEP]
+                if (step.action) {
+                    const targetId = step.actionTargetId || step.targetId;
+                    if (targetId) {
+                        const el = document.querySelector(`[data-help-id="${targetId}"]`);
+                        if (el) {
+                            setIsPuppetVisible(true);
+                            // Move to element
+                            // Small delay to ensure layout is stable
+                            setTimeout(() => {
+                                setPuppetRect(el.getBoundingClientRect());
+                            }, 100);
+
+                            // Perform Action
+                            if (step.action === 'click') {
+                                setTimeout(() => {
+                                    setIsPuppetClicking(true);
+                                    // Visual click only?
+                                    setTimeout(() => {
+                                        setIsPuppetClicking(false);
+                                        if (!step.preventInteraction) {
+                                            (el as HTMLElement).click();
+                                        }
+                                    }, 400); // Click hold duration
+                                }, (step.actionDelay || 1000));
+                            } else if (step.action === 'wait') {
+                                // Just hover
+                            }
+                        }
+                    }
+                } else {
+                    // Hide puppet if no action
+                    setIsPuppetVisible(false);
+                }
+
                 // Small delay to allow transition
                 const timer = setTimeout(() => {
                     speak(step.title + ". " + step.text);
@@ -135,6 +176,7 @@ export function HelpAssistant() {
         } else {
             window.speechSynthesis.cancel();
             setIsSpeaking(false);
+            setIsPuppetVisible(false);
         }
     }, [tourStep, isTouring, activeSection, speak]);
 
@@ -247,7 +289,41 @@ export function HelpAssistant() {
 
         // Standard Tour Start
         if (!force && section.route !== "all" && section.route !== pathname && section.route.startsWith('/app')) {
-            // If not on the right page, go there first
+            // [INTERACTIVE NAV] Try to find sidebar link and click it
+            const sidebarLinkId = `sidebar-item-${section.route}`;
+            const sidebarLink = document.querySelector(`[data-help-id="${sidebarLinkId}"]`);
+
+            if (sidebarLink) {
+                // We found the link! Let's animate.
+                setOpen(false); // Close sheet immediately
+                setIsPuppetVisible(true);
+
+                // Move hand to link
+                const rect = sidebarLink.getBoundingClientRect();
+                setPuppetRect(rect);
+
+                // Speak context
+                if (isVoiceEnabled) speak("Переходим в нужный раздел...");
+
+                // Click sequence
+                setTimeout(() => {
+                    setIsPuppetClicking(true);
+                    setTimeout(() => {
+                        setIsPuppetClicking(false);
+                        setIsPuppetVisible(false); // Hide hand during transition
+                        (sidebarLink as HTMLElement).click();
+
+                        // Fallback resume if route change is slow or fails
+                        setTimeout(() => {
+                            startTour(section, true);
+                        }, 1200);
+                    }, 300);
+                }, 800);
+
+                return;
+            }
+
+            // Fallback: If link hidden (mobile?) or not found
             setOpen(false);
             router.push(section.route);
             setTimeout(() => {
@@ -721,6 +797,13 @@ export function HelpAssistant() {
                     </div>
                 )}
             </AnimatePresence>
+
+            {/* CURSOR PUPPET */}
+            <CursorPuppet
+                targetRect={puppetRect}
+                isClicking={isPuppetClicking}
+                isVisible={isPuppetVisible}
+            />
         </>
     );
 }

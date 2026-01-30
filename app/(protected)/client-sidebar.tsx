@@ -203,6 +203,7 @@ export default function ClientSidebar({
                                             <Link
                                                 key={item.href}
                                                 href={item.href}
+                                                data-help-id={`sidebar-item-${item.href}`}
                                                 className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium
                                                 ${isActive
                                                         ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
