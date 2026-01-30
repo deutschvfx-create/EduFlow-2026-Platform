@@ -304,7 +304,8 @@ export function HelpAssistant() {
                     setIsPuppetClicking(true);
                     setTimeout(() => {
                         setIsPuppetClicking(false);
-                        setIsPuppetVisible(false);
+                        // DO NOT HIDE PUPPET YET - Wait for route change to clear it naturally via unmount or effect
+                        // setIsPuppetVisible(false); 
                         (element as HTMLElement).click();
 
                         // Wait for nav

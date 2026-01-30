@@ -30,37 +30,43 @@ export function CursorPuppet({ targetRect, isClicking = false, isVisible = true 
 
     return (
         <motion.div
-            className="fixed z-[9999] pointer-events-none text-indigo-500 drop-shadow-xl select-none"
-            initial={{ opacity: 0, x: x - 50, y: y + 50 }}
-            animate={{
-                opacity: 1,
-                x: x - 4, // Adjust for icon alignment (tip is at top-left)
-                y: y - 2,
-                scale: isClicking ? 0.8 : 1
-            }}
-            exit={{ opacity: 0, scale: 0 }}
-            transition={{
-                type: "spring",
-                stiffness: 120,
-                damping: 20,
-                scale: { duration: 0.15 }
-            }}
+            className="fixed inset-0 pointer-events-none z-[2147483647]" // MAX_INT z-index
+            initial={{ opacity: 1 }} // Ensure container is visible
+            exit={{ opacity: 0 }}
         >
-            <div className="relative">
-                <MousePointer2 className="w-10 h-10 md:w-8 md:h-8 fill-indigo-500/20 stroke-[3]" />
+            <motion.div
+                className="absolute text-indigo-500 drop-shadow-2xl select-none"
+                initial={{ opacity: 0, x: x - 50, y: y + 50 }}
+                animate={{
+                    opacity: 1,
+                    x: x - 4, // Adjust for icon alignment (tip is at top-left)
+                    y: y - 2,
+                    scale: isClicking ? 0.8 : 1
+                }}
+                exit={{ opacity: 0, scale: 0 }}
+                transition={{
+                    type: "spring",
+                    stiffness: 120,
+                    damping: 20,
+                    scale: { duration: 0.15 }
+                }}
+            >
+                <div className="relative">
+                    <MousePointer2 className="w-10 h-10 md:w-8 md:h-8 fill-indigo-500/20 stroke-[3]" />
 
-                {/* Click Ripple Effect */}
-                <AnimatePresence>
-                    {isClicking && (
-                        <motion.div
-                            initial={{ scale: 0, opacity: 1 }}
-                            animate={{ scale: 2, opacity: 0 }}
-                            exit={{ opacity: 0 }}
-                            className="absolute -top-2 -left-2 w-14 h-14 bg-indigo-500/40 rounded-full blur-[2px]"
-                        />
-                    )}
-                </AnimatePresence>
-            </div>
+                    {/* Click Ripple Effect */}
+                    <AnimatePresence>
+                        {isClicking && (
+                            <motion.div
+                                initial={{ scale: 0, opacity: 1 }}
+                                animate={{ scale: 2, opacity: 0 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute -top-2 -left-2 w-14 h-14 bg-indigo-500/40 rounded-full blur-[2px]"
+                            />
+                        )}
+                    </AnimatePresence>
+                </div>
+            </motion.div>
         </motion.div>
     );
 }
