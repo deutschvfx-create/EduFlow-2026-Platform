@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Lesson, DayOfWeek } from "@/lib/types/schedule";
 import { ModuleGuard } from "@/components/system/module-guard";
 import { useAuth } from "@/components/auth/auth-provider";
+import { DesktopWeekGrid } from "@/components/schedule/desktop-week-grid";
 
 const DAYS: DayOfWeek[] = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
@@ -27,8 +28,8 @@ const DayLabels: Record<DayOfWeek, string> = {
 }
 
 export default function SchedulePage() {
-    const { userData } = useAuth();
-    const canEdit = userData?.role === 'OWNER' || userData?.role === 'DIRECTOR';
+    // const { userData } = useAuth(); // Handled in replace block above
+    // const canEdit = ... 
 
     const [groupFilter, setGroupFilter] = useState("all");
     const [teacherFilter, setTeacherFilter] = useState("all");
@@ -102,7 +103,27 @@ export default function SchedulePage() {
                 {/* Header Actions */}
                 <div className="flex items-center justify-between px-1">
                     <h1 className="text-xl font-bold text-white">Расписание</h1>
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-3">
+                        {/* View Mode Toggle - Visible on Tablets+ */}
+                        <div className="hidden md:flex bg-zinc-900 p-1 rounded-lg border border-zinc-800">
+                            <Button
+                                variant={viewMode === 'day' ? 'secondary' : 'ghost'}
+                                size="sm"
+                                className="h-7 text-xs"
+                                onClick={() => setViewMode('day')}
+                            >
+                                День
+                            </Button>
+                            <Button
+                                variant={viewMode === 'week' ? 'secondary' : 'ghost'}
+                                size="sm"
+                                className="h-7 text-xs"
+                                onClick={() => setViewMode('week')}
+                            >
+                                Неделя
+                            </Button>
+                        </div>
+
                         <ScheduleFilters
                             groups={groups}
                             teachers={teachers}
@@ -119,42 +140,57 @@ export default function SchedulePage() {
                     </div>
                 </div>
 
-                {/* Mobile Calendar Strip */}
-                <div className="-mx-4 md:mx-0 sticky top-0 z-30">
-                    <MobileDateStrip
-                        currentDate={currentDate}
-                        onDateSelect={setCurrentDate}
-                    />
-                </div>
-
-                {/* Content Area */}
-                <div className="flex-1 overflow-y-auto min-h-[400px] pb-20">
-                    {/* Summary Line */}
-                    <div className="flex items-center gap-2 text-xs text-zinc-500 mb-4 px-1">
-                        <span className="font-medium text-zinc-300">{filteredLessons.length} занятий</span>
-                        <span>•</span>
-                        <span>{filteredLessons.filter(l => l.status === 'PLANNED').length} активных</span>
+                {viewMode === 'week' ? (
+                    /* DESKTOP WEEK VIEW */
+                    <div className="flex-1 overflow-hidden">
+                        <DesktopWeekGrid
+                            lessons={filteredLessons}
+                            currentDate={currentDate}
+                            onLessonClick={handleLessonClick}
+                        />
                     </div>
+                ) : (
+                    /* MOBILE DAY VIEW */
+                    <>
+                        {/* Mobile Calendar Strip */}
+                        <div className="-mx-4 md:mx-0 sticky top-0 z-30">
+                            <MobileDateStrip
+                                currentDate={currentDate}
+                                onDateSelect={setCurrentDate}
+                            />
+                        </div>
 
-                    {filteredLessons.length > 0 ? (
-                        <div className="grid grid-cols-1 gap-3">
-                            {filteredLessons
-                                .sort((a, b) => a.startTime.localeCompare(b.startTime))
-                                .map(lesson => (
-                                    <LessonCard
-                                        key={lesson.id}
-                                        lesson={lesson}
-                                        onClick={handleLessonClick}
-                                    />
-                                ))}
+                        {/* Content Area */}
+                        <div className="flex-1 overflow-y-auto min-h-[400px] pb-20">
+                            {/* Summary Line */}
+                            <div className="flex items-center gap-2 text-xs text-zinc-500 mb-4 px-1">
+                                <span className="font-medium text-zinc-300">{filteredLessons.length} занятий</span>
+                                <span>•</span>
+                                <span>{filteredLessons.filter(l => l.status === 'PLANNED').length} активных</span>
+                            </div>
+
+                            {filteredLessons.length > 0 ? (
+                                <div className="grid grid-cols-1 gap-3">
+                                    {filteredLessons
+                                        .sort((a, b) => a.startTime.localeCompare(b.startTime))
+                                        .map(lesson => (
+                                            <LessonCard
+                                                key={lesson.id}
+                                                lesson={lesson}
+                                                onClick={handleLessonClick}
+                                            />
+                                        ))}
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center h-[300px] text-zinc-600">
+                                    <h3 className="font-medium text-zinc-400 mb-1">На этот день занятий нет</h3>
+                                    <p className="text-xs">Попробуйте выбрать другую дату</p>
+                                </div>
+                            )}
                         </div>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center h-[300px] text-zinc-600">
-                            <h3 className="font-medium text-zinc-400 mb-1">На этот день занятий нет</h3>
-                            <p className="text-xs">Попробуйте выбрать другую дату</p>
-                        </div>
-                    )}
-                </div>
+                    </>
+                )}
+
 
                 {/* Floating Action Button - Only for Admins */}
                 {canEdit && (
