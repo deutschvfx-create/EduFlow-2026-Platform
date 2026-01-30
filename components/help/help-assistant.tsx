@@ -315,8 +315,14 @@ export function HelpAssistant() {
                 }, 800);
             };
 
-            // 1. Try direct click (Desktop)
-            if (targetEl) {
+            // 1. Try direct click (Desktop/Visible Link)
+            // Check visibility using offsetParent (null if display: none) or zero rect
+            const isVisible = (el: Element) => {
+                if (!(el instanceof HTMLElement)) return false;
+                return el.offsetParent !== null && el.getBoundingClientRect().width > 0;
+            };
+
+            if (targetEl && isVisible(targetEl)) {
                 executeClick(targetEl);
                 return;
             }
@@ -324,8 +330,8 @@ export function HelpAssistant() {
             // 2. Try Mobile Menu Macro
             const mobileMenuTrigger = document.querySelector('[data-help-id="mobile-nav-menu"]');
 
-            // Only try mobile macro if desktop link is NOT found AND mobile menu trigger IS found
-            if (!targetEl && mobileMenuTrigger) {
+            // Only try mobile macro if desktop link is NOT visible AND mobile menu trigger IS visible
+            if (mobileMenuTrigger && isVisible(mobileMenuTrigger)) {
                 // Step 1: Click Menu
                 setOpen(false); // Close Assistant Sheet
                 setIsPuppetVisible(true);
