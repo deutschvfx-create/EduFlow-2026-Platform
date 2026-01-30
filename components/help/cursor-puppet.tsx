@@ -11,16 +11,22 @@ interface CursorPuppetProps {
 }
 
 export function CursorPuppet({ targetRect, isClicking = false, isVisible = true }: CursorPuppetProps) {
-    // If no target, hide or stay at last known position? 
-    // Ideally, we move to a resting position or hide.
+    // Determine target coordinates or default to center screen
+    const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 1000;
+    const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
 
-    if (!targetRect || !isVisible) return null;
+    let x, y;
 
-    // Calculate center of target for the cursor tip
-    // MousePointer2 tip is at top-left (0,0) of the icon box roughly.
-    // We want the tip to point to the center of the element.
-    const x = targetRect.left + targetRect.width / 2;
-    const y = targetRect.top + targetRect.height / 2;
+    if (targetRect) {
+        x = targetRect.left + targetRect.width / 2;
+        y = targetRect.top + targetRect.height / 2;
+    } else {
+        // Center screen default
+        x = windowWidth / 2;
+        y = windowHeight / 2;
+    }
+
+    if (!isVisible) return null;
 
     return (
         <motion.div
