@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,9 +25,60 @@ export function AddLessonModal({ lessons, children }: { lessons: Lesson[], child
     const [endTime, setEndTime] = useState("10:30");
     const [room, setRoom] = useState("");
 
+    // Conflict State
+    const [conflicts, setConflicts] = useState<{
+        teacher?: string;
+        group?: string;
+        room?: string;
+    }>({});
+
+    // Helper: Check for overlaps
+    const checkConflicts = () => {
+        if (!dayOfWeek || !startTime || !endTime) {
+            setConflicts({});
+            return;
+        }
+
+        const newConflicts: typeof conflicts = {};
+
+        lessons.forEach(l => {
+            if (l.status === 'CANCELLED') return;
+            if (l.dayOfWeek !== dayOfWeek) return;
+
+            // Check Time Overlap
+            // (StartA < EndB) and (EndA > StartB)
+            const overlap = (startTime < l.endTime) && (endTime > l.startTime);
+
+            if (overlap) {
+                // 1. Teacher Conflict
+                if (teacherId && l.teacherId === teacherId) {
+                    newConflicts.teacher = `Преподаватель занят: ${l.groupName} (${l.startTime}-${l.endTime})`;
+                }
+                // 2. Group Conflict
+                if (groupId && l.groupId === groupId) {
+                    newConflicts.group = `У группы уже есть урок: ${l.courseName} (${l.startTime}-${l.endTime})`;
+                }
+                // 3. Room Conflict
+                if (room && l.room === room) {
+                    newConflicts.room = `Аудитория занята: ${l.groupName} (${l.startTime}-${l.endTime})`;
+                }
+            }
+        });
+
+        setConflicts(newConflicts);
+    };
+
+    // Real-time check effect
+    // We verify whenever any dependency changes
+    /* eslint-disable react-hooks/exhaustive-deps */
+    useEffect(() => {
+        checkConflicts();
+    }, [groupId, teacherId, room, dayOfWeek, startTime, endTime]);
+
+
     const handleSubmit = async () => {
-        if (!groupId || !courseId || !teacherId || !dayOfWeek || !startTime || !endTime) {
-            alert("Все поля кроме аудитории обязательны");
+        if (!groupId || !courseId || !teacherId || !dayOfWeek || !startTime || !endTime || !room) {
+            alert("Все поля обязательны");
             return;
         }
 
@@ -36,42 +87,20 @@ export function AddLessonModal({ lessons, children }: { lessons: Lesson[], child
             return;
         }
 
-        // Simple validation overlap check
-        const hasOverlap = lessons.some(l =>
-            l.dayOfWeek === dayOfWeek &&
-            l.groupId === groupId &&
-            l.status !== 'CANCELLED' &&
-            ((startTime >= l.startTime && startTime < l.endTime) || (endTime > l.startTime && endTime <= l.endTime))
-        );
-
-        if (hasOverlap) {
-            alert("В это время у группы уже есть занятие!");
+        if (Object.keys(conflicts).length > 0) {
+            alert("Есть конфликты в расписании! Исправьте их перед созданием.");
             return;
         }
-
-        // Check teacher overlap
-        const teacherOverlap = lessons.some(l =>
-            l.dayOfWeek === dayOfWeek &&
-            l.teacherId === teacherId &&
-            l.status !== 'CANCELLED' &&
-            ((startTime >= l.startTime && startTime < l.endTime) || (endTime > l.startTime && endTime <= l.endTime))
-        );
-
-        if (teacherOverlap) {
-            alert("В это время преподаватель уже занят!");
-            return;
-        }
-
 
         setLoading(true);
         // Simulate API call
         await new Promise(r => setTimeout(r, 1000));
         setLoading(false);
         setOpen(false);
-        alert(`Занятие успешно добавлено (Mock)`);
+        alert(`Занятие успешно добавлено!`);
 
-        // Reset form
-        setRoom("");
+        // Reset (optional)
+        // setRoom("");
     };
 
     return (
@@ -87,15 +116,18 @@ export function AddLessonModal({ lessons, children }: { lessons: Lesson[], child
             <DialogContent className="sm:max-w-[600px] bg-zinc-900 border-zinc-800 text-zinc-100">
                 <DialogHeader>
                     <DialogTitle>Добавление занятия</DialogTitle>
-                    <DialogDescription>Запланируйте новый урок в расписании</DialogDescription>
+                    <DialogDescription>Система автоматически проверяет конфликты.</DialogDescription>
                 </DialogHeader>
 
                 <div className="grid gap-4 py-4">
+                    {/* ROW 1: Group & Course */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label>Группа *</Label>
+                            <Label className={conflicts.group ? "text-red-400" : ""}>
+                                Группа {conflicts.group && "*"}
+                            </Label>
                             <Select value={groupId} onValueChange={setGroupId}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                <SelectTrigger className={conflicts.group ? "border-red-500 bg-red-950/10" : "bg-zinc-950 border-zinc-800"}>
                                     <SelectValue placeholder="Выберите группу" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -104,6 +136,9 @@ export function AddLessonModal({ lessons, children }: { lessons: Lesson[], child
                                     ))}
                                 </SelectContent>
                             </Select>
+                            {conflicts.group && (
+                                <p className="text-[10px] text-red-400 font-medium">{conflicts.group}</p>
+                            )}
                         </div>
                         <div className="space-y-2">
                             <Label>Предмет *</Label>
@@ -120,11 +155,14 @@ export function AddLessonModal({ lessons, children }: { lessons: Lesson[], child
                         </div>
                     </div>
 
+                    {/* ROW 2: Teacher & Day */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label>Преподаватель *</Label>
+                            <Label className={conflicts.teacher ? "text-red-400" : ""}>
+                                Преподаватель {conflicts.teacher && "*"}
+                            </Label>
                             <Select value={teacherId} onValueChange={setTeacherId}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                <SelectTrigger className={conflicts.teacher ? "border-red-500 bg-red-950/10" : "bg-zinc-950 border-zinc-800"}>
                                     <SelectValue placeholder="Преподаватель" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -133,6 +171,9 @@ export function AddLessonModal({ lessons, children }: { lessons: Lesson[], child
                                     ))}
                                 </SelectContent>
                             </Select>
+                            {conflicts.teacher && (
+                                <p className="text-[10px] text-red-400 font-medium">{conflicts.teacher}</p>
+                            )}
                         </div>
 
                         <div className="space-y-2">
@@ -142,18 +183,15 @@ export function AddLessonModal({ lessons, children }: { lessons: Lesson[], child
                                     <SelectValue placeholder="День" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="MON">Понедельник</SelectItem>
-                                    <SelectItem value="TUE">Вторник</SelectItem>
-                                    <SelectItem value="WED">Среда</SelectItem>
-                                    <SelectItem value="THU">Четверг</SelectItem>
-                                    <SelectItem value="FRI">Пятница</SelectItem>
-                                    <SelectItem value="SAT">Суббота</SelectItem>
-                                    <SelectItem value="SUN">Воскресенье</SelectItem>
+                                    {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map(d => (
+                                        <SelectItem key={d} value={d}>{d}</SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
                     </div>
 
+                    {/* ROW 3: Time & Room */}
                     <div className="grid grid-cols-3 gap-4">
                         <div className="space-y-2">
                             <Label>Начало</Label>
@@ -182,22 +220,31 @@ export function AddLessonModal({ lessons, children }: { lessons: Lesson[], child
                             </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label>Аудитория</Label>
+                            <Label className={conflicts.room ? "text-red-400" : ""}>
+                                Аудитория {conflicts.room && "*"}
+                            </Label>
                             <Input
                                 placeholder="101"
-                                className="bg-zinc-950 border-zinc-800"
+                                className={conflicts.room ? "border-red-500 bg-red-950/10 text-red-100" : "bg-zinc-950 border-zinc-800"}
                                 value={room}
                                 onChange={(e) => setRoom(e.target.value)}
                             />
+                            {conflicts.room && (
+                                <p className="text-[10px] text-red-400 font-medium absolute">{conflicts.room}</p>
+                            )}
                         </div>
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-2 pt-4 border-t border-zinc-800">
                     <Button variant="ghost" onClick={() => setOpen(false)}>Отмена</Button>
-                    <Button onClick={handleSubmit} disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                    <Button
+                        onClick={handleSubmit}
+                        disabled={loading || Object.keys(conflicts).length > 0}
+                        className={Object.keys(conflicts).length > 0 ? "bg-red-900/50 text-red-400 border border-red-900 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700 text-white"}
+                    >
                         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Создать
+                        {Object.keys(conflicts).length > 0 ? "Исправьте конфликты" : "Создать"}
                     </Button>
                 </div>
             </DialogContent>
