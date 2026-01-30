@@ -17,6 +17,15 @@ export function FloatingBotTrigger({ onClick, hasNewFeatures }: FloatingBotTrigg
     const controls = useAnimation();
     const constraintsRef = useRef(null);
 
+    // Reset idle timer on interaction
+    const resetIdle = () => {
+        setIsIdle(false);
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => {
+            setIsIdle(true);
+        }, 3000); // 3 seconds to idle
+    };
+
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
