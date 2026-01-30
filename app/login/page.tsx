@@ -191,9 +191,9 @@ function LoginForm() {
 
 export default function LoginPage() {
     return (
-        <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-4 relative overflow-hidden">
-            {/* Background elements */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none" />
+        <div className="min-h-[100dvh] flex items-center justify-center bg-zinc-950 p-4 relative overflow-y-auto overflow-x-hidden supports-[min-height:100dvh]:min-h-[100dvh]">
+            {/* Background elements - Fixed to stay in place */}
+            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none" />
 
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -201,7 +201,7 @@ export default function LoginPage() {
                 className="w-full max-w-sm relative"
             >
                 {/* Mascot */}
-                <div className="absolute -top-16 md:-top-24 left-1/2 -translate-x-1/2 w-20 h-20 md:w-32 md:h-32 z-20 pointer-events-none opacity-90">
+                <div className="absolute -top-16 md:-top-24 left-1/2 -translate-x-1/2 w-20 h-20 md:w-32 md:h-32 z-20 pointer-events-none opacity-90 transition-all duration-300 peer-focus-within:translate-y-[-10px] md:peer-focus-within:translate-y-0">
                     <Mascot status="idle" className="w-full h-full" />
                 </div>
 
