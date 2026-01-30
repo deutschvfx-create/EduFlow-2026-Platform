@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useRef } from 'react';
-import { useChat } from 'ai/react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useChat } from '@ai-sdk/react';
 import { Send, Bot, User, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -10,17 +10,19 @@ import { Mascot } from '@/components/shared/mascot'; // Reusing the mascot compo
 import { motion, AnimatePresence } from 'framer-motion';
 
 export function BotChat() {
-    const { messages, input, handleInputChange, handleSubmit, isLoading, error, setMessages } = useChat({
+    const [input, setInput] = useState('');
+    const { messages, sendMessage, status, error, setMessages } = useChat({
         api: '/api/chat',
         initialMessages: [
             {
                 id: 'welcome',
                 role: 'assistant',
-                content: 'Привет! Я Edu-Bot. Чем я могу помочь тебе сегодня? Ты можешь спросить меня о функциях системы или попросить совета по управлению школой. 🚀'
+                parts: [{ type: 'text', text: 'Привет! Я Edu-Bot. Чем я могу помочь тебе сегодня? Ты можешь спросить меня о функциях системы или попросить совета по управлению школой. 🚀' }]
             }
         ]
     });
 
+    const isLoading = status === 'streaming' || status === 'submitted';
     const scrollRef = useRef<HTMLDivElement>(null);
 
     // Auto-scroll to bottom on new messages
@@ -31,16 +33,25 @@ export function BotChat() {
                 scrollContainer.scrollTop = scrollContainer.scrollHeight;
             }
         }
-    }, [messages, isLoading]);
+    }, [messages, status]);
 
     const clearChat = () => {
         setMessages([
             {
                 id: 'welcome',
                 role: 'assistant',
-                content: 'Чат очищен. Чем еще я могу помочь? 😊'
+                parts: [{ type: 'text', text: 'Чат очищен. Чем еще я могу помочь? 😊' }]
             }
         ]);
+    };
+
+    const handleFormSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!input.trim() || isLoading) return;
+
+        const currentInput = input;
+        setInput('');
+        await sendMessage(currentInput);
     };
 
     return (
@@ -92,7 +103,9 @@ export function BotChat() {
                                         ? 'bg-indigo-600 text-white rounded-tr-none'
                                         : 'bg-zinc-900/80 text-zinc-200 border border-zinc-800/50 rounded-tl-none'
                                         }`}>
-                                        {m.content}
+                                        {m.parts.map((part, i) => (
+                                            part.type === 'text' ? <React.Fragment key={i}>{part.text}</React.Fragment> : null
+                                        ))}
                                     </div>
                                     <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest px-1">
                                         {m.role === 'user' ? 'Вы' : 'Edu-Bot'}
@@ -101,7 +114,7 @@ export function BotChat() {
                             </motion.div>
                         ))}
                     </AnimatePresence>
-                    {isLoading && messages[messages.length - 1]?.role === 'user' && (
+                    {isLoading && (
                         <div className="flex gap-3">
                             <div className="flex-none w-8 h-8 rounded-full bg-indigo-950/50 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
                                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -125,10 +138,10 @@ export function BotChat() {
 
             {/* Input Area */}
             <div className="p-4 bg-zinc-950 border-t border-zinc-900">
-                <form onSubmit={handleSubmit} className="flex gap-2">
+                <form onSubmit={handleFormSubmit} className="flex gap-2">
                     <Input
                         value={input}
-                        onChange={handleInputChange}
+                        onChange={(e) => setInput(e.target.value)}
                         placeholder="Задайте вопрос..."
                         className="flex-1 h-11 bg-zinc-900 border-zinc-800 text-sm rounded-xl focus-visible:ring-indigo-500/50 transition-all"
                         disabled={isLoading}
