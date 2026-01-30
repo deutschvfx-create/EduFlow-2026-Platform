@@ -5,12 +5,21 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Loader2, Trash2, XCircle } from "lucide-react";
+import { Loader2, Trash2, XCircle, Minus, Plus } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MOCK_GROUPS_FULL } from "@/lib/mock/groups";
 import { MOCK_TEACHERS } from "@/lib/mock/teachers";
 import { MOCK_COURSES } from "@/lib/mock/courses";
 import { DayOfWeek, Lesson, LessonStatus } from "@/lib/types/schedule";
+
+// Helper to add minutes to "HH:MM"
+const addMinutes = (time: string, minutes: number) => {
+    const [h, m] = time.split(':').map(Number);
+    const date = new Date();
+    date.setHours(h, m);
+    date.setMinutes(date.getMinutes() + minutes);
+    return date.toTimeString().slice(0, 5);
+};
 
 interface EditLessonModalProps {
     lesson: Lesson | null;
@@ -144,77 +153,106 @@ export function EditLessonModal({ lesson, open, onOpenChange, onSave }: EditLess
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4">
+                    {/* ROW 3: Time Controls */}
+                    <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label>Начало</Label>
-                            <Select value={startTime} onValueChange={setStartTime}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="max-h-[200px]">
-                                    {["08:00", "09:00", "09:30", "11:00", "12:30", "14:00", "15:30", "17:00", "18:30"].map(t => (
-                                        <SelectItem key={t} value={t}>{t}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <div className="flex items-center gap-1">
+                                <Button
+                                    size="icon" variant="outline" className="h-9 w-9 shrink-0 border-zinc-700 bg-zinc-900"
+                                    onClick={() => setStartTime(t => addMinutes(t, -15))}
+                                >
+                                    <Minus className="h-3 w-3" />
+                                </Button>
+                                <Select value={startTime} onValueChange={setStartTime}>
+                                    <SelectTrigger className="bg-zinc-950 border-zinc-800 text-center font-mono">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="max-h-[200px]">
+                                        {["08:00", "09:00", "09:30", "11:00", "12:30", "14:00", "15:30", "17:00", "18:30"].map(t => (
+                                            <SelectItem key={t} value={t}>{t}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Button
+                                    size="icon" variant="outline" className="h-9 w-9 shrink-0 border-zinc-700 bg-zinc-900"
+                                    onClick={() => setStartTime(t => addMinutes(t, 15))}
+                                >
+                                    <Plus className="h-3 w-3" />
+                                </Button>
+                            </div>
                         </div>
                         <div className="space-y-2">
                             <Label>Конец</Label>
-                            <Select value={endTime} onValueChange={setEndTime}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="max-h-[200px]">
-                                    {["09:30", "10:30", "11:00", "12:30", "14:00", "15:30", "17:00", "18:30", "20:00"].map(t => (
-                                        <SelectItem key={t} value={t}>{t}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Аудитория</Label>
-                            <Input
-                                className="bg-zinc-950 border-zinc-800"
-                                value={room}
-                                onChange={(e) => setRoom(e.target.value)}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="space-y-2 pt-2 border-t border-zinc-800">
-                        <div className="text-zinc-400 text-sm mb-2">Действия</div>
-                        <div className="flex gap-4">
-                            {status !== 'CANCELLED' ? (
+                            <div className="flex items-center gap-1">
                                 <Button
-                                    type="button"
-                                    variant="destructive"
-                                    className="w-full bg-red-900/30 hover:bg-red-900/50 text-red-500 border border-red-900"
-                                    onClick={() => setStatus('CANCELLED')}
+                                    size="icon" variant="outline" className="h-9 w-9 shrink-0 border-zinc-700 bg-zinc-900"
+                                    onClick={() => setEndTime(t => addMinutes(t, -15))}
                                 >
-                                    <XCircle className="mr-2 h-4 w-4" /> Отменить занятие
+                                    <Minus className="h-3 w-3" />
                                 </Button>
-                            ) : (
+                                <Select value={endTime} onValueChange={setEndTime}>
+                                    <SelectTrigger className="bg-zinc-950 border-zinc-800 text-center font-mono">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="max-h-[200px]">
+                                        {["09:30", "10:30", "11:00", "12:30", "14:00", "15:30", "17:00", "18:30", "20:00"].map(t => (
+                                            <SelectItem key={t} value={t}>{t}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                                 <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="w-full border-zinc-700 text-zinc-300 hover:bg-zinc-800"
-                                    onClick={() => setStatus('PLANNED')}
+                                    size="icon" variant="outline" className="h-9 w-9 shrink-0 border-zinc-700 bg-zinc-900"
+                                    onClick={() => setEndTime(t => addMinutes(t, 15))}
                                 >
-                                    <Loader2 className="mr-2 h-4 w-4" /> Восстановить занятие
+                                    <Plus className="h-3 w-3" />
                                 </Button>
-                            )}
+                            </div>
                         </div>
+                    </div>    <div className="space-y-2">
+                        <Label>Аудитория</Label>
+                        <Input
+                            className="bg-zinc-950 border-zinc-800"
+                            value={room}
+                            onChange={(e) => setRoom(e.target.value)}
+                        />
                     </div>
                 </div>
 
-                <DialogFooter>
-                    <Button variant="ghost" onClick={() => onOpenChange(false)}>Отмена</Button>
-                    <Button onClick={handleSubmit} disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Сохранить
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                <div className="space-y-2 pt-2 border-t border-zinc-800">
+                    <div className="text-zinc-400 text-sm mb-2">Действия</div>
+                    <div className="flex gap-4">
+                        {status !== 'CANCELLED' ? (
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                className="w-full bg-red-900/30 hover:bg-red-900/50 text-red-500 border border-red-900"
+                                onClick={() => setStatus('CANCELLED')}
+                            >
+                                <XCircle className="mr-2 h-4 w-4" /> Отменить занятие
+                            </Button>
+                        ) : (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                                onClick={() => setStatus('PLANNED')}
+                            >
+                                <Loader2 className="mr-2 h-4 w-4" /> Восстановить занятие
+                            </Button>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            <DialogFooter>
+                <Button variant="ghost" onClick={() => onOpenChange(false)}>Отмена</Button>
+                <Button onClick={handleSubmit} disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Сохранить
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+        </Dialog >
     );
 }
