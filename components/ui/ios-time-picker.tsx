@@ -27,15 +27,16 @@ export function IOSStyleTimePicker({
 
     const hourRef = React.useRef<HTMLDivElement>(null);
     const minuteRef = React.useRef<HTMLDivElement>(null);
+
+    // Drag state
     const isDragging = React.useRef(false);
+    const activeRef = React.useRef<React.RefObject<HTMLDivElement | null> | null>(null);
     const startY = React.useRef(0);
     const startScrollTop = React.useRef(0);
 
-    // Initial scroll and sync from props
+    // Initial scroll sync from props
     React.useEffect(() => {
         const [h, m] = value.split(':').map(Number);
-
-        // Use a small timeout to ensure DOM is ready and styled
         const timer = setTimeout(() => {
             if (!isNaN(h)) {
                 setSelectedHour(h);
@@ -52,41 +53,55 @@ export function IOSStyleTimePicker({
                 }
             }
         }, 50);
-
         return () => clearTimeout(timer);
-    }, [value]); // Sync only when 'value' prop changes from outside
+    }, [value]);
 
-    const handleMouseDown = (e: React.MouseEvent, ref: React.RefObject<HTMLDivElement | null>) => {
+    // Global drag handlers
+    React.useEffect(() => {
+        const handleGlobalMove = (e: MouseEvent | TouchEvent) => {
+            if (!isDragging.current || !activeRef.current?.current) return;
+
+            const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+            const deltaY = clientY - startY.current;
+            activeRef.current.current.scrollTop = startScrollTop.current - deltaY;
+        };
+
+        const handleGlobalUp = () => {
+            if (!isDragging.current || !activeRef.current?.current) return;
+
+            isDragging.current = false;
+            const ref = activeRef.current.current;
+            ref.style.cursor = 'grab';
+            ref.style.scrollSnapType = 'y mandatory';
+            document.body.style.userSelect = 'auto';
+            activeRef.current = null;
+        };
+
+        window.addEventListener('mousemove', handleGlobalMove);
+        window.addEventListener('mouseup', handleGlobalUp);
+        window.addEventListener('touchmove', handleGlobalMove, { passive: false });
+        window.addEventListener('touchend', handleGlobalUp);
+
+        return () => {
+            window.removeEventListener('mousemove', handleGlobalMove);
+            window.removeEventListener('mouseup', handleGlobalUp);
+            window.removeEventListener('touchmove', handleGlobalMove);
+            window.removeEventListener('touchend', handleGlobalUp);
+        };
+    }, []);
+
+    const startDrag = (clientY: number, ref: React.RefObject<HTMLDivElement | null>) => {
         if (!ref.current) return;
         isDragging.current = true;
-        startY.current = e.clientY;
+        activeRef.current = ref;
+        startY.current = clientY;
         startScrollTop.current = ref.current.scrollTop;
         ref.current.style.cursor = 'grabbing';
         ref.current.style.scrollSnapType = 'none';
         document.body.style.userSelect = 'none';
     };
 
-    const handleMouseMove = (e: React.MouseEvent, ref: React.RefObject<HTMLDivElement | null>) => {
-        if (!isDragging.current || !ref.current) return;
-        e.preventDefault();
-        const deltaY = e.clientY - startY.current;
-        ref.current.scrollTop = startScrollTop.current - deltaY;
-    };
-
-    const handleMouseUp = (ref: React.RefObject<HTMLDivElement | null>) => {
-        if (!isDragging.current || !ref.current) return;
-        isDragging.current = false;
-        ref.current.style.cursor = 'grab';
-        ref.current.style.scrollSnapType = 'y mandatory';
-        document.body.style.userSelect = 'auto';
-    };
-
-    const handleMouseLeave = (ref: React.RefObject<HTMLDivElement | null>) => {
-        if (isDragging.current) handleMouseUp(ref);
-    };
-
     const handleScroll = (e: React.UIEvent<HTMLDivElement>, type: 'hour' | 'minute') => {
-        // Only trigger onChange if it's a real user scroll/snap, not initial sync
         const container = e.currentTarget;
         const itemHeight = 40;
         const scrollTop = container.scrollTop;
@@ -116,15 +131,11 @@ export function IOSStyleTimePicker({
             <div
                 ref={hourRef}
                 className="flex-1 overflow-y-auto no-scrollbar snap-y snap-mandatory relative scroll-smooth cursor-grab active:cursor-grabbing [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-                onMouseDown={(e) => handleMouseDown(e, hourRef)}
-                onMouseMove={(e) => handleMouseMove(e, hourRef)}
-                onMouseUp={() => handleMouseUp(hourRef)}
-                onMouseLeave={() => handleMouseLeave(hourRef)}
+                onMouseDown={(e) => startDrag(e.clientY, hourRef)}
+                onTouchStart={(e) => startDrag(e.touches[0].clientY, hourRef)}
                 onScroll={(e) => handleScroll(e, 'hour')}
             >
-                {/* Top Spacer */}
                 <div className="h-[calc(50%-20px)] pointer-events-none" />
-
                 {hours.map((h) => (
                     <div
                         key={h}
@@ -141,8 +152,6 @@ export function IOSStyleTimePicker({
                         {h.toString().padStart(2, '0')}
                     </div>
                 ))}
-
-                {/* Bottom Spacer */}
                 <div className="h-[calc(50%-20px)] pointer-events-none" />
             </div>
 
@@ -153,15 +162,11 @@ export function IOSStyleTimePicker({
             <div
                 ref={minuteRef}
                 className="flex-1 overflow-y-auto no-scrollbar snap-y snap-mandatory relative scroll-smooth cursor-grab active:cursor-grabbing [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-                onMouseDown={(e) => handleMouseDown(e, minuteRef)}
-                onMouseMove={(e) => handleMouseMove(e, minuteRef)}
-                onMouseUp={() => handleMouseUp(minuteRef)}
-                onMouseLeave={() => handleMouseLeave(minuteRef)}
+                onMouseDown={(e) => startDrag(e.clientY, minuteRef)}
+                onTouchStart={(e) => startDrag(e.touches[0].clientY, minuteRef)}
                 onScroll={(e) => handleScroll(e, 'minute')}
             >
-                {/* Top Spacer */}
                 <div className="h-[calc(50%-20px)] pointer-events-none" />
-
                 {minutes.map((m) => (
                     <div
                         key={m}
@@ -178,8 +183,6 @@ export function IOSStyleTimePicker({
                         {m.toString().padStart(2, '0')}
                     </div>
                 ))}
-
-                {/* Bottom Spacer */}
                 <div className="h-[calc(50%-20px)] pointer-events-none" />
             </div>
         </div>
