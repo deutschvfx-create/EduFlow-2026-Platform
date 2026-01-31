@@ -639,43 +639,37 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
                                                         onPointerDown={(e) => { e.stopPropagation(); handleDragStart(e, lesson, 'resize-top'); }}
                                                     />
 
-                                                    <div className="px-1.5 py-1 flex items-start justify-between gap-1 relative z-10">
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="flex items-center gap-1.5 mb-0.5">
-                                                                {/* Avatar Logic */}
-                                                                {showAvatar ? (
-                                                                    <Avatar className="h-5 w-5 shrink-0 border border-white/10 shadow-sm">
-                                                                        <AvatarImage src={`https://api.dicebear.com/7.x/notionists/svg?seed=${lesson.teacherId}`} />
-                                                                        <AvatarFallback className="text-[8px] bg-black/20 text-white/90 font-bold">
-                                                                            {teacherInitials}
-                                                                        </AvatarFallback>
-                                                                    </Avatar>
-                                                                ) : (
-                                                                    // Fallback: Tiny Initials Dot if very compact
-                                                                    <div className="h-4 w-4 shrink-0 rounded-full bg-white/20 flex items-center justify-center text-[8px] font-bold">
-                                                                        {teacherInitials}
-                                                                    </div>
-                                                                )}
-                                                                <span className="font-bold leading-tight truncate text-[10px]">
-                                                                    {lesson.courseName}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="px-1.5 pb-1 flex flex-col gap-0.5 opacity-90 pointer-events-none mt-auto">
-                                                        <div className="flex items-center gap-1 text-[9px] truncate">
-                                                            <Users className="h-2.5 w-2.5" />
-                                                            <span>{lesson.groupName}</span>
-                                                        </div>
-                                                        <div className="flex items-center gap-1 text-[9px] truncate text-white/80 font-bold">
-                                                            <Clock className="h-2.5 w-2.5" />
-                                                            <span>
+                                                    <div className="p-2 flex flex-col h-full relative z-10 pointer-events-none">
+                                                        {/* 1. Subject & 2. Time Header */}
+                                                        <div className="flex flex-col mb-2">
+                                                            <span className="font-bold text-[11px] leading-tight truncate text-white">
+                                                                {lesson.courseName}
+                                                            </span>
+                                                            <span className="text-[10px] font-medium text-white/80 flex items-center gap-1 mt-0.5">
+                                                                <Clock className="h-3 w-3 shrink-0" />
                                                                 {isDragging && (style as any).isBeingManipulated && liveTimeRange
                                                                     ? `${liveTimeRange.start} - ${liveTimeRange.end}`
                                                                     : `${lesson.startTime} - ${lesson.endTime}`
                                                                 }
                                                             </span>
+                                                        </div>
+
+                                                        {/* 3, 4, 5. Meta Stack */}
+                                                        <div className="flex flex-col gap-1.5 overflow-hidden">
+                                                            <div className="flex items-center gap-1.5 text-[9px] text-white/90 truncate">
+                                                                <Users className="h-3 w-3 shrink-0 opacity-70" />
+                                                                <span className="truncate">{lesson.groupName}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-1.5 text-[9px] text-white/90 truncate">
+                                                                <GraduationCap className="h-3 w-3 shrink-0 opacity-70" />
+                                                                <span className="truncate">{lesson.teacherName}</span>
+                                                            </div>
+                                                            {lesson.room && (
+                                                                <div className="flex items-center gap-1.5 text-[9px] text-white/90 truncate">
+                                                                    <MapPin className="h-3 w-3 shrink-0 opacity-70" />
+                                                                    <span className="truncate">{lesson.room} ауд.</span>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
 
@@ -702,11 +696,11 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
                                                             boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.5)"
                                                         }}
                                                     >
-                                                        <div className="px-1.5 py-1 flex flex-col h-full">
-                                                            <span className="font-bold text-[10px] truncate">{lesson.courseName}</span>
-                                                            <div className="mt-auto flex items-center gap-1 text-[9px] text-white/90">
-                                                                <Clock className="h-2 w-2" />
-                                                                <span>{liveTimeRange?.start || lesson.startTime}</span>
+                                                        <div className="p-2 flex flex-col h-full pointer-events-none">
+                                                            <span className="font-bold text-[11px] leading-tight truncate text-white">{lesson.courseName}</span>
+                                                            <div className="mt-1 flex items-center gap-1 text-[10px] text-white/90">
+                                                                <Clock className="h-3 w-3 shrink-0" />
+                                                                <span>{liveTimeRange?.start || lesson.startTime} - {liveTimeRange?.end || lesson.endTime}</span>
                                                             </div>
                                                         </div>
                                                     </div>
