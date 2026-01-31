@@ -185,13 +185,16 @@ export default function SchedulePage() {
 
                 {viewMode === 'week' ? (
                     /* DESKTOP WEEK VIEW */
-                    <div className="flex-1 overflow-hidden">
-                        <DesktopWeekGrid
-                            lessons={filteredLessons}
-                            currentDate={currentDate}
-                            onLessonClick={handleLessonClick}
-                            onLessonAdd={handleLessonAdd}
-                        />
+                    /* DESKTOP WEEK VIEW */
+                    <div className="flex-1 overflow-x-auto overflow-y-hidden">
+                        <div className="min-w-[1024px] h-full">
+                            <DesktopWeekGrid
+                                lessons={filteredLessons}
+                                currentDate={currentDate}
+                                onLessonClick={handleLessonClick}
+                                onLessonAdd={handleLessonAdd}
+                            />
+                        </div>
                     </div>
                 ) : (
                     /* MOBILE DAY VIEW */
