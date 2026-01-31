@@ -8,4 +8,6 @@ export interface Classroom {
     capacity?: number;
     note?: string;
     color?: string; // Hex color for calendar visualization
+    building?: string; // Optional: Корпус / Блок
+    floor?: string; // Optional: Этаж (can be string like "1", "2", "Подвал", etc.)
 }

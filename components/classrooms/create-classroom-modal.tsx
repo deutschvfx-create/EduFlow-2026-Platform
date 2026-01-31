@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Building, Monitor, Microscope, Box } from "lucide-react";
+import { Loader2, Plus, Building, Monitor, Microscope, Box, ChevronDown, ChevronUp } from "lucide-react";
 import { Classroom, ClassroomType } from "@/lib/types/classroom";
 
 interface CreateClassroomModalProps {
@@ -17,12 +17,15 @@ interface CreateClassroomModalProps {
 export function CreateClassroomModal({ children, onSave }: CreateClassroomModalProps) {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [showAdvanced, setShowAdvanced] = useState(false);
 
     // Form State
     const [name, setName] = useState("");
     const [type, setType] = useState<ClassroomType>("CLASSROOM");
     const [capacity, setCapacity] = useState("");
     const [note, setNote] = useState("");
+    const [building, setBuilding] = useState("");
+    const [floor, setFloor] = useState("");
 
     const handleSubmit = async () => {
         if (!name) return;
@@ -38,7 +41,9 @@ export function CreateClassroomModal({ children, onSave }: CreateClassroomModalP
             status: 'ACTIVE',
             capacity: capacity ? parseInt(capacity) : undefined,
             note: note || undefined,
-            color: '#6366f1' // Default Indigo
+            color: '#6366f1', // Default Indigo
+            building: building || undefined,
+            floor: floor || undefined,
         };
 
         onSave(newClassroom);
@@ -52,6 +57,9 @@ export function CreateClassroomModal({ children, onSave }: CreateClassroomModalP
         setType("CLASSROOM");
         setCapacity("");
         setNote("");
+        setBuilding("");
+        setFloor("");
+        setShowAdvanced(false);
     };
 
     return (
@@ -135,6 +143,42 @@ export function CreateClassroomModal({ children, onSave }: CreateClassroomModalP
                             onChange={(e) => setNote(e.target.value)}
                         />
                     </div>
+
+                    {/* Progressive Disclosure Button */}
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowAdvanced(!showAdvanced)}
+                        className="w-full text-xs text-zinc-400 hover:text-zinc-200 gap-2"
+                    >
+                        {showAdvanced ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                        Дополнительные параметры
+                    </Button>
+
+                    {/* Advanced Fields */}
+                    {showAdvanced && type !== 'ONLINE' && (
+                        <div className="grid grid-cols-2 gap-4 pt-2 border-t border-zinc-800">
+                            <div className="space-y-2">
+                                <Label>Корпус / Блок</Label>
+                                <Input
+                                    placeholder="A, B, Главный..."
+                                    className="bg-zinc-950 border-zinc-800"
+                                    value={building}
+                                    onChange={(e) => setBuilding(e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Этаж</Label>
+                                <Input
+                                    placeholder="1, 2, Подвал..."
+                                    className="bg-zinc-950 border-zinc-800"
+                                    value={floor}
+                                    onChange={(e) => setFloor(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <DialogFooter>

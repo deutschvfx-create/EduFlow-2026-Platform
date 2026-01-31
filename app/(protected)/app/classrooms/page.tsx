@@ -97,6 +97,20 @@ export default function ClassroomsPage() {
 
                             {/* Metadata */}
                             <div className="space-y-1.5 text-xs">
+                                {/* Building/Floor - only show if exists and not ONLINE */}
+                                {classroom.type !== 'ONLINE' && (classroom.building || classroom.floor) && (
+                                    <div className="text-zinc-400 flex items-center gap-1.5">
+                                        <Building className="h-3 w-3 opacity-70" />
+                                        <span>
+                                            {classroom.building && classroom.floor
+                                                ? `${classroom.building} · ${classroom.floor} этаж`
+                                                : classroom.building
+                                                    ? classroom.building
+                                                    : `${classroom.floor} этаж`
+                                            }
+                                        </span>
+                                    </div>
+                                )}
                                 {classroom.capacity && (
                                     <div className="flex items-center gap-2 text-zinc-400">
                                         <Users className="h-3 w-3 opacity-70" />
@@ -110,8 +124,8 @@ export default function ClassroomsPage() {
                                 )}
                                 <div className="pt-2">
                                     <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium ${classroom.status === 'ACTIVE'
-                                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                            : 'bg-zinc-800 text-zinc-500 border border-zinc-700'
+                                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                        : 'bg-zinc-800 text-zinc-500 border border-zinc-700'
                                         }`}>
                                         {classroom.status === 'ACTIVE' ? 'Активна' : 'Отключена'}
                                     </span>
