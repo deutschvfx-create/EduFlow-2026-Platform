@@ -113,6 +113,7 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
     const [liveDay, setLiveDay] = useState<DayOfWeek | null>(null);
     const [liveTimeRange, setLiveTimeRange] = useState<{ start: string, end: string } | null>(null);
     const [conflictError, setConflictError] = useState<string | null>(null);
+    const ignoreClickRef = useRef(false);
 
     const [initialGrab, setInitialGrab] = useState<{
         x: number,
@@ -168,7 +169,10 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
 
     // --- Edit Handlers ---
     const handleLessonClick = (lesson: Lesson) => {
-        if (isDragging) return;
+        if (isDragging || ignoreClickRef.current) {
+            ignoreClickRef.current = false;
+            return;
+        }
         setEditFormData({
             groupId: lesson.groupId,
             courseId: lesson.courseId,
@@ -261,6 +265,7 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
         // We will only set isDragging to true if cursor moves beyond threshold
         // setIsDragging(true); 
         setDragType(type);
+        ignoreClickRef.current = type !== 'move';
 
         setActiveLessonId(lesson.id);
         setDragDelta({ x: 0, y: 0 });
@@ -289,6 +294,7 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
         // Threshold Check
         if (!isDragging && (Math.abs(deltaY) > 5 || Math.abs(deltaX) > 5)) {
             setIsDragging(true);
+            ignoreClickRef.current = true;
         }
 
         if (!isDragging) return;
