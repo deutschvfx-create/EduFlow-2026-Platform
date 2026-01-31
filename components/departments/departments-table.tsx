@@ -85,7 +85,7 @@ export function DepartmentsTable({ departments, onEdit }: DepartmentsTableProps)
                             </TableCell>
                             <TableCell>
                                 <Badge variant="secondary" className="bg-zinc-800 text-zinc-300 font-normal">
-                                    {department.facultyCode}
+                                    ID: {department.facultyId}
                                 </Badge>
                             </TableCell>
                             <TableCell>
@@ -101,7 +101,7 @@ export function DepartmentsTable({ departments, onEdit }: DepartmentsTableProps)
                                 {department.studentsCount}
                             </TableCell>
                             <TableCell className="text-zinc-400">
-                                {department.headTeacherName || <span className="text-zinc-600 italic">Не назначен</span>}
+                                {department.headTeacherId || <span className="text-zinc-600 italic">Не назначен</span>}
                             </TableCell>
                             <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                                 <DropdownMenu>

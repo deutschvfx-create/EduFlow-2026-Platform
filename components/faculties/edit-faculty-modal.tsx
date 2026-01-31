@@ -55,9 +55,6 @@ export function EditFacultyModal({ faculty, open, onOpenChange, onSave }: EditFa
             description,
             headTeacherId,
             status,
-            headTeacherName: MOCK_TEACHERS.find(t => t.id === headTeacherId)
-                ? `${MOCK_TEACHERS.find(t => t.id === headTeacherId)?.firstName} ${MOCK_TEACHERS.find(t => t.id === headTeacherId)?.lastName}`
-                : undefined
         });
 
         setLoading(false);

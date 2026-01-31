@@ -126,9 +126,8 @@ export default function FacultyDetailsPage() {
                             <div className="text-zinc-300 text-sm leading-relaxed">{faculty.description || 'Описание отсутствует'}</div>
                         </div>
                         <div className="space-y-1">
-                            <div className="text-xs text-zinc-500 uppercase font-semibold">Руководитель</div>
-                            <div className="text-zinc-300 font-medium">{faculty.headTeacherName || 'Не назначен'}</div>
-                            {faculty.headTeacherName && <div className="text-xs text-zinc-500">Декан факультета</div>}
+                            <div className="text-xs text-zinc-500 uppercase font-semibold">Руководитель (ID)</div>
+                            <div className="text-zinc-300 font-medium">{faculty.headTeacherId || 'Не назначен'}</div>
                         </div>
                     </CardContent>
                 </Card>

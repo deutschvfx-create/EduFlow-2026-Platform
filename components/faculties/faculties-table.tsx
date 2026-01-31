@@ -98,7 +98,7 @@ export function FacultiesTable({ faculties, onEdit }: FacultiesTableProps) {
                                 {faculty.teachersCount}
                             </TableCell>
                             <TableCell className="text-zinc-400">
-                                {faculty.headTeacherName || <span className="text-zinc-600 italic">Не назначен</span>}
+                                {faculty.headTeacherId || <span className="text-zinc-600 italic">Не назначен</span>}
                             </TableCell>
                             <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                                 <DropdownMenu>

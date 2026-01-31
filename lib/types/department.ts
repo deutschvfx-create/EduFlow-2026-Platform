@@ -7,13 +7,9 @@ export type Department = {
     code: string;
 
     facultyId: string;
-    facultyName: string;
-    facultyCode: string;
-
     status: DepartmentStatus;
 
     headTeacherId?: string;
-    headTeacherName?: string;
 
     teachersCount: number;
     groupsCount: number;

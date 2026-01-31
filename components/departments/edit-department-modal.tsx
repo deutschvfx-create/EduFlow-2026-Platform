@@ -59,11 +59,6 @@ export function EditDepartmentModal({ department, open, onOpenChange, onSave }: 
             description,
             headTeacherId,
             status,
-            headTeacherName: MOCK_TEACHERS.find(t => t.id === headTeacherId)
-                ? `${MOCK_TEACHERS.find(t => t.id === headTeacherId)?.firstName} ${MOCK_TEACHERS.find(t => t.id === headTeacherId)?.lastName}`
-                : undefined,
-            facultyName: MOCK_FACULTIES.find(f => f.id === facultyId)?.name || department.facultyName,
-            facultyCode: MOCK_FACULTIES.find(f => f.id === facultyId)?.code || department.facultyCode
         });
 
         setLoading(false);
