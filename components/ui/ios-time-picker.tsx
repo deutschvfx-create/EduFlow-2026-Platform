@@ -23,7 +23,7 @@ export function IOSStyleTimePicker({
     const [selectedMinute, setSelectedMinute] = React.useState<number>(parseInt(value.split(':')[1]) || 0);
 
     const hours = Array.from({ length: maxHour - minHour + 1 }, (_, i) => i + minHour);
-    const minutes = Array.from({ length: 60 / minuteStep }, (_, i) => i * minuteStep);
+    const minutes = Array.from({ length: Math.ceil(60 / minuteStep) }, (_, i) => i * minuteStep);
 
     const hourRef = React.useRef<HTMLDivElement>(null);
     const minuteRef = React.useRef<HTMLDivElement>(null);
@@ -31,25 +31,20 @@ export function IOSStyleTimePicker({
     const startY = React.useRef(0);
     const startScrollTop = React.useRef(0);
 
-    // Sync with external value changes
     React.useEffect(() => {
         const [h, m] = value.split(':').map(Number);
-        if (!isNaN(h)) setSelectedHour(h);
-        if (!isNaN(m)) setSelectedMinute(m);
+        if (!isNaN(h) && h !== selectedHour) setSelectedHour(h);
+        if (!isNaN(m) && m !== selectedMinute) setSelectedMinute(m);
+    }, [value, selectedHour, selectedMinute]);
 
-        // Auto-scroll to selected on mount/change (optional, good for UX)
-        // This needs careful handling to not fight user scroll. 
-        // We'll skip auto-scroll for now to respect user position, or add it only on value prop change from outside.
-    }, [value]);
-
-    // Drag Handlers
     const handleMouseDown = (e: React.MouseEvent, ref: React.RefObject<HTMLDivElement | null>) => {
         if (!ref.current) return;
         isDragging.current = true;
         startY.current = e.clientY;
         startScrollTop.current = ref.current.scrollTop;
         ref.current.style.cursor = 'grabbing';
-        ref.current.style.scrollSnapType = 'none'; // Disable snap while dragging
+        ref.current.style.scrollSnapType = 'none';
+        document.body.style.userSelect = 'none';
     };
 
     const handleMouseMove = (e: React.MouseEvent, ref: React.RefObject<HTMLDivElement | null>) => {
@@ -63,28 +58,14 @@ export function IOSStyleTimePicker({
         if (!isDragging.current || !ref.current) return;
         isDragging.current = false;
         ref.current.style.cursor = 'grab';
-        ref.current.style.scrollSnapType = 'y mandatory'; // Re-enable snap
-        // Optional: Smoothly snap to nearest after release if momentum didn't do it
+        ref.current.style.scrollSnapType = 'y mandatory';
+        document.body.style.userSelect = 'auto';
     };
 
     const handleMouseLeave = (ref: React.RefObject<HTMLDivElement | null>) => {
         if (isDragging.current) handleMouseUp(ref);
     };
 
-    // Click handlers remain for direct selection
-    const handleHourClick = (h: number) => {
-        setSelectedHour(h);
-        onChange(`${h.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`);
-        // Scroll to item
-        // Not implementing auto-scroll on click to keep it simple, changing value is enough as user will likely scroll
-    };
-
-    const handleMinuteClick = (m: number) => {
-        setSelectedMinute(m);
-        onChange(`${selectedHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
-    };
-
-    // Scroll Handlers
     const handleScroll = (e: React.UIEvent<HTMLDivElement>, type: 'hour' | 'minute') => {
         const container = e.currentTarget;
         const itemHeight = 40;
@@ -92,19 +73,16 @@ export function IOSStyleTimePicker({
         const index = Math.round(scrollTop / itemHeight);
 
         if (type === 'hour') {
-            const newHour = minHour + index;
-            const clampedHour = Math.max(minHour, Math.min(maxHour, newHour));
-            if (clampedHour !== selectedHour) {
-                setSelectedHour(clampedHour);
-                onChange(`${clampedHour.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`);
+            const h = hours[Math.max(0, Math.min(hours.length - 1, index))];
+            if (h !== selectedHour) {
+                setSelectedHour(h);
+                onChange(`${h.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`);
             }
         } else {
-            const safeIndex = Math.max(0, Math.min(minutes.length - 1, index));
-            const safeMinute = minutes[safeIndex];
-
-            if (safeMinute !== selectedMinute) {
-                setSelectedMinute(safeMinute);
-                onChange(`${selectedHour.toString().padStart(2, '0')}:${safeMinute.toString().padStart(2, '0')}`);
+            const m = minutes[Math.max(0, Math.min(minutes.length - 1, index))];
+            if (m !== selectedMinute) {
+                setSelectedMinute(m);
+                onChange(`${selectedHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
             }
         }
     };
@@ -115,7 +93,7 @@ export function IOSStyleTimePicker({
 
             <div
                 ref={hourRef}
-                className="flex-1 overflow-y-auto snap-y snap-mandatory relative scroll-smooth cursor-grab active:cursor-grabbing [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                className="flex-1 overflow-y-auto snap-y snap-mandatory relative scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden cursor-grab active:cursor-grabbing"
                 onMouseDown={(e) => handleMouseDown(e, hourRef)}
                 onMouseMove={(e) => handleMouseMove(e, hourRef)}
                 onMouseUp={() => handleMouseUp(hourRef)}
@@ -123,10 +101,6 @@ export function IOSStyleTimePicker({
                 onScroll={(e) => handleScroll(e, 'hour')}
                 style={{ paddingBlock: 'calc(50% - 20px)' }}
             >
-                <style jsx>{`
-                    .no-scrollbar::-webkit-scrollbar { display: none; }
-                    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-                `}</style>
                 {hours.map((h) => (
                     <div
                         key={h}
@@ -134,7 +108,11 @@ export function IOSStyleTimePicker({
                             "h-10 flex items-center justify-center snap-center text-sm transition-all duration-200",
                             selectedHour === h ? "text-white font-bold text-lg scale-110" : "text-zinc-600 hover:text-zinc-400"
                         )}
-                        onClick={() => handleHourClick(h)}
+                        onClick={() => {
+                            setSelectedHour(h);
+                            onChange(`${h.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`);
+                            if (hourRef.current) hourRef.current.scrollTop = hours.indexOf(h) * 40;
+                        }}
                     >
                         {h.toString().padStart(2, '0')}
                     </div>
@@ -145,7 +123,7 @@ export function IOSStyleTimePicker({
 
             <div
                 ref={minuteRef}
-                className="flex-1 overflow-y-auto snap-y snap-mandatory relative scroll-smooth cursor-grab active:cursor-grabbing [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                className="flex-1 overflow-y-auto snap-y snap-mandatory relative scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden cursor-grab active:cursor-grabbing"
                 onMouseDown={(e) => handleMouseDown(e, minuteRef)}
                 onMouseMove={(e) => handleMouseMove(e, minuteRef)}
                 onMouseUp={() => handleMouseUp(minuteRef)}
@@ -160,7 +138,11 @@ export function IOSStyleTimePicker({
                             "h-10 flex items-center justify-center snap-center text-sm transition-all duration-200",
                             selectedMinute === m ? "text-white font-bold text-lg scale-110" : "text-zinc-600 hover:text-zinc-400"
                         )}
-                        onClick={() => handleMinuteClick(m)}
+                        onClick={() => {
+                            setSelectedMinute(m);
+                            onChange(`${selectedHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
+                            if (minuteRef.current) minuteRef.current.scrollTop = minutes.indexOf(m) * 40;
+                        }}
                     >
                         {m.toString().padStart(2, '0')}
                     </div>
