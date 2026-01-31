@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MOCK_GROUPS_FULL } from "@/lib/mock/groups";
 import { MOCK_TEACHERS } from "@/lib/mock/teachers";
 import { MOCK_COURSES } from "@/lib/mock/courses";
+import { MOCK_CLASSROOMS } from "@/lib/mock/classrooms";
 import { DayOfWeek, Lesson, LessonStatus } from "@/lib/types/schedule";
 import { useModules } from "@/hooks/use-modules";
 
@@ -212,14 +213,72 @@ export function EditLessonModal({ lesson, open, onOpenChange, onSave }: EditLess
                             </div>
                         </div>
 
-                        {modules.classrooms && (
+                        {modules.classrooms && MOCK_CLASSROOMS.length > 0 && (
                             <div className="space-y-2">
                                 <Label>Аудитория</Label>
-                                <Input
-                                    className="bg-zinc-950 border-zinc-800"
-                                    value={room}
-                                    onChange={(e) => setRoom(e.target.value)}
-                                />
+                                <Select value={room || "__none__"} onValueChange={setRoom}>
+                                    <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                        <SelectValue placeholder="Не выбрана" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="__none__">Не выбрана</SelectItem>
+                                        {MOCK_CLASSROOMS.length >= 10 ? (
+                                            // Grouped view for 10+ classrooms
+                                            (() => {
+                                                const grouped = MOCK_CLASSROOMS.reduce((acc, cls) => {
+                                                    const key = cls.building || "Без корпуса";
+                                                    if (!acc[key]) acc[key] = [];
+                                                    acc[key].push(cls);
+                                                    return acc;
+                                                }, {} as Record<string, typeof MOCK_CLASSROOMS>);
+
+                                                return Object.entries(grouped)
+                                                    .sort(([a], [b]) => a.localeCompare(b))
+                                                    .map(([building, classrooms]) => (
+                                                        <div key={building}>
+                                                            <div className="px-2 py-1.5 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
+                                                                {building}
+                                                            </div>
+                                                            {classrooms
+                                                                .sort((a, b) => {
+                                                                    if (a.floor && b.floor && a.floor !== b.floor) {
+                                                                        return a.floor.localeCompare(b.floor);
+                                                                    }
+                                                                    return a.name.localeCompare(b.name);
+                                                                })
+                                                                .map(cls => (
+                                                                    <SelectItem key={cls.id} value={cls.name}>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <span>{cls.name}</span>
+                                                                            {cls.type === 'ONLINE' && (
+                                                                                <span className="text-[10px] text-cyan-400">Онлайн</span>
+                                                                            )}
+                                                                            {cls.floor && cls.type !== 'ONLINE' && (
+                                                                                <span className="text-[10px] text-zinc-500">· {cls.floor} эт.</span>
+                                                                            )}
+                                                                        </div>
+                                                                    </SelectItem>
+                                                                ))}
+                                                        </div>
+                                                    ));
+                                            })()
+                                        ) : (
+                                            // Flat list for < 10 classrooms
+                                            MOCK_CLASSROOMS
+                                                .sort((a, b) => a.name.localeCompare(b.name))
+                                                .map(cls => (
+                                                    <SelectItem key={cls.id} value={cls.name}>
+                                                        <div className="flex items-center gap-2">
+                                                            <span>{cls.name}</span>
+                                                            {cls.type === 'ONLINE' && (
+                                                                <span className="text-[10px] text-cyan-400">Онлайн</span>
+                                                            )}
+                                                        </div>
+                                                    </SelectItem>
+                                                ))
+                                        )}
+                                    </SelectContent>
+                                </Select>
                             </div>
                         )}
                     </div>
