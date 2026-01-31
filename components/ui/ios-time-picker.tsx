@@ -90,17 +90,13 @@ export function IOSStyleTimePicker({
 
             <div
                 ref={hourRef}
-                className="flex-1 overflow-y-auto no-scrollbar snap-y snap-mandatory relative scroll-smooth cursor-grab active:cursor-grabbing"
+                className="flex-1 overflow-y-auto snap-y snap-mandatory relative scroll-smooth cursor-grab active:cursor-grabbing [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
                 onMouseDown={(e) => handleMouseDown(e, hourRef)}
                 onMouseMove={(e) => handleMouseMove(e, hourRef)}
                 onMouseUp={() => handleMouseUp(hourRef)}
                 onMouseLeave={() => handleMouseLeave(hourRef)}
                 style={{ paddingBlock: 'calc(50% - 20px)' }} // Center 40px item
             >
-                <style jsx>{`
-                    .no-scrollbar::-webkit-scrollbar { display: none; }
-                    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-                `}</style>
                 {hours.map((h) => (
                     <div
                         key={h}
@@ -119,7 +115,7 @@ export function IOSStyleTimePicker({
 
             <div
                 ref={minuteRef}
-                className="flex-1 overflow-y-auto no-scrollbar snap-y snap-mandatory relative scroll-smooth cursor-grab active:cursor-grabbing"
+                className="flex-1 overflow-y-auto snap-y snap-mandatory relative scroll-smooth cursor-grab active:cursor-grabbing [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
                 onMouseDown={(e) => handleMouseDown(e, minuteRef)}
                 onMouseMove={(e) => handleMouseMove(e, minuteRef)}
                 onMouseUp={() => handleMouseUp(minuteRef)}
