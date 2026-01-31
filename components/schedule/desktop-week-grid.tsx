@@ -137,7 +137,7 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
         );
     };
 
-    const handleDragStart = (e: React.MouseEvent, lesson: Lesson, type: 'move' | 'resize-top' | 'resize-bottom') => {
+    const handleDragStart = (e: React.PointerEvent, lesson: Lesson, type: 'move' | 'resize-top' | 'resize-bottom') => {
         e.preventDefault();
         e.stopPropagation();
 
@@ -160,11 +160,11 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
             lesson
         });
 
-        // Lock pointer to capture release even outside window
-        (e.currentTarget as HTMLElement).setPointerCapture?.(1);
+        // Use pointerId for robust capturing
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     };
 
-    const handleMouseMove = (e: React.MouseEvent) => {
+    const handlePointerMove = (e: React.PointerEvent) => {
         if (!isDragging || !initialGrab || !activeLessonId) return;
 
         const deltaX = e.clientX - initialGrab.x;
@@ -181,7 +181,8 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
         const colWidth = (gridRect.width - 56) / 7;
         const colDelta = Math.round(deltaX / colWidth);
         const newDayIdx = Math.max(0, Math.min(6, initialGrab.dayIdx + colDelta));
-        setLiveDay(DAYS[newDayIdx]);
+        const currentLiveDay = DAYS[newDayIdx];
+        setLiveDay(currentLiveDay);
 
         const deltaMin = Math.round(deltaY / 5) * 5;
         let newStartMin = initialGrab.startMin;
@@ -196,23 +197,26 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
             newDuration = Math.max(15, Math.min(15 * 60 - initialGrab.startMin, initialGrab.durationMin + deltaMin));
         }
 
-        setLiveTimeRange({
-            start: minutesToTime(newStartMin),
-            end: minutesToTime(newStartMin + newDuration)
-        });
+        const newStart = minutesToTime(newStartMin);
+        const newEnd = minutesToTime(newStartMin + newDuration);
+
+        setLiveTimeRange({ start: newStart, end: newEnd });
+
+        // Quick Conflict Check for Visual Feedback (Red Ring)
+        const conflict = checkConflict(activeLessonId, currentLiveDay, newStart, newEnd, initialGrab.lesson.teacherId);
+        setConflictError(conflict ? "Conflict" : null);
     };
 
-    const handleMouseUp = (e: React.MouseEvent) => {
-        if (isDragging && activeLessonId && initialGrab) {
+    const handlePointerUp = (e: React.PointerEvent) => {
+        if (isDragging && activeLessonId && initialGrab && liveTimeRange && liveDay) {
             // Releasing pointer capture
-            (e.currentTarget as HTMLElement).releasePointerCapture?.(1);
+            (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
 
-            const conflict = checkConflict(activeLessonId, liveDay!, liveTimeRange!.start, liveTimeRange!.end, initialGrab.lesson.teacherId);
-            setConflictError(conflict ? "Конфликт преподавателя" : null);
+            const conflict = checkConflict(activeLessonId, liveDay, liveTimeRange.start, liveTimeRange.end, initialGrab.lesson.teacherId);
 
             if (!conflict) {
-                console.log("Committed New Time:", liveTimeRange?.start, "—", liveTimeRange?.end, "on", liveDay);
-                // onUpdate(activeLessonId, { ...initialGrab.lesson, dayOfWeek: liveDay!, startTime: liveTimeRange!.start, endTime: liveTimeRange!.end });
+                console.log("Committed New Time:", liveTimeRange.start, "—", liveTimeRange.end, "on", liveDay);
+                // In production this would call an API. For now we update visual state.
             } else {
                 console.log("Reverting due to conflict");
             }
@@ -282,9 +286,9 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
         <div
             id="schedule-grid-container"
             className="flex h-full flex-col bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl shadow-black/50 select-none relative"
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerUp}
         >
             {/* Header: Days */}
             <div className="flex border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-sm">
@@ -434,6 +438,7 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
                                                 zIndex: (style as any).zIndex,
                                                 transition: isDragging && (style as any).isBeingManipulated ? 'none' : 'all 0.3s ease-out',
                                                 transform: isDragging && (style as any).isBeingManipulated && dragType === 'move' ? `translate(${dragDelta.x}px, ${dragDelta.y}px)` : undefined,
+                                                touchAction: 'none' // Crucial for pointer events
                                             }}
                                             className={cn(
                                                 "absolute rounded border shadow-sm hover:shadow-lg flex flex-col overflow-hidden group/card animate-in fade-in zoom-in-95 cursor-grab active:cursor-grabbing",
@@ -442,12 +447,12 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
                                                     : (style as any).colorClasses,
                                                 isDragging && (style as any).isBeingManipulated && conflictError && "ring-2 ring-red-500 ring-offset-2 ring-offset-black"
                                             )}
-                                            onMouseDown={(e) => handleDragStart(e, lesson, 'move')}
+                                            onPointerDown={(e) => handleDragStart(e, lesson, 'move')}
                                         >
                                             {/* Top Resize Handle */}
                                             <div
                                                 className="absolute top-0 inset-x-0 h-2 cursor-ns-resize hover:bg-white/20 z-50 transition-colors"
-                                                onMouseDown={(e) => { e.stopPropagation(); handleDragStart(e, lesson, 'resize-top'); }}
+                                                onPointerDown={(e) => { e.stopPropagation(); handleDragStart(e, lesson, 'resize-top'); }}
                                             />
 
                                             <div className="px-1.5 py-1 text-[10px] font-bold leading-tight truncate">
@@ -461,7 +466,7 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
                                                 <div className="flex items-center gap-1 text-[9px] truncate text-white/80 font-bold">
                                                     <Clock className="h-2.5 w-2.5" />
                                                     <span>
-                                                        {isDragging && style.isBeingManipulated && liveTimeRange
+                                                        {isDragging && (style as any).isBeingManipulated && liveTimeRange
                                                             ? `${liveTimeRange.start} - ${liveTimeRange.end}`
                                                             : `${lesson.startTime} - ${lesson.endTime}`
                                                         }
@@ -472,7 +477,7 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
                                             {/* Bottom Resize Handle */}
                                             <div
                                                 className="absolute bottom-0 inset-x-0 h-2 cursor-ns-resize hover:bg-white/20 z-50 transition-colors"
-                                                onMouseDown={(e) => { e.stopPropagation(); handleDragStart(e, lesson, 'resize-bottom'); }}
+                                                onPointerDown={(e) => { e.stopPropagation(); handleDragStart(e, lesson, 'resize-bottom'); }}
                                             />
                                         </div>
                                     );
