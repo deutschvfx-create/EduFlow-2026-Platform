@@ -229,15 +229,22 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
 
     // Helper to calculate grid position & Overlaps
     const getLayoutStyles = (lesson: Lesson, dayLessons: Lesson[]) => {
-        if (lesson.id === activeLessonId && dragType) {
-            return { display: 'none' };
+        const isBeingManipulated = lesson.id === activeLessonId;
+
+        let startTime = lesson.startTime;
+        let endTime = lesson.endTime;
+
+        // For resizing, we update the logical footprint in real-time
+        if (isBeingManipulated && (dragType === 'resize-top' || dragType === 'resize-bottom') && liveTimeRange) {
+            startTime = liveTimeRange.start;
+            endTime = liveTimeRange.end;
         }
 
-        const [hourStr, minuteStr] = lesson.startTime.split(':');
+        const [hourStr, minuteStr] = startTime.split(':');
         const startHour = parseInt(hourStr);
         const startMinute = parseInt(minuteStr);
 
-        const [endHourStr, endMinuteStr] = lesson.endTime.split(':');
+        const [endHourStr, endMinuteStr] = endTime.split(':');
         const endHour = parseInt(endHourStr);
         const endMinute = parseInt(endMinuteStr);
 
@@ -259,7 +266,6 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
         }
 
         const color = getTeacherColor(lesson.teacherId);
-        const isBeingManipulated = lesson.id === activeLessonId;
 
         return {
             top: `${topPercent}%`,
@@ -267,7 +273,6 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
             width,
             left,
             colorClasses: cn(color.bg, color.border, color.text),
-            transform: isBeingManipulated && dragType === 'move' ? `translate(${dragDelta.x}px, ${dragDelta.y}px)` : undefined,
             zIndex: isBeingManipulated ? 100 : undefined,
             isBeingManipulated
         };
@@ -322,7 +327,13 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
                     </div>
 
                     {DAYS.map((day, colIndex) => {
-                        const dayLessons = lessons.filter(l => l.dayOfWeek === day);
+                        const dayLessons = lessons.filter(l => {
+                            const isBeingManipulated = l.id === activeLessonId;
+                            if (isBeingManipulated) {
+                                return liveDay === day;
+                            }
+                            return l.dayOfWeek === day;
+                        });
 
                         return (
                             <div key={day} className="relative z-10 h-[900px] group">
@@ -416,20 +427,20 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
                                                 onLessonClick(lesson);
                                             }}
                                             style={{
-                                                top: style.top,
-                                                height: style.height,
-                                                width: style.width,
-                                                left: style.left,
-                                                transform: style.transform,
-                                                zIndex: style.zIndex,
-                                                transition: isDragging && style.isBeingManipulated ? 'none' : undefined
+                                                top: (style as any).top,
+                                                height: (style as any).height,
+                                                width: (style as any).width,
+                                                left: (style as any).left,
+                                                zIndex: (style as any).zIndex,
+                                                transition: isDragging && (style as any).isBeingManipulated ? 'none' : 'all 0.3s ease-out',
+                                                transform: isDragging && (style as any).isBeingManipulated && dragType === 'move' ? `translate(${dragDelta.x}px, ${dragDelta.y}px)` : undefined,
                                             }}
                                             className={cn(
-                                                "absolute rounded border shadow-sm transition-all duration-300 ease-out hover:shadow-lg flex flex-col overflow-hidden group/card animate-in fade-in zoom-in-95 cursor-grab active:cursor-grabbing",
+                                                "absolute rounded border shadow-sm hover:shadow-lg flex flex-col overflow-hidden group/card animate-in fade-in zoom-in-95 cursor-grab active:cursor-grabbing",
                                                 lesson.status === 'CANCELLED'
                                                     ? "bg-red-950/80 border-red-900/50 text-red-200"
-                                                    : style.colorClasses,
-                                                isDragging && style.isBeingManipulated && conflictError && "ring-2 ring-red-500 ring-offset-2 ring-offset-black"
+                                                    : (style as any).colorClasses,
+                                                isDragging && (style as any).isBeingManipulated && conflictError && "ring-2 ring-red-500 ring-offset-2 ring-offset-black"
                                             )}
                                             onMouseDown={(e) => handleDragStart(e, lesson, 'move')}
                                         >
