@@ -57,7 +57,7 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
 
     useEffect(() => {
         if (pulsingLessonId) {
-            const timer = setTimeout(() => setPulsingLessonId(null), 1500);
+            const timer = setTimeout(() => setPulsingLessonId(null), 2500);
             return () => clearTimeout(timer);
         }
     }, [pulsingLessonId]);
@@ -501,12 +501,28 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
                                             initial={false}
                                             animate={pulsingLessonId === lesson.id ? (
                                                 shouldReduceMotion ? {
-                                                    opacity: [1, 0.7, 1],
-                                                    transition: { duration: 1, ease: "easeInOut" }
+                                                    boxShadow: [
+                                                        "inset 0 0 0px rgba(34, 197, 94, 0)",
+                                                        "inset 0 0 20px rgba(34, 197, 94, 0.3)",
+                                                        "inset 0 0 0px rgba(34, 197, 94, 0)"
+                                                    ],
+                                                    transition: { duration: 1.5, ease: "easeInOut" }
                                                 } : {
-                                                    scale: [1, 1.02, 1, 1.015, 1, 1.01, 1],
-                                                    opacity: [1, 0.9, 1, 0.93, 1, 0.96, 1],
-                                                    transition: { duration: 1, ease: "easeInOut" }
+                                                    scale: [1, 1.02, 1, 1.015, 1, 1.02, 1],
+                                                    boxShadow: [
+                                                        "0 0 0px rgba(249, 115, 22, 0)",      // Start
+                                                        "0 0 12px rgba(249, 115, 22, 0.5)",   // Orange Pulse 1
+                                                        "0 0 0px rgba(249, 115, 22, 0)",      // Mid
+                                                        "0 0 8px rgba(249, 115, 22, 0.4)",    // Orange Pulse 2
+                                                        "0 0 0px rgba(249, 115, 22, 0)",      // Mid
+                                                        "0 0 15px rgba(34, 197, 94, 0.6)",    // Green Confirm
+                                                        "0 0 0px rgba(34, 197, 94, 0)"       // End
+                                                    ],
+                                                    transition: {
+                                                        duration: 2.0,
+                                                        ease: "easeInOut",
+                                                        times: [0, 0.15, 0.3, 0.45, 0.6, 0.8, 1]
+                                                    }
                                                 }
                                             ) : {}}
                                             style={{
