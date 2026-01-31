@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Plus, Building, Monitor, Microscope, Box, ChevronDown, ChevronUp } from "lucide-react";
 import { Classroom, ClassroomType } from "@/lib/types/classroom";
+import { useOrganization } from "@/hooks/use-organization";
 
 interface CreateClassroomModalProps {
     children?: React.ReactNode;
@@ -18,6 +19,7 @@ export function CreateClassroomModal({ children, onSave }: CreateClassroomModalP
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [showAdvanced, setShowAdvanced] = useState(false);
+    const { currentOrganizationId } = useOrganization();
 
     // Form State
     const [name, setName] = useState("");
@@ -28,7 +30,7 @@ export function CreateClassroomModal({ children, onSave }: CreateClassroomModalP
     const [floor, setFloor] = useState("");
 
     const handleSubmit = async () => {
-        if (!name) return;
+        if (!name || !currentOrganizationId) return;
         setLoading(true);
 
         // Simulating API
@@ -36,6 +38,7 @@ export function CreateClassroomModal({ children, onSave }: CreateClassroomModalP
 
         const newClassroom: Classroom = {
             id: Math.random().toString(36).substr(2, 9),
+            organizationId: currentOrganizationId,
             name,
             type,
             status: 'ACTIVE',
