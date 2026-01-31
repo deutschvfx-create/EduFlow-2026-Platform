@@ -158,6 +158,9 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
         );
     };
 
+    // Locked Axis State
+    const [lockedAxis, setLockedAxis] = useState<'vertical' | 'horizontal' | null>(null);
+
     const handleDragStart = (e: React.PointerEvent, lesson: Lesson, type: 'move' | 'resize-top' | 'resize-bottom') => {
         e.preventDefault();
         e.stopPropagation();
@@ -174,6 +177,7 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
 
         setIsDragging(true);
         setDragType(type);
+        setLockedAxis(null); // Reset lock
         setActiveLessonId(lesson.id);
         setDragDelta({ x: 0, y: 0 });
         setLiveDay(lesson.dayOfWeek);
@@ -198,51 +202,98 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
         const deltaX = e.clientX - initialGrab.x;
         const deltaY = e.clientY - initialGrab.y;
 
-        // 1. Direct Visual Follow (Transform)
-        setDragDelta({ x: deltaX, y: deltaY });
+        // 1. Deadzone & Intebt Detection (for 'move' only)
+        // Resize is always vertical-intent
+        if (dragType === 'move' && !lockedAxis) {
+            const dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            if (dist < 8) return; // Deadzone
 
-        // 2. Calculate "Snap-Shadow" for logical feedback (Preview Text)
-        // We use the grid columns' parent to measure accurately
-        const columnsContainer = document.getElementById('grid-columns-container');
-        if (!columnsContainer) return;
-        const columnsRect = columnsContainer.getBoundingClientRect();
-
-        const colWidth = columnsRect.width / 7;
-
-        // Absolute Column Detection
-        // Calculate which column index the mouse is currently hovering over
-        const relativeX = e.clientX - columnsRect.left;
-        const colIdx = Math.floor(relativeX / colWidth);
-        const newDayIdx = Math.max(0, Math.min(6, colIdx));
-
-        const currentLiveDay = DAYS[newDayIdx];
-
-        if (currentLiveDay !== liveDay) {
-            setLiveDay(currentLiveDay);
+            if (Math.abs(deltaY) > Math.abs(deltaX)) {
+                setLockedAxis('vertical');
+            } else {
+                setLockedAxis('horizontal');
+            }
+            return; // Skip first frame of lock
         }
 
-        const deltaMin = Math.round(deltaY / 5) * 5;
-        let newStartMin = initialGrab.startMin;
-        let newDuration = initialGrab.durationMin;
+        // 2. Direct Visual Follow (Transform) based on Locked Axis
+        let visualDeltaX = deltaX;
+        let visualDeltaY = deltaY;
 
-        if (dragType === 'move') {
-            newStartMin = Math.max(0, Math.min(15 * 60 - initialGrab.durationMin, initialGrab.startMin + deltaMin));
-        } else if (dragType === 'resize-top') {
-            newStartMin = Math.max(0, Math.min(initialGrab.startMin + initialGrab.durationMin - 15, initialGrab.startMin + deltaMin));
-            newDuration = (initialGrab.startMin + initialGrab.durationMin) - newStartMin;
-        } else if (dragType === 'resize-bottom') {
-            newDuration = Math.max(15, Math.min(15 * 60 - initialGrab.startMin, initialGrab.durationMin + deltaMin));
+        if (lockedAxis === 'vertical' || dragType !== 'move') {
+            visualDeltaX = 0; // Lock X visualization
+        } else if (lockedAxis === 'horizontal') {
+            visualDeltaY = 0; // Lock Y visualization
         }
 
-        const newStart = minutesToTime(newStartMin);
-        const newEnd = minutesToTime(newStartMin + newDuration);
+        setDragDelta({ x: visualDeltaX, y: visualDeltaY });
 
-        if (newStart !== liveTimeRange?.start || newEnd !== liveTimeRange?.end) {
-            setLiveTimeRange({ start: newStart, end: newEnd });
+        // 3. Logic based on Locked Axis
+
+        // --- Day Calculation (Horizontal Intent) ---
+        if (lockedAxis === 'horizontal' && dragType === 'move') {
+            // We use the grid columns' parent to measure accurately
+            const columnsContainer = document.getElementById('grid-columns-container');
+            if (columnsContainer) {
+                const columnsRect = columnsContainer.getBoundingClientRect();
+                const colWidth = columnsRect.width / 7;
+
+                // Absolute Column Detection
+                const relativeX = e.clientX - columnsRect.left;
+                const colIdx = Math.floor(relativeX / colWidth);
+                const newDayIdx = Math.max(0, Math.min(6, colIdx));
+                const currentLiveDay = DAYS[newDayIdx];
+
+                if (currentLiveDay !== liveDay) {
+                    setLiveDay(currentLiveDay);
+                }
+            }
+            // Keep time stable to original
+            if (initialGrab.lesson.startTime !== liveTimeRange?.start || initialGrab.lesson.endTime !== liveTimeRange?.end) {
+                setLiveTimeRange({ start: initialGrab.lesson.startTime, end: initialGrab.lesson.endTime });
+            }
         }
+        // Force Original Day if Vertical
+        else if (liveDay !== initialGrab.lesson.dayOfWeek) {
+            setLiveDay(initialGrab.lesson.dayOfWeek);
+        }
+
+
+        // --- Time Calculation (Vertical Intent) ---
+        if (lockedAxis === 'vertical' || dragType !== 'move') {
+            const deltaMin = Math.round(deltaY / 5) * 5;
+            let newStartMin = initialGrab.startMin;
+            let newDuration = initialGrab.durationMin;
+
+            if (dragType === 'move') {
+                newStartMin = Math.max(0, Math.min(15 * 60 - initialGrab.durationMin, initialGrab.startMin + deltaMin));
+            } else if (dragType === 'resize-top') {
+                newStartMin = Math.max(0, Math.min(initialGrab.startMin + initialGrab.durationMin - 15, initialGrab.startMin + deltaMin));
+                newDuration = (initialGrab.startMin + initialGrab.durationMin) - newStartMin;
+            } else if (dragType === 'resize-bottom') {
+                newDuration = Math.max(15, Math.min(15 * 60 - initialGrab.startMin, initialGrab.durationMin + deltaMin));
+            }
+
+            const newStart = minutesToTime(newStartMin);
+            const newEnd = minutesToTime(newStartMin + newDuration);
+
+            if (newStart !== liveTimeRange?.start || newEnd !== liveTimeRange?.end) {
+                setLiveTimeRange({ start: newStart, end: newEnd });
+            }
+        }
+
 
         // Quick Conflict Check for Visual Feedback (Red Ring)
-        const conflict = checkConflict(activeLessonId, currentLiveDay, newStart, newEnd, initialGrab.lesson.teacherId);
+        // Note: We check conflict on whatever 'liveDay' and 'liveTimeRange' represent currently
+        // Quick Conflict Check for Visual Feedback (Red Ring)
+        // Optimization: Use locally computed values if we just updated them, otherwise state might lag 1 frame
+
+        // Use the values we just calculated or fell back to
+        const activeDay = (lockedAxis === 'vertical' || dragType !== 'move') ? initialGrab.lesson.dayOfWeek : (liveDay || initialGrab.lesson.dayOfWeek);
+        const activeStart = (lockedAxis === 'horizontal' && dragType === 'move') ? initialGrab.lesson.startTime : (liveTimeRange?.start || initialGrab.lesson.startTime);
+        const activeEnd = (lockedAxis === 'horizontal' && dragType === 'move') ? initialGrab.lesson.endTime : (liveTimeRange?.end || initialGrab.lesson.endTime);
+
+        const conflict = checkConflict(activeLessonId, activeDay, activeStart, activeEnd, initialGrab.lesson.teacherId);
         setConflictError(conflict ? "Conflict" : null);
     };
 
