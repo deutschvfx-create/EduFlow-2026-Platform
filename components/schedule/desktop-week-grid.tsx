@@ -49,15 +49,6 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
     const [localLessons, setLocalLessons] = useState<Lesson[]>(propsLessons);
     const lastUpdateRef = useRef<number>(0);
 
-    // Sync with props if they change, but NOT if we just updated locally (avoid "snapback")
-    useEffect(() => {
-        const now = Date.now();
-        if (now - lastUpdateRef.current > 2000 && !isDragging) {
-            console.log("[Schedule] Syncing local state with props");
-            setLocalLessons(propsLessons);
-        }
-    }, [propsLessons, isDragging]);
-
     // Interaction State
     const [editorOpen, setEditorOpen] = useState(false);
     const [selectedSlot, setSelectedSlot] = useState<{ day: DayOfWeek, time: string } | null>(null);
@@ -74,6 +65,15 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
     const [isDragging, setIsDragging] = useState(false);
     const [dragType, setDragType] = useState<'move' | 'resize-top' | 'resize-bottom' | null>(null);
     const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
+
+    // Sync with props if they change, but NOT if we just updated locally (avoid "snapback")
+    useEffect(() => {
+        const now = Date.now();
+        if (now - lastUpdateRef.current > 2000 && !isDragging) {
+            console.log("[Schedule] Syncing local state with props");
+            setLocalLessons(propsLessons);
+        }
+    }, [propsLessons, isDragging]);
 
     // Smooth Follow State
     const [dragDelta, setDragDelta] = useState({ x: 0, y: 0 });
@@ -109,11 +109,13 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
 
     const handleQuickSave = () => {
         if (!formData.groupId || !formData.teacherId || !formData.courseId) return;
+        const teacher = MOCK_TEACHERS.find(t => t.id === formData.teacherId);
         const newLesson: Lesson = {
             id: `temp-${Date.now()}`,
             groupId: formData.groupId,
             groupName: MOCK_GROUPS_FULL.find(g => g.id === formData.groupId)?.name || "New Group",
             teacherId: formData.teacherId,
+            teacherName: teacher ? `${teacher.firstName} ${teacher.lastName}` : "Unknown Teacher",
             courseId: formData.courseId,
             courseName: MOCK_COURSES.find(c => c.id === formData.courseId)?.name || "New Course",
             dayOfWeek: selectedSlot?.day || 'MON',

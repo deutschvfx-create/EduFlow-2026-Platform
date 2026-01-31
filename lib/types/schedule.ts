@@ -1,4 +1,4 @@
-export type LessonStatus = "PLANNED" | "CANCELLED";
+export type LessonStatus = "PLANNED" | "CANCELLED" | "SCHEDULED";
 
 export type DayOfWeek = "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT" | "SUN";
 
