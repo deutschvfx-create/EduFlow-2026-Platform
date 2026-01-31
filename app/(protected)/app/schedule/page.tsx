@@ -14,6 +14,7 @@ import { Lesson, DayOfWeek } from "@/lib/types/schedule";
 import { ModuleGuard } from "@/components/system/module-guard";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DesktopWeekGrid } from "@/components/schedule/desktop-week-grid";
+import { useOrganization } from "@/hooks/use-organization";
 
 const DAYS: DayOfWeek[] = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
@@ -29,6 +30,7 @@ const DayLabels: Record<DayOfWeek, string> = {
 
 export default function SchedulePage() {
     const { userData } = useAuth();
+    const { currentOrganizationId } = useOrganization();
     const canEdit = userData?.role === 'OWNER' || userData?.role === 'DIRECTOR';
     const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
 
@@ -121,6 +123,7 @@ export default function SchedulePage() {
 
         const newLesson: Lesson = {
             id,
+            organizationId: currentOrganizationId!,
             status: 'PLANNED',
             createdAt: new Date().toISOString(),
             // Mapped Data

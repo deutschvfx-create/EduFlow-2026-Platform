@@ -8,6 +8,7 @@ import { PageTransition } from "@/components/system/page-transition";
 import { HelpAssistant } from "@/components/help/help-assistant";
 import { MobileLayout } from "@/components/layouts/mobile-layout";
 import { DesktopLayout } from "@/components/layouts/desktop-layout";
+import { OrganizationProvider } from "@/hooks/use-organization";
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
     // Fetch modules config on client side
@@ -17,28 +18,30 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
     });
 
     return (
-        <ConnectivityProvider>
-            {/* Mobile & Tablet Layout (< 1025px) */}
-            <div className="laptop:hidden">
-                <MobileLayout>
-                    <PageTransition>
-                        {children}
-                    </PageTransition>
-                </MobileLayout>
-            </div>
+        <OrganizationProvider>
+            <ConnectivityProvider>
+                {/* Mobile & Tablet Layout (< 1025px) */}
+                <div className="laptop:hidden">
+                    <MobileLayout>
+                        <PageTransition>
+                            {children}
+                        </PageTransition>
+                    </MobileLayout>
+                </div>
 
-            {/* Laptop & Desktop Layout (≥ 1025px) */}
-            <div className="hidden laptop:block">
-                <DesktopLayout modulesConfig={modulesConfig}>
-                    <PageTransition>
-                        {children}
-                    </PageTransition>
-                </DesktopLayout>
-            </div>
+                {/* Laptop & Desktop Layout (≥ 1025px) */}
+                <div className="hidden laptop:block">
+                    <DesktopLayout modulesConfig={modulesConfig}>
+                        <PageTransition>
+                            {children}
+                        </PageTransition>
+                    </DesktopLayout>
+                </div>
 
-            {/* Global components */}
-            <ConnectivityHub />
-            <HelpAssistant />
-        </ConnectivityProvider>
+                {/* Global components */}
+                <ConnectivityHub />
+                <HelpAssistant />
+            </ConnectivityProvider>
+        </OrganizationProvider>
     );
 }

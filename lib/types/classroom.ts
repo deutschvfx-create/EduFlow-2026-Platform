@@ -2,6 +2,7 @@ export type ClassroomType = 'CLASSROOM' | 'LAB' | 'ONLINE' | 'OTHER';
 
 export interface Classroom {
     id: string;
+    organizationId: string; // Multi-tenant: classroom belongs to organization
     name: string;
     type: ClassroomType;
     status: 'ACTIVE' | 'DISABLED';

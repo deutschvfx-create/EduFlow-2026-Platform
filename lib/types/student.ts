@@ -9,6 +9,7 @@ export type StudentGroup = {
 
 export type Student = {
     id: string;
+    organizationId: string; // Multi-tenant: student belongs to organization
     firstName: string;
     lastName: string;
     birthDate: string; // ISO format: YYYY-MM-DD

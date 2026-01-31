@@ -19,6 +19,7 @@ export type TeacherGroup = {
 
 export type Teacher = {
     id: string;
+    organizationId: string; // Multi-tenant: teacher belongs to organization
     firstName: string;
     lastName: string;
     birthDate?: string; // YYYY-MM-DD

@@ -2,6 +2,7 @@ export type GroupStatus = "ACTIVE" | "INACTIVE" | "ARCHIVED";
 
 export type Group = {
     id: string;
+    organizationId: string; // Multi-tenant: group belongs to organization
     name: string;
     code: string;
 

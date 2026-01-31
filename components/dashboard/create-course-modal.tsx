@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BookOpen } from "lucide-react";
 import { generateId } from "@/lib/utils";
+import { useOrganization } from "@/hooks/use-organization";
 
 interface CreateCourseModalProps {
     onSuccess: () => void;
@@ -17,13 +18,15 @@ interface CreateCourseModalProps {
 export function CreateCourseModal({ onSuccess }: CreateCourseModalProps) {
     const [open, setOpen] = useState(false);
     const [name, setName] = useState('');
+    const { currentOrganizationId } = useOrganization();
 
     const handleSubmit = () => {
-        if (!name) return;
+        if (!name || !currentOrganizationId) return;
 
         import("@/lib/data/courses.repo").then(({ coursesRepo }) => {
             coursesRepo.add({
                 id: generateId(),
+                organizationId: currentOrganizationId,
                 name,
                 code: 'NEW',
                 facultyId: 'unknown',
@@ -34,7 +37,6 @@ export function CreateCourseModal({ onSuccess }: CreateCourseModalProps) {
                 departmentCode: 'UNK',
                 status: 'ACTIVE',
                 level: 'A1',
-                description: '',
                 teacherIds: [],
                 teacherNames: [],
                 groupIds: [],

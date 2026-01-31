@@ -1,9 +1,12 @@
 import { Classroom } from "@/lib/types/classroom";
 
+const DEFAULT_ORG_ID = "org_default";
+
 export const MOCK_CLASSROOMS: Classroom[] = [
     // Main Building - Ground Floor
     {
         id: "cls-1",
+        organizationId: DEFAULT_ORG_ID,
         name: "101",
         type: "CLASSROOM",
         status: "ACTIVE",
@@ -14,6 +17,7 @@ export const MOCK_CLASSROOMS: Classroom[] = [
     },
     {
         id: "cls-2",
+        organizationId: DEFAULT_ORG_ID,
         name: "102",
         type: "LAB",
         status: "ACTIVE",
@@ -26,6 +30,7 @@ export const MOCK_CLASSROOMS: Classroom[] = [
     // Main Building - Second Floor
     {
         id: "cls-3",
+        organizationId: DEFAULT_ORG_ID,
         name: "201",
         type: "CLASSROOM",
         status: "ACTIVE",
@@ -36,6 +41,7 @@ export const MOCK_CLASSROOMS: Classroom[] = [
     },
     {
         id: "cls-4",
+        organizationId: DEFAULT_ORG_ID,
         name: "202",
         type: "CLASSROOM",
         status: "ACTIVE",
@@ -46,6 +52,7 @@ export const MOCK_CLASSROOMS: Classroom[] = [
     },
     {
         id: "cls-5",
+        organizationId: DEFAULT_ORG_ID,
         name: "215",
         type: "LAB",
         status: "ACTIVE",
@@ -58,6 +65,7 @@ export const MOCK_CLASSROOMS: Classroom[] = [
     // Building B
     {
         id: "cls-6",
+        organizationId: DEFAULT_ORG_ID,
         name: "B-101",
         type: "CLASSROOM",
         status: "ACTIVE",
@@ -68,6 +76,7 @@ export const MOCK_CLASSROOMS: Classroom[] = [
     },
     {
         id: "cls-7",
+        organizationId: DEFAULT_ORG_ID,
         name: "B-201",
         type: "CLASSROOM",
         status: "ACTIVE",
@@ -79,6 +88,7 @@ export const MOCK_CLASSROOMS: Classroom[] = [
     // Online
     {
         id: "cls-8",
+        organizationId: DEFAULT_ORG_ID,
         name: "Zoom #1",
         type: "ONLINE",
         status: "ACTIVE",
@@ -88,6 +98,7 @@ export const MOCK_CLASSROOMS: Classroom[] = [
     },
     {
         id: "cls-9",
+        organizationId: DEFAULT_ORG_ID,
         name: "Zoom #2",
         type: "ONLINE",
         status: "ACTIVE",
@@ -97,6 +108,7 @@ export const MOCK_CLASSROOMS: Classroom[] = [
     // Small school example (no building/floor)
     {
         id: "cls-10",
+        organizationId: DEFAULT_ORG_ID,
         name: "Кабинет 1",
         type: "CLASSROOM",
         status: "ACTIVE",
@@ -105,6 +117,7 @@ export const MOCK_CLASSROOMS: Classroom[] = [
     },
     {
         id: "cls-11",
+        organizationId: DEFAULT_ORG_ID,
         name: "Кабинет 2",
         type: "CLASSROOM",
         status: "ACTIVE",

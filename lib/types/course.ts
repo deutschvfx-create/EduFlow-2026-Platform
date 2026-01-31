@@ -2,6 +2,7 @@ export type CourseStatus = "ACTIVE" | "INACTIVE" | "ARCHIVED";
 
 export type Course = {
     id: string;
+    organizationId: string; // Multi-tenant: course belongs to organization
     name: string;
     code: string;
 

@@ -4,6 +4,7 @@ export type DayOfWeek = "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT" | "SUN";
 
 export type Lesson = {
     id: string;
+    organizationId: string; // Multi-tenant: lesson belongs to organization
     groupId: string;
     groupName: string;
 
