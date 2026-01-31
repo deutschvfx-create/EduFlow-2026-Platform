@@ -54,7 +54,7 @@ export default function DepartmentDetailsPage() {
                         <span className="font-mono bg-zinc-800 px-2 rounded text-zinc-300">{department.code}</span>
                         <span className="flex items-center gap-2">
                             <Building2 className="h-3 w-3" />
-                            {department.facultyName} <Badge variant="secondary" className="text-[10px] h-4 py-0">{department.facultyCode}</Badge>
+                            Факультет (ID): {department.facultyId}
                         </span>
                     </div>
                 </div>
@@ -130,8 +130,8 @@ export default function DepartmentDetailsPage() {
                             <div className="text-zinc-300 text-sm leading-relaxed">{department.description || 'Описание отсутствует'}</div>
                         </div>
                         <div className="space-y-1">
-                            <div className="text-xs text-zinc-500 uppercase font-semibold">Руководитель (Зав. кафедрой)</div>
-                            <div className="text-zinc-300 font-medium">{department.headTeacherName || 'Не назначен'}</div>
+                            <div className="text-xs text-zinc-500 uppercase font-semibold">Руководитель (ID)</div>
+                            <div className="text-zinc-300 font-medium">{department.headTeacherId || 'Не назначен'}</div>
                         </div>
                         <div className="space-y-1">
                             <div className="text-xs text-zinc-500 uppercase font-semibold">Дата создания</div>
