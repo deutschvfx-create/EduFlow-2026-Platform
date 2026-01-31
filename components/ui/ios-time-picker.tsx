@@ -88,53 +88,89 @@ export function IOSStyleTimePicker({
         <div className={cn("flex bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl w-48 h-40 select-none relative group", className)}>
             <div className="absolute top-1/2 left-0 right-0 h-10 -mt-5 bg-white/5 pointer-events-none z-10 border-y border-white/10" />
 
-            <div
-                ref={hourRef}
-                className="flex-1 overflow-y-auto snap-y snap-mandatory relative scroll-smooth cursor-grab active:cursor-grabbing [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-                onMouseDown={(e) => handleMouseDown(e, hourRef)}
-                onMouseMove={(e) => handleMouseMove(e, hourRef)}
-                onMouseUp={() => handleMouseUp(hourRef)}
-                onMouseLeave={() => handleMouseLeave(hourRef)}
-                style={{ paddingBlock: 'calc(50% - 20px)' }} // Center 40px item
-            >
-                {hours.map((h) => (
-                    <div
-                        key={h}
-                        className={cn(
-                            "h-10 flex items-center justify-center snap-center text-sm transition-all duration-200",
-                            selectedHour === h ? "text-white font-bold text-lg scale-110" : "text-zinc-600 hover:text-zinc-400"
-                        )}
-                        onClick={() => handleHourClick(h)}
-                    >
-                        {h.toString().padStart(2, '0')}
-                    </div>
-                ))}
-            </div>
+    // Scroll Handlers
+            const handleScroll = (e: React.UIEvent<HTMLDivElement>, type: 'hour' | 'minute') => {
+        const container = e.currentTarget;
+                const itemHeight = 40;
+                const scrollTop = container.scrollTop;
+                const index = Math.round(scrollTop / itemHeight);
 
-            <div className="flex items-center justify-center text-zinc-600 font-bold bg-zinc-900/50 z-20 pb-0.5">:</div>
+                if (type === 'hour') {
+            const newHour = minHour + index;
+                // Bound checks
+                const clampedHour = Math.max(minHour, Math.min(maxHour, newHour));
+                if (clampedHour !== selectedHour) {
+                    setSelectedHour(clampedHour);
+                onChange(`${clampedHour.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`);
+            }
+        } else {
+            const newMinute = index * minuteStep;
+                // Bound checks (minutes are 0..59 usually but based on array length)
+                const maxMin = (Math.floor(60 / minuteStep) - 1) * minuteStep;
+                // Actually, simplest is to access the array safely
+                const safeIndex = Math.max(0, Math.min(minutes.length - 1, index));
+                const safeMinute = minutes[safeIndex];
 
-            <div
-                ref={minuteRef}
-                className="flex-1 overflow-y-auto snap-y snap-mandatory relative scroll-smooth cursor-grab active:cursor-grabbing [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-                onMouseDown={(e) => handleMouseDown(e, minuteRef)}
-                onMouseMove={(e) => handleMouseMove(e, minuteRef)}
-                onMouseUp={() => handleMouseUp(minuteRef)}
-                onMouseLeave={() => handleMouseLeave(minuteRef)}
-                style={{ paddingBlock: 'calc(50% - 20px)' }}
-            >
-                {minutes.map((m) => (
+                if (safeMinute !== selectedMinute) {
+                    setSelectedMinute(safeMinute);
+                onChange(`${selectedHour.toString().padStart(2, '0')}:${safeMinute.toString().padStart(2, '0')}`);
+            }
+        }
+    };
+
+                return (
+                <div className={cn("flex bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl w-48 h-40 select-none relative group", className)}>
+                    <div className="absolute top-1/2 left-0 right-0 h-10 -mt-5 bg-white/5 pointer-events-none z-10 border-y border-white/10" />
+
                     <div
-                        key={m}
-                        className={cn(
-                            "h-10 flex items-center justify-center snap-center text-sm transition-all duration-200",
-                            selectedMinute === m ? "text-white font-bold text-lg scale-110" : "text-zinc-600 hover:text-zinc-400"
-                        )}
-                        onClick={() => handleMinuteClick(m)}
+                        ref={hourRef}
+                        className="flex-1 overflow-y-auto snap-y snap-mandatory relative scroll-smooth cursor-grab active:cursor-grabbing [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                        onMouseDown={(e) => handleMouseDown(e, hourRef)}
+                        onMouseMove={(e) => handleMouseMove(e, hourRef)}
+                        onMouseUp={() => handleMouseUp(hourRef)}
+                        onMouseLeave={() => handleMouseLeave(hourRef)}
+                        onScroll={(e) => handleScroll(e, 'hour')}
+                        style={{ paddingBlock: 'calc(50% - 20px)' }} // Center 40px item
                     >
-                        {m.toString().padStart(2, '0')}
+                        {hours.map((h) => (
+                            <div
+                                key={h}
+                                className={cn(
+                                    "h-10 flex items-center justify-center snap-center text-sm transition-all duration-200",
+                                    selectedHour === h ? "text-white font-bold text-lg scale-110" : "text-zinc-600 hover:text-zinc-400"
+                                )}
+                                onClick={() => handleHourClick(h)}
+                            >
+                                {h.toString().padStart(2, '0')}
+                            </div>
+                        ))}
                     </div>
-                ))}
-            </div>
-        </div>
-    );
+
+                    <div className="flex items-center justify-center text-zinc-600 font-bold bg-zinc-900/50 z-20 pb-0.5">:</div>
+
+                    <div
+                        ref={minuteRef}
+                        className="flex-1 overflow-y-auto snap-y snap-mandatory relative scroll-smooth cursor-grab active:cursor-grabbing [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                        onMouseDown={(e) => handleMouseDown(e, minuteRef)}
+                        onMouseMove={(e) => handleMouseMove(e, minuteRef)}
+                        onMouseUp={() => handleMouseUp(minuteRef)}
+                        onMouseLeave={() => handleMouseLeave(minuteRef)}
+                        onScroll={(e) => handleScroll(e, 'minute')}
+                        style={{ paddingBlock: 'calc(50% - 20px)' }}
+                    >
+                        {minutes.map((m) => (
+                            <div
+                                key={m}
+                                className={cn(
+                                    "h-10 flex items-center justify-center snap-center text-sm transition-all duration-200",
+                                    selectedMinute === m ? "text-white font-bold text-lg scale-110" : "text-zinc-600 hover:text-zinc-400"
+                                )}
+                                onClick={() => handleMinuteClick(m)}
+                            >
+                                {m.toString().padStart(2, '0')}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                );
 }
