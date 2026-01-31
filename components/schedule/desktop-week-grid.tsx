@@ -14,12 +14,14 @@ import { MOCK_GROUPS_FULL } from "@/lib/mock/groups";
 import { MOCK_TEACHERS } from "@/lib/mock/teachers";
 import { MOCK_COURSES } from "@/lib/mock/courses";
 import { IOSStyleTimePicker } from "@/components/ui/ios-time-picker";
+import { useEffect } from "react";
 
 interface DesktopWeekGridProps {
     lessons: Lesson[];
     currentDate: Date;
     onLessonClick: (lesson: Lesson) => void;
     onLessonAdd?: (lesson: any) => void;
+    onLessonUpdate?: (lesson: Lesson) => void;
 }
 
 const HOURS = Array.from({ length: 15 }, (_, i) => i + 8); // 08:00 to 22:00
@@ -40,9 +42,15 @@ const getTeacherColor = (teacherId: string) => {
     return TEACHER_COLORS[hash % TEACHER_COLORS.length];
 };
 
-export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonAdd }: DesktopWeekGridProps) {
+export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonClick, onLessonAdd, onLessonUpdate }: DesktopWeekGridProps) {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
     const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+
+    // Local State to allow immediate "Stickiness"
+    const [localLessons, setLocalLessons] = useState<Lesson[]>(propsLessons);
+
+    // Sync with props if they change (e.g. from server)
+    useEffect(() => { setLocalLessons(propsLessons); }, [propsLessons]);
 
     // Interaction State
     const [editorOpen, setEditorOpen] = useState(false);
@@ -98,15 +106,21 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
 
     const handleQuickSave = () => {
         if (!formData.groupId || !formData.teacherId || !formData.courseId) return;
-        const newLesson = {
+        const newLesson: Lesson = {
+            id: `temp-${Date.now()}`,
             groupId: formData.groupId,
+            groupName: MOCK_GROUPS_FULL.find(g => g.id === formData.groupId)?.name || "New Group",
             teacherId: formData.teacherId,
             courseId: formData.courseId,
-            dayOfWeek: selectedSlot?.day,
+            courseName: MOCK_COURSES.find(c => c.id === formData.courseId)?.name || "New Course",
+            dayOfWeek: selectedSlot?.day || 'MON',
             startTime: formData.startTime,
             endTime: formData.endTime,
-            room: "101"
+            room: "101",
+            status: 'SCHEDULED'
         };
+
+        setLocalLessons(prev => [...prev, newLesson]);
         if (onLessonAdd) onLessonAdd(newLesson);
         setEditorOpen(false);
     };
@@ -128,7 +142,7 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
     };
 
     const checkConflict = (lessonId: string, day: DayOfWeek, start: string, end: string, teacherId: string) => {
-        return lessons.some(l =>
+        return localLessons.some(l =>
             l.id !== lessonId &&
             l.status !== 'CANCELLED' &&
             l.dayOfWeek === day &&
@@ -154,7 +168,7 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
         setInitialGrab({
             x: e.clientX,
             y: e.clientY,
-            dayIdx: DAYS.indexOf(lesson.dayOfWeek),
+            dayIdx: DAYS.indexOf(lesson.dayOfWeek), // This MUST be correct from the start
             startMin,
             durationMin: endMin - startMin,
             lesson
@@ -174,11 +188,12 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
         setDragDelta({ x: deltaX, y: deltaY });
 
         // 2. Calculate "Snap-Shadow" for logical feedback (Preview Text)
-        const gridContainer = document.getElementById('schedule-grid-container');
-        if (!gridContainer) return;
-        const gridRect = gridContainer.getBoundingClientRect();
+        // We use the grid columns' parent to measure accurately
+        const columnsContainer = document.getElementById('grid-columns-container');
+        if (!columnsContainer) return;
+        const columnsRect = columnsContainer.getBoundingClientRect();
 
-        const colWidth = (gridRect.width - 56) / 7;
+        const colWidth = columnsRect.width / 7;
         const colDelta = Math.round(deltaX / colWidth);
         const newDayIdx = Math.max(0, Math.min(6, initialGrab.dayIdx + colDelta));
         const currentLiveDay = DAYS[newDayIdx];
@@ -215,10 +230,21 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
             const conflict = checkConflict(activeLessonId, liveDay, liveTimeRange.start, liveTimeRange.end, initialGrab.lesson.teacherId);
 
             if (!conflict) {
-                console.log("Committed New Time:", liveTimeRange.start, "—", liveTimeRange.end, "on", liveDay);
-                // In production this would call an API. For now we update visual state.
+                console.log(`[Interaction] Committing ${activeLessonId} to ${liveDay} at ${liveTimeRange.start}-${liveTimeRange.end}`);
+
+                const updatedLesson = {
+                    ...initialGrab.lesson,
+                    dayOfWeek: liveDay,
+                    startTime: liveTimeRange.start,
+                    endTime: liveTimeRange.end
+                };
+
+                // Apply to local state immediately
+                setLocalLessons(prev => prev.map(l => l.id === activeLessonId ? updatedLesson : l));
+
+                if (onLessonUpdate) onLessonUpdate(updatedLesson);
             } else {
-                console.log("Reverting due to conflict");
+                console.log("[Interaction] Reverting due to conflict");
             }
         }
         setIsDragging(false);
@@ -322,7 +348,7 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
                 </div>
 
                 {/* Columns */}
-                <div className="flex-1 grid grid-cols-7 divide-x divide-zinc-800 relative bg-zinc-950/80">
+                <div id="grid-columns-container" className="flex-1 grid grid-cols-7 divide-x divide-zinc-800 relative bg-zinc-950/80">
                     {/* Background Grid Lines */}
                     <div className="absolute inset-0 z-0 flex flex-col pointer-events-none">
                         {HOURS.map(hour => (
@@ -331,7 +357,7 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
                     </div>
 
                     {DAYS.map((day, colIndex) => {
-                        const dayLessons = lessons.filter(l => {
+                        const dayLessons = localLessons.filter(l => {
                             const isBeingManipulated = l.id === activeLessonId;
                             if (isBeingManipulated) {
                                 return liveDay === day;
@@ -436,6 +462,7 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
                                                 width: (style as any).width,
                                                 left: (style as any).left,
                                                 zIndex: (style as any).zIndex,
+                                                // Disable transitions while dragging for zero-lag follow
                                                 transition: isDragging && (style as any).isBeingManipulated ? 'none' : 'all 0.3s ease-out',
                                                 transform: isDragging && (style as any).isBeingManipulated && dragType === 'move' ? `translate(${dragDelta.x}px, ${dragDelta.y}px)` : undefined,
                                                 touchAction: 'none' // Crucial for pointer events
