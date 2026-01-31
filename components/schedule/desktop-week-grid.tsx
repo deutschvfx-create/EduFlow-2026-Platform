@@ -25,13 +25,28 @@ interface DesktopWeekGridProps {
 const HOURS = Array.from({ length: 15 }, (_, i) => i + 8); // 08:00 to 22:00
 const DAYS: DayOfWeek[] = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
+const TEACHER_COLORS = [
+    { bg: "bg-blue-900/80", border: "border-blue-700/50", text: "text-blue-100", ghost: "border-blue-400/50 bg-blue-400/10" },
+    { bg: "bg-indigo-900/80", border: "border-indigo-700/50", text: "text-indigo-100", ghost: "border-indigo-400/50 bg-indigo-400/10" },
+    { bg: "bg-emerald-900/80", border: "border-emerald-700/50", text: "text-emerald-100", ghost: "border-emerald-400/50 bg-emerald-400/10" },
+    { bg: "bg-rose-900/80", border: "border-rose-700/50", text: "text-rose-100", ghost: "border-rose-400/50 bg-rose-400/10" },
+    { bg: "bg-amber-900/80", border: "border-amber-700/50", text: "text-amber-100", ghost: "border-amber-400/50 bg-amber-400/10" },
+    { bg: "bg-violet-900/80", border: "border-violet-700/50", text: "text-violet-100", ghost: "border-violet-400/50 bg-violet-400/10" },
+    { bg: "bg-teal-900/80", border: "border-teal-700/50", text: "text-teal-100", ghost: "border-teal-400/50 bg-teal-400/10" },
+];
+
+const getTeacherColor = (teacherId: string) => {
+    const hash = teacherId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return TEACHER_COLORS[hash % TEACHER_COLORS.length];
+};
+
 export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonAdd }: DesktopWeekGridProps) {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
     const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
     // Interaction State
     const [editorOpen, setEditorOpen] = useState(false);
-    const [selectedSlot, setSelectedSlot] = useState<{ day: DayOfWeek, time: string } | null>(null);    // Form State for Inline Editor
+    const [selectedSlot, setSelectedSlot] = useState<{ day: DayOfWeek, time: string } | null>(null);
     const [formData, setFormData] = useState({
         groupId: "",
         courseId: "",
@@ -43,7 +58,7 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
 
     // Drag & Resize State
     const [isDragging, setIsDragging] = useState(false);
-    const [dragType, setDragType] = useState<'move' | 'resize' | null>(null);
+    const [dragType, setDragType] = useState<'move' | 'resize-top' | 'resize-bottom' | null>(null);
     const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
     const [dragPreview, setDragPreview] = useState<{
         day: DayOfWeek,
@@ -51,18 +66,17 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
         endTime: string,
         top: number,
         height: number,
-        conflict?: string
+        conflict?: string,
+        color: any
     } | null>(null);
 
-    // Initial Drag State
     const [initialGrab, setInitialGrab] = useState<{ x: number, y: number, dayIdx: number, startMin: number, durationMin: number } | null>(null);
-
 
     // --- Creation Handler ---
     const handleSlotClick = (day: DayOfWeek, hour: number) => {
-        if (isDragging) return; // Ignore if dropping
+        if (isDragging) return;
         const time = `${hour.toString().padStart(2, '0')}:00`;
-        const endTime = `${(hour + 1).toString().padStart(2, '0')}:30`; // Default +1.5h
+        const endTime = `${(hour + 1).toString().padStart(2, '0')}:30`;
         setSelectedSlot({ day, time });
         setFormData({
             groupId: "",
@@ -82,8 +96,8 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
             teacherId: formData.teacherId,
             courseId: formData.courseId,
             dayOfWeek: selectedSlot?.day,
-            startTime: formData.startTime, // Use user selected time
-            endTime: formData.endTime,     // Use user selected time
+            startTime: formData.startTime,
+            endTime: formData.endTime,
             room: "101"
         };
         if (onLessonAdd) onLessonAdd(newLesson);
@@ -91,22 +105,27 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
     };
 
     // --- Drag & Drop Logic ---
-
-    // Convert Y px to Minutes from 08:00
-    // Grid height = 15 hours * 60px = 900px
-    const pxToMinutes = (px: number) => Math.round((px / 60) * 60); // 60px = 60min
     const minutesToTime = (mins: number) => {
-        const totalMin = mins + (8 * 60); // Start at 8:00
+        const totalMin = Math.max(0, Math.min(15 * 60, mins)) + (8 * 60);
         const h = Math.floor(totalMin / 60);
         const m = totalMin % 60;
-        // Snap to 15 min
-        const snappedM = Math.round(m / 15) * 15;
+        const snappedM = Math.round(m / 5) * 5; // Snap to 5 min for precision
         const finalH = h + Math.floor(snappedM / 60);
         const finalM = snappedM % 60;
-        return `${finalH.toString().padStart(2, '0')}:${finalM.toString().padStart(2, '0')}`;
+        return `${Math.min(22, finalH).toString().padStart(2, '0')}:${finalM.toString().padStart(2, '0')}`;
     };
 
-    const handleDragStart = (e: React.MouseEvent, lesson: Lesson, type: 'move' | 'resize') => {
+    const checkConflict = (lessonId: string, day: DayOfWeek, start: string, end: string, teacherId: string) => {
+        return lessons.some(l =>
+            l.id !== lessonId &&
+            l.status !== 'CANCELLED' &&
+            l.dayOfWeek === day &&
+            l.teacherId === teacherId &&
+            ((start >= l.startTime && start < l.endTime) || (end > l.startTime && end <= l.endTime) || (start <= l.startTime && end >= l.endTime))
+        );
+    };
+
+    const handleDragStart = (e: React.MouseEvent, lesson: Lesson, type: 'move' | 'resize-top' | 'resize-bottom') => {
         e.preventDefault();
         e.stopPropagation();
 
@@ -119,13 +138,10 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
         setDragType(type);
         setActiveLessonId(lesson.id);
 
-        // Find current day index
-        const dayIdx = DAYS.indexOf(lesson.dayOfWeek);
-
         setInitialGrab({
             x: e.clientX,
             y: e.clientY,
-            dayIdx,
+            dayIdx: DAYS.indexOf(lesson.dayOfWeek),
             startMin,
             durationMin: endMin - startMin
         });
@@ -134,69 +150,63 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
     const handleMouseMove = (e: React.MouseEvent) => {
         if (!isDragging || !initialGrab || !activeLessonId) return;
 
-        const gridRect = e.currentTarget.getBoundingClientRect(); // Grid container
-        // Calculate Relative Mouse Pos
-        // We need column width to know day.
-        const colWidth = gridRect.width / 7; // Time col is separate? No, in this component grid-cols-7 is for content. But there's a time col.
-        // Wait, the structure is: [TimeCol] [GridCols7]
-        // We should attach listener to the [GridCols7] container ideally or calculate offset.
+        const gridContainer = document.getElementById('schedule-grid-container');
+        if (!gridContainer) return;
+        const gridRect = gridContainer.getBoundingClientRect();
 
-        // Simplified approach: Track Delta
         const deltaY = e.clientY - initialGrab.y;
         const deltaX = e.clientX - initialGrab.x;
 
-        // 1. Calculate New Day (Only for Move)
-        let newDayIdx = initialGrab.dayIdx;
-        if (dragType === 'move') {
-            // Approximate column shift (assuming ~150px col width, better to measure)
-            // We can use visual approximation or just rely on mouse being over a specific column if we used distinct event handlers.
-            // For simplicity, let's assume standard width derived from drag.
-            // Actually, simplest is: snap X movement to colWidth
-            // Let's just update Time for now, Day dragging requires accurate Col hit testing.
+        // Calculate New Day
+        const colWidth = (gridRect.width - 56) / 7; // Subtract TimeCol width
+        const colDelta = Math.round(deltaX / colWidth);
+        let newDayIdx = Math.max(0, Math.min(6, initialGrab.dayIdx + colDelta));
 
-            // ... Skipping Day change for MVP stability, focusing on Time ...
-            // Update: Let's try to infer Day from cursor position if possible, but requires ref ref.
-        }
-
-        // 2. Calculate New Time
-        // 60px = 60min => 1px = 1min
-        const deltaMin = Math.round(deltaY / 60 * 60 / 15) * 15; // Snap to 15m steps
+        // Calculate New Time (1px = 1min because 60px = 60min)
+        const deltaMin = Math.round(deltaY / 5) * 5; // Snap to 5m increments
 
         let newStartMin = initialGrab.startMin;
         let newDuration = initialGrab.durationMin;
 
         if (dragType === 'move') {
-            newStartMin = Math.max(0, initialGrab.startMin + deltaMin);
-        } else {
-            // Resize: Start stays, duration changes
-            newDuration = Math.max(15, initialGrab.durationMin + deltaMin);
+            newStartMin = Math.max(0, Math.min(15 * 60 - initialGrab.durationMin, initialGrab.startMin + deltaMin));
+        } else if (dragType === 'resize-top') {
+            const potentialStart = Math.max(0, initialGrab.startMin + deltaMin);
+            const potentialEnd = initialGrab.startMin + initialGrab.durationMin;
+            if (potentialEnd - potentialStart >= 15) {
+                newStartMin = potentialStart;
+                newDuration = potentialEnd - potentialStart;
+            } else {
+                newStartMin = potentialEnd - 15;
+                newDuration = 15;
+            }
+        } else if (dragType === 'resize-bottom') {
+            newDuration = Math.max(15, Math.min(15 * 60 - initialGrab.startMin, initialGrab.durationMin + deltaMin));
         }
 
         const formattedStart = minutesToTime(newStartMin);
         const formattedEnd = minutesToTime(newStartMin + newDuration);
+        const currentLesson = lessons.find(l => l.id === activeLessonId)!;
 
-        // Visual Params
-        const topPx = (newStartMin / 60) * 60; // 1min = 1px visual in this 60px/h grid?
-        // Wait, getLayoutStyles uses %:  (startMinutesFrom8 / (15 * 60)) * 100
-        const topPercent = (newStartMin / (15 * 60)) * 100;
-        const heightPercent = (newDuration / (15 * 60)) * 100;
+        const conflict = checkConflict(activeLessonId, DAYS[newDayIdx], formattedStart, formattedEnd, currentLesson.teacherId)
+            ? "Конфликт в расписании у преподавателя"
+            : undefined;
 
         setDragPreview({
             day: DAYS[newDayIdx],
             startTime: formattedStart,
             endTime: formattedEnd,
-            top: topPercent,
-            height: heightPercent
+            top: (newStartMin / (15 * 60)) * 100,
+            height: (newDuration / (15 * 60)) * 100,
+            conflict,
+            color: getTeacherColor(currentLesson.teacherId)
         });
     };
 
     const handleMouseUp = () => {
-        if (isDragging && activeLessonId && dragPreview) {
-            // Commit changes
-            // Here we would call an onUpdate(lessonId, { startTime, endTime, day })
-            // For now, we just mock alert or log
-            console.log("Updated Lesson:", activeLessonId, dragPreview.startTime, dragPreview.endTime);
-            // In real app: props.onLessonUpdate(...)
+        if (isDragging && activeLessonId && dragPreview && !dragPreview.conflict) {
+            console.log("Committed Lesson Change:", activeLessonId, dragPreview);
+            // props.onLessonUpdate(activeLessonId, { ... })
         }
         setIsDragging(false);
         setDragType(null);
@@ -208,8 +218,6 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
     // Helper to calculate grid position & Overlaps
     const getLayoutStyles = (lesson: Lesson, dayLessons: Lesson[]) => {
         if (lesson.id === activeLessonId && dragType === 'move') {
-            // hide original while dragging? Or show ghost?
-            // usually we show original with low opacity
             return { display: 'none' };
         }
 
@@ -227,24 +235,32 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
         const topPercent = (startMinutesFrom8 / (15 * 60)) * 100;
         const heightPercent = (durationMinutes / (15 * 60)) * 100;
 
-        // Overlap Logic (Simplified for brevity)
         const overlaps = dayLessons.filter(l => l.id !== lesson.id && l.status !== 'CANCELLED' && l.startTime < lesson.endTime && l.endTime > lesson.startTime);
-        let width = "96%";
-        let left = "2%";
+        let width = "calc(100% - 4px)";
+        let left = "2px";
         if (overlaps.length > 0) {
             const cluster = [lesson, ...overlaps].sort((a, b) => a.id.localeCompare(b.id));
             const count = cluster.length;
             const index = cluster.findIndex(l => l.id === lesson.id);
-            width = `${Math.floor(96 / count)}%`;
-            left = `${2 + (index * (100 / count))}%`;
+            width = `calc(${Math.floor(100 / count)}% - 4px)`;
+            left = `calc(${(index * (100 / count))}% + 2px)`;
         }
 
-        return { top: `${topPercent}%`, height: `${heightPercent}%`, width, left };
+        const color = getTeacherColor(lesson.teacherId);
+
+        return {
+            top: `${topPercent}%`,
+            height: `${heightPercent}%`,
+            width,
+            left,
+            colorClasses: cn(color.bg, color.border, color.text)
+        };
     };
 
     return (
         <div
-            className="flex h-full flex-col bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl shadow-black/50 select-none"
+            id="schedule-grid-container"
+            className="flex h-full flex-col bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl shadow-black/50 select-none relative"
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
@@ -372,20 +388,27 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
                                     ))}
                                 </div>
 
-                                {/* Drag Preview (Ghost) */}
                                 {isDragging && dragPreview && dragPreview.day === day && (
                                     <div
-                                        className="absolute w-[96%] left-[2%] rounded border-2 border-dashed border-white/50 bg-white/10 z-50 pointer-events-none flex flex-col justify-center items-center text-xs font-bold text-white shadow-xl backdrop-blur-sm"
+                                        className={cn(
+                                            "absolute w-[calc(100%-4px)] left-[2px] rounded border-2 border-dashed z-50 pointer-events-none flex flex-col justify-center items-center text-xs font-bold shadow-xl backdrop-blur-sm transition-all duration-75",
+                                            dragPreview.conflict ? "border-red-500 bg-red-500/20 text-red-200" : dragPreview.color.ghost
+                                        )}
                                         style={{ top: `${dragPreview.top}%`, height: `${dragPreview.height}%` }}
                                     >
-                                        <span>{dragPreview.startTime} - {dragPreview.endTime}</span>
+                                        <div className="flex flex-col items-center gap-0.5">
+                                            <span className="bg-black/40 px-2 py-0.5 rounded-full">{dragPreview.startTime} — {dragPreview.endTime}</span>
+                                            {dragPreview.conflict && (
+                                                <span className="text-[10px] text-red-400 font-medium px-2 text-center uppercase tracking-tight">{dragPreview.conflict}</span>
+                                            )}
+                                        </div>
                                     </div>
                                 )}
 
                                 {/* Lessons Layer */}
                                 {dayLessons.map(lesson => {
                                     const style = getLayoutStyles(lesson, dayLessons);
-                                    if (style.display === 'none') return null; // Logic moved here to avoid type error with void return
+                                    if ((style as any).display === 'none') return null;
 
                                     return (
                                         <div
@@ -394,16 +417,29 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
                                                 e.stopPropagation();
                                                 onLessonClick(lesson);
                                             }}
-                                            onMouseDown={(e) => handleDragStart(e, lesson, 'move')}
-                                            style={style}
+                                            style={{
+                                                top: (style as any).top,
+                                                height: (style as any).height,
+                                                width: (style as any).width,
+                                                left: (style as any).left
+                                            }}
                                             className={cn(
-                                                "absolute rounded border shadow-sm transition-all duration-500 ease-out hover:z-40 hover:shadow-lg flex flex-col overflow-hidden group/card animate-in fade-in zoom-in-95 slide-in-from-top-2",
+                                                "absolute rounded border shadow-sm transition-all duration-500 ease-out hover:z-40 hover:shadow-lg flex flex-col overflow-hidden group/card animate-in fade-in zoom-in-95 slide-in-from-top-2 cursor-grab active:cursor-grabbing",
                                                 lesson.status === 'CANCELLED'
                                                     ? "bg-red-950/80 border-red-900/50 text-red-200"
-                                                    : "bg-indigo-900/80 border-indigo-700/50 text-indigo-100"
+                                                    : (style as any).colorClasses
                                             )}
                                         >
-                                            <div className="px-1.5 py-1 text-[10px] font-bold leading-tight truncate cursor-grab active:cursor-grabbing">
+                                            {/* Top Resize Handle */}
+                                            <div
+                                                className="absolute top-0 inset-x-0 h-2 cursor-ns-resize hover:bg-white/20 active:bg-white/40 z-50 transition-colors"
+                                                onMouseDown={(e) => handleDragStart(e, lesson, 'resize-top')}
+                                            />
+
+                                            <div
+                                                className="px-1.5 py-1 text-[10px] font-bold leading-tight truncate"
+                                                onMouseDown={(e) => handleDragStart(e, lesson, 'move')}
+                                            >
                                                 {lesson.courseName}
                                             </div>
                                             <div className="px-1.5 pb-1 flex flex-col gap-0.5 opacity-90 pointer-events-none">
@@ -411,16 +447,16 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
                                                     <Users className="h-2.5 w-2.5" />
                                                     <span>{lesson.groupName}</span>
                                                 </div>
-                                                <div className="flex items-center gap-1 text-[9px] truncate">
+                                                <div className="flex items-center gap-1 text-[9px] truncate text-white/80 font-semibold">
                                                     <Clock className="h-2.5 w-2.5" />
                                                     <span>{lesson.startTime} - {lesson.endTime}</span>
                                                 </div>
                                             </div>
 
-                                            {/* Resize Handle */}
+                                            {/* Bottom Resize Handle */}
                                             <div
-                                                className="absolute bottom-0 inset-x-0 h-1.5 cursor-ns-resize hover:bg-white/20 active:bg-violet-500 z-50"
-                                                onMouseDown={(e) => handleDragStart(e, lesson, 'resize')}
+                                                className="absolute bottom-0 inset-x-0 h-2 cursor-ns-resize hover:bg-white/20 active:bg-white/40 z-50 transition-colors"
+                                                onMouseDown={(e) => handleDragStart(e, lesson, 'resize-bottom')}
                                             />
                                         </div>
                                     );
