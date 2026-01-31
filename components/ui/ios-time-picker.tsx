@@ -23,7 +23,7 @@ export function IOSStyleTimePicker({
     const [selectedMinute, setSelectedMinute] = React.useState<number>(parseInt(value.split(':')[1]) || 0);
 
     const hours = Array.from({ length: maxHour - minHour + 1 }, (_, i) => i + minHour);
-    const minutes = Array.from({ length: Math.ceil(60 / minuteStep) }, (_, i) => i * minuteStep);
+    const minutes = Array.from({ length: Math.floor(60 / minuteStep) }, (_, i) => i * minuteStep);
 
     const hourRef = React.useRef<HTMLDivElement>(null);
     const minuteRef = React.useRef<HTMLDivElement>(null);
@@ -31,11 +31,30 @@ export function IOSStyleTimePicker({
     const startY = React.useRef(0);
     const startScrollTop = React.useRef(0);
 
+    // Initial scroll and sync from props
     React.useEffect(() => {
         const [h, m] = value.split(':').map(Number);
-        if (!isNaN(h) && h !== selectedHour) setSelectedHour(h);
-        if (!isNaN(m) && m !== selectedMinute) setSelectedMinute(m);
-    }, [value, selectedHour, selectedMinute]);
+
+        // Use a small timeout to ensure DOM is ready and styled
+        const timer = setTimeout(() => {
+            if (!isNaN(h)) {
+                setSelectedHour(h);
+                const hIndex = hours.indexOf(h);
+                if (hIndex !== -1 && hourRef.current) {
+                    hourRef.current.scrollTop = hIndex * 40;
+                }
+            }
+            if (!isNaN(m)) {
+                setSelectedMinute(m);
+                const mIndex = minutes.indexOf(m);
+                if (mIndex !== -1 && minuteRef.current) {
+                    minuteRef.current.scrollTop = mIndex * 40;
+                }
+            }
+        }, 50);
+
+        return () => clearTimeout(timer);
+    }, [value]); // Sync only when 'value' prop changes from outside
 
     const handleMouseDown = (e: React.MouseEvent, ref: React.RefObject<HTMLDivElement | null>) => {
         if (!ref.current) return;
@@ -67,6 +86,7 @@ export function IOSStyleTimePicker({
     };
 
     const handleScroll = (e: React.UIEvent<HTMLDivElement>, type: 'hour' | 'minute') => {
+        // Only trigger onChange if it's a real user scroll/snap, not initial sync
         const container = e.currentTarget;
         const itemHeight = 40;
         const scrollTop = container.scrollTop;
@@ -89,18 +109,22 @@ export function IOSStyleTimePicker({
 
     return (
         <div className={cn("flex bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl w-48 h-40 select-none relative group", className)}>
+            {/* Selection Highlight Bar */}
             <div className="absolute top-1/2 left-0 right-0 h-10 -mt-5 bg-white/5 pointer-events-none z-10 border-y border-white/10" />
 
+            {/* Hours Column */}
             <div
                 ref={hourRef}
-                className="flex-1 overflow-y-auto snap-y snap-mandatory relative scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden cursor-grab active:cursor-grabbing"
+                className="flex-1 overflow-y-auto no-scrollbar snap-y snap-mandatory relative scroll-smooth cursor-grab active:cursor-grabbing [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
                 onMouseDown={(e) => handleMouseDown(e, hourRef)}
                 onMouseMove={(e) => handleMouseMove(e, hourRef)}
                 onMouseUp={() => handleMouseUp(hourRef)}
                 onMouseLeave={() => handleMouseLeave(hourRef)}
                 onScroll={(e) => handleScroll(e, 'hour')}
-                style={{ paddingBlock: 'calc(50% - 20px)' }}
             >
+                {/* Top Spacer */}
+                <div className="h-[calc(50%-20px)] pointer-events-none" />
+
                 {hours.map((h) => (
                     <div
                         key={h}
@@ -117,20 +141,27 @@ export function IOSStyleTimePicker({
                         {h.toString().padStart(2, '0')}
                     </div>
                 ))}
+
+                {/* Bottom Spacer */}
+                <div className="h-[calc(50%-20px)] pointer-events-none" />
             </div>
 
-            <div className="flex items-center justify-center text-zinc-600 font-bold bg-zinc-900/50 z-20 pb-0.5">:</div>
+            {/* Separator */}
+            <div className="flex items-center justify-center text-zinc-600 font-bold bg-zinc-900/50 z-20 pb-0.5 px-1">:</div>
 
+            {/* Minutes Column */}
             <div
                 ref={minuteRef}
-                className="flex-1 overflow-y-auto snap-y snap-mandatory relative scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden cursor-grab active:cursor-grabbing"
+                className="flex-1 overflow-y-auto no-scrollbar snap-y snap-mandatory relative scroll-smooth cursor-grab active:cursor-grabbing [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
                 onMouseDown={(e) => handleMouseDown(e, minuteRef)}
                 onMouseMove={(e) => handleMouseMove(e, minuteRef)}
                 onMouseUp={() => handleMouseUp(minuteRef)}
                 onMouseLeave={() => handleMouseLeave(minuteRef)}
                 onScroll={(e) => handleScroll(e, 'minute')}
-                style={{ paddingBlock: 'calc(50% - 20px)' }}
             >
+                {/* Top Spacer */}
+                <div className="h-[calc(50%-20px)] pointer-events-none" />
+
                 {minutes.map((m) => (
                     <div
                         key={m}
@@ -147,6 +178,9 @@ export function IOSStyleTimePicker({
                         {m.toString().padStart(2, '0')}
                     </div>
                 ))}
+
+                {/* Bottom Spacer */}
+                <div className="h-[calc(50%-20px)] pointer-events-none" />
             </div>
         </div>
     );
