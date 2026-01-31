@@ -19,6 +19,12 @@ export function IOSStyleTimePicker({
     minuteStep = 15,
     className
 }: TimePickerProps & { className?: string }) {
+    const [selectedHour, setSelectedHour] = React.useState<number>(parseInt(value.split(':')[0]) || 9);
+    const [selectedMinute, setSelectedMinute] = React.useState<number>(parseInt(value.split(':')[1]) || 0);
+
+    const hours = Array.from({ length: maxHour - minHour + 1 }, (_, i) => i + minHour);
+    const minutes = Array.from({ length: 60 / minuteStep }, (_, i) => i * minuteStep);
+
     const hourRef = React.useRef<HTMLDivElement>(null);
     const minuteRef = React.useRef<HTMLDivElement>(null);
     const isDragging = React.useRef(false);
