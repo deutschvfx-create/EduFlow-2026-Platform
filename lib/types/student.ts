@@ -2,11 +2,6 @@ export type StudentStatus = "PENDING" | "ACTIVE" | "SUSPENDED" | "ARCHIVED";
 
 export type PaymentStatus = "OK" | "DUE" | "UNKNOWN";
 
-export type StudentGroup = {
-    id: string;
-    name: string;
-};
-
 export type Student = {
     id: string;
     organizationId: string; // Multi-tenant: student belongs to organization
@@ -17,7 +12,7 @@ export type Student = {
     phone?: string;
     createdAt: string; // ISO
     status: StudentStatus;
-    groups: StudentGroup[];
+    groupIds: string[];
     lastActivityAt?: string; // ISO
     paymentStatus?: PaymentStatus;
     paidUntil?: string; // ISO format: YYYY-MM-DDTHH:mm:ssZ

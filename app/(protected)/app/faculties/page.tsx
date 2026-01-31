@@ -10,20 +10,24 @@ import { Building2, CheckCircle2, XCircle, Archive, ChevronRight, LayoutGrid } f
 import { Faculty } from "@/lib/types/faculty";
 import { ModuleGuard } from "@/components/system/module-guard";
 import { motion, AnimatePresence } from "framer-motion";
+import { useOrganization } from "@/hooks/use-organization";
 
 export default function FacultiesPage() {
+    const { currentOrganizationId } = useOrganization();
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [faculties, setFaculties] = useState<Faculty[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
-        loadFaculties();
-    }, []);
+        if (currentOrganizationId) {
+            loadFaculties(currentOrganizationId);
+        }
+    }, [currentOrganizationId]);
 
-    const loadFaculties = () => {
+    const loadFaculties = (orgId: string) => {
         import("@/lib/data/faculties.repo").then(async ({ facultiesRepo }) => {
-            const data = await facultiesRepo.getAll();
+            const data = await facultiesRepo.getAll(orgId);
             setFaculties(data);
             setIsLoaded(true);
         });

@@ -7,12 +7,7 @@ export type Course = {
     code: string;
 
     facultyId: string;
-    facultyName: string;
-    facultyCode: string;
-
     departmentId: string;
-    departmentName: string;
-    departmentCode: string;
 
     status: CourseStatus;
 
@@ -20,10 +15,7 @@ export type Course = {
     description?: string;
 
     teacherIds: string[];
-    teacherNames: string[]; // For easier display
-
     groupIds: string[];
-    groupNames: string[]; // For easier display
 
     createdAt: string; // ISO
 };

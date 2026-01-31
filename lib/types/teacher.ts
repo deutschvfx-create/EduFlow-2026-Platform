@@ -12,11 +12,6 @@ export type TeacherPermissions = {
     canInviteStudents: boolean;
 };
 
-export type TeacherGroup = {
-    id: string;
-    name: string;
-};
-
 export type Teacher = {
     id: string;
     organizationId: string; // Multi-tenant: teacher belongs to organization
@@ -29,7 +24,7 @@ export type Teacher = {
     status: TeacherStatus;
     role: TeacherRole;
     permissions: TeacherPermissions;
-    groups: TeacherGroup[];
+    groupIds: string[];
     createdAt: string; // ISO
     lastActivityAt?: string; // ISO
 };

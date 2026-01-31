@@ -30,17 +30,11 @@ export function CreateCourseModal({ onSuccess }: CreateCourseModalProps) {
                 name,
                 code: 'NEW',
                 facultyId: 'unknown',
-                facultyName: 'Факультет Неизвестен',
-                facultyCode: 'UNK',
                 departmentId: 'unknown',
-                departmentName: 'Кафедра Неизвестна',
-                departmentCode: 'UNK',
                 status: 'ACTIVE',
                 level: 'A1',
                 teacherIds: [],
-                teacherNames: [],
                 groupIds: [],
-                groupNames: [],
                 createdAt: new Date().toISOString()
             });
             setOpen(false);

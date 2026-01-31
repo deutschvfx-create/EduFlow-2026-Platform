@@ -9,28 +9,31 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Users } from "lucide-react";
 import { generateId } from "@/lib/utils";
+import { useOrganization } from "@/hooks/use-organization";
 
 interface CreateStudentModalProps {
     onSuccess: () => void;
 }
 
 export function CreateStudentModal({ onSuccess }: CreateStudentModalProps) {
+    const { currentOrganizationId } = useOrganization();
     const [open, setOpen] = useState(false);
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
 
     const handleSubmit = () => {
-        if (!firstName || !lastName) return;
+        if (!firstName || !lastName || !currentOrganizationId) return;
 
         import("@/lib/data/students.repo").then(({ studentsRepo }) => {
             studentsRepo.add({
                 id: generateId(),
+                organizationId: currentOrganizationId,
                 firstName,
                 lastName,
                 birthDate: '2000-01-01',
                 createdAt: new Date().toISOString(),
                 status: 'ACTIVE',
-                groups: []
+                groupIds: []
             });
             setOpen(false);
             setFirstName('');

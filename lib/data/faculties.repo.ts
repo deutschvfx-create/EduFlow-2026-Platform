@@ -19,18 +19,20 @@ import {
 const COLLECTION = "faculties";
 
 export const facultiesRepo = {
-    getAll: async (): Promise<Faculty[]> => {
+    getAll: async (organizationId: string): Promise<Faculty[]> => {
+        const filteredMock = MOCK_FACULTIES.filter(f => f.organizationId === organizationId);
         return withFallback((async () => {
             try {
-                const snapshot = await getDocs(collection(db, COLLECTION));
+                const q = query(collection(db, COLLECTION), where("organizationId", "==", organizationId));
+                const snapshot = await getDocs(q);
 
-                // Auto-seed if empty
-                if (snapshot.empty) {
+                // Auto-seed if empty (Only if using org_1 for now to represent first user)
+                if (snapshot.empty && organizationId === "org_1") {
                     console.log("Seeding mock faculties to Firestore...");
                     const batch = writeBatch(db);
                     const seeded: Faculty[] = [];
 
-                    MOCK_FACULTIES.forEach(f => {
+                    filteredMock.forEach(f => {
                         const ref = doc(db, COLLECTION, f.id);
                         batch.set(ref, f);
                         seeded.push(f);
@@ -45,7 +47,7 @@ export const facultiesRepo = {
                 console.error("Failed to fetch faculties", e);
                 throw e;
             }
-        })(), MOCK_FACULTIES);
+        })(), filteredMock);
     },
 
     getById: async (id: string): Promise<Faculty | undefined> => {

@@ -9,7 +9,6 @@ export type Faculty = {
     status: FacultyStatus;
 
     headTeacherId?: string; // optional
-    headTeacherName?: string; // optional (mock-friendly)
 
     departmentsCount: number;
     groupsCount: number;

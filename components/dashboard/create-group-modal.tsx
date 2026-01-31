@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { MOCK_TEACHERS } from '@/lib/mock/teachers';
 import { Layers } from "lucide-react";
 import { generateId } from "@/lib/utils";
+import { useOrganization } from "@/hooks/use-organization";
 // import { toast } from "sonner";
 const toast = { success: (m: string) => alert(m), error: (m: string) => alert(m) }; // Using custom toast or this if available, reverting to alert if needed or custom hook from settings? 
 // Actually user asked for "show toast 'Создано'". Since I set up custom toast in settings page locally, 
@@ -32,16 +33,18 @@ interface CreateGroupModalProps {
 }
 
 export function CreateGroupModal({ onSuccess }: CreateGroupModalProps) {
+    const { currentOrganizationId } = useOrganization();
     const [open, setOpen] = useState(false);
     const [name, setName] = useState('');
     const [teacher, setTeacher] = useState('');
 
     const handleSubmit = () => {
-        if (!name) return;
+        if (!name || !currentOrganizationId) return;
 
         import("@/lib/data/groups.repo").then(({ groupsRepo }) => {
             groupsRepo.add({
                 id: generateId(),
+                organizationId: currentOrganizationId,
                 name,
                 curatorTeacherId: teacher || undefined,
                 studentsCount: 0,
@@ -51,10 +54,6 @@ export function CreateGroupModal({ onSuccess }: CreateGroupModalProps) {
                 departmentId: 'unknown',
                 paymentType: 'FREE',
                 level: 'A1',
-                facultyName: 'Факультет Неизвестен',
-                facultyCode: 'UNK',
-                departmentName: 'Кафедра Неизвестна',
-                departmentCode: 'UNK',
                 maxStudents: 30,
                 teachersCount: 1,
                 coursesCount: 0,

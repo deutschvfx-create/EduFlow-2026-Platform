@@ -19,26 +19,30 @@ import {
 const COLLECTION = "users";
 
 export const teachersRepo = {
-    getAll: async (): Promise<Teacher[]> => {
+    getAll: async (organizationId: string): Promise<Teacher[]> => {
+        const filteredMock = MOCK_TEACHERS.filter(t => t.organizationId === organizationId);
         return withFallback((async () => {
             try {
-                const q = query(collection(db, COLLECTION), where("role", "==", "TEACHER"));
+                const q = query(
+                    collection(db, COLLECTION),
+                    where("role", "==", "TEACHER"),
+                    where("organizationId", "==", organizationId)
+                );
                 const snapshot = await getDocs(q);
 
                 // Auto-seed if empty
-                if (snapshot.empty) {
+                if (snapshot.empty && organizationId === "org_1") {
                     console.log("Seeding mock teachers to Firestore...");
                     const batch = writeBatch(db);
                     const seeded: Teacher[] = [];
 
-                    MOCK_TEACHERS.forEach(t => {
+                    filteredMock.forEach(t => {
                         const ref = doc(db, COLLECTION, t.id);
-                        // Map Teacher to Firestore UserData + extra fields
                         const userData = {
                             ...t,
-                            uid: t.id, // Ensure uid matches id
+                            uid: t.id,
                             role: "TEACHER",
-                            organizationId: "default", // or null
+                            organizationId: organizationId,
                         };
                         batch.set(ref, userData);
                         seeded.push(userData as unknown as Teacher);
@@ -50,7 +54,6 @@ export const teachersRepo = {
 
                 return snapshot.docs.map(doc => {
                     const data = doc.data();
-                    // Map back to Teacher type if necessary, or just cast if structure matches
                     return {
                         id: doc.id,
                         ...data
@@ -60,7 +63,7 @@ export const teachersRepo = {
                 console.error("Failed to fetch teachers", e);
                 throw e;
             }
-        })(), MOCK_TEACHERS);
+        })(), filteredMock);
     },
 
     add: async (teacher: Teacher) => {

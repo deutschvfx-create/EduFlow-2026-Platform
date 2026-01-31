@@ -19,26 +19,30 @@ import {
 const COLLECTION = "users";
 
 export const studentsRepo = {
-    getAll: async (): Promise<Student[]> => {
+    getAll: async (organizationId: string): Promise<Student[]> => {
+        const filteredMock = MOCK_STUDENTS.filter(s => s.organizationId === organizationId);
         return withFallback((async () => {
             try {
-                const q = query(collection(db, COLLECTION), where("role", "==", "STUDENT"));
+                const q = query(
+                    collection(db, COLLECTION),
+                    where("role", "==", "STUDENT"),
+                    where("organizationId", "==", organizationId)
+                );
                 const snapshot = await getDocs(q);
 
-                // Auto-seed if empty (Migration from mock)
-                if (snapshot.empty) {
+                // Auto-seed if empty (Only if using org_1 for now to represent first user)
+                if (snapshot.empty && organizationId === "org_1") {
                     console.log("Seeding mock students to Firestore...");
                     const batch = writeBatch(db);
                     const seeded: Student[] = [];
 
-                    MOCK_STUDENTS.forEach(s => {
+                    filteredMock.forEach(s => {
                         const ref = doc(db, COLLECTION, s.id);
-                        // Map Student to Firestore UserData properties + extra student fields
                         const userData = {
                             ...s,
                             uid: s.id,
                             role: "STUDENT",
-                            organizationId: "default", // or whatever default
+                            organizationId: organizationId,
                         };
                         batch.set(ref, userData);
                         seeded.push(userData as unknown as Student);
@@ -59,7 +63,7 @@ export const studentsRepo = {
                 console.error("Failed to fetch students", e);
                 throw e;
             }
-        })(), MOCK_STUDENTS);
+        })(), filteredMock);
     },
 
     add: async (student: Student) => {

@@ -7,12 +7,7 @@ export type Group = {
     code: string;
 
     facultyId: string;
-    facultyName: string;
-    facultyCode: string;
-
     departmentId: string;
-    departmentName: string;
-    departmentCode: string;
 
     status: GroupStatus;
 
@@ -20,7 +15,6 @@ export type Group = {
     paymentType?: "FREE" | "PAID";
 
     curatorTeacherId?: string;
-    curatorTeacherName?: string;
 
     studentsCount: number;
     maxStudents: number;

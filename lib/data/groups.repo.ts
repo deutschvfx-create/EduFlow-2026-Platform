@@ -19,18 +19,20 @@ import {
 const COLLECTION = "groups";
 
 export const groupsRepo = {
-    getAll: async (): Promise<Group[]> => {
+    getAll: async (organizationId: string): Promise<Group[]> => {
+        const filteredMock = MOCK_GROUPS_FULL.filter(g => g.organizationId === organizationId);
         return withFallback((async () => {
             try {
-                const snapshot = await getDocs(collection(db, COLLECTION));
+                const q = query(collection(db, COLLECTION), where("organizationId", "==", organizationId));
+                const snapshot = await getDocs(q);
 
                 // Auto-seed if empty
-                if (snapshot.empty) {
+                if (snapshot.empty && organizationId === "org_1") {
                     console.log("Seeding mock groups to Firestore...");
                     const batch = writeBatch(db);
                     const seeded: Group[] = [];
 
-                    MOCK_GROUPS_FULL.forEach(g => {
+                    filteredMock.forEach(g => {
                         const ref = doc(db, COLLECTION, g.id);
                         batch.set(ref, g);
                         seeded.push(g);
@@ -45,7 +47,7 @@ export const groupsRepo = {
                 console.error("Failed to fetch groups", e);
                 throw e;
             }
-        })(), MOCK_GROUPS_FULL);
+        })(), filteredMock);
     },
 
     getById: async (id: string): Promise<Group | undefined> => {
