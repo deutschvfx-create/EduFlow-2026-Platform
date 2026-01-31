@@ -28,33 +28,38 @@ export function IOSStyleTimePicker({
     const hourRef = React.useRef<HTMLDivElement>(null);
     const minuteRef = React.useRef<HTMLDivElement>(null);
 
-    // Drag state
+    // Drag and Motion State
     const isDragging = React.useRef(false);
     const activeRef = React.useRef<React.RefObject<HTMLDivElement | null> | null>(null);
     const startY = React.useRef(0);
     const startScrollTop = React.useRef(0);
 
-    // Initial scroll sync from props
+    // Initial and External Sync
     React.useEffect(() => {
+        // DO NOT SYNC while the user is actively dragging, it causes "jumping"
+        if (isDragging.current) return;
+
         const [h, m] = value.split(':').map(Number);
+
         const timer = setTimeout(() => {
-            if (!isNaN(h)) {
+            if (!isNaN(h) && hourRef.current) {
                 setSelectedHour(h);
                 const hIndex = hours.indexOf(h);
-                if (hIndex !== -1 && hourRef.current) {
+                if (hIndex !== -1) {
                     hourRef.current.scrollTop = hIndex * 40;
                 }
             }
-            if (!isNaN(m)) {
+            if (!isNaN(m) && minuteRef.current) {
                 setSelectedMinute(m);
                 const mIndex = minutes.indexOf(m);
-                if (mIndex !== -1 && minuteRef.current) {
+                if (mIndex !== -1) {
                     minuteRef.current.scrollTop = mIndex * 40;
                 }
             }
         }, 50);
+
         return () => clearTimeout(timer);
-    }, [value]);
+    }, [value, hours, minutes]);
 
     // Global drag handlers
     React.useEffect(() => {
@@ -64,6 +69,9 @@ export function IOSStyleTimePicker({
             const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
             const deltaY = clientY - startY.current;
             activeRef.current.current.scrollTop = startScrollTop.current - deltaY;
+
+            // Prevent scrolling of parent while dragging
+            if (e.cancelable) e.preventDefault();
         };
 
         const handleGlobalUp = () => {
@@ -77,7 +85,7 @@ export function IOSStyleTimePicker({
             activeRef.current = null;
         };
 
-        window.addEventListener('mousemove', handleGlobalMove);
+        window.addEventListener('mousemove', handleGlobalMove, { passive: false });
         window.addEventListener('mouseup', handleGlobalUp);
         window.addEventListener('touchmove', handleGlobalMove, { passive: false });
         window.addEventListener('touchend', handleGlobalUp);
@@ -107,6 +115,9 @@ export function IOSStyleTimePicker({
         const scrollTop = container.scrollTop;
         const index = Math.round(scrollTop / itemHeight);
 
+        // Update CSS variable for the 3D effect without triggering re-renders
+        container.style.setProperty('--scroll-top', `${scrollTop}px`);
+
         if (type === 'hour') {
             const h = hours[Math.max(0, Math.min(hours.length - 1, index))];
             if (h !== selectedHour) {
@@ -124,8 +135,12 @@ export function IOSStyleTimePicker({
 
     return (
         <div className={cn("flex bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl w-48 h-40 select-none relative group", className)}>
-            {/* Selection Highlight Bar */}
-            <div className="absolute top-1/2 left-0 right-0 h-10 -mt-5 bg-white/5 pointer-events-none z-10 border-y border-white/10" />
+            {/* 3D Perspective Container */}
+            <div className="absolute inset-0 pointer-events-none z-10">
+                <div className="absolute top-0 left-0 right-0 h-10 bg-gradient-to-b from-zinc-950 to-transparent opacity-80" />
+                <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-zinc-950 to-transparent opacity-80" />
+                <div className="absolute top-1/2 left-0 right-0 h-10 -mt-5 bg-white/5 border-y border-white/10" />
+            </div>
 
             {/* Hours Column */}
             <div
@@ -134,19 +149,18 @@ export function IOSStyleTimePicker({
                 onMouseDown={(e) => startDrag(e.clientY, hourRef)}
                 onTouchStart={(e) => startDrag(e.touches[0].clientY, hourRef)}
                 onScroll={(e) => handleScroll(e, 'hour')}
+                style={{ perspective: '500px' }}
             >
                 <div className="h-[calc(50%-20px)] pointer-events-none" />
-                {hours.map((h) => (
+                {hours.map((h, i) => (
                     <div
                         key={h}
                         className={cn(
-                            "h-10 flex items-center justify-center snap-center text-sm transition-all duration-200",
-                            selectedHour === h ? "text-white font-bold text-lg scale-110" : "text-zinc-600 hover:text-zinc-400"
+                            "h-10 flex items-center justify-center snap-center text-sm transition-all duration-300 ease-out preserve-3d",
+                            selectedHour === h ? "text-white font-bold text-lg scale-110" : "text-zinc-600 grayscale opacity-40"
                         )}
-                        onClick={() => {
-                            setSelectedHour(h);
-                            onChange(`${h.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`);
-                            if (hourRef.current) hourRef.current.scrollTop = hours.indexOf(h) * 40;
+                        style={{
+                            transform: `rotateX(calc((${i} * 40px - var(--scroll-top, ${selectedHour === h ? (hours.indexOf(selectedHour) * 40) : 0}px)) * -0.8deg)) translateZ(10px)`,
                         }}
                     >
                         {h.toString().padStart(2, '0')}
@@ -156,7 +170,7 @@ export function IOSStyleTimePicker({
             </div>
 
             {/* Separator */}
-            <div className="flex items-center justify-center text-zinc-600 font-bold bg-zinc-900/50 z-20 pb-0.5 px-1">:</div>
+            <div className="flex items-center justify-center text-zinc-600 font-bold bg-zinc-900/50 z-20 pb-0.5 px-0.5">:</div>
 
             {/* Minutes Column */}
             <div
@@ -165,19 +179,18 @@ export function IOSStyleTimePicker({
                 onMouseDown={(e) => startDrag(e.clientY, minuteRef)}
                 onTouchStart={(e) => startDrag(e.touches[0].clientY, minuteRef)}
                 onScroll={(e) => handleScroll(e, 'minute')}
+                style={{ perspective: '500px' }}
             >
                 <div className="h-[calc(50%-20px)] pointer-events-none" />
-                {minutes.map((m) => (
+                {minutes.map((m, i) => (
                     <div
                         key={m}
                         className={cn(
-                            "h-10 flex items-center justify-center snap-center text-sm transition-all duration-200",
-                            selectedMinute === m ? "text-white font-bold text-lg scale-110" : "text-zinc-600 hover:text-zinc-400"
+                            "h-10 flex items-center justify-center snap-center text-sm transition-all duration-300 ease-out preserve-3d",
+                            selectedMinute === m ? "text-white font-bold text-lg scale-110" : "text-zinc-600 grayscale opacity-40"
                         )}
-                        onClick={() => {
-                            setSelectedMinute(m);
-                            onChange(`${selectedHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
-                            if (minuteRef.current) minuteRef.current.scrollTop = minutes.indexOf(m) * 40;
+                        style={{
+                            transform: `rotateX(calc((${i} * 40px - var(--scroll-top, ${selectedMinute === m ? (minutes.indexOf(selectedMinute) * 40) : 0}px)) * -0.8deg)) translateZ(10px)`,
                         }}
                     >
                         {m.toString().padStart(2, '0')}
