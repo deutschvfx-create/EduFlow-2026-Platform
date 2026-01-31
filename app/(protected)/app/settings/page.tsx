@@ -4,6 +4,7 @@ import { useModules } from "@/hooks/use-modules";
 import { ModuleKey, defaultModulesState } from "@/lib/config/modules";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
     Users,
@@ -28,6 +29,23 @@ import { OrganizationProfileCard } from "@/components/settings/organization-prof
 export default function SettingsPage() {
     const { modules, toggleModule, setAllModules, resetModules, isLoaded } = useModules();
     const [toastMsg, setToastMsg] = useState<{ text: string, type: 'success' | 'info' } | null>(null);
+    const router = useRouter();
+
+    const moduleRoutes: Partial<Record<ModuleKey, string>> = {
+        students: "/app/students",
+        teachers: "/app/teachers",
+        faculties: "/app/faculties",
+        departments: "/app/departments",
+        groups: "/app/groups",
+        classrooms: "/app/classrooms",
+        courses: "/app/courses",
+        schedule: "/app/schedule",
+        attendance: "/app/attendance",
+        grades: "/app/grades",
+        announcements: "/app/announcements",
+        chat: "/app/chat",
+        reports: "/app/reports",
+    };
 
     // Clear toast
     useEffect(() => {
@@ -151,28 +169,40 @@ export default function SettingsPage() {
         }).join(', ')}` : null;
 
         return (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 flex items-center justify-between hover:border-zinc-700 transition-colors group">
+            <div
+                className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 flex items-center justify-between hover:border-zinc-700 hover:bg-zinc-800/30 transition-all group cursor-pointer"
+                onClick={() => {
+                    if (!modules[mKey]) {
+                        // Enable if disabled
+                        handleToggle(mKey);
+                    }
+                    // Navigate
+                    if (moduleRoutes[mKey]) {
+                        router.push(moduleRoutes[mKey]!);
+                    }
+                }}
+            >
                 <div className="flex items-center gap-3 overflow-hidden">
                     <div className="h-8 w-8 rounded-md bg-zinc-950 flex items-center justify-center border border-zinc-800 group-hover:border-indigo-500/30 transition-colors">
                         <Icon className="h-4 w-4 text-indigo-400" />
                     </div>
                     <div className="flex flex-col min-w-0">
-                        <span className="text-sm font-medium text-zinc-200 truncate">{label}</span>
+                        <span className="text-sm font-medium text-zinc-200 truncate group-hover:text-white transition-colors">
+                            {label}
+                        </span>
                         {depText && (
                             <span className="text-[10px] text-amber-500/90 leading-none truncate">{depText}</span>
                         )}
-                        {/* Description hidden in compact mode or made tooltop? Let's just remove description to save space as requested "control panel" style, or make it very subtle if needed. 
-                           User asked: "Show: icon + module name + toggle". Small dependency text appears only if needed.
-                           So I will remove the general description 'desc' to save vertical space.
-                        */}
                     </div>
                 </div>
                 <div className="flex items-center" data-help-id={`module-toggle-${mKey}`}>
-                    <Switch
-                        checked={modules[mKey]}
-                        onCheckedChange={() => handleToggle(mKey)}
-                        className="scale-90"
-                    />
+                    <div onClick={(e) => e.stopPropagation()}>
+                        <Switch
+                            checked={modules[mKey]}
+                            onCheckedChange={() => handleToggle(mKey)}
+                            className="scale-90"
+                        />
+                    </div>
                 </div>
             </div>
         );
