@@ -63,11 +63,6 @@ export default function CourseDetailsPage() {
                     </h1>
                     <div className="text-zinc-400 text-sm flex gap-4 items-center mt-1">
                         <span className="font-mono bg-zinc-800 px-2 rounded text-zinc-300">{course.code}</span>
-                        <span className="flex items-center gap-2">
-                            <Badge variant="secondary" className="text-[10px] h-4 py-0">{course.facultyCode}</Badge>
-                            <span className="text-xs text-zinc-500">/</span>
-                            <span className="text-xs">{course.departmentName}</span>
-                        </span>
                     </div>
                 </div>
                 <div className="ml-auto flex gap-2">
@@ -147,12 +142,12 @@ export default function CourseDetailsPage() {
                             <CourseLevelBadge level={course.level} />
                         </div>
                         <div className="space-y-1">
-                            <div className="text-xs text-zinc-500 uppercase font-semibold">Факультет</div>
-                            <div className="text-zinc-300 font-medium">{course.facultyName}</div>
+                            <div className="text-xs text-zinc-500 uppercase font-semibold">Факультет (ID)</div>
+                            <div className="text-zinc-300 font-medium">{course.facultyId}</div>
                         </div>
                         <div className="space-y-1">
-                            <div className="text-xs text-zinc-500 uppercase font-semibold">Кафедра</div>
-                            <div className="text-zinc-300 font-medium">{course.departmentName}</div>
+                            <div className="text-xs text-zinc-500 uppercase font-semibold">Кафедра (ID)</div>
+                            <div className="text-zinc-300 font-medium">{course.departmentId}</div>
                         </div>
                         <div className="pt-4 flex flex-col gap-2">
                             <Button variant="outline" className="w-full border-zinc-700 hover:bg-zinc-800" onClick={() => setAssignTeachersOpen(true)}>
@@ -184,10 +179,10 @@ export default function CourseDetailsPage() {
                             </TabsContent>
                             <TabsContent value="groups">
                                 <div className="space-y-4">
-                                    {course.groupNames.length > 0 ? (
-                                        course.groupNames.map((name, i) => (
+                                    {course.groupIds.length > 0 ? (
+                                        course.groupIds.map((id, i) => (
                                             <Card key={i} className="bg-zinc-900 border-zinc-800 p-4 flex items-center justify-between">
-                                                <div className="font-medium text-zinc-200">{name}</div>
+                                                <div className="font-medium text-zinc-200">Группа {id}</div>
                                                 <Button variant="ghost" size="sm" className="text-zinc-500">Детали</Button>
                                             </Card>
                                         ))
@@ -202,10 +197,10 @@ export default function CourseDetailsPage() {
                             </TabsContent>
                             <TabsContent value="teachers">
                                 <div className="space-y-4">
-                                    {course.teacherNames.length > 0 ? (
-                                        course.teacherNames.map((name, i) => (
+                                    {course.teacherIds.length > 0 ? (
+                                        course.teacherIds.map((id, i) => (
                                             <Card key={i} className="bg-zinc-900 border-zinc-800 p-4 flex items-center justify-between">
-                                                <div className="font-medium text-zinc-200">{name}</div>
+                                                <div className="font-medium text-zinc-200">Преподаватель {id}</div>
                                                 <Button variant="ghost" size="sm" className="text-zinc-500">Профиль</Button>
                                             </Card>
                                         ))

@@ -70,10 +70,6 @@ export function EditCourseModal({ course, open, onOpenChange, onSave }: EditCour
             level,
             description,
             status,
-            facultyName: MOCK_FACULTIES.find(f => f.id === facultyId)?.name || course.facultyName,
-            facultyCode: MOCK_FACULTIES.find(f => f.id === facultyId)?.code || course.facultyCode,
-            departmentName: MOCK_DEPARTMENTS.find(d => d.id === departmentId)?.name || course.departmentName,
-            departmentCode: MOCK_DEPARTMENTS.find(d => d.id === departmentId)?.code || course.departmentCode,
         });
 
         setLoading(false);

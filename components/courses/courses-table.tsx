@@ -86,9 +86,9 @@ export function CoursesTable({ courses, onEdit, onAssignTeachers, onLinkGroups }
                             <TableCell>
                                 <div className="flex flex-col gap-1">
                                     <Badge variant="secondary" className="bg-zinc-800 text-zinc-300 w-fit text-[10px]">
-                                        {course.facultyCode}
+                                        ID: {course.facultyId}
                                     </Badge>
-                                    <span className="text-zinc-500 text-xs">{course.departmentName}</span>
+                                    <span className="text-zinc-500 text-xs">ID: {course.departmentId}</span>
                                 </div>
                             </TableCell>
                             <TableCell>
@@ -96,28 +96,18 @@ export function CoursesTable({ courses, onEdit, onAssignTeachers, onLinkGroups }
                             </TableCell>
                             <TableCell>
                                 <div className="flex flex-wrap gap-1 max-w-[200px]">
-                                    {(course.teacherNames?.length || 0) > 0 ? (
-                                        <>
-                                            {(course.teacherNames?.length || 0) > 2 ? (
-                                                <Badge variant="outline" className="border-zinc-700 text-zinc-400 text-[10px] bg-zinc-900">
-                                                    {course.teacherNames.length} чел.
-                                                </Badge>
-                                            ) : (
-                                                course.teacherNames.map((name, i) => (
-                                                    <Badge key={i} variant="outline" className="border-zinc-700 text-zinc-400 text-[10px] bg-zinc-900">
-                                                        {name}
-                                                    </Badge>
-                                                ))
-                                            )}
-                                        </>
+                                    {(course.teacherIds?.length || 0) > 0 ? (
+                                        <Badge variant="outline" className="border-zinc-700 text-zinc-400 text-[10px] bg-zinc-900">
+                                            {course.teacherIds.length} чел.
+                                        </Badge>
                                     ) : <span className="text-zinc-600 italic text-xs">Нет</span>}
                                 </div>
                             </TableCell>
                             <TableCell>
                                 <div className="flex flex-wrap gap-1 max-w-[200px]">
-                                    {(course.groupNames?.length || 0) > 0 ? (
+                                    {(course.groupIds?.length || 0) > 0 ? (
                                         <Badge variant="outline" className="border-indigo-500/20 text-indigo-300 text-[10px] bg-indigo-500/5">
-                                            {course.groupNames.length} групп
+                                            {course.groupIds.length} групп
                                         </Badge>
                                     ) : <span className="text-zinc-600 italic text-xs">Нет</span>}
                                 </div>
