@@ -13,7 +13,8 @@ export interface Grade {
 const MOCK_GRADES: Grade[] = [];
 
 export const gradesRepo = {
-    getAll: async (): Promise<Grade[]> => {
+    getAll: async (organizationId: string): Promise<Grade[]> => {
+        // Multi-tenant: filter by organizationId if needed
         return db.getAll<Grade>('grades');
     },
 

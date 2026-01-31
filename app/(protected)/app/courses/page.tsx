@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, CheckCircle2, XCircle, Archive } from "lucide-react";
 import { Course } from "@/lib/types/course";
 import { ModuleGuard } from "@/components/system/module-guard";
+import { useOrganization } from "@/hooks/use-organization";
 
 export default function CoursesPage() {
     const [search, setSearch] = useState("");
@@ -30,10 +31,11 @@ export default function CoursesPage() {
     // Filter Logic
     const [courses, setCourses] = useState<Course[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
+    const { currentOrganizationId } = useOrganization();
 
     useEffect(() => {
         import("@/lib/data/courses.repo").then(async ({ coursesRepo }) => {
-            const data = await coursesRepo.getAll();
+            const data = await coursesRepo.getAll(currentOrganizationId!);
             setCourses(data as any);
             setIsLoaded(true);
         });

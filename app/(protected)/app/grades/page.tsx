@@ -13,6 +13,7 @@ import { GraduationCap, BarChart3, AlertCircle, Plus, Loader2 } from "lucide-rea
 // import { toast } from "sonner";
 const toast = { success: (m: string) => alert(m), error: (m: string) => alert(m) };
 import { ModuleGuard } from "@/components/system/module-guard";
+import { useOrganization } from "@/hooks/use-organization";
 
 // Local map type
 type LocalGradesMap = Record<string, GradeRecord>;
@@ -30,13 +31,14 @@ export default function GradesPage() {
     const [allStudents, setAllStudents] = useState<any[]>([]);
     const [gradesData, setGradesData] = useState<LocalGradesMap>({});
     const [isLoaded, setIsLoaded] = useState(false);
+    const { currentOrganizationId } = useOrganization();
 
     useEffect(() => {
         Promise.all([
-            import("@/lib/data/groups.repo").then(m => m.groupsRepo.getAll()),
-            import("@/lib/data/courses.repo").then(m => m.coursesRepo.getAll()),
-            import("@/lib/data/students.repo").then(m => m.studentsRepo.getAll()),
-            import("@/lib/data/grades.repo").then(m => m.gradesRepo.getAll())
+            import("@/lib/data/groups.repo").then(m => m.groupsRepo.getAll(currentOrganizationId!)),
+            import("@/lib/data/courses.repo").then(m => m.coursesRepo.getAll(currentOrganizationId!)),
+            import("@/lib/data/students.repo").then(m => m.studentsRepo.getAll(currentOrganizationId!)),
+            import("@/lib/data/grades.repo").then(m => m.gradesRepo.getAll(currentOrganizationId!))
         ]).then(([g, c, s, grades]) => {
             setGroups(g);
             setCourses(c);

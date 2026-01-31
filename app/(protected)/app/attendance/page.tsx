@@ -24,6 +24,7 @@ const toast = { success: (m: string) => alert(m), error: (m: string) => alert(m)
 import { MOCK_COURSES } from "@/lib/mock/courses";
 import { Lesson } from "@/lib/types/schedule";
 import { ModuleGuard } from "@/components/system/module-guard";
+import { useOrganization } from "@/hooks/use-organization";
 
 type LocalAttendanceMap = Record<string, AttendanceRecord>;
 
@@ -39,13 +40,14 @@ export default function AttendancePage() {
     const [students, setStudents] = useState<any[]>([]);
     const [groups, setGroups] = useState<any[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
+    const { currentOrganizationId } = useOrganization();
 
     useEffect(() => {
         Promise.all([
-            import("@/lib/data/attendance.repo").then(m => m.attendanceRepo.getAll()),
-            import("@/lib/data/schedule.repo").then(m => m.scheduleRepo.getAll()),
-            import("@/lib/data/students.repo").then(m => m.studentsRepo.getAll()),
-            import("@/lib/data/groups.repo").then(m => m.groupsRepo.getAll())
+            import("@/lib/data/attendance.repo").then(m => m.attendanceRepo.getAll(currentOrganizationId!)),
+            import("@/lib/data/schedule.repo").then(m => m.scheduleRepo.getAll(currentOrganizationId!)),
+            import("@/lib/data/students.repo").then(m => m.studentsRepo.getAll(currentOrganizationId!)),
+            import("@/lib/data/groups.repo").then(m => m.groupsRepo.getAll(currentOrganizationId!))
         ]).then(([att, sch, stu, grps]) => {
             const map: LocalAttendanceMap = {};
             // @ts-ignore

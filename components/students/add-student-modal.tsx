@@ -10,10 +10,12 @@ import { Plus, QrCode, Mail, Camera, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MOCK_GROUPS } from "@/lib/mock/students";
 import { generateId } from "@/lib/utils";
+import { useOrganization } from "@/hooks/use-organization";
 
 export function AddStudentModal() {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const { currentOrganizationId } = useOrganization();
 
     // Form State
     const [firstName, setFirstName] = useState("");
@@ -43,11 +45,12 @@ export function AddStudentModal() {
             const { studentsRepo } = await import("@/lib/data/students.repo");
             studentsRepo.add({
                 id: generateId(),
+                organizationId: currentOrganizationId!,
                 firstName,
                 lastName,
                 birthDate: new Date(birthDate).toISOString(),
                 status: 'ACTIVE',
-                groups: groupId ? (await (await import("@/lib/data/groups.repo")).groupsRepo.getAll()).filter((g: any) => g.id === groupId).map((g: any) => ({ id: g.id, name: g.name })) : [],
+                groupIds: groupId ? [groupId] : [],
                 email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@student.eduflow.com`, // Auto-generate email
                 phone: '',
                 paymentStatus: 'UNKNOWN',

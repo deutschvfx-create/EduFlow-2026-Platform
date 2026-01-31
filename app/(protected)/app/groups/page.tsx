@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Layers, CheckCircle2, XCircle, Archive } from "lucide-react";
 import { Group } from "@/lib/types/group";
 import { ModuleGuard } from "@/components/system/module-guard";
+import { useOrganization } from "@/hooks/use-organization";
 
 export default function GroupsPage() {
     const [search, setSearch] = useState("");
@@ -24,10 +25,11 @@ export default function GroupsPage() {
     // Filter Logic
     const [groups, setGroups] = useState<Group[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
+    const { currentOrganizationId } = useOrganization();
 
     useEffect(() => {
         import("@/lib/data/groups.repo").then(async ({ groupsRepo }) => {
-            const data = await groupsRepo.getAll();
+            const data = await groupsRepo.getAll(currentOrganizationId!);
             setGroups(data as any);
             setIsLoaded(true);
         });

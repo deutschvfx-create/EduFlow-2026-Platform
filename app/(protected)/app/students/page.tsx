@@ -10,6 +10,7 @@ import { Users, UserCheck, UserX, Clock, Search, TrendingUp, TrendingDown } from
 import { Button } from "@/components/ui/button";
 import { ModuleGuard } from "@/components/system/module-guard";
 import { motion } from "framer-motion";
+import { useOrganization } from "@/hooks/use-organization";
 
 export default function StudentsPage() {
     const [search, setSearch] = useState("");
@@ -19,10 +20,11 @@ export default function StudentsPage() {
     // Filter Logic
     const [students, setStudents] = useState<any[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
+    const { currentOrganizationId } = useOrganization();
 
     useEffect(() => {
         import("@/lib/data/students.repo").then(async ({ studentsRepo }) => {
-            const data = await studentsRepo.getAll();
+            const data = await studentsRepo.getAll(currentOrganizationId!);
             setStudents(data);
             setIsLoaded(true);
         });

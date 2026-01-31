@@ -11,6 +11,7 @@ import { Users, GraduationCap, UserX, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Teacher, TeacherPermissions } from "@/lib/types/teacher";
 import { ModuleGuard } from "@/components/system/module-guard";
+import { useOrganization } from "@/hooks/use-organization";
 
 import { TeacherGrid } from "@/components/teachers/teacher-grid";
 import { LayoutGrid, List, ShieldCheck } from "lucide-react";
@@ -39,6 +40,7 @@ export default function TeachersPage() {
     // Filter Logic
     const [teachers, setTeachers] = useState<Teacher[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
+    const { currentOrganizationId } = useOrganization();
 
     // Roadmap Dialog State
     const [assignmentRoadmapOpen, setAssignmentRoadmapOpen] = useState(false);
@@ -51,12 +53,14 @@ export default function TeachersPage() {
         const savedControl = localStorage.getItem("teachers-control-mode") === "true";
         setControlMode(savedControl);
 
-        loadTeachers();
-    }, []);
+        if (currentOrganizationId) {
+            loadTeachers(currentOrganizationId);
+        }
+    }, [currentOrganizationId]);
 
-    const loadTeachers = () => {
+    const loadTeachers = (orgId: string) => {
         import("@/lib/data/teachers.repo").then(async ({ teachersRepo }) => {
-            const data = await teachersRepo.getAll();
+            const data = await teachersRepo.getAll(orgId);
             setTeachers(data);
             setIsLoaded(true);
         });
@@ -85,6 +89,7 @@ export default function TeachersPage() {
 
     const handleBulkAction = async (action: string) => {
         const { teachersRepo } = await import("@/lib/data/teachers.repo");
+        // Potential multi-tenant filter here if needed for selection
 
         if (action === 'delete') {
             if (!confirm(`Удалить ${selectedIds.length} преподавателей?`)) return;
@@ -98,7 +103,7 @@ export default function TeachersPage() {
             return;
         }
 
-        loadTeachers();
+        loadTeachers(currentOrganizationId!);
         setSelectedIds([]);
     };
 
@@ -112,12 +117,12 @@ export default function TeachersPage() {
 
         const matchesStatus = statusFilter === 'all' || teacher.status === statusFilter;
         const matchesRole = roleFilter === 'all' || teacher.role === roleFilter;
-        const matchesGroup = groupFilter === 'all' || teacher.groups?.some(g => g.id === groupFilter);
+        const matchesGroup = groupFilter === 'all' || teacher.groupIds?.includes(groupFilter);
 
         // Problem Filter (Only in Control Mode)
         let matchesProblem = true;
         if (controlMode && problemFilter !== 'all') {
-            if (problemFilter === 'no_groups') matchesProblem = (!teacher.groups || teacher.groups.length === 0);
+            if (problemFilter === 'no_groups') matchesProblem = (!teacher.groupIds || teacher.groupIds.length === 0);
             if (problemFilter === 'invited') matchesProblem = teacher.status === 'INVITED';
             if (problemFilter === 'suspended') matchesProblem = teacher.status === 'SUSPENDED';
         }
@@ -130,7 +135,7 @@ export default function TeachersPage() {
     const active = teachers.filter(s => s.status === 'ACTIVE').length;
     const invited = teachers.filter(s => s.status === 'INVITED').length;
     const suspended = teachers.filter(s => s.status === 'SUSPENDED').length;
-    const noGroups = teachers.filter(s => !s.groups || s.groups.length === 0).length;
+    const noGroups = teachers.filter(s => !s.groupIds || s.groupIds.length === 0).length;
 
     if (!isLoaded) return <div className="p-8 text-zinc-500">Загрузка данных...</div>;
 

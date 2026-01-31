@@ -66,10 +66,10 @@ export default function SchedulePage() {
 
     useEffect(() => {
         Promise.all([
-            import("@/lib/data/schedule.repo").then(m => m.scheduleRepo.getAll()),
-            import("@/lib/data/groups.repo").then(m => m.groupsRepo.getAll()),
-            import("@/lib/data/teachers.repo").then(m => m.teachersRepo.getAll()),
-            import("@/lib/data/courses.repo").then(m => m.coursesRepo.getAll())
+            import("@/lib/data/schedule.repo").then(m => m.scheduleRepo.getAll(currentOrganizationId!)),
+            import("@/lib/data/groups.repo").then(m => m.groupsRepo.getAll(currentOrganizationId!)),
+            import("@/lib/data/teachers.repo").then(m => m.teachersRepo.getAll(currentOrganizationId!)),
+            import("@/lib/data/courses.repo").then(m => m.coursesRepo.getAll(currentOrganizationId!))
         ]).then(([l, g, t, c]) => {
             setLessons(l as any);
             setGroups(g);

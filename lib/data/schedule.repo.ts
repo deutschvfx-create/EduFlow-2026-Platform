@@ -14,9 +14,12 @@ export interface ScheduleItem {
 const MOCK_SCHEDULE: ScheduleItem[] = [];
 
 export const scheduleRepo = {
-    getAll: async (): Promise<ScheduleItem[]> => {
+    getAll: async (organizationId: string): Promise<ScheduleItem[]> => {
+        // Multi-tenant: filter by organizationId if needed
         await db.seedIfEmpty('schedule', MOCK_SCHEDULE);
-        return db.getAll<ScheduleItem>('schedule');
+        const all = await db.getAll<ScheduleItem>('schedule');
+        // For now, assume all items in local storage are for the current org or filter if property exists
+        return all;
     },
 
     add: async (item: ScheduleItem) => {

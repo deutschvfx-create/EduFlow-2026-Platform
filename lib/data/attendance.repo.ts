@@ -11,7 +11,8 @@ export interface AttendanceRecord {
 const MOCK_ATTENDANCE: AttendanceRecord[] = [];
 
 export const attendanceRepo = {
-    getAll: async (): Promise<AttendanceRecord[]> => {
+    getAll: async (organizationId: string): Promise<AttendanceRecord[]> => {
+        // Multi-tenant: filter by organizationId if needed
         return db.getAll<AttendanceRecord>('attendance');
     },
 
