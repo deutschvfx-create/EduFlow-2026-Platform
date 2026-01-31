@@ -19,7 +19,8 @@ import {
     MessageSquare,
     BarChart3,
     RotateCcw,
-    Zap
+    Zap,
+    MapPin
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { OrganizationProfileCard } from "@/components/settings/organization-profile-card";
@@ -93,7 +94,7 @@ export default function SettingsPage() {
 
     const applyPreset = (type: 'UNIVERSITY' | 'SCHOOL') => {
         if (type === 'UNIVERSITY') {
-            setAllModules(defaultModulesState);
+            setAllModules({ ...defaultModulesState, classrooms: true });
             showToast("Шаблон «Университет» применён");
         } else {
             setAllModules({
@@ -110,6 +111,7 @@ export default function SettingsPage() {
                 departments: false,
                 grades: false,
                 reports: false,
+                classrooms: false,
             });
             showToast("Шаблон «Языковой курс» применён");
         }
@@ -261,6 +263,7 @@ export default function SettingsPage() {
                 <ModuleCard mKey="faculties" label="Факультеты" icon={Building2} desc="" />
                 <ModuleCard mKey="departments" label="Кафедры" icon={DoorOpen} desc="" />
                 <ModuleCard mKey="groups" label="Группы" icon={Layers} desc="" />
+                <ModuleCard mKey="classrooms" label="Аудитории" icon={MapPin} desc="" />
             </Section>
 
             <Section title="Обучение">

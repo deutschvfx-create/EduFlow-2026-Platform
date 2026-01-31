@@ -11,6 +11,7 @@ import { MOCK_GROUPS_FULL } from "@/lib/mock/groups";
 import { MOCK_TEACHERS } from "@/lib/mock/teachers";
 import { MOCK_COURSES } from "@/lib/mock/courses";
 import { DayOfWeek, Lesson, LessonStatus } from "@/lib/types/schedule";
+import { useModules } from "@/hooks/use-modules";
 
 // Helper to add minutes to "HH:MM"
 const addMinutes = (time: string, minutes: number) => {
@@ -30,6 +31,7 @@ interface EditLessonModalProps {
 
 export function EditLessonModal({ lesson, open, onOpenChange, onSave }: EditLessonModalProps) {
     const [loading, setLoading] = useState(false);
+    const { modules } = useModules();
 
     // Form State
     const [groupId, setGroupId] = useState("");
@@ -210,14 +212,16 @@ export function EditLessonModal({ lesson, open, onOpenChange, onSave }: EditLess
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <Label>Аудитория</Label>
-                            <Input
-                                className="bg-zinc-950 border-zinc-800"
-                                value={room}
-                                onChange={(e) => setRoom(e.target.value)}
-                            />
-                        </div>
+                        {modules.classrooms && (
+                            <div className="space-y-2">
+                                <Label>Аудитория</Label>
+                                <Input
+                                    className="bg-zinc-950 border-zinc-800"
+                                    value={room}
+                                    onChange={(e) => setRoom(e.target.value)}
+                                />
+                            </div>
+                        )}
                     </div>
 
                     <div className="space-y-2 pt-2 border-t border-zinc-800">

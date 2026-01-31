@@ -10,7 +10,8 @@ export type ModuleKey =
     | "grades"
     | "announcements"
     | "chat"
-    | "reports";
+    | "reports"
+    | "classrooms";
 
 export type ModulesState = Record<ModuleKey, boolean>;
 
@@ -27,4 +28,5 @@ export const defaultModulesState: ModulesState = {
     announcements: true,
     chat: true,
     reports: true,
+    classrooms: false,
 };

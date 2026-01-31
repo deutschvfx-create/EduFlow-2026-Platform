@@ -11,9 +11,11 @@ import { MOCK_GROUPS_FULL } from "@/lib/mock/groups";
 import { MOCK_TEACHERS } from "@/lib/mock/teachers";
 import { MOCK_COURSES } from "@/lib/mock/courses";
 import { DayOfWeek, Lesson } from "@/lib/types/schedule";
+import { useModules } from "@/hooks/use-modules";
 
 export function AddLessonModal({ lessons, children }: { lessons: Lesson[], children?: React.ReactNode }) {
     const [open, setOpen] = useState(false);
+    const { modules } = useModules();
     const [loading, setLoading] = useState(false);
 
     // Form State
@@ -59,7 +61,7 @@ export function AddLessonModal({ lessons, children }: { lessons: Lesson[], child
                     newConflicts.group = `У группы уже есть урок: ${l.courseName} (${l.startTime}-${l.endTime})`;
                 }
                 // 3. Room Conflict
-                if (room && l.room === room) {
+                if (room && l.room === room && modules.classrooms) {
                     newConflicts.room = `Аудитория занята: ${l.groupName} (${l.startTime}-${l.endTime})`;
                 }
             }
@@ -219,20 +221,22 @@ export function AddLessonModal({ lessons, children }: { lessons: Lesson[], child
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className="space-y-2">
-                            <Label className={conflicts.room ? "text-red-400" : ""}>
-                                Аудитория {conflicts.room && "*"}
-                            </Label>
-                            <Input
-                                placeholder="101"
-                                className={conflicts.room ? "border-red-500 bg-red-950/10 text-red-100" : "bg-zinc-950 border-zinc-800"}
-                                value={room}
-                                onChange={(e) => setRoom(e.target.value)}
-                            />
-                            {conflicts.room && (
-                                <p className="text-[10px] text-red-400 font-medium absolute">{conflicts.room}</p>
-                            )}
-                        </div>
+                        {modules.classrooms && (
+                            <div className="space-y-2">
+                                <Label className={conflicts.room ? "text-red-400" : ""}>
+                                    Аудитория {conflicts.room && "*"}
+                                </Label>
+                                <Input
+                                    placeholder="101"
+                                    className={conflicts.room ? "border-red-500 bg-red-950/10 text-red-100" : "bg-zinc-950 border-zinc-800"}
+                                    value={room}
+                                    onChange={(e) => setRoom(e.target.value)}
+                                />
+                                {conflicts.room && (
+                                    <p className="text-[10px] text-red-400 font-medium absolute">{conflicts.room}</p>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 

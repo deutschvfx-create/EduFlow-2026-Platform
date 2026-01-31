@@ -20,6 +20,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Trash2, AlertCircle } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 
+import { useModules } from "@/hooks/use-modules";
+
 interface DesktopWeekGridProps {
     lessons: Lesson[];
     currentDate: Date;
@@ -48,6 +50,7 @@ const getTeacherColor = (teacherId: string) => {
 };
 
 export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonClick, onLessonAdd, onLessonUpdate, onLessonDelete }: DesktopWeekGridProps) {
+    const { modules } = useModules();
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
     const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
@@ -664,7 +667,7 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
                                                                 <GraduationCap className="h-3 w-3 shrink-0 opacity-70" />
                                                                 <span className="truncate">{lesson.teacherName}</span>
                                                             </div>
-                                                            {lesson.room && (
+                                                            {lesson.room && modules.classrooms && (
                                                                 <div className="flex items-center gap-1.5 text-[9px] text-white/90 truncate">
                                                                     <MapPin className="h-3 w-3 shrink-0 opacity-70" />
                                                                     <span className="truncate">{lesson.room} ауд.</span>
