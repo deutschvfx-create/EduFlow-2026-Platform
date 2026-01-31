@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Lesson, DayOfWeek } from "@/lib/types/schedule";
 import { cn } from "@/lib/utils";
 import { Clock, MapPin, Users, GraduationCap, X, Plus } from "lucide-react";
@@ -49,6 +50,17 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
     // Local State to allow immediate "Stickiness"
     const [localLessons, setLocalLessons] = useState<Lesson[]>(propsLessons);
     const lastUpdateRef = useRef<number>(0);
+
+    // Pulse feedback state
+    const [pulsingLessonId, setPulsingLessonId] = useState<string | null>(null);
+    const shouldReduceMotion = useReducedMotion();
+
+    useEffect(() => {
+        if (pulsingLessonId) {
+            const timer = setTimeout(() => setPulsingLessonId(null), 1500);
+            return () => clearTimeout(timer);
+        }
+    }, [pulsingLessonId]);
 
     // Adaptive Density: Count unique teachers to decide avatar visibility
     const uniqueTeachersCount = new Set(localLessons.map(l => l.teacherId)).size;
@@ -132,6 +144,7 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
 
         lastUpdateRef.current = Date.now();
         setLocalLessons(prev => [...prev, newLesson]);
+        setPulsingLessonId(newLesson.id);
         if (onLessonAdd) onLessonAdd(newLesson);
         setEditorOpen(false);
     };
@@ -259,6 +272,7 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
 
                 lastUpdateRef.current = Date.now();
                 setLocalLessons(prev => prev.map(l => l.id === activeLessonId ? updatedLesson : l));
+                setPulsingLessonId(activeLessonId);
 
                 if (onLessonUpdate) onLessonUpdate(updatedLesson);
                 console.log("STATUS: SUCCESS - Local state updated.");
@@ -478,12 +492,23 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
                                     const teacherInitials = lesson.teacherName ? lesson.teacherName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : "?";
 
                                     return (
-                                        <div
+                                        <motion.div
                                             key={lesson.id}
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 onLessonClick(lesson);
                                             }}
+                                            initial={false}
+                                            animate={pulsingLessonId === lesson.id ? (
+                                                shouldReduceMotion ? {
+                                                    opacity: [1, 0.7, 1],
+                                                    transition: { duration: 1, ease: "easeInOut" }
+                                                } : {
+                                                    scale: [1, 1.02, 1, 1.015, 1, 1.01, 1],
+                                                    opacity: [1, 0.9, 1, 0.93, 1, 0.96, 1],
+                                                    transition: { duration: 1, ease: "easeInOut" }
+                                                }
+                                            ) : {}}
                                             style={{
                                                 top: (style as any).top,
                                                 height: (style as any).height,
@@ -554,7 +579,7 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
                                                 className="absolute bottom-0 inset-x-0 h-2 cursor-ns-resize hover:bg-white/20 z-50 transition-colors"
                                                 onPointerDown={(e) => { e.stopPropagation(); handleDragStart(e, lesson, 'resize-bottom'); }}
                                             />
-                                        </div>
+                                        </motion.div>
                                     );
                                 })}
                             </div>
