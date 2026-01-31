@@ -252,15 +252,9 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
 
     const handlePointerUp = (e: React.PointerEvent) => {
         if (isDragging && activeLessonId && initialGrab && liveTimeRange && liveDay) {
-            // Releasing pointer capture
             (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
 
             const conflict = checkConflict(activeLessonId, liveDay, liveTimeRange.start, liveTimeRange.end, initialGrab.lesson.teacherId);
-
-            console.group(`[Schedule] Interaction Commitment: ${activeLessonId}`);
-            console.log("Final Day:", liveDay, "(Initial:", DAYS[initialGrab.dayIdx], ")");
-            console.log("Final Time:", liveTimeRange.start, "-", liveTimeRange.end);
-            console.log("Conflict:", conflict);
 
             if (!conflict) {
                 const updatedLesson = {
@@ -270,16 +264,14 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
                     endTime: liveTimeRange.end
                 };
 
+                // We update local state. The lesson in the grid will transition to new top/height
+                // thanks to the CSS transition on the motion.div.
                 lastUpdateRef.current = Date.now();
                 setLocalLessons(prev => prev.map(l => l.id === activeLessonId ? updatedLesson : l));
                 setPulsingLessonId(activeLessonId);
 
                 if (onLessonUpdate) onLessonUpdate(updatedLesson);
-                console.log("STATUS: SUCCESS - Local state updated.");
-            } else {
-                console.log("STATUS: REVERTED - Conflict detected.");
             }
-            console.groupEnd();
         }
         setIsDragging(false);
         setDragType(null);
@@ -482,6 +474,17 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
                                     ))}
                                 </div>
 
+                                {/* Placeholder Layer */}
+                                {isDragging && activeLessonId && liveDay === day && dragType === 'move' && !conflictError && liveTimeRange && (
+                                    <div
+                                        className="absolute w-[calc(100%-4px)] left-[2px] border-2 border-dashed border-zinc-500/50 rounded bg-white/[0.03] z-20 pointer-events-none transition-all duration-150"
+                                        style={{
+                                            top: `${(timeToMinutes(liveTimeRange.start) / (15 * 60)) * 100}%`,
+                                            height: `${((timeToMinutes(liveTimeRange.end) - timeToMinutes(liveTimeRange.start)) / (15 * 60)) * 100}%`
+                                        }}
+                                    />
+                                )}
+
                                 {/* Lessons Layer */}
                                 {dayLessons.map(lesson => {
                                     const style = getLayoutStyles(lesson, dayLessons);
@@ -490,112 +493,141 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
                                     // ADAPTIVE DENSITY RULES
                                     const showAvatar = uniqueTeachersCount <= 5 && overlapCount <= 2;
                                     const teacherInitials = lesson.teacherName ? lesson.teacherName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : "?";
+                                    const isBeingDragManipulated = isDragging && lesson.id === activeLessonId;
 
                                     return (
-                                        <motion.div
-                                            key={lesson.id}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                onLessonClick(lesson);
-                                            }}
-                                            initial={false}
-                                            animate={pulsingLessonId === lesson.id ? (
-                                                shouldReduceMotion ? {
-                                                    boxShadow: [
-                                                        "inset 0 0 0px rgba(34, 197, 94, 0)",
-                                                        "inset 0 0 20px rgba(34, 197, 94, 0.3)",
-                                                        "inset 0 0 0px rgba(34, 197, 94, 0)"
-                                                    ],
-                                                    transition: { duration: 1.5, ease: "easeInOut" }
-                                                } : {
-                                                    scale: [1, 1.02, 1, 1.015, 1, 1.02, 1],
-                                                    boxShadow: [
-                                                        "0 0 0px rgba(249, 115, 22, 0)",      // Start
-                                                        "0 0 12px rgba(249, 115, 22, 0.5)",   // Orange Pulse 1
-                                                        "0 0 0px rgba(249, 115, 22, 0)",      // Mid
-                                                        "0 0 8px rgba(249, 115, 22, 0.4)",    // Orange Pulse 2
-                                                        "0 0 0px rgba(249, 115, 22, 0)",      // Mid
-                                                        "0 0 15px rgba(34, 197, 94, 0.6)",    // Green Confirm
-                                                        "0 0 0px rgba(34, 197, 94, 0)"       // End
-                                                    ],
-                                                    transition: {
-                                                        duration: 2.0,
-                                                        ease: "easeInOut",
-                                                        times: [0, 0.15, 0.3, 0.45, 0.6, 0.8, 1]
+                                        <div key={lesson.id}>
+                                            <motion.div
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onLessonClick(lesson);
+                                                }}
+                                                initial={false}
+                                                animate={pulsingLessonId === lesson.id ? (
+                                                    shouldReduceMotion ? {
+                                                        boxShadow: [
+                                                            "inset 0 0 0px rgba(34, 197, 94, 0)",
+                                                            "inset 0 0 20px rgba(34, 197, 94, 0.3)",
+                                                            "inset 0 0 0px rgba(34, 197, 94, 0)"
+                                                        ],
+                                                        transition: { duration: 1.5, ease: "easeInOut" }
+                                                    } : {
+                                                        scale: [1, 1.02, 1, 1.015, 1, 1.02, 1],
+                                                        boxShadow: [
+                                                            "0 0 0px rgba(249, 115, 22, 0)",      // Start
+                                                            "0 0 12px rgba(249, 115, 22, 0.5)",   // Orange Pulse 1
+                                                            "0 0 0px rgba(249, 115, 22, 0)",      // Mid
+                                                            "0 0 8px rgba(249, 115, 22, 0.4)",    // Orange Pulse 2
+                                                            "0 0 0px rgba(249, 115, 22, 0)",      // Mid
+                                                            "0 0 15px rgba(34, 197, 94, 0.6)",    // Green Confirm
+                                                            "0 0 0px rgba(34, 197, 94, 0)"       // End
+                                                        ],
+                                                        transition: {
+                                                            duration: 2.0,
+                                                            ease: "easeInOut",
+                                                            times: [0, 0.15, 0.3, 0.45, 0.6, 0.8, 1]
+                                                        }
                                                     }
-                                                }
-                                            ) : {}}
-                                            style={{
-                                                top: (style as any).top,
-                                                height: (style as any).height,
-                                                width: (style as any).width,
-                                                left: (style as any).left,
-                                                zIndex: (style as any).zIndex,
-                                                transition: isDragging && (style as any).isBeingManipulated ? 'none' : 'all 0.3s ease-out',
-                                                transform: isDragging && (style as any).isBeingManipulated && dragType === 'move' ? `translate(${dragDelta.x}px, ${dragDelta.y}px)` : undefined,
-                                                touchAction: 'none'
-                                            }}
-                                            className={cn(
-                                                "absolute rounded border shadow-sm hover:shadow-lg flex flex-col overflow-hidden group/card animate-in fade-in zoom-in-95 cursor-grab active:cursor-grabbing",
-                                                lesson.status === 'CANCELLED'
-                                                    ? "bg-red-950/80 border-red-900/50 text-red-200"
-                                                    : (style as any).colorClasses,
-                                                isDragging && (style as any).isBeingManipulated && conflictError && "ring-2 ring-red-500 ring-offset-2 ring-offset-black"
-                                            )}
-                                            onPointerDown={(e) => handleDragStart(e, lesson, 'move')}
-                                        >
-                                            {/* Top Resize Handle */}
-                                            <div
-                                                className="absolute top-0 inset-x-0 h-2 cursor-ns-resize hover:bg-white/20 z-50 transition-colors"
-                                                onPointerDown={(e) => { e.stopPropagation(); handleDragStart(e, lesson, 'resize-top'); }}
-                                            />
+                                                ) : {}}
+                                                style={{
+                                                    top: (style as any).top,
+                                                    height: (style as any).height,
+                                                    width: (style as any).width,
+                                                    left: (style as any).left,
+                                                    zIndex: (style as any).zIndex,
+                                                    transition: 'all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1)', // Smooth commit
+                                                    opacity: isBeingDragManipulated ? 0.4 : 1,
+                                                    touchAction: 'none',
+                                                    transform: undefined
+                                                }}
+                                                className={cn(
+                                                    "absolute rounded border shadow-sm hover:shadow-lg flex flex-col overflow-hidden group/card animate-in fade-in zoom-in-95 cursor-grab active:cursor-grabbing",
+                                                    lesson.status === 'CANCELLED'
+                                                        ? "bg-red-950/80 border-red-900/50 text-red-200"
+                                                        : (style as any).colorClasses,
+                                                    isBeingDragManipulated && conflictError && "ring-2 ring-red-500 ring-offset-2 ring-offset-black"
+                                                )}
+                                                onPointerDown={(e) => handleDragStart(e, lesson, 'move')}
+                                            >
+                                                {/* Top Resize Handle */}
+                                                <div
+                                                    className="absolute top-0 inset-x-0 h-2 cursor-ns-resize hover:bg-white/20 z-50 transition-colors"
+                                                    onPointerDown={(e) => { e.stopPropagation(); handleDragStart(e, lesson, 'resize-top'); }}
+                                                />
 
-                                            <div className="px-1.5 py-1 flex items-start justify-between gap-1 relative z-10">
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-1.5 mb-0.5">
-                                                        {/* Avatar Logic */}
-                                                        {showAvatar ? (
-                                                            <Avatar className="h-5 w-5 shrink-0 border border-white/10 shadow-sm">
-                                                                <AvatarImage src={`https://api.dicebear.com/7.x/notionists/svg?seed=${lesson.teacherId}`} />
-                                                                <AvatarFallback className="text-[8px] bg-black/20 text-white/90 font-bold">
+                                                <div className="px-1.5 py-1 flex items-start justify-between gap-1 relative z-10">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-1.5 mb-0.5">
+                                                            {/* Avatar Logic */}
+                                                            {showAvatar ? (
+                                                                <Avatar className="h-5 w-5 shrink-0 border border-white/10 shadow-sm">
+                                                                    <AvatarImage src={`https://api.dicebear.com/7.x/notionists/svg?seed=${lesson.teacherId}`} />
+                                                                    <AvatarFallback className="text-[8px] bg-black/20 text-white/90 font-bold">
+                                                                        {teacherInitials}
+                                                                    </AvatarFallback>
+                                                                </Avatar>
+                                                            ) : (
+                                                                // Fallback: Tiny Initials Dot if very compact
+                                                                <div className="h-4 w-4 shrink-0 rounded-full bg-white/20 flex items-center justify-center text-[8px] font-bold">
                                                                     {teacherInitials}
-                                                                </AvatarFallback>
-                                                            </Avatar>
-                                                        ) : (
-                                                            // Fallback: Tiny Initials Dot if very compact
-                                                            <div className="h-4 w-4 shrink-0 rounded-full bg-white/20 flex items-center justify-center text-[8px] font-bold">
-                                                                {teacherInitials}
-                                                            </div>
-                                                        )}
-                                                        <span className="font-bold leading-tight truncate text-[10px]">
-                                                            {lesson.courseName}
+                                                                </div>
+                                                            )}
+                                                            <span className="font-bold leading-tight truncate text-[10px]">
+                                                                {lesson.courseName}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="px-1.5 pb-1 flex flex-col gap-0.5 opacity-90 pointer-events-none mt-auto">
+                                                    <div className="flex items-center gap-1 text-[9px] truncate">
+                                                        <Users className="h-2.5 w-2.5" />
+                                                        <span>{lesson.groupName}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1 text-[9px] truncate text-white/80 font-bold">
+                                                        <Clock className="h-2.5 w-2.5" />
+                                                        <span>
+                                                            {isDragging && (style as any).isBeingManipulated && liveTimeRange
+                                                                ? `${liveTimeRange.start} - ${liveTimeRange.end}`
+                                                                : `${lesson.startTime} - ${lesson.endTime}`
+                                                            }
                                                         </span>
                                                     </div>
                                                 </div>
-                                            </div>
 
-                                            <div className="px-1.5 pb-1 flex flex-col gap-0.5 opacity-90 pointer-events-none mt-auto">
-                                                <div className="flex items-center gap-1 text-[9px] truncate">
-                                                    <Users className="h-2.5 w-2.5" />
-                                                    <span>{lesson.groupName}</span>
-                                                </div>
-                                                <div className="flex items-center gap-1 text-[9px] truncate text-white/80 font-bold">
-                                                    <Clock className="h-2.5 w-2.5" />
-                                                    <span>
-                                                        {isDragging && (style as any).isBeingManipulated && liveTimeRange
-                                                            ? `${liveTimeRange.start} - ${liveTimeRange.end}`
-                                                            : `${lesson.startTime} - ${lesson.endTime}`
-                                                        }
-                                                    </span>
-                                                </div>
-                                            </div>
+                                                {/* Bottom Resize Handle */}
+                                                <div
+                                                    className="absolute bottom-0 inset-x-0 h-2 cursor-ns-resize hover:bg-white/20 z-50 transition-colors"
+                                                    onPointerDown={(e) => { e.stopPropagation(); handleDragStart(e, lesson, 'resize-bottom'); }}
+                                                />
+                                            </motion.div>
 
-                                            {/* Bottom Resize Handle */}
-                                            <div
-                                                className="absolute bottom-0 inset-x-0 h-2 cursor-ns-resize hover:bg-white/20 z-50 transition-colors"
-                                                onPointerDown={(e) => { e.stopPropagation(); handleDragStart(e, lesson, 'resize-bottom'); }}
-                                            />
-                                        </motion.div>
+                                            {/* Ghost Element Layer (Only if moving) */}
+                                            {isBeingDragManipulated && dragType === 'move' && (
+                                                <div
+                                                    className={cn(
+                                                        "absolute pointer-events-none z-50 rounded border shadow-2xl opacity-70 scale-105 transition-none",
+                                                        (style as any).colorClasses
+                                                    )}
+                                                    style={{
+                                                        top: (style as any).top,
+                                                        height: (style as any).height,
+                                                        width: (style as any).width,
+                                                        left: (style as any).left,
+                                                        transform: `translate(0, ${dragDelta.y}px)`,
+                                                        boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.5)"
+                                                    }}
+                                                >
+                                                    <div className="px-1.5 py-1 flex flex-col h-full">
+                                                        <span className="font-bold text-[10px] truncate">{lesson.courseName}</span>
+                                                        <div className="mt-auto flex items-center gap-1 text-[9px] text-white/90">
+                                                            <Clock className="h-2 w-2" />
+                                                            <span>{liveTimeRange?.start || lesson.startTime}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
                                     );
                                 })}
                             </div>
