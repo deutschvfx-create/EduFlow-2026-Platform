@@ -60,17 +60,19 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
     const [isDragging, setIsDragging] = useState(false);
     const [dragType, setDragType] = useState<'move' | 'resize-top' | 'resize-bottom' | null>(null);
     const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
-    const [dragPreview, setDragPreview] = useState<{
-        day: DayOfWeek,
-        startTime: string,
-        endTime: string,
-        top: number,
-        height: number,
-        conflict?: string,
-        color: any
-    } | null>(null);
 
-    const [initialGrab, setInitialGrab] = useState<{ x: number, y: number, dayIdx: number, startMin: number, durationMin: number } | null>(null);
+    // The "Live" state of the lesson being manipulated
+    const [liveLesson, setLiveLesson] = useState<Lesson | null>(null);
+    const [conflictError, setConflictError] = useState<string | null>(null);
+
+    const [initialGrab, setInitialGrab] = useState<{
+        x: number,
+        y: number,
+        dayIdx: number,
+        startMin: number,
+        durationMin: number,
+        lesson: Lesson
+    } | null>(null);
 
     // --- Creation Handler ---
     const handleSlotClick = (day: DayOfWeek, hour: number) => {
@@ -104,12 +106,17 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
         setEditorOpen(false);
     };
 
-    // --- Drag & Drop Logic ---
+    // --- Drag & Drop Geometry Logic ---
+    const timeToMinutes = (time: string) => {
+        const [h, m] = time.split(':').map(Number);
+        return (h - 8) * 60 + m;
+    };
+
     const minutesToTime = (mins: number) => {
         const totalMin = Math.max(0, Math.min(15 * 60, mins)) + (8 * 60);
         const h = Math.floor(totalMin / 60);
         const m = totalMin % 60;
-        const snappedM = Math.round(m / 5) * 5; // Snap to 5 min for precision
+        const snappedM = Math.round(m / 5) * 5;
         const finalH = h + Math.floor(snappedM / 60);
         const finalM = snappedM % 60;
         return `${Math.min(22, finalH).toString().padStart(2, '0')}:${finalM.toString().padStart(2, '0')}`;
@@ -129,26 +136,26 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
         e.preventDefault();
         e.stopPropagation();
 
-        const [h, m] = lesson.startTime.split(':').map(Number);
-        const [eh, em] = lesson.endTime.split(':').map(Number);
-        const startMin = (h - 8) * 60 + m;
-        const endMin = (eh - 8) * 60 + em;
+        const startMin = timeToMinutes(lesson.startTime);
+        const endMin = timeToMinutes(lesson.endTime);
 
         setIsDragging(true);
         setDragType(type);
         setActiveLessonId(lesson.id);
+        setLiveLesson(lesson);
 
         setInitialGrab({
             x: e.clientX,
             y: e.clientY,
             dayIdx: DAYS.indexOf(lesson.dayOfWeek),
             startMin,
-            durationMin: endMin - startMin
+            durationMin: endMin - startMin,
+            lesson
         });
     };
 
     const handleMouseMove = (e: React.MouseEvent) => {
-        if (!isDragging || !initialGrab || !activeLessonId) return;
+        if (!isDragging || !initialGrab || !activeLessonId || !liveLesson) return;
 
         const gridContainer = document.getElementById('schedule-grid-container');
         if (!gridContainer) return;
@@ -157,13 +164,14 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
         const deltaY = e.clientY - initialGrab.y;
         const deltaX = e.clientX - initialGrab.x;
 
-        // Calculate New Day
-        const colWidth = (gridRect.width - 56) / 7; // Subtract TimeCol width
+        // 1. Calculate Day
+        const colWidth = (gridRect.width - 56) / 7;
         const colDelta = Math.round(deltaX / colWidth);
-        let newDayIdx = Math.max(0, Math.min(6, initialGrab.dayIdx + colDelta));
+        const newDayIdx = Math.max(0, Math.min(6, initialGrab.dayIdx + colDelta));
+        const newDay = DAYS[newDayIdx];
 
-        // Calculate New Time (1px = 1min because 60px = 60min)
-        const deltaMin = Math.round(deltaY / 5) * 5; // Snap to 5m increments
+        // 2. Calculate Time (1px = 1min)
+        const deltaMin = Math.round(deltaY / 5) * 5;
 
         let newStartMin = initialGrab.startMin;
         let newDuration = initialGrab.durationMin;
@@ -186,38 +194,41 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
 
         const formattedStart = minutesToTime(newStartMin);
         const formattedEnd = minutesToTime(newStartMin + newDuration);
-        const currentLesson = lessons.find(l => l.id === activeLessonId)!;
 
-        const conflict = checkConflict(activeLessonId, DAYS[newDayIdx], formattedStart, formattedEnd, currentLesson.teacherId)
-            ? "Конфликт в расписании у преподавателя"
-            : undefined;
+        const conflict = checkConflict(activeLessonId, newDay, formattedStart, formattedEnd, liveLesson.teacherId)
+            ? "Конфликт преподавателя"
+            : null;
 
-        setDragPreview({
-            day: DAYS[newDayIdx],
+        setConflictError(conflict);
+        setLiveLesson(prev => prev ? ({
+            ...prev,
+            dayOfWeek: newDay,
             startTime: formattedStart,
-            endTime: formattedEnd,
-            top: (newStartMin / (15 * 60)) * 100,
-            height: (newDuration / (15 * 60)) * 100,
-            conflict,
-            color: getTeacherColor(currentLesson.teacherId)
-        });
+            endTime: formattedEnd
+        }) : null);
     };
 
     const handleMouseUp = () => {
-        if (isDragging && activeLessonId && dragPreview && !dragPreview.conflict) {
-            console.log("Committed Lesson Change:", activeLessonId, dragPreview);
-            // props.onLessonUpdate(activeLessonId, { ... })
+        if (isDragging && activeLessonId && liveLesson) {
+            if (conflictError) {
+                // Flash red or just revert? User said Revert.
+                console.log("Reverting due to conflict");
+            } else {
+                console.log("Committed New Time:", liveLesson.startTime, "—", liveLesson.endTime, "on", liveLesson.dayOfWeek);
+                // onUpdate(activeLessonId, liveLesson)
+            }
         }
         setIsDragging(false);
         setDragType(null);
         setActiveLessonId(null);
-        setDragPreview(null);
+        setLiveLesson(null);
+        setConflictError(null);
     };
 
 
     // Helper to calculate grid position & Overlaps
     const getLayoutStyles = (lesson: Lesson, dayLessons: Lesson[]) => {
-        if (lesson.id === activeLessonId && dragType === 'move') {
+        if (lesson.id === activeLessonId && dragType) {
             return { display: 'none' };
         }
 
@@ -388,18 +399,21 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
                                     ))}
                                 </div>
 
-                                {isDragging && dragPreview && dragPreview.day === day && (
+                                {isDragging && liveLesson && liveLesson.dayOfWeek === day && (
                                     <div
                                         className={cn(
                                             "absolute w-[calc(100%-4px)] left-[2px] rounded border-2 border-dashed z-50 pointer-events-none flex flex-col justify-center items-center text-xs font-bold shadow-xl backdrop-blur-sm transition-all duration-75",
-                                            dragPreview.conflict ? "border-red-500 bg-red-500/20 text-red-200" : dragPreview.color.ghost
+                                            conflictError ? "border-red-500 bg-red-500/20 text-red-100" : getTeacherColor(liveLesson.teacherId).ghost
                                         )}
-                                        style={{ top: `${dragPreview.top}%`, height: `${dragPreview.height}%` }}
+                                        style={{
+                                            top: `${(timeToMinutes(liveLesson.startTime) / (15 * 60)) * 100}%`,
+                                            height: `${((timeToMinutes(liveLesson.endTime) - timeToMinutes(liveLesson.startTime)) / (15 * 60)) * 100}%`
+                                        }}
                                     >
                                         <div className="flex flex-col items-center gap-0.5">
-                                            <span className="bg-black/40 px-2 py-0.5 rounded-full">{dragPreview.startTime} — {dragPreview.endTime}</span>
-                                            {dragPreview.conflict && (
-                                                <span className="text-[10px] text-red-400 font-medium px-2 text-center uppercase tracking-tight">{dragPreview.conflict}</span>
+                                            <span className="bg-black/40 px-2 py-0.5 rounded-full">{liveLesson.startTime} — {liveLesson.endTime}</span>
+                                            {conflictError && (
+                                                <span className="text-[10px] text-red-400 font-medium px-2 text-center uppercase tracking-tight">{conflictError}</span>
                                             )}
                                         </div>
                                     </div>
