@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Lesson, DayOfWeek } from "@/lib/types/schedule";
 import { cn } from "@/lib/utils";
 import { Clock, MapPin, Users, GraduationCap, X, Plus } from "lucide-react";
@@ -14,7 +14,6 @@ import { MOCK_GROUPS_FULL } from "@/lib/mock/groups";
 import { MOCK_TEACHERS } from "@/lib/mock/teachers";
 import { MOCK_COURSES } from "@/lib/mock/courses";
 import { IOSStyleTimePicker } from "@/components/ui/ios-time-picker";
-import { useEffect } from "react";
 
 interface DesktopWeekGridProps {
     lessons: Lesson[];
@@ -48,9 +47,16 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
 
     // Local State to allow immediate "Stickiness"
     const [localLessons, setLocalLessons] = useState<Lesson[]>(propsLessons);
+    const lastUpdateRef = useRef<number>(0);
 
-    // Sync with props if they change (e.g. from server)
-    useEffect(() => { setLocalLessons(propsLessons); }, [propsLessons]);
+    // Sync with props if they change, but NOT if we just updated locally (avoid "snapback")
+    useEffect(() => {
+        const now = Date.now();
+        if (now - lastUpdateRef.current > 2000 && !isDragging) {
+            console.log("[Schedule] Syncing local state with props");
+            setLocalLessons(propsLessons);
+        }
+    }, [propsLessons, isDragging]);
 
     // Interaction State
     const [editorOpen, setEditorOpen] = useState(false);
@@ -73,9 +79,6 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
     const [dragDelta, setDragDelta] = useState({ x: 0, y: 0 });
     const [liveDay, setLiveDay] = useState<DayOfWeek | null>(null);
     const [liveTimeRange, setLiveTimeRange] = useState<{ start: string, end: string } | null>(null);
-
-    // The "Live" state of the lesson being manipulated
-    // const [liveLesson, setLiveLesson] = useState<Lesson | null>(null); // Removed as per instruction
     const [conflictError, setConflictError] = useState<string | null>(null);
 
     const [initialGrab, setInitialGrab] = useState<{
@@ -117,9 +120,11 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
             startTime: formData.startTime,
             endTime: formData.endTime,
             room: "101",
-            status: 'SCHEDULED'
+            status: 'SCHEDULED',
+            createdAt: new Date().toISOString()
         };
 
+        lastUpdateRef.current = Date.now();
         setLocalLessons(prev => [...prev, newLesson]);
         if (onLessonAdd) onLessonAdd(newLesson);
         setEditorOpen(false);
@@ -157,6 +162,13 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
 
         const startMin = timeToMinutes(lesson.startTime);
         const endMin = timeToMinutes(lesson.endTime);
+        const dayIdx = DAYS.indexOf(lesson.dayOfWeek);
+
+        console.group(`[Schedule] Drag Start: ${lesson.id}`);
+        console.log("Type:", type);
+        console.log("Original Day:", lesson.dayOfWeek, "Idx:", dayIdx);
+        console.log("Original Time:", lesson.startTime, "-", lesson.endTime);
+        console.groupEnd();
 
         setIsDragging(true);
         setDragType(type);
@@ -168,7 +180,7 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
         setInitialGrab({
             x: e.clientX,
             y: e.clientY,
-            dayIdx: DAYS.indexOf(lesson.dayOfWeek), // This MUST be correct from the start
+            dayIdx: dayIdx >= 0 ? dayIdx : 0,
             startMin,
             durationMin: endMin - startMin,
             lesson
@@ -197,7 +209,10 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
         const colDelta = Math.round(deltaX / colWidth);
         const newDayIdx = Math.max(0, Math.min(6, initialGrab.dayIdx + colDelta));
         const currentLiveDay = DAYS[newDayIdx];
-        setLiveDay(currentLiveDay);
+
+        if (currentLiveDay !== liveDay) {
+            setLiveDay(currentLiveDay);
+        }
 
         const deltaMin = Math.round(deltaY / 5) * 5;
         let newStartMin = initialGrab.startMin;
@@ -215,7 +230,9 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
         const newStart = minutesToTime(newStartMin);
         const newEnd = minutesToTime(newStartMin + newDuration);
 
-        setLiveTimeRange({ start: newStart, end: newEnd });
+        if (newStart !== liveTimeRange?.start || newEnd !== liveTimeRange?.end) {
+            setLiveTimeRange({ start: newStart, end: newEnd });
+        }
 
         // Quick Conflict Check for Visual Feedback (Red Ring)
         const conflict = checkConflict(activeLessonId, currentLiveDay, newStart, newEnd, initialGrab.lesson.teacherId);
@@ -229,9 +246,12 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
 
             const conflict = checkConflict(activeLessonId, liveDay, liveTimeRange.start, liveTimeRange.end, initialGrab.lesson.teacherId);
 
-            if (!conflict) {
-                console.log(`[Interaction] Committing ${activeLessonId} to ${liveDay} at ${liveTimeRange.start}-${liveTimeRange.end}`);
+            console.group(`[Schedule] Interaction Commitment: ${activeLessonId}`);
+            console.log("Final Day:", liveDay, "(Initial:", DAYS[initialGrab.dayIdx], ")");
+            console.log("Final Time:", liveTimeRange.start, "-", liveTimeRange.end);
+            console.log("Conflict:", conflict);
 
+            if (!conflict) {
                 const updatedLesson = {
                     ...initialGrab.lesson,
                     dayOfWeek: liveDay,
@@ -239,13 +259,15 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
                     endTime: liveTimeRange.end
                 };
 
-                // Apply to local state immediately
+                lastUpdateRef.current = Date.now();
                 setLocalLessons(prev => prev.map(l => l.id === activeLessonId ? updatedLesson : l));
 
                 if (onLessonUpdate) onLessonUpdate(updatedLesson);
+                console.log("STATUS: SUCCESS - Local state updated.");
             } else {
-                console.log("[Interaction] Reverting due to conflict");
+                console.log("STATUS: REVERTED - Conflict detected.");
             }
+            console.groupEnd();
         }
         setIsDragging(false);
         setDragType(null);
