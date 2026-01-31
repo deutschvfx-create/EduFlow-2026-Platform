@@ -61,8 +61,13 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
     const [dragType, setDragType] = useState<'move' | 'resize-top' | 'resize-bottom' | null>(null);
     const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
 
+    // Smooth Follow State
+    const [dragDelta, setDragDelta] = useState({ x: 0, y: 0 });
+    const [liveDay, setLiveDay] = useState<DayOfWeek | null>(null);
+    const [liveTimeRange, setLiveTimeRange] = useState<{ start: string, end: string } | null>(null);
+
     // The "Live" state of the lesson being manipulated
-    const [liveLesson, setLiveLesson] = useState<Lesson | null>(null);
+    // const [liveLesson, setLiveLesson] = useState<Lesson | null>(null); // Removed as per instruction
     const [conflictError, setConflictError] = useState<string | null>(null);
 
     const [initialGrab, setInitialGrab] = useState<{
@@ -106,7 +111,7 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
         setEditorOpen(false);
     };
 
-    // --- Drag & Drop Geometry Logic ---
+    // --- Interaction Logic ---
     const timeToMinutes = (time: string) => {
         const [h, m] = time.split(':').map(Number);
         return (h - 8) * 60 + m;
@@ -142,7 +147,9 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
         setIsDragging(true);
         setDragType(type);
         setActiveLessonId(lesson.id);
-        setLiveLesson(lesson);
+        setDragDelta({ x: 0, y: 0 });
+        setLiveDay(lesson.dayOfWeek);
+        setLiveTimeRange({ start: lesson.startTime, end: lesson.endTime });
 
         setInitialGrab({
             x: e.clientX,
@@ -152,76 +159,70 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
             durationMin: endMin - startMin,
             lesson
         });
+
+        // Lock pointer to capture release even outside window
+        (e.currentTarget as HTMLElement).setPointerCapture?.(1);
     };
 
     const handleMouseMove = (e: React.MouseEvent) => {
-        if (!isDragging || !initialGrab || !activeLessonId || !liveLesson) return;
+        if (!isDragging || !initialGrab || !activeLessonId) return;
 
+        const deltaX = e.clientX - initialGrab.x;
+        const deltaY = e.clientY - initialGrab.y;
+
+        // 1. Direct Visual Follow (Transform)
+        setDragDelta({ x: deltaX, y: deltaY });
+
+        // 2. Calculate "Snap-Shadow" for logical feedback (Preview Text)
         const gridContainer = document.getElementById('schedule-grid-container');
         if (!gridContainer) return;
         const gridRect = gridContainer.getBoundingClientRect();
 
-        const deltaY = e.clientY - initialGrab.y;
-        const deltaX = e.clientX - initialGrab.x;
-
-        // 1. Calculate Day
         const colWidth = (gridRect.width - 56) / 7;
         const colDelta = Math.round(deltaX / colWidth);
         const newDayIdx = Math.max(0, Math.min(6, initialGrab.dayIdx + colDelta));
-        const newDay = DAYS[newDayIdx];
+        setLiveDay(DAYS[newDayIdx]);
 
-        // 2. Calculate Time (1px = 1min)
         const deltaMin = Math.round(deltaY / 5) * 5;
-
         let newStartMin = initialGrab.startMin;
         let newDuration = initialGrab.durationMin;
 
         if (dragType === 'move') {
             newStartMin = Math.max(0, Math.min(15 * 60 - initialGrab.durationMin, initialGrab.startMin + deltaMin));
         } else if (dragType === 'resize-top') {
-            const potentialStart = Math.max(0, initialGrab.startMin + deltaMin);
-            const potentialEnd = initialGrab.startMin + initialGrab.durationMin;
-            if (potentialEnd - potentialStart >= 15) {
-                newStartMin = potentialStart;
-                newDuration = potentialEnd - potentialStart;
-            } else {
-                newStartMin = potentialEnd - 15;
-                newDuration = 15;
-            }
+            newStartMin = Math.max(0, Math.min(initialGrab.startMin + initialGrab.durationMin - 15, initialGrab.startMin + deltaMin));
+            newDuration = (initialGrab.startMin + initialGrab.durationMin) - newStartMin;
         } else if (dragType === 'resize-bottom') {
             newDuration = Math.max(15, Math.min(15 * 60 - initialGrab.startMin, initialGrab.durationMin + deltaMin));
         }
 
-        const formattedStart = minutesToTime(newStartMin);
-        const formattedEnd = minutesToTime(newStartMin + newDuration);
-
-        const conflict = checkConflict(activeLessonId, newDay, formattedStart, formattedEnd, liveLesson.teacherId)
-            ? "Конфликт преподавателя"
-            : null;
-
-        setConflictError(conflict);
-        setLiveLesson(prev => prev ? ({
-            ...prev,
-            dayOfWeek: newDay,
-            startTime: formattedStart,
-            endTime: formattedEnd
-        }) : null);
+        setLiveTimeRange({
+            start: minutesToTime(newStartMin),
+            end: minutesToTime(newStartMin + newDuration)
+        });
     };
 
-    const handleMouseUp = () => {
-        if (isDragging && activeLessonId && liveLesson) {
-            if (conflictError) {
-                // Flash red or just revert? User said Revert.
-                console.log("Reverting due to conflict");
+    const handleMouseUp = (e: React.MouseEvent) => {
+        if (isDragging && activeLessonId && initialGrab) {
+            // Releasing pointer capture
+            (e.currentTarget as HTMLElement).releasePointerCapture?.(1);
+
+            const conflict = checkConflict(activeLessonId, liveDay!, liveTimeRange!.start, liveTimeRange!.end, initialGrab.lesson.teacherId);
+            setConflictError(conflict ? "Конфликт преподавателя" : null);
+
+            if (!conflict) {
+                console.log("Committed New Time:", liveTimeRange?.start, "—", liveTimeRange?.end, "on", liveDay);
+                // onUpdate(activeLessonId, { ...initialGrab.lesson, dayOfWeek: liveDay!, startTime: liveTimeRange!.start, endTime: liveTimeRange!.end });
             } else {
-                console.log("Committed New Time:", liveLesson.startTime, "—", liveLesson.endTime, "on", liveLesson.dayOfWeek);
-                // onUpdate(activeLessonId, liveLesson)
+                console.log("Reverting due to conflict");
             }
         }
         setIsDragging(false);
         setDragType(null);
         setActiveLessonId(null);
-        setLiveLesson(null);
+        setDragDelta({ x: 0, y: 0 });
+        setLiveDay(null);
+        setLiveTimeRange(null);
         setConflictError(null);
     };
 
@@ -258,13 +259,17 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
         }
 
         const color = getTeacherColor(lesson.teacherId);
+        const isBeingManipulated = lesson.id === activeLessonId;
 
         return {
             top: `${topPercent}%`,
             height: `${heightPercent}%`,
             width,
             left,
-            colorClasses: cn(color.bg, color.border, color.text)
+            colorClasses: cn(color.bg, color.border, color.text),
+            transform: isBeingManipulated && dragType === 'move' ? `translate(${dragDelta.x}px, ${dragDelta.y}px)` : undefined,
+            zIndex: isBeingManipulated ? 100 : undefined,
+            isBeingManipulated
         };
     };
 
@@ -399,30 +404,9 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
                                     ))}
                                 </div>
 
-                                {isDragging && liveLesson && liveLesson.dayOfWeek === day && (
-                                    <div
-                                        className={cn(
-                                            "absolute w-[calc(100%-4px)] left-[2px] rounded border-2 border-dashed z-50 pointer-events-none flex flex-col justify-center items-center text-xs font-bold shadow-xl backdrop-blur-sm transition-all duration-75",
-                                            conflictError ? "border-red-500 bg-red-500/20 text-red-100" : getTeacherColor(liveLesson.teacherId).ghost
-                                        )}
-                                        style={{
-                                            top: `${(timeToMinutes(liveLesson.startTime) / (15 * 60)) * 100}%`,
-                                            height: `${((timeToMinutes(liveLesson.endTime) - timeToMinutes(liveLesson.startTime)) / (15 * 60)) * 100}%`
-                                        }}
-                                    >
-                                        <div className="flex flex-col items-center gap-0.5">
-                                            <span className="bg-black/40 px-2 py-0.5 rounded-full">{liveLesson.startTime} — {liveLesson.endTime}</span>
-                                            {conflictError && (
-                                                <span className="text-[10px] text-red-400 font-medium px-2 text-center uppercase tracking-tight">{conflictError}</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
                                 {/* Lessons Layer */}
                                 {dayLessons.map(lesson => {
                                     const style = getLayoutStyles(lesson, dayLessons);
-                                    if ((style as any).display === 'none') return null;
 
                                     return (
                                         <div
@@ -432,28 +416,30 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
                                                 onLessonClick(lesson);
                                             }}
                                             style={{
-                                                top: (style as any).top,
-                                                height: (style as any).height,
-                                                width: (style as any).width,
-                                                left: (style as any).left
+                                                top: style.top,
+                                                height: style.height,
+                                                width: style.width,
+                                                left: style.left,
+                                                transform: style.transform,
+                                                zIndex: style.zIndex,
+                                                transition: isDragging && style.isBeingManipulated ? 'none' : undefined
                                             }}
                                             className={cn(
-                                                "absolute rounded border shadow-sm transition-all duration-500 ease-out hover:z-40 hover:shadow-lg flex flex-col overflow-hidden group/card animate-in fade-in zoom-in-95 slide-in-from-top-2 cursor-grab active:cursor-grabbing",
+                                                "absolute rounded border shadow-sm transition-all duration-300 ease-out hover:shadow-lg flex flex-col overflow-hidden group/card animate-in fade-in zoom-in-95 cursor-grab active:cursor-grabbing",
                                                 lesson.status === 'CANCELLED'
                                                     ? "bg-red-950/80 border-red-900/50 text-red-200"
-                                                    : (style as any).colorClasses
+                                                    : style.colorClasses,
+                                                isDragging && style.isBeingManipulated && conflictError && "ring-2 ring-red-500 ring-offset-2 ring-offset-black"
                                             )}
+                                            onMouseDown={(e) => handleDragStart(e, lesson, 'move')}
                                         >
                                             {/* Top Resize Handle */}
                                             <div
-                                                className="absolute top-0 inset-x-0 h-2 cursor-ns-resize hover:bg-white/20 active:bg-white/40 z-50 transition-colors"
-                                                onMouseDown={(e) => handleDragStart(e, lesson, 'resize-top')}
+                                                className="absolute top-0 inset-x-0 h-2 cursor-ns-resize hover:bg-white/20 z-50 transition-colors"
+                                                onMouseDown={(e) => { e.stopPropagation(); handleDragStart(e, lesson, 'resize-top'); }}
                                             />
 
-                                            <div
-                                                className="px-1.5 py-1 text-[10px] font-bold leading-tight truncate"
-                                                onMouseDown={(e) => handleDragStart(e, lesson, 'move')}
-                                            >
+                                            <div className="px-1.5 py-1 text-[10px] font-bold leading-tight truncate">
                                                 {lesson.courseName}
                                             </div>
                                             <div className="px-1.5 pb-1 flex flex-col gap-0.5 opacity-90 pointer-events-none">
@@ -461,16 +447,21 @@ export function DesktopWeekGrid({ lessons, currentDate, onLessonClick, onLessonA
                                                     <Users className="h-2.5 w-2.5" />
                                                     <span>{lesson.groupName}</span>
                                                 </div>
-                                                <div className="flex items-center gap-1 text-[9px] truncate text-white/80 font-semibold">
+                                                <div className="flex items-center gap-1 text-[9px] truncate text-white/80 font-bold">
                                                     <Clock className="h-2.5 w-2.5" />
-                                                    <span>{lesson.startTime} - {lesson.endTime}</span>
+                                                    <span>
+                                                        {isDragging && style.isBeingManipulated && liveTimeRange
+                                                            ? `${liveTimeRange.start} - ${liveTimeRange.end}`
+                                                            : `${lesson.startTime} - ${lesson.endTime}`
+                                                        }
+                                                    </span>
                                                 </div>
                                             </div>
 
                                             {/* Bottom Resize Handle */}
                                             <div
-                                                className="absolute bottom-0 inset-x-0 h-2 cursor-ns-resize hover:bg-white/20 active:bg-white/40 z-50 transition-colors"
-                                                onMouseDown={(e) => handleDragStart(e, lesson, 'resize-bottom')}
+                                                className="absolute bottom-0 inset-x-0 h-2 cursor-ns-resize hover:bg-white/20 z-50 transition-colors"
+                                                onMouseDown={(e) => { e.stopPropagation(); handleDragStart(e, lesson, 'resize-bottom'); }}
                                             />
                                         </div>
                                     );
