@@ -490,9 +490,6 @@ export function HelpAssistant() {
     /**
      * Performs a click with automatic retries and verification
      */
-    /**
-     * Performs a click with automatic retries and verification
-     */
     const retryableClick = useCallback(async (
         element: HTMLElement,
         verification?: {
@@ -876,7 +873,7 @@ export function HelpAssistant() {
 
         // Standard Tour Start
         if (!force && section.route !== "all" && section.route !== pathname && section.route.startsWith('/app')) {
-            const sidebarLinkId = `sidebar-item-${section.route}`;
+            const currentSidebarLinkId = `sidebar-item-${section.route}`;
 
             // [HELPER] Function to execute the click with puppet and verification
             const executeNavigationClick = async (element: HTMLElement): Promise<boolean> => {
@@ -912,7 +909,7 @@ export function HelpAssistant() {
             await new Promise(resolve => setTimeout(resolve, 500));
 
             // 1. Try direct click (Desktop/Visible Link)
-            const targetEl = await validateElement(`[data-help-id="${sidebarLinkId}"]`, {
+            const targetEl = await validateElement(`[data-help-id="${currentSidebarLinkId}"]`, {
                 timeout: 500,
                 mustBeVisible: true
             });
@@ -982,7 +979,7 @@ export function HelpAssistant() {
                     toJSON: () => { }
                 } as DOMRect);
 
-                const drawerTarget = await validateElement(`[data-help-id="${sidebarLinkId}"]`, {
+                const drawerTarget = await validateElement(`[data-help-id="${currentSidebarLinkId}"]`, {
                     timeout: 3000,
                     mustBeVisible: true
                 });
@@ -1003,7 +1000,7 @@ export function HelpAssistant() {
                 }
 
                 // If drawer target not found or click failed
-                console.warn("Target link not found or click failed in drawer:", sidebarLinkId);
+                console.warn("Target link not found or click failed in drawer:", currentSidebarLinkId);
                 if (isVoiceEnabled) speak("Не вижу кнопку. Перехожу автоматически.");
                 setIsPuppetVisible(false);
 
