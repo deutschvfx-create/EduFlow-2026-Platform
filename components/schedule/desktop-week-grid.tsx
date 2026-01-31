@@ -208,8 +208,13 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
         const columnsRect = columnsContainer.getBoundingClientRect();
 
         const colWidth = columnsRect.width / 7;
-        const colDelta = Math.round(deltaX / colWidth);
-        const newDayIdx = Math.max(0, Math.min(6, initialGrab.dayIdx + colDelta));
+
+        // Absolute Column Detection
+        // Calculate which column index the mouse is currently hovering over
+        const relativeX = e.clientX - columnsRect.left;
+        const colIdx = Math.floor(relativeX / colWidth);
+        const newDayIdx = Math.max(0, Math.min(6, colIdx));
+
         const currentLiveDay = DAYS[newDayIdx];
 
         if (currentLiveDay !== liveDay) {
