@@ -14,6 +14,7 @@ import { MOCK_GROUPS_FULL } from "@/lib/mock/groups";
 import { MOCK_TEACHERS } from "@/lib/mock/teachers";
 import { MOCK_COURSES } from "@/lib/mock/courses";
 import { IOSStyleTimePicker } from "@/components/ui/ios-time-picker";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface DesktopWeekGridProps {
     lessons: Lesson[];
@@ -48,6 +49,9 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
     // Local State to allow immediate "Stickiness"
     const [localLessons, setLocalLessons] = useState<Lesson[]>(propsLessons);
     const lastUpdateRef = useRef<number>(0);
+
+    // Adaptive Density: Count unique teachers to decide avatar visibility
+    const uniqueTeachersCount = new Set(localLessons.map(l => l.teacherId)).size;
 
     // Interaction State
     const [editorOpen, setEditorOpen] = useState(false);
@@ -367,6 +371,8 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
         const overlaps = dayLessons.filter(l => l.id !== lesson.id && l.status !== 'CANCELLED' && l.startTime < lesson.endTime && l.endTime > lesson.startTime);
         let width = "calc(100% - 4px)";
         let left = "2px";
+        const overlapCount = overlaps.length + 1;
+
         if (overlaps.length > 0) {
             const cluster = [lesson, ...overlaps].sort((a, b) => a.id.localeCompare(b.id));
             const count = cluster.length;
@@ -384,7 +390,8 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
             left,
             colorClasses: cn(color.bg, color.border, color.text),
             zIndex: isBeingManipulated ? 100 : undefined,
-            isBeingManipulated
+            isBeingManipulated,
+            overlapCount
         };
     };
 
@@ -528,6 +535,11 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
                                 {/* Lessons Layer */}
                                 {dayLessons.map(lesson => {
                                     const style = getLayoutStyles(lesson, dayLessons);
+                                    const overlapCount = (style as any).overlapCount || 1;
+
+                                    // ADAPTIVE DENSITY RULES
+                                    const showAvatar = uniqueTeachersCount <= 5 && overlapCount <= 2;
+                                    const teacherInitials = lesson.teacherName ? lesson.teacherName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : "?";
 
                                     return (
                                         <div
@@ -542,10 +554,9 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
                                                 width: (style as any).width,
                                                 left: (style as any).left,
                                                 zIndex: (style as any).zIndex,
-                                                // Disable transitions while dragging for zero-lag follow
                                                 transition: isDragging && (style as any).isBeingManipulated ? 'none' : 'all 0.3s ease-out',
                                                 transform: isDragging && (style as any).isBeingManipulated && dragType === 'move' ? `translate(${dragDelta.x}px, ${dragDelta.y}px)` : undefined,
-                                                touchAction: 'none' // Crucial for pointer events
+                                                touchAction: 'none'
                                             }}
                                             className={cn(
                                                 "absolute rounded border shadow-sm hover:shadow-lg flex flex-col overflow-hidden group/card animate-in fade-in zoom-in-95 cursor-grab active:cursor-grabbing",
@@ -562,10 +573,31 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
                                                 onPointerDown={(e) => { e.stopPropagation(); handleDragStart(e, lesson, 'resize-top'); }}
                                             />
 
-                                            <div className="px-1.5 py-1 text-[10px] font-bold leading-tight truncate">
-                                                {lesson.courseName}
+                                            <div className="px-1.5 py-1 flex items-start justify-between gap-1 relative z-10">
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-1.5 mb-0.5">
+                                                        {/* Avatar Logic */}
+                                                        {showAvatar ? (
+                                                            <Avatar className="h-5 w-5 shrink-0 border border-white/10 shadow-sm">
+                                                                <AvatarImage src={`https://api.dicebear.com/7.x/notionists/svg?seed=${lesson.teacherId}`} />
+                                                                <AvatarFallback className="text-[8px] bg-black/20 text-white/90 font-bold">
+                                                                    {teacherInitials}
+                                                                </AvatarFallback>
+                                                            </Avatar>
+                                                        ) : (
+                                                            // Fallback: Tiny Initials Dot if very compact
+                                                            <div className="h-4 w-4 shrink-0 rounded-full bg-white/20 flex items-center justify-center text-[8px] font-bold">
+                                                                {teacherInitials}
+                                                            </div>
+                                                        )}
+                                                        <span className="font-bold leading-tight truncate text-[10px]">
+                                                            {lesson.courseName}
+                                                        </span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="px-1.5 pb-1 flex flex-col gap-0.5 opacity-90 pointer-events-none">
+
+                                            <div className="px-1.5 pb-1 flex flex-col gap-0.5 opacity-90 pointer-events-none mt-auto">
                                                 <div className="flex items-center gap-1 text-[9px] truncate">
                                                     <Users className="h-2.5 w-2.5" />
                                                     <span>{lesson.groupName}</span>
