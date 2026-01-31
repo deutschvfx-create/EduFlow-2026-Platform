@@ -11,10 +11,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { MOCK_FACULTIES } from "@/lib/mock/faculties";
 import { MOCK_DEPARTMENTS } from "@/lib/mock/departments";
 import { generateId } from "@/lib/utils";
+import { useOrganization } from "@/hooks/use-organization";
 
 export function AddCourseModal() {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const { currentOrganizationId } = useOrganization();
 
     // Form State
     const [name, setName] = useState("");
@@ -42,7 +44,7 @@ export function AddCourseModal() {
     }
 
     const handleSubmit = async () => {
-        if (!name || !code || !facultyId || !departmentId) {
+        if (!name || !code || !facultyId || !departmentId || !currentOrganizationId) {
             alert("Заполните обязательные поля: Название, Код, Факультет, Кафедра");
             return;
         }
@@ -53,21 +55,16 @@ export function AddCourseModal() {
             const { coursesRepo } = await import("@/lib/data/courses.repo");
             coursesRepo.add({
                 id: generateId(),
+                organizationId: currentOrganizationId,
                 name,
                 code,
                 facultyId,
-                facultyName: MOCK_FACULTIES.find(f => f.id === facultyId)?.name || 'Неизвестен',
-                facultyCode: MOCK_FACULTIES.find(f => f.id === facultyId)?.code || 'UNK',
                 departmentId,
-                departmentName: MOCK_DEPARTMENTS.find(d => d.id === departmentId)?.name || 'Неизвестна',
-                departmentCode: MOCK_DEPARTMENTS.find(d => d.id === departmentId)?.code || 'UNK',
                 level,
                 description,
                 status: 'ACTIVE',
                 teacherIds: [],
-                teacherNames: [],
                 groupIds: [],
-                groupNames: [],
                 createdAt: new Date().toISOString()
             });
 
