@@ -19,7 +19,8 @@ import {
     Settings,
     LogOut,
     Menu,
-    X
+    X,
+    MapPin
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,7 @@ const sidebarItems = [
             { label: "Факультеты", href: "/app/faculties", icon: Building2 },
             { label: "Кафедры", href: "/app/departments", icon: DoorOpen },
             { label: "Группы", href: "/app/groups", icon: Layers },
+            { label: "Аудитории", href: "/app/classrooms", icon: MapPin },
         ]
     },
     {
@@ -137,7 +139,9 @@ export default function ClientSidebar({
             if (item.href.includes('teachers')) return modules?.teachers;
             if (item.href.includes('faculties')) return modules?.faculties;
             if (item.href.includes('departments')) return modules?.departments;
+            if (item.href.includes('departments')) return modules?.departments;
             if (item.href.includes('groups')) return modules?.groups;
+            if (item.href.includes('classrooms')) return modules?.classrooms;
             if (item.href.includes('courses')) return modules?.courses;
             if (item.href.includes('schedule')) return modules?.schedule;
             if (item.href.includes('attendance')) return modules?.attendance;
