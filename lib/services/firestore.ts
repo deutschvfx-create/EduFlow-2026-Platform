@@ -2,7 +2,7 @@
 import { db } from "@/lib/firebase";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 
-export type UserRole = 'OWNER' | 'DIRECTOR' | 'TEACHER' | 'STUDENT';
+export type UserRole = 'owner' | 'teacher' | 'student';
 
 export interface UserData {
     uid: string;
@@ -48,6 +48,19 @@ export const UserService = {
         } catch (e) {
             console.error("UserService.updateUser failed:", e);
         }
+    },
+
+    async getAllUsers(organizationId: string): Promise<UserData[]> {
+        if (typeof window === 'undefined' || !db) return [];
+        try {
+            const { collection, query, where, getDocs } = await import("firebase/firestore");
+            const q = query(collection(db, "users"), where("organizationId", "==", organizationId));
+            const snap = await getDocs(q);
+            return snap.docs.map(doc => doc.data() as UserData);
+        } catch (e) {
+            console.error("UserService.getAllUsers failed:", e);
+            return [];
+        }
     }
 };
 
@@ -60,8 +73,8 @@ export const DashboardService = {
         try {
             const { collection, getCountFromServer, query, where } = await import("firebase/firestore");
 
-            const studentsQuery = query(collection(db, "users"), where("role", "==", "STUDENT"));
-            const teachersQuery = query(collection(db, "users"), where("role", "==", "TEACHER"));
+            const studentsQuery = query(collection(db, "users"), where("role", "==", "student"));
+            const teachersQuery = query(collection(db, "users"), where("role", "==", "teacher"));
 
             const [studentsSnap, teachersSnap] = await Promise.all([
                 getCountFromServer(studentsQuery),

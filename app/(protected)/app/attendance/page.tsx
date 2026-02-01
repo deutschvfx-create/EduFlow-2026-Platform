@@ -24,6 +24,9 @@ import { MOCK_COURSES } from "@/lib/mock/courses";
 import { Lesson } from "@/lib/types/schedule";
 import { ModuleGuard } from "@/components/system/module-guard";
 import { useOrganization } from "@/hooks/use-organization";
+import { useRole } from "@/hooks/use-role";
+import { useAuth } from "@/components/auth/auth-provider";
+import { attendanceRepo } from "@/lib/data/attendance.repo";
 
 type LocalAttendanceMap = Record<string, AttendanceRecord>;
 
@@ -40,45 +43,65 @@ export default function AttendancePage() {
     const [groups, setGroups] = useState<any[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
     const { currentOrganizationId } = useOrganization();
+    const { isTeacher, isOwner } = useRole();
+    const { userData } = useAuth();
 
+    // Load Metadata (Static-ish)
     useEffect(() => {
+        if (!currentOrganizationId) return;
+
+        setIsLoaded(false);
         Promise.all([
-            import("@/lib/data/attendance.repo").then(m => m.attendanceRepo.getAll(currentOrganizationId!)),
-            import("@/lib/data/schedule.repo").then(m => m.scheduleRepo.getAll(currentOrganizationId!)),
-            import("@/lib/data/students.repo").then(m => m.studentsRepo.getAll(currentOrganizationId!)),
-            import("@/lib/data/groups.repo").then(m => m.groupsRepo.getAll(currentOrganizationId!))
-        ]).then(([att, sch, stu, grps]) => {
-            const map: LocalAttendanceMap = {};
-            // @ts-ignore
-            att.forEach(r => {
-                // @ts-ignore
-                const key = `${r.scheduleId || r.lessonId}-${r.studentId}`;
-                // @ts-ignore
-                map[key] = { ...r, status: r.status as AttendanceStatus };
-            });
-            setAttendanceData(map);
-
-            // Map ScheduleItem to Lesson
-            const mappedSchedule: Lesson[] = sch.map((item: any) => {
-                // Helper to convert numeric day to string day
-                const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-                // @ts-ignore
-                const grp = grps.find(g => g.id === item.groupId);
-
-                return {
-                    ...item,
-                    dayOfWeek: typeof item.dayOfWeek === 'number' ? days[item.dayOfWeek] || 'MON' : item.dayOfWeek,
-                    status: 'PLANNED',
-                    createdAt: new Date().toISOString()
-                } as Lesson;
-            });
+            import("@/lib/data/schedule.repo").then(m =>
+                m.scheduleRepo.getAll(currentOrganizationId!, undefined, isTeacher ? { teacherId: userData?.uid } : {})
+            ),
+            import("@/lib/data/students.repo").then(m =>
+                m.studentsRepo.getAll(currentOrganizationId!, isTeacher ? { groupIds: (userData as any)?.groupIds } : {})
+            ),
+            import("@/lib/data/groups.repo").then(m =>
+                m.groupsRepo.getAll(currentOrganizationId!, isTeacher ? { groupIds: (userData as any)?.groupIds } : {})
+            )
+        ]).then(([sch, stu, grps]) => {
+            const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+            const mappedSchedule: Lesson[] = sch.map((item: any) => ({
+                ...item,
+                dayOfWeek: typeof item.dayOfWeek === 'number' ? days[item.dayOfWeek] || 'MON' : item.dayOfWeek,
+                status: 'PLANNED',
+                createdAt: new Date().toISOString()
+            } as Lesson));
 
             setSchedule(mappedSchedule);
             setStudents(stu);
             setGroups(grps);
             setIsLoaded(true);
         });
-    }, []);
+    }, [currentOrganizationId, isTeacher, userData?.uid]);
+
+    // Real-time Attendance Listener (Scoped)
+    useEffect(() => {
+        if (!currentOrganizationId || !isLoaded) return;
+
+        const scheduleIds = isTeacher
+            ? schedule.map(l => l.id)
+            : undefined;
+
+        attendanceRepo.getAll(
+            currentOrganizationId,
+            (records) => {
+                const map: LocalAttendanceMap = {};
+                records.forEach(r => {
+                    const key = `${r.scheduleId}-${r.studentId}`;
+                    map[key] = { ...r, status: r.status as AttendanceStatus };
+                });
+                setAttendanceData(map);
+            },
+            scheduleIds ? { scheduleIds } : {}
+        );
+
+        return () => {
+            attendanceRepo.unsubscribe(currentOrganizationId);
+        };
+    }, [currentOrganizationId, isLoaded, schedule, isTeacher]);
 
     // Derived State: Lessons for the day
     const lessonsForDate = useMemo(() => {
@@ -112,41 +135,57 @@ export default function AttendancePage() {
         return students.filter(s => s.groupIds?.includes(currentLesson.groupId));
     }, [currentLesson, students]);
 
-    const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
-        if (!selectedLessonId || !currentLesson) return;
+    const handleStatusChange = async (studentId: string, status: AttendanceStatus) => {
+        if (!selectedLessonId || !currentLesson || !currentOrganizationId) return;
 
         const key = `${selectedLessonId}-${studentId}`;
-        const newRecord: AttendanceRecord = {
-            id: attendanceData[key]?.id || `new-${Math.random()}`,
-            scheduleId: selectedLessonId, // Updated prop name locally if needed or keep lessonId
+        const existing = attendanceData[key];
+
+        const record: AttendanceRecord = {
+            id: existing?.id || `new-${Date.now()}-${studentId}`,
+            organizationId: currentOrganizationId,
+            scheduleId: selectedLessonId,
             studentId: studentId,
             date: date?.toISOString() || new Date().toISOString(),
             status,
-            // studentName removed from type if simplified
+            note: existing?.note || "",
+            updatedAt: new Date().toISOString()
         };
 
-        setAttendanceData(prev => ({
-            ...prev,
-            [key]: newRecord
-        }));
+        try {
+            await attendanceRepo.save(currentOrganizationId, record);
+            // Optimistic update locally for immediate UX if needed, 
+            // but onSnapshot will handle it.
+        } catch (error) {
+            console.error("Attendance save error:", error);
+            toast.error("Ошибка при сохранении");
+        }
     };
 
-    const handleBulkStatus = (status: AttendanceStatus) => {
-        if (!selectedLessonId || !currentLesson) return;
+    const handleBulkStatus = async (status: AttendanceStatus) => {
+        if (!selectedLessonId || !currentLesson || !currentOrganizationId) return;
 
-        const newMap = { ...attendanceData };
-        studentsInLesson.forEach(s => {
-            const key = `${selectedLessonId}-${s.id}`;
-            newMap[key] = {
-                id: newMap[key]?.id || `new-${Math.random()}`,
-                scheduleId: selectedLessonId,
-                studentId: s.id,
-                date: date?.toISOString() || new Date().toISOString(),
-                status,
-            };
-        });
-        setAttendanceData(newMap);
-        // alert(`Все отмечены как ${status}`);
+        try {
+            const promises = studentsInLesson.map(s => {
+                const key = `${selectedLessonId}-${s.id}`;
+                const existing = attendanceData[key];
+                const record: AttendanceRecord = {
+                    id: existing?.id || `new-${Date.now()}-${s.id}`,
+                    organizationId: currentOrganizationId,
+                    scheduleId: selectedLessonId,
+                    studentId: s.id,
+                    date: date?.toISOString() || new Date().toISOString(),
+                    status,
+                    note: existing?.note || "",
+                };
+                return attendanceRepo.save(currentOrganizationId, record);
+            });
+            await Promise.all(promises);
+            toast.success(`Все отмечены как ${status}`);
+        } catch (error) {
+            console.error("Bulk attendance error:", error);
+            toast.error("Ошика при массовом обновлении");
+        }
     };
 
     const getStatus = (studentId: string): AttendanceStatus => {

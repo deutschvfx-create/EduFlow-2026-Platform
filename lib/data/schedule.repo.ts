@@ -28,13 +28,18 @@ export const scheduleRepo = {
      */
     getAll: async (
         organizationId: string,
-        onUpdate?: (lessons: Lesson[]) => void
+        onUpdate?: (lessons: Lesson[]) => void,
+        options?: { teacherId?: string }
     ): Promise<Lesson[]> => {
         // Try Firestore first
         if (typeof window !== 'undefined' && firestoreDb) {
             try {
                 const lessonsRef = collection(firestoreDb, COLLECTION_NAME);
-                const q = query(lessonsRef, where("organizationId", "==", organizationId));
+                let q = query(lessonsRef, where("organizationId", "==", organizationId));
+
+                if (options?.teacherId) {
+                    q = query(q, where("teacherId", "==", options.teacherId));
+                }
 
                 // If callback provided, set up realtime listener
                 if (onUpdate) {

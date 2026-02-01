@@ -3,11 +3,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Calendar, Clock, MapPin, QrCode } from "lucide-react"
+import { Calendar, Clock, MapPin, QrCode, GraduationCap } from "lucide-react"
 import { MOCK_STUDENTS } from "@/lib/mock/students"
 import QRCode from "react-qr-code"
 import { useState, useEffect } from "react"
+import Link from "next/link";
 import { Lesson } from "@/lib/types/schedule"
+import { AttendanceRecord } from "@/lib/types/attendance"
+import { attendanceRepo } from "@/lib/data/attendance.repo"
+import { AttendanceStatusBadge } from "@/components/attendance/status-badge"
 
 // Mock config for current student and app settings, replacing missing "@/lib/data"
 const CURRENT_STUDENT_ID = "s1";
@@ -16,12 +20,25 @@ const APP_CONFIG = { orgType: 'LanguageSchool' };
 export default function StudentDashboard() {
     const rawStudent = MOCK_STUDENTS.find(s => s.id === CURRENT_STUDENT_ID) || MOCK_STUDENTS[0];
     const [schedule, setSchedule] = useState<Lesson[]>([]);
+    const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
 
     useEffect(() => {
-        // Load schedule from repository
+        if (!rawStudent.organizationId) return;
+
+        // Load schedule
         import("@/lib/data/schedule.repo").then(m =>
             m.scheduleRepo.getAll(rawStudent.organizationId)
         ).then(setSchedule);
+
+        // Real-time Attendance
+        attendanceRepo.getAll(rawStudent.organizationId, (records) => {
+            const myAttendance = records.filter(r => r.studentId === CURRENT_STUDENT_ID);
+            setAttendance(myAttendance);
+        }, { studentId: CURRENT_STUDENT_ID });
+
+        return () => {
+            attendanceRepo.unsubscribe(rawStudent.organizationId);
+        };
     }, [rawStudent.organizationId]);
 
     // Extend raw student with UI helpers
@@ -33,10 +50,14 @@ export default function StudentDashboard() {
 
     const isLanguageSchool = APP_CONFIG.orgType === 'LanguageSchool';
 
-    // Get Today's Schedule (Mock logic: showing all for now or filtering by "MON" to simulate today)
     const todayLessons = student.groupIds?.[0]
         ? schedule.filter(l => l.groupId === student.groupIds[0]).slice(0, 3)
         : [];
+
+    const getAttendanceStatus = (lessonId: string) => {
+        const record = attendance.find(r => r.scheduleId === lessonId);
+        return record?.status;
+    };
 
     return (
         <div className="flex flex-col gap-6 p-4 md:p-6 min-h-[calc(100vh-4rem)] max-w-md mx-auto w-full">
@@ -88,6 +109,13 @@ export default function StudentDashboard() {
                 </CardContent>
             </Card>
 
+            <Link href="/student/grades">
+                <Button variant="outline" className="w-full bg-zinc-900 border-zinc-800 text-zinc-300 gap-2 h-12">
+                    <GraduationCap className="h-4 w-4 text-indigo-400" />
+                    Мои оценки
+                </Button>
+            </Link>
+
             {/* 3. Schedule List */}
             <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -120,7 +148,12 @@ export default function StudentDashboard() {
                                         </div>
                                     </div>
                                 </div>
-                                <div className={`h-2 w-2 rounded-full ${lesson.status === 'PLANNED' ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                                <div className="flex flex-col items-center gap-2">
+                                    <div className={`h-2 w-2 rounded-full ${lesson.status === 'PLANNED' ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                                    {getAttendanceStatus(lesson.id) && (
+                                        <AttendanceStatusBadge status={getAttendanceStatus(lesson.id)!} />
+                                    )}
+                                </div>
                             </CardContent>
                         </Card>
                     )) : (
@@ -134,6 +167,6 @@ export default function StudentDashboard() {
 
             {/* Bottom Spacer for Mobile Nav */}
             <div className="h-20" />
-        </div>
+        </div >
     )
 }

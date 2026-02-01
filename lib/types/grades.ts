@@ -2,6 +2,7 @@ export type GradeType = "HOMEWORK" | "QUIZ" | "EXAM" | "PROJECT" | "PARTICIPATIO
 
 export type GradeRecord = {
     id: string;
+    organizationId: string;
 
     groupId: string;
 

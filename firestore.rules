@@ -14,45 +14,85 @@ service cloud.firestore {
       return exists(path) ? get(path).data.get('organizationId', null) : null;
     }
 
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isRole(role) {
+      return isSignedIn() && getUserData().get('role', 'student') == role;
+    }
+
     // --- USER PROFILE RULES ---
     
     match /users/{userId} {
       // Allow read if it's own profile or same organization
       allow read: if isSignedIn() && (
         request.auth.uid == userId || 
-        (exists(/databases/$(database)/documents/users/$(userId)) && get(/databases/$(database)/documents/users/$(userId)).data.get('organizationId', 'none') == getOrgId())
+        (exists(/databases/$(database)/documents/users/$(userId)) && 
+         get(/databases/$(database)/documents/users/$(userId)).data.get('organizationId', 'none') == getOrgId())
       );
       
       // Allow create if it's the user's own UID
       allow create: if isSignedIn() && request.auth.uid == userId;
       
-      // Allow update for own profile
-      allow update: if isSignedIn() && request.auth.uid == userId;
+      // Allow update for own profile (but not self-role change if owner) or for owner to manage users in their org
+      allow update: if isSignedIn() && (
+        (request.auth.uid == userId && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']) || 
+          isRole('owner') // Owner can change roles, but we'll manage the self-check in UI or more granular rules
+        )) ||
+        (isRole('owner') && 
+         get(/databases/$(database)/documents/users/$(userId)).data.get('organizationId', 'none') == getOrgId() &&
+         request.resource.data.get('role', '') in ['teacher', 'student'])
+      );
     }
 
     // --- ORGANIZATION RULES ---
     
     match /organizations/{orgId} {
       // BOOTSTRAP: Allow signed-in users to create an organization 
-      // if they don't have one yet in their user profile.
       allow create: if isSignedIn() && 
                     (getOrgId() == null) &&
                     request.resource.data.ownerId == request.auth.uid &&
                     request.resource.data.organizationId == orgId;
 
-      // Read/Update allowed for owners or members
-      allow read, update: if isSignedIn() && (
-        resource.data.ownerId == request.auth.uid || 
+      // Read allowed for members
+      allow read: if isSignedIn() && (
         resource.data.organizationId == getOrgId()
+      );
+
+      // Update allowed only for owner
+      allow update: if isSignedIn() && (
+        resource.data.ownerId == request.auth.uid || 
+        (isRole('owner') && resource.data.organizationId == getOrgId())
       );
     }
 
     // --- MULTI-TENANT DOMAIN RULES ---
-    
-    match /{collection}/{document=**} {
-      allow read, write: if isSignedIn() && 
-                          !(collection in ["users", "organizations"]) && 
-                          (resource == null ? request.resource.data.organizationId == getOrgId() : resource.data.organizationId == getOrgId());
+
+    // Generic rule for organization-level data
+    match /{collection}/{docId} {
+      
+      // Helper to check org access
+      function belongsToOrg() {
+        return (resource == null ? request.resource.data.organizationId == getOrgId() : resource.data.organizationId == getOrgId());
+      }
+
+      // 1. OWNER: Full access to everything in their org
+      allow read, write: if isRole('owner') && belongsToOrg();
+
+      // 2. TEACHER: Specific access
+      // collection in ["schedule", "groups", "students", "courses"]
+      allow read: if isRole('teacher') && belongsToOrg();
+      allow write: if isRole('teacher') && belongsToOrg() && (collection in ["attendance", "grades"]);
+
+      // 3. STUDENT: Own data read-only
+      allow read: if isRole('student') && belongsToOrg() && (
+        collection in ["schedule", "courses"] || // General schedule/courses
+        (collection == "attendance" && resource != null && resource.data.get('studentId', '') == request.auth.uid) || // Own attendance
+        (collection == "grades" && resource != null && resource.data.get('studentId', '') == request.auth.uid) || // Own grades
+        (resource != null && resource.data.get('studentId', '') == request.auth.uid) // Other Personal data
+      );
     }
   }
 }

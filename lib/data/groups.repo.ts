@@ -19,11 +19,22 @@ import {
 const COLLECTION = "groups";
 
 export const groupsRepo = {
-    getAll: async (organizationId: string): Promise<Group[]> => {
-        const filteredMock = MOCK_GROUPS_FULL.filter(g => g.organizationId === organizationId);
+    getAll: async (organizationId: string, options?: { groupIds?: string[] }): Promise<Group[]> => {
+        let filteredMock = MOCK_GROUPS_FULL.filter(g => g.organizationId === organizationId);
+        if (options?.groupIds && options.groupIds.length > 0) {
+            filteredMock = filteredMock.filter(g => options.groupIds!.includes(g.id));
+        }
+
         return withFallback((async () => {
             try {
-                const q = query(collection(db, COLLECTION), where("organizationId", "==", organizationId));
+                let q = query(collection(db, COLLECTION), where("organizationId", "==", organizationId));
+
+                if (options?.groupIds && options.groupIds.length > 0) {
+                    // Firestore 'in' has a limit of 30, but for basic scoping it should suffice.
+                    // If we have more, we might need a different strategy or client-side filtering.
+                    q = query(q, where("__name__", "in", options.groupIds.slice(0, 30)));
+                }
+
                 const snapshot = await getDocs(q);
 
                 // Auto-seed if empty

@@ -11,6 +11,7 @@ export const MOCK_GRADES: GradeRecord[] = [
         date: "2025-09-02",
         score: 95,
         comment: "Excellent work!",
+        organizationId: "org1",
         updatedAt: "2025-09-02T15:00:00Z"
     },
     {
@@ -22,6 +23,7 @@ export const MOCK_GRADES: GradeRecord[] = [
         date: "2025-09-02",
         score: 80,
         comment: "Good attempt",
+        organizationId: "org1",
         updatedAt: "2025-09-02T15:05:00Z"
     },
     {
@@ -32,6 +34,7 @@ export const MOCK_GRADES: GradeRecord[] = [
         type: "QUIZ",
         date: "2025-09-05",
         score: 100,
+        organizationId: "org1",
         updatedAt: "2025-09-05T10:00:00Z"
     },
 
@@ -45,6 +48,7 @@ export const MOCK_GRADES: GradeRecord[] = [
         type: "EXAM",
         date: "2025-09-10",
         score: 75,
+        organizationId: "org1",
         updatedAt: "2025-09-10T12:00:00Z"
     }
 ];

@@ -33,6 +33,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useRole } from "@/hooks/use-role";
 
 const allMenuItems = [
     { label: "Дашборд", href: "/app/dashboard", icon: LayoutDashboard, category: "quick" },
@@ -70,13 +71,40 @@ export function MobileDrawer({ trigger, open: controlledOpen, onOpenChange }: Mo
     const [searchQuery, setSearchQuery] = useState("");
     const pathname = usePathname();
     const { userData } = useAuth();
+    const { role, isOwner, isTeacher, isStudent } = useRole();
+
+    const allowedMenuItems = useMemo(() => {
+        return allMenuItems.filter(item => {
+            if (isOwner) return true; // Owners see everything
+
+            // Teacher restrictions
+            if (isTeacher) {
+                const hiddenForTeachers = ["/app/faculties", "/app/departments", "/app/reports", "/app/payments", "/app/settings"];
+                return !hiddenForTeachers.includes(item.href);
+            }
+
+            // Student restrictions (even more limited)
+            if (isStudent) {
+                const allowedForStudents = ["/app/dashboard", "/app/schedule", "/app/chat", "/app/attendance", "/app/grades"];
+                if (allowedForStudents.includes(item.href)) {
+                    if (item.href === "/app/grades") {
+                        return { ...item, href: "/student/grades" };
+                    }
+                    return item;
+                }
+                return false;
+            }
+
+            return false;
+        });
+    }, [isOwner, isTeacher, isStudent]);
 
     const filteredItems = useMemo(() => {
-        if (!searchQuery) return allMenuItems;
-        return allMenuItems.filter(item =>
+        if (!searchQuery) return allowedMenuItems;
+        return allowedMenuItems.filter(item =>
             item.label.toLowerCase().includes(searchQuery.toLowerCase())
         );
-    }, [searchQuery]);
+    }, [searchQuery, allowedMenuItems]);
 
     const quickAccessItems = filteredItems.filter(i => i.category === "quick");
     const otherModules = filteredItems.filter(i => i.category === "all");
@@ -149,7 +177,7 @@ export function MobileDrawer({ trigger, open: controlledOpen, onOpenChange }: Mo
                                         </Avatar>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-bold text-white truncate">{userData?.name || "Пользователь"}</p>
-                                            <p className="text-[10px] text-zinc-500 font-medium uppercase tracking-tighter">{userData?.role || "GUEST"}</p>
+                                            <p className="text-[10px] text-zinc-500 font-medium uppercase tracking-tighter">{role || "student"}</p>
                                         </div>
                                         <motion.div
                                             animate={{ rotate: isProfileOpen ? 180 : 0 }}

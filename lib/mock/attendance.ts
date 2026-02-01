@@ -4,6 +4,7 @@ export const MOCK_ATTENDANCE: AttendanceRecord[] = [
     // Lesson l1 (g1) - Student s1, s2
     {
         id: "a1",
+        organizationId: "org1",
         lessonId: "l1",
         scheduleId: "l1",
         studentId: "s1",
@@ -12,6 +13,7 @@ export const MOCK_ATTENDANCE: AttendanceRecord[] = [
     },
     {
         id: "a2",
+        organizationId: "org1",
         lessonId: "l1",
         scheduleId: "l1",
         studentId: "s2",
@@ -22,6 +24,7 @@ export const MOCK_ATTENDANCE: AttendanceRecord[] = [
     // Lesson l2 (g1)
     {
         id: "a3",
+        organizationId: "org1",
         lessonId: "l2",
         scheduleId: "l2",
         studentId: "s1",
@@ -30,6 +33,7 @@ export const MOCK_ATTENDANCE: AttendanceRecord[] = [
     },
     {
         id: "a4",
+        organizationId: "org1",
         lessonId: "l2",
         scheduleId: "l2",
         studentId: "s2",

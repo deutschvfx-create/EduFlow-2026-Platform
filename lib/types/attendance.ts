@@ -2,6 +2,7 @@ export type AttendanceStatus = "PRESENT" | "ABSENT" | "LATE" | "EXCUSED" | "UNKN
 
 export type AttendanceRecord = {
     id: string;
+    organizationId: string;
     lessonId?: string; // Legacy
     scheduleId: string; // New
     studentId: string;

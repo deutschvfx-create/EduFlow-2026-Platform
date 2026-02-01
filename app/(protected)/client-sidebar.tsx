@@ -130,7 +130,12 @@ export default function ClientSidebar({
 
     // Filter Items Logic (Client Side)
     const filteredItems = dynamicSidebarItems.map(group => {
-        const newItems = group.items.filter(item => {
+        const newItems = group.items.map(item => {
+            if (user?.role === 'STUDENT' && item.href === '/app/grades') {
+                return { ...item, href: '/student/grades' };
+            }
+            return item;
+        }).filter(item => {
             if (item.href === '/teacher' || item.href === '/student') return true;
             if (item.href === '/app/dashboard') return true;
             if (item.href === '/app/settings') return true;
@@ -138,7 +143,6 @@ export default function ClientSidebar({
             // Map href to config key
             if (item.href.includes('teachers')) return modules?.teachers;
             if (item.href.includes('faculties')) return modules?.faculties;
-            if (item.href.includes('departments')) return modules?.departments;
             if (item.href.includes('departments')) return modules?.departments;
             if (item.href.includes('groups')) return modules?.groups;
             if (item.href.includes('classrooms')) return modules?.classrooms;

@@ -15,6 +15,7 @@ import { ModuleGuard } from "@/components/system/module-guard";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DesktopWeekGrid } from "@/components/schedule/desktop-week-grid";
 import { useOrganization } from "@/hooks/use-organization";
+import { useRole } from "@/hooks/use-role";
 
 const DAYS: DayOfWeek[] = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
@@ -30,8 +31,8 @@ const DayLabels: Record<DayOfWeek, string> = {
 
 export default function SchedulePage() {
     const { userData } = useAuth();
+    const { isOwner, isTeacher, isStudent } = useRole();
     const { currentOrganizationId } = useOrganization();
-    const canEdit = userData?.role === 'OWNER' || userData?.role === 'DIRECTOR';
     const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
 
     // Auto-switch view mode on desktop/mobile
@@ -89,10 +90,17 @@ export default function SchedulePage() {
 
                 // Start realtime subscription and load metadata
                 const [l, g, t, c] = await Promise.all([
-                    schM.scheduleRepo.getAll(currentOrganizationId, (updated) => {
-                        if (active) setLessons(updated);
-                    }),
-                    grpM.groupsRepo.getAll(currentOrganizationId),
+                    schM.scheduleRepo.getAll(
+                        currentOrganizationId,
+                        (updated) => {
+                            if (active) setLessons(updated);
+                        },
+                        isTeacher ? { teacherId: userData?.uid } : {}
+                    ),
+                    grpM.groupsRepo.getAll(
+                        currentOrganizationId,
+                        isTeacher ? { groupIds: (userData as any)?.groupIds } : {}
+                    ),
                     teaM.teachersRepo.getAll(currentOrganizationId),
                     couM.coursesRepo.getAll(currentOrganizationId)
                 ]);
@@ -125,7 +133,7 @@ export default function SchedulePage() {
     useEffect(() => {
         if (!userData) return;
 
-        if (userData.role === 'TEACHER') {
+        if (userData.role === 'teacher') {
             setTeacherFilter(userData.uid);
         }
         // TODO: For students we need their groupId. 
@@ -175,7 +183,7 @@ export default function SchedulePage() {
     if (!isLoaded) return <div className="p-8 text-zinc-500">Загрузка расписания...</div>;
 
     const handleLessonClick = (lesson: Lesson) => {
-        if (!canEdit) return; // Read-only for others
+        if (!isOwner && !isTeacher) return; // Read-only for others (students)
         setSelectedLesson(lesson);
         setEditModalOpen(true);
     };
@@ -312,8 +320,8 @@ export default function SchedulePage() {
                 )}
 
 
-                {/* Floating Action Button - Only for Admins */}
-                {canEdit && (
+                {/* Floating Action Button - Only for Owners/Teachers (if allowed) */}
+                {isOwner && (
                     <div className="fixed bottom-6 right-4 md:bottom-8 md:right-8 z-40">
                         <AddLessonModal
                             lessons={lessons}

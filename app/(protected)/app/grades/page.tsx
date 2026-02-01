@@ -14,6 +14,9 @@ import { GraduationCap, BarChart3, AlertCircle, Plus, Loader2 } from "lucide-rea
 const toast = { success: (m: string) => alert(m), error: (m: string) => alert(m) };
 import { ModuleGuard } from "@/components/system/module-guard";
 import { useOrganization } from "@/hooks/use-organization";
+import { useRole } from "@/hooks/use-role";
+import { useAuth } from "@/components/auth/auth-provider";
+import { gradesRepo } from "@/lib/data/grades.repo";
 
 // Local map type
 type LocalGradesMap = Record<string, GradeRecord>;
@@ -32,34 +35,60 @@ export default function GradesPage() {
     const [gradesData, setGradesData] = useState<LocalGradesMap>({});
     const [isLoaded, setIsLoaded] = useState(false);
     const { currentOrganizationId } = useOrganization();
+    const { isTeacher, isOwner } = useRole();
+    const { userData } = useAuth();
 
     useEffect(() => {
-        Promise.all([
-            import("@/lib/data/groups.repo").then(m => m.groupsRepo.getAll(currentOrganizationId!)),
-            import("@/lib/data/courses.repo").then(m => m.coursesRepo.getAll(currentOrganizationId!)),
-            import("@/lib/data/students.repo").then(m => m.studentsRepo.getAll(currentOrganizationId!)),
-            import("@/lib/data/grades.repo").then(m => m.gradesRepo.getAll(currentOrganizationId!))
-        ]).then(([g, c, s, grades]) => {
-            setGroups(g);
-            setCourses(c);
-            setAllStudents(s);
+        if (!currentOrganizationId) return;
 
-            const map: LocalGradesMap = {};
-            // @ts-ignore
-            grades.forEach(r => {
-                map[r.studentId] = r as any; // NOTE: This assumes 1 grade per student per context. In reality need composite key or filtering.
-                // But current 'gradesData' is used as Session Grades.
-                // We should ideally filter by selected context later, or map Key = `${courseId}-${studentId}-${type}`
-            });
-            // For now, adhering to existing 'gradesData' usage which seems to check just studentId?
-            // Line 108: `const db = currentSessionGrades[studentId];`
-            // Line 66: `return gradesData;`
-            // Yes, assumes one active session.
+        setIsLoaded(false);
+        let active = true;
 
-            setGradesData(map);
-            setIsLoaded(true);
-        });
-    }, []);
+        const loadMetadata = async () => {
+            const [grpM, couM, stuM] = await Promise.all([
+                import("@/lib/data/groups.repo"),
+                import("@/lib/data/courses.repo"),
+                import("@/lib/data/students.repo")
+            ]);
+
+            const [g, c, s] = await Promise.all([
+                grpM.groupsRepo.getAll(currentOrganizationId, isTeacher ? { groupIds: (userData as any)?.groupIds } : {}),
+                couM.coursesRepo.getAll(currentOrganizationId),
+                stuM.studentsRepo.getAll(currentOrganizationId, isTeacher ? { groupIds: (userData as any)?.groupIds } : {})
+            ]);
+
+            if (active) {
+                setGroups(g);
+                setCourses(c);
+                setAllStudents(s);
+            }
+        };
+
+        const setupGradesListener = () => {
+            gradesRepo.getAll(
+                currentOrganizationId,
+                (updated) => {
+                    if (active) {
+                        const map: LocalGradesMap = {};
+                        updated.forEach(r => {
+                            // Composite key if needed, or simple student map if session-scoped
+                            map[r.studentId] = r;
+                        });
+                        setGradesData(map);
+                        setIsLoaded(true);
+                    }
+                },
+                isTeacher ? { groupId: groupId !== 'all' ? groupId : undefined, courseId: courseId !== 'all' ? courseId : undefined } : {}
+            );
+        };
+
+        loadMetadata().then(() => setupGradesListener());
+
+        return () => {
+            active = false;
+            gradesRepo.unsubscribe(currentOrganizationId);
+        };
+    }, [currentOrganizationId, isTeacher, userData?.uid, groupId, courseId]);
 
     // Derived: Students in Group
     const studentsInGroup = useMemo(() => {
@@ -144,10 +173,36 @@ export default function GradesPage() {
             return;
         }
 
-        // Simulate save
-        await new Promise(r => setTimeout(r, 800));
-        alert('Оценки сохранены!');
-        setLocalEdits({});
+        if (!currentOrganizationId) return;
+
+        try {
+            const studentIds = Object.keys(localEdits);
+            const promises = studentIds.map(sid => {
+                const dbRec = currentSessionGrades[sid];
+                const edit = localEdits[sid];
+
+                const record: GradeRecord = {
+                    id: dbRec?.id || `new-${Date.now()}-${sid}`,
+                    organizationId: currentOrganizationId,
+                    groupId,
+                    courseId,
+                    studentId: sid,
+                    type: type as GradeType,
+                    date: date?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
+                    score: edit.score !== undefined ? edit.score : dbRec?.score,
+                    comment: edit.comment !== undefined ? edit.comment : dbRec?.comment,
+                    updatedAt: new Date().toISOString()
+                };
+                return gradesRepo.save(currentOrganizationId, record);
+            });
+
+            await Promise.all(promises);
+            toast.success('Оценки сохранены!');
+            setLocalEdits({});
+        } catch (error) {
+            console.error("Save grades error:", error);
+            toast.error("Ошибка при сохранении оценок");
+        }
     };
 
     // Stats

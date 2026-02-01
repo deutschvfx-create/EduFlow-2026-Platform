@@ -19,15 +19,25 @@ import {
 const COLLECTION = "users";
 
 export const studentsRepo = {
-    getAll: async (organizationId: string): Promise<Student[]> => {
-        const filteredMock = MOCK_STUDENTS.filter(s => s.organizationId === organizationId);
+    getAll: async (organizationId: string, options?: { groupIds?: string[] }): Promise<Student[]> => {
+        let filteredMock = MOCK_STUDENTS.filter(s => s.organizationId === organizationId);
+        if (options?.groupIds && options.groupIds.length > 0) {
+            filteredMock = filteredMock.filter(s => s.groupIds?.some(id => options.groupIds!.includes(id)));
+        }
+
         return withFallback((async () => {
             try {
-                const q = query(
-                    collection(db, COLLECTION),
+                const collRef = collection(db, COLLECTION);
+                let q = query(
+                    collRef,
                     where("role", "==", "STUDENT"),
                     where("organizationId", "==", organizationId)
                 );
+
+                if (options?.groupIds && options.groupIds.length > 0) {
+                    q = query(q, where("groupIds", "array-contains-any", options.groupIds.slice(0, 10)));
+                }
+
                 const snapshot = await getDocs(q);
 
                 // Auto-seed if empty (Only if using org_1 for now to represent first user)

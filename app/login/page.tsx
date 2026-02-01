@@ -55,7 +55,7 @@ function LoginForm() {
                 setStoredUser(data, token)
 
                 if (data.organizationId) {
-                    router.push(data.role === 'STUDENT' ? '/student' : '/app/dashboard')
+                    router.push(data.role === 'student' ? '/student' : '/app/dashboard')
                 } else {
                     router.push('/register')
                 }

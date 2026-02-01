@@ -12,30 +12,9 @@ import {
     Settings
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useRole } from "@/hooks/use-role";
 
-const navItems = [
-    {
-        label: "Меню",
-        isDrawer: true,
-        icon: Menu
-    },
-    {
-        label: "Главная",
-        href: "/app/dashboard",
-        icon: Home
-    },
-    {
-        label: "Студенты",
-        href: "/app/students",
-        icon: Users
-    },
-    {
-        label: "Расписание",
-        href: "/app/schedule",
-        icon: Calendar
-    },
 
-];
 
 interface MobileNavBarProps {
     onOpenMenu?: () => void;
@@ -43,6 +22,31 @@ interface MobileNavBarProps {
 
 export function MobileNavBar({ onOpenMenu }: MobileNavBarProps) {
     const pathname = usePathname();
+    const { isStudent } = useRole();
+
+    const navItems = [
+        {
+            label: "Меню",
+            isDrawer: true,
+            icon: Menu
+        },
+        {
+            label: "Главная",
+            href: "/app/dashboard",
+            icon: Home
+        },
+        {
+            label: "Студенты",
+            href: "/app/students",
+            icon: Users,
+            hidden: isStudent
+        },
+        {
+            label: "Расписание",
+            href: "/app/schedule",
+            icon: Calendar
+        },
+    ].filter(item => !item.hidden);
 
     const renderItem = (item: any) => {
         const isActive = item.href ? (pathname === item.href || pathname.startsWith(item.href + '/')) : false;

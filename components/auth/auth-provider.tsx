@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     // AND not already handled by the page logic
                     if (data && (pathname === '/login' || pathname === '/register')) {
                         if (data.organizationId) {
-                            const target = data.role === 'STUDENT' ? '/student' : '/app/dashboard';
+                            const target = data.role === 'student' ? '/student' : '/app/dashboard';
                             router.push(target);
                         } else {
                             // If logged in but no org, stay on register to complete onboarding
