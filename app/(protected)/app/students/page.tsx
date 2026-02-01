@@ -29,11 +29,24 @@ export default function StudentsPage() {
     }, [currentOrganizationId]);
 
     const loadStudents = (orgId: string) => {
-        import("@/lib/data/students.repo").then(async ({ studentsRepo }) => {
-            const data = await studentsRepo.getAll(orgId);
-            setStudents(data);
-            setIsLoaded(true);
-        });
+        console.log(`[StudentsPage] Loading students for org: ${orgId}`);
+        import("@/lib/data/students.repo")
+            .then(async ({ studentsRepo }) => {
+                try {
+                    const data = await studentsRepo.getAll(orgId);
+                    console.log(`[StudentsPage] Loaded ${data.length} students`);
+                    setStudents(data);
+                } catch (err) {
+                    console.error("[StudentsPage] Failed to load students:", err);
+                    alert("Ошибка при загрузке студентов. Проверьте консоль.");
+                } finally {
+                    setIsLoaded(true);
+                }
+            })
+            .catch(err => {
+                console.error("[StudentsPage] Failed to import repo:", err);
+                setIsLoaded(true);
+            });
     };
 
     const handleAction = async (action: string, id: string) => {

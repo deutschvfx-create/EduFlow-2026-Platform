@@ -60,11 +60,24 @@ export default function TeachersPage() {
     }, [currentOrganizationId]);
 
     const loadTeachers = (orgId: string) => {
-        import("@/lib/data/teachers.repo").then(async ({ teachersRepo }) => {
-            const data = await teachersRepo.getAll(orgId);
-            setTeachers(data);
-            setIsLoaded(true);
-        });
+        console.log(`[TeachersPage] Loading teachers for org: ${orgId}`);
+        import("@/lib/data/teachers.repo")
+            .then(async ({ teachersRepo }) => {
+                try {
+                    const data = await teachersRepo.getAll(orgId);
+                    console.log(`[TeachersPage] Loaded ${data.length} teachers`);
+                    setTeachers(data);
+                } catch (err) {
+                    console.error("[TeachersPage] Failed to load teachers:", err);
+                    alert("Ошибка при загрузке преподавателей. Проверьте консоль.");
+                } finally {
+                    setIsLoaded(true);
+                }
+            })
+            .catch(err => {
+                console.error("[TeachersPage] Failed to import repo:", err);
+                setIsLoaded(true);
+            });
     };
 
     const toggleView = (mode: "table" | "grid") => {
