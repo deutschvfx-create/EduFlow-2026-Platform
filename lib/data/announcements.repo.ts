@@ -33,14 +33,15 @@ export const announcementsRepo = {
         }
     },
 
-    add: async (announcement: Announcement) => {
-        if (!announcement.organizationId) {
+    add: async (organizationId: string, announcement: Announcement) => {
+        if (!organizationId) {
             throw new Error("organizationId is required");
         }
         const ref = announcement.id ? doc(db, COLLECTION, announcement.id) : doc(collection(db, COLLECTION));
         const newAnnouncement = {
             ...announcement,
             id: ref.id,
+            organizationId,
             createdAt: announcement.createdAt || new Date().toISOString()
         };
         await setDoc(ref, newAnnouncement);

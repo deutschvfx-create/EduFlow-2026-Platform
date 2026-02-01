@@ -26,7 +26,7 @@ export function CreateAnnouncementModal({ onSuccess }: CreateAnnouncementModalPr
 
         try {
             const { announcementsRepo } = await import("@/lib/data/announcements.repo");
-            await announcementsRepo.add({
+            await announcementsRepo.add(currentOrganizationId, {
                 id: generateId(),
                 organizationId: currentOrganizationId,
                 title,

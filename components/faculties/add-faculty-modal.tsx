@@ -55,7 +55,7 @@ export function AddFacultyModal() {
         setLoading(true);
         try {
             const { facultiesRepo } = await import("@/lib/data/faculties.repo");
-            await facultiesRepo.add({
+            await facultiesRepo.add(currentOrganizationId, {
                 id: generateId(),
                 organizationId: currentOrganizationId,
                 name,

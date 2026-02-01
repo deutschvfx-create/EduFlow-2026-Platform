@@ -65,7 +65,7 @@ export default function FacultiesPage() {
             const { facultiesRepo } = await import("@/lib/data/faculties.repo");
             const faculty = faculties.find(f => f.id === id);
             if (!faculty) return;
-            await facultiesRepo.update(currentOrganizationId, { ...faculty, ...updates });
+            await facultiesRepo.update(currentOrganizationId, faculty.id, updates);
             setFaculties(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f));
         } catch (error) {
             console.error(error);

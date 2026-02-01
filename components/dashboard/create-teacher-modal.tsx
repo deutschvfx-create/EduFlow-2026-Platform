@@ -26,7 +26,7 @@ export function CreateTeacherModal({ onSuccess }: CreateTeacherModalProps) {
 
         try {
             const { teachersRepo } = await import("@/lib/data/teachers.repo");
-            await teachersRepo.add({
+            await teachersRepo.add(currentOrganizationId, {
                 id: generateId(),
                 organizationId: currentOrganizationId,
                 firstName,

@@ -89,7 +89,7 @@ export function AddGroupModal() {
 
         try {
             const { groupsRepo } = await import("@/lib/data/groups.repo");
-            groupsRepo.add({
+            groupsRepo.add(currentOrganizationId!, {
                 id: generateId(),
                 organizationId: currentOrganizationId!,
                 name,

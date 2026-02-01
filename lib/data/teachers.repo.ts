@@ -52,11 +52,12 @@ export const teachersRepo = {
         }
     },
 
-    add: async (teacher: Teacher) => {
+    add: async (organizationId: string, teacher: Teacher) => {
         const ref = teacher.id ? doc(db, COLLECTION, teacher.id) : doc(collection(db, COLLECTION));
         const newTeacher = {
             ...teacher,
             id: ref.id,
+            organizationId,
             role: "TEACHER",
             createdAt: teacher.createdAt || new Date().toISOString()
         };
@@ -64,7 +65,7 @@ export const teachersRepo = {
         return newTeacher;
     },
 
-    update: async (id: string, updates: Partial<Teacher>) => {
+    update: async (organizationId: string, id: string, updates: Partial<Teacher>) => {
         const ref = doc(db, COLLECTION, id);
         await updateDoc(ref, updates);
         const snap = await getDoc(ref);

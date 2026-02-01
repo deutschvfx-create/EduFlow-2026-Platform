@@ -42,18 +42,19 @@ export const facultiesRepo = {
         }
     },
 
-    add: async (faculty: Faculty) => {
+    add: async (organizationId: string, faculty: Faculty) => {
         const ref = faculty.id ? doc(db, COLLECTION, faculty.id) : doc(collection(db, COLLECTION));
         const newFaculty = {
             ...faculty,
             id: ref.id,
+            organizationId,
             createdAt: faculty.createdAt || new Date().toISOString()
         };
         await setDoc(ref, newFaculty);
         return newFaculty;
     },
 
-    update: async (id: string, updates: Partial<Faculty>) => {
+    update: async (organizationId: string, id: string, updates: Partial<Faculty>) => {
         const ref = doc(db, COLLECTION, id);
         await updateDoc(ref, updates);
         const snap = await getDoc(ref);

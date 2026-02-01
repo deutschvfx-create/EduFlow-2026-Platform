@@ -40,10 +40,10 @@ export default function StudentsPage() {
         if (!currentOrganizationId) return;
         try {
             const { studentsRepo } = await import("@/lib/data/students.repo");
-            if (action === 'activate') await studentsRepo.update(id, { status: 'ACTIVE' } as any);
-            if (action === 'suspend') await studentsRepo.update(id, { status: 'SUSPENDED' } as any);
+            if (action === 'activate') await studentsRepo.update(currentOrganizationId, id, { status: 'ACTIVE' } as any);
+            if (action === 'suspend') await studentsRepo.update(currentOrganizationId, id, { status: 'SUSPENDED' } as any);
             if (action === 'archive') {
-                if (confirm("Вы уверены?")) await studentsRepo.update(id, { status: 'ARCHIVED' } as any);
+                if (confirm("Вы уверены?")) await studentsRepo.update(currentOrganizationId, id, { status: 'ARCHIVED' } as any);
                 else return;
             }
             loadStudents(currentOrganizationId);

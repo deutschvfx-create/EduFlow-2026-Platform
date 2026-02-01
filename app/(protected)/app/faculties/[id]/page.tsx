@@ -49,7 +49,7 @@ export default function FacultyDetailsPage() {
         if (!currentOrganizationId) return;
         try {
             const { facultiesRepo } = await import("@/lib/data/faculties.repo");
-            await facultiesRepo.update(currentOrganizationId, { ...faculty, ...updates });
+            await facultiesRepo.update(currentOrganizationId, faculty.id, updates);
             setFaculty(prev => prev ? { ...prev, ...updates } : null);
         } catch (error) {
             console.error(error);

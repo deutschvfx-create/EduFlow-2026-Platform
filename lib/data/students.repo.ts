@@ -59,11 +59,12 @@ export const studentsRepo = {
         }
     },
 
-    add: async (student: Student) => {
+    add: async (organizationId: string, student: Student) => {
         const ref = student.id ? doc(db, COLLECTION, student.id) : doc(collection(db, COLLECTION));
         const newStudent = {
             ...student,
             id: ref.id,
+            organizationId,
             role: "STUDENT",
             createdAt: student.createdAt || new Date().toISOString()
         };
@@ -71,7 +72,7 @@ export const studentsRepo = {
         return newStudent;
     },
 
-    update: async (id: string, updates: Partial<Student>) => {
+    update: async (organizationId: string, id: string, updates: Partial<Student>) => {
         const ref = doc(db, COLLECTION, id);
         await updateDoc(ref, updates);
         const snap = await getDoc(ref);

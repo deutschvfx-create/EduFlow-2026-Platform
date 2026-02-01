@@ -54,7 +54,7 @@ export default function CourseDetailsPage() {
         if (!currentOrganizationId) return;
         try {
             const { coursesRepo } = await import("@/lib/data/courses.repo");
-            await coursesRepo.update(currentOrganizationId, { ...course, ...updates });
+            await coursesRepo.update(currentOrganizationId, course.id, updates);
             setCourse(prev => prev ? { ...prev, ...updates } : null);
         } catch (error) {
             console.error(error);
@@ -66,7 +66,7 @@ export default function CourseDetailsPage() {
         if (!currentOrganizationId) return;
         try {
             const { coursesRepo } = await import("@/lib/data/courses.repo");
-            await coursesRepo.update(currentOrganizationId, { ...course, teacherIds });
+            await coursesRepo.update(currentOrganizationId, course.id, { teacherIds });
             setCourse(prev => prev ? { ...prev, teacherIds } : null);
         } catch (error) {
             console.error(error);
@@ -77,7 +77,7 @@ export default function CourseDetailsPage() {
         if (!currentOrganizationId) return;
         try {
             const { coursesRepo } = await import("@/lib/data/courses.repo");
-            await coursesRepo.update(currentOrganizationId, { ...course, groupIds });
+            await coursesRepo.update(currentOrganizationId, course.id, { groupIds });
             setCourse(prev => prev ? { ...prev, groupIds } : null);
         } catch (error) {
             console.error(error);

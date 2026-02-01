@@ -53,18 +53,19 @@ export const groupsRepo = {
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Group));
     },
 
-    add: async (group: Group) => {
+    add: async (organizationId: string, group: Group) => {
         const ref = group.id ? doc(db, COLLECTION, group.id) : doc(collection(db, COLLECTION));
         const newGroup = {
             ...group,
             id: ref.id,
+            organizationId,
             createdAt: group.createdAt || new Date().toISOString()
         };
         await setDoc(ref, newGroup);
         return newGroup;
     },
 
-    update: async (id: string, updates: Partial<Group>) => {
+    update: async (organizationId: string, id: string, updates: Partial<Group>) => {
         const ref = doc(db, COLLECTION, id);
         await updateDoc(ref, updates);
         const snap = await getDoc(ref);

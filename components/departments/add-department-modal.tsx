@@ -67,6 +67,10 @@ export function AddDepartmentModal() {
                 description,
                 headTeacherId,
                 status: 'ACTIVE',
+                teachersCount: 0,
+                groupsCount: 0,
+                studentsCount: 0,
+                coursesCount: 0,
                 createdAt: new Date().toISOString()
             });
             setOpen(false);

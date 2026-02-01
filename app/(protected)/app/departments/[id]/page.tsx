@@ -50,7 +50,7 @@ export default function DepartmentDetailsPage() {
         if (!currentOrganizationId) return;
         try {
             const { departmentsRepo } = await import("@/lib/data/departments.repo");
-            await departmentsRepo.update(currentOrganizationId, { ...department, ...updates });
+            await departmentsRepo.update(currentOrganizationId, department.id, updates);
             setDepartment(prev => prev ? { ...prev, ...updates } : null);
         } catch (error) {
             console.error(error);

@@ -24,7 +24,7 @@ export function CreateCourseModal({ onSuccess }: CreateCourseModalProps) {
         if (!name || !currentOrganizationId) return;
 
         import("@/lib/data/courses.repo").then(({ coursesRepo }) => {
-            coursesRepo.add({
+            coursesRepo.add(currentOrganizationId, {
                 id: generateId(),
                 organizationId: currentOrganizationId,
                 name,

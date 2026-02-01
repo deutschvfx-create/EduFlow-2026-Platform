@@ -87,7 +87,7 @@ export default function CoursesPage() {
             const { coursesRepo } = await import("@/lib/data/courses.repo");
             const course = courses.find(c => c.id === id);
             if (!course) return;
-            await coursesRepo.update(currentOrganizationId, { ...course, ...updates });
+            await coursesRepo.update(currentOrganizationId, course.id, updates);
             setCourses(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
         } catch (error) {
             console.error(error);

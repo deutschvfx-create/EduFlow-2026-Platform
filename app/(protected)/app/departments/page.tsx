@@ -64,7 +64,7 @@ export default function DepartmentsPage() {
             const { departmentsRepo } = await import("@/lib/data/departments.repo");
             const dept = departments.find(d => d.id === id);
             if (!dept) return;
-            await departmentsRepo.update(currentOrganizationId, { ...dept, ...updates });
+            await departmentsRepo.update(currentOrganizationId, dept.id, updates);
             setDepartments(prev => prev.map(d => d.id === id ? { ...d, ...updates } : d));
         } catch (error) {
             console.error(error);

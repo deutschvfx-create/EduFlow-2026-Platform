@@ -70,7 +70,7 @@ export default function GroupsPage() {
             const { groupsRepo } = await import("@/lib/data/groups.repo");
             const group = groups.find(g => g.id === id);
             if (!group) return;
-            await groupsRepo.update(currentOrganizationId, { ...group, ...updates });
+            await groupsRepo.update(currentOrganizationId, group.id, updates);
             setGroups(prev => prev.map(g => g.id === id ? { ...g, ...updates } : g));
         } catch (error) {
             console.error(error);

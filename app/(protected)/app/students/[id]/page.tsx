@@ -99,7 +99,7 @@ export default function StudentProfilePage() {
         if (!currentOrganizationId) return;
         try {
             const { studentsRepo } = await import("@/lib/data/students.repo");
-            await studentsRepo.update(id, { status: newStatus } as any);
+            await studentsRepo.update(currentOrganizationId, id, { status: newStatus } as any);
             setStudent(prev => prev ? { ...prev, status: newStatus } : null);
         } catch (error) {
             console.error(error);

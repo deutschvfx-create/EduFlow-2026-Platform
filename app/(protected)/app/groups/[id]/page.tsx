@@ -50,7 +50,7 @@ export default function GroupDetailsPage() {
         if (!currentOrganizationId) return;
         try {
             const { groupsRepo } = await import("@/lib/data/groups.repo");
-            await groupsRepo.update(id, updates);
+            await groupsRepo.update(currentOrganizationId, id, updates);
             setGroup(prev => prev ? { ...prev, ...updates } : null);
         } catch (error) {
             console.error(error);

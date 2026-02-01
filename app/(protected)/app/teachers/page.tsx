@@ -99,11 +99,11 @@ export default function TeachersPage() {
             }
         } else if (action === 'suspend') {
             for (const id of selectedIds) {
-                await teachersRepo.update(id, { status: 'SUSPENDED' });
+                await teachersRepo.update(currentOrganizationId!, id, { status: 'SUSPENDED' });
             }
         } else if (action === 'activate') {
             for (const id of selectedIds) {
-                await teachersRepo.update(id, { status: 'ACTIVE' });
+                await teachersRepo.update(currentOrganizationId!, id, { status: 'ACTIVE' });
             }
         } else if (action === 'assign_groups') {
             setAssignmentRoadmapOpen(true);
@@ -156,7 +156,7 @@ export default function TeachersPage() {
         try {
             const teacher = teachers.find(t => t.id === teacherId);
             if (!teacher) return;
-            await teachersRepo.update(currentOrganizationId, { ...teacher, permissions: newPermissions });
+            await teachersRepo.update(currentOrganizationId, teacher.id, { permissions: newPermissions });
             setTeachers(prev => prev.map(t => t.id === teacherId ? { ...t, permissions: newPermissions } : t));
             // toast.success("Права обновлены");
         } catch (error) {
@@ -168,10 +168,10 @@ export default function TeachersPage() {
     const handleTableAction = async (action: string, id: string) => {
         if (!currentOrganizationId) return;
         try {
-            if (action === 'activate') await teachersRepo.update(id, { status: 'ACTIVE' });
-            if (action === 'suspend') await teachersRepo.update(id, { status: 'SUSPENDED' });
+            if (action === 'activate') await teachersRepo.update(currentOrganizationId, id, { status: 'ACTIVE' });
+            if (action === 'suspend') await teachersRepo.update(currentOrganizationId, id, { status: 'SUSPENDED' });
             if (action === 'archive') {
-                if (confirm("Вы уверены?")) await teachersRepo.update(id, { status: 'ARCHIVED' });
+                if (confirm("Вы уверены?")) await teachersRepo.update(currentOrganizationId, id, { status: 'ARCHIVED' });
                 else return;
             }
             loadTeachers(currentOrganizationId);

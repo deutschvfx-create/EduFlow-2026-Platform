@@ -53,7 +53,7 @@ export function CreateGroupModal({ onSuccess }: CreateGroupModalProps) {
 
         try {
             const { groupsRepo } = await import("@/lib/data/groups.repo");
-            await groupsRepo.add({
+            await groupsRepo.add(currentOrganizationId, {
                 id: generateId(),
                 organizationId: currentOrganizationId,
                 name,

@@ -48,18 +48,19 @@ export const departmentsRepo = {
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Department));
     },
 
-    add: async (department: Department) => {
+    add: async (organizationId: string, department: Department) => {
         const ref = department.id ? doc(db, COLLECTION, department.id) : doc(collection(db, COLLECTION));
         const newDepartment = {
             ...department,
             id: ref.id,
+            organizationId,
             createdAt: department.createdAt || new Date().toISOString()
         };
         await setDoc(ref, newDepartment);
         return newDepartment;
     },
 
-    update: async (id: string, updates: Partial<Department>) => {
+    update: async (organizationId: string, id: string, updates: Partial<Department>) => {
         const ref = doc(db, COLLECTION, id);
         await updateDoc(ref, updates);
         const snap = await getDoc(ref);

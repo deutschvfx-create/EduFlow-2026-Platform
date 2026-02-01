@@ -58,7 +58,7 @@ export default function TeacherProfilePage() {
         if (!currentOrganizationId) return;
         try {
             const { teachersRepo } = await import("@/lib/data/teachers.repo");
-            await teachersRepo.update(teacherId, { permissions: newPermissions });
+            await teachersRepo.update(currentOrganizationId, teacherId, { permissions: newPermissions });
             setTeacher(prev => prev ? { ...prev, permissions: newPermissions } : null);
         } catch (error) {
             console.error(error);
@@ -70,7 +70,7 @@ export default function TeacherProfilePage() {
         if (!currentOrganizationId) return;
         try {
             const { teachersRepo } = await import("@/lib/data/teachers.repo");
-            await teachersRepo.update(id, { status: newStatus } as any);
+            await teachersRepo.update(currentOrganizationId, id, { status: newStatus } as any);
             setTeacher(prev => prev ? { ...prev, status: newStatus } : null);
         } catch (error) {
             console.error(error);

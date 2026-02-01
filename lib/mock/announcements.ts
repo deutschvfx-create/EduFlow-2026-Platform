@@ -3,6 +3,7 @@ import { Announcement } from "@/lib/types/announcement";
 export const MOCK_ANNOUNCEMENTS: Announcement[] = [
     {
         id: "a1",
+        organizationId: "org1",
         title: "Добро пожаловать в новый учебный семестр!",
         content: "Уважаемые студенты и преподаватели! Рады приветствовать вас в осеннем семестре 2025 года. Расписание уже доступно в личном кабинете. Желаем успехов в учебе!",
         status: "PUBLISHED",
@@ -15,6 +16,7 @@ export const MOCK_ANNOUNCEMENTS: Announcement[] = [
     },
     {
         id: "a2",
+        organizationId: "org1",
         title: "Изменения в расписании группы English A1",
         content: "Внимание! Занятие в пятницу переносится на субботу 14:00 в связи с болезнью преподавателя.",
         status: "PUBLISHED",
@@ -29,6 +31,7 @@ export const MOCK_ANNOUNCEMENTS: Announcement[] = [
     },
     {
         id: "a3",
+        organizationId: "org1",
         title: "Подготовка к экзаменам",
         content: "Напоминаем, что промежуточные экзамены начнутся через 2 недели. Просьба сдать все домашние задания.",
         status: "DRAFT",
@@ -42,6 +45,7 @@ export const MOCK_ANNOUNCEMENTS: Announcement[] = [
     },
     {
         id: "a4",
+        organizationId: "org1",
         title: "Технические работы на сервере",
         content: "Сайт будет недоступен 20 сентября с 03:00 до 05:00 утра.",
         status: "ARCHIVED",
@@ -54,6 +58,7 @@ export const MOCK_ANNOUNCEMENTS: Announcement[] = [
     },
     {
         id: "a5",
+        organizationId: "org1",
         title: "Конкурс талантов",
         content: "Приглашаем всех желающих принять участие в ежегодном конкурсе талантов школы. Регистрация открыта до конца месяца.",
         status: "PUBLISHED",
