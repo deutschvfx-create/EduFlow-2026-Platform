@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GraduationCap } from "lucide-react";
 import { generateId } from "@/lib/utils";
+import { useOrganization } from "@/hooks/use-organization";
 
 interface CreateTeacherModalProps {
     onSuccess: () => void;
@@ -18,6 +19,7 @@ export function CreateTeacherModal({ onSuccess }: CreateTeacherModalProps) {
     const [open, setOpen] = useState(false);
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
+    const { currentOrganizationId } = useOrganization();
 
     const handleSubmit = () => {
         if (!firstName) return;
@@ -25,12 +27,13 @@ export function CreateTeacherModal({ onSuccess }: CreateTeacherModalProps) {
         import("@/lib/data/teachers.repo").then(({ teachersRepo }) => {
             teachersRepo.add({
                 id: generateId(),
+                organizationId: currentOrganizationId!,
                 firstName,
                 lastName,
                 email: `${firstName.toLowerCase()}@eduflow.com`,
                 role: 'TEACHER',
                 status: 'ACTIVE',
-                groups: [],
+                groupIds: [],
                 createdAt: new Date().toISOString(),
                 permissions: {
                     canCreateGroups: false,

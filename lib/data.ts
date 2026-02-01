@@ -33,7 +33,7 @@ export interface Transaction {
     description: string;
     amount: number;
     status: "completed" | "pending" | "failed";
-    studentName: string;
+    studentId: string;
 }
 
 export const CURRENT_STUDENT_ID = "student-1";
@@ -121,11 +121,11 @@ export const MOCK_STUDENTS: Student[] = [
 ];
 
 export const MOCK_TRANSACTIONS: Transaction[] = [
-    { id: "t1", date: "2024-03-20", description: "Monthly Subscription - Premium", amount: 49.99, status: "completed", studentName: "Alex Johnson" },
-    { id: "t2", date: "2024-03-19", description: "Course Pack: Business English", amount: 120.00, status: "completed", studentName: "Maria Garcia" },
-    { id: "t3", date: "2024-03-18", description: "Private Tutoring Session", amount: 35.00, status: "pending", studentName: "Dmitry Ivanov" },
-    { id: "t4", date: "2024-03-17", description: "Monthly Subscription - Basic", amount: 29.99, status: "completed", studentName: "Sophie Dubois" },
-    { id: "t5", date: "2024-03-15", description: "Exam Prep Materials", amount: 15.00, status: "failed", studentName: "Hans Muller" },
+    { id: "t1", date: "2024-03-20", description: "Monthly Subscription - Premium", amount: 49.99, status: "completed", studentId: "student-1" },
+    { id: "t2", date: "2024-03-19", description: "Course Pack: Business English", amount: 120.00, status: "completed", studentId: "student-2" },
+    { id: "t3", date: "2024-03-18", description: "Private Tutoring Session", amount: 35.00, status: "pending", studentId: "student-3" },
+    { id: "t4", date: "2024-03-17", description: "Monthly Subscription - Basic", amount: 29.99, status: "completed", studentId: "student-4" },
+    { id: "t5", date: "2024-03-15", description: "Exam Prep Materials", amount: 15.00, status: "failed", studentId: "student-5" },
 ];
 
 export const RESOURCES_CATEGORIES = [
@@ -137,15 +137,14 @@ export const RESOURCES_CATEGORIES = [
 
 export interface AttendanceRecord {
     studentId: string;
-    studentName: string;
     status: "present" | "absent" | "late" | "sick";
     date: string;
 }
 
 export const MOCK_ATTENDANCE: AttendanceRecord[] = [
-    { studentId: "student-1", studentName: "Alex Johnson", status: "present", date: "2024-03-25" },
-    { studentId: "student-2", studentName: "Maria Garcia", status: "late", date: "2024-03-25" },
-    { studentId: "student-3", studentName: "Dmitry Ivanov", status: "sick", date: "2024-03-25" },
-    { studentId: "student-4", studentName: "Sophie Dubois", status: "present", date: "2024-03-25" },
-    { studentId: "student-5", studentName: "Hans Muller", status: "absent", date: "2024-03-25" },
+    { studentId: "student-1", status: "present", date: "2024-03-25" },
+    { studentId: "student-2", status: "late", date: "2024-03-25" },
+    { studentId: "student-3", status: "sick", date: "2024-03-25" },
+    { studentId: "student-4", status: "present", date: "2024-03-25" },
+    { studentId: "student-5", status: "absent", date: "2024-03-25" },
 ];

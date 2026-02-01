@@ -149,12 +149,10 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
         const teacher = MOCK_TEACHERS.find(t => t.id === formData.teacherId);
         const newLesson: Lesson = {
             id: `temp-${Date.now()}`,
+            organizationId: "org_1", // Mock or from context if available
             groupId: formData.groupId,
-            groupName: MOCK_GROUPS_FULL.find(g => g.id === formData.groupId)?.name || "New Group",
             teacherId: formData.teacherId,
-            teacherName: teacher ? `${teacher.firstName} ${teacher.lastName}` : "Unknown Teacher",
             courseId: formData.courseId,
-            courseName: MOCK_COURSES.find(c => c.id === formData.courseId)?.name || "New Course",
             dayOfWeek: selectedSlot?.day || 'MON',
             startTime: formData.startTime,
             endTime: formData.endTime,
@@ -194,11 +192,8 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
         const updatedLesson: Lesson = {
             ...localLessons.find(l => l.id === editingLessonId)!,
             groupId: editFormData.groupId,
-            groupName: MOCK_GROUPS_FULL.find(g => g.id === editFormData.groupId)?.name || "Group",
             teacherId: editFormData.teacherId,
-            teacherName: teacher ? `${teacher.firstName} ${teacher.lastName}` : "Teacher",
             courseId: editFormData.courseId,
-            courseName: MOCK_COURSES.find(c => c.id === editFormData.courseId)?.name || "Course",
             dayOfWeek: editFormData.dayOfWeek,
             startTime: editFormData.startTime,
             endTime: editFormData.endTime,
@@ -578,7 +573,6 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
 
                                         // ADAPTIVE DENSITY RULES
                                         const showAvatar = uniqueTeachersCount <= 5 && overlapCount <= 2;
-                                        const teacherInitials = lesson.teacherName ? lesson.teacherName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : "?";
                                         const isBeingDragManipulated = isDragging && lesson.id === activeLessonId;
 
                                         return (
@@ -646,7 +640,7 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
                                                         {/* 1. Subject & 2. Time Header */}
                                                         <div className="flex flex-col mb-2">
                                                             <span className="font-bold text-[11px] leading-tight truncate text-white">
-                                                                {lesson.courseName}
+                                                                ID: {lesson.courseId}
                                                             </span>
                                                             <span className="text-[10px] font-medium text-white/80 flex items-center gap-1 mt-0.5">
                                                                 <Clock className="h-3 w-3 shrink-0" />
@@ -661,11 +655,11 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
                                                         <div className="flex flex-col gap-1.5 overflow-hidden">
                                                             <div className="flex items-center gap-1.5 text-[9px] text-white/90 truncate">
                                                                 <Users className="h-3 w-3 shrink-0 opacity-70" />
-                                                                <span className="truncate">{lesson.groupName}</span>
+                                                                <span className="truncate">Гр: {lesson.groupId}</span>
                                                             </div>
                                                             <div className="flex items-center gap-1.5 text-[9px] text-white/90 truncate">
                                                                 <GraduationCap className="h-3 w-3 shrink-0 opacity-70" />
-                                                                <span className="truncate">{lesson.teacherName}</span>
+                                                                <span className="truncate">Пр: {lesson.teacherId}</span>
                                                             </div>
                                                             {lesson.room && modules.classrooms && (
                                                                 <div className="flex items-center gap-1.5 text-[9px] text-white/90 truncate">
@@ -700,7 +694,7 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
                                                         }}
                                                     >
                                                         <div className="p-2 flex flex-col h-full pointer-events-none">
-                                                            <span className="font-bold text-[11px] leading-tight truncate text-white">{lesson.courseName}</span>
+                                                            <span className="font-bold text-[11px] leading-tight truncate text-white">ID: {lesson.courseId}</span>
                                                             <div className="mt-1 flex items-center gap-1 text-[10px] text-white/90">
                                                                 <Clock className="h-3 w-3 shrink-0" />
                                                                 <span>{liveTimeRange?.start || lesson.startTime} - {liveTimeRange?.end || lesson.endTime}</span>

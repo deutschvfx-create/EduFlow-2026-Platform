@@ -89,12 +89,10 @@ export function TeachersTable({ teachers, onEditPermissions }: TeachersTableProp
                             </TableCell>
                             <TableCell>
                                 <div className="flex flex-wrap gap-1">
-                                    {(teacher.groups?.length || 0) > 0 ? (
-                                        teacher.groups.map(g => (
-                                            <Badge key={g.id} variant="secondary" className="bg-zinc-800 text-zinc-300 hover:bg-zinc-700 text-[10px] px-1 py-0 h-5">
-                                                {g.name}
-                                            </Badge>
-                                        ))
+                                    {(teacher.groupIds?.length || 0) > 0 ? (
+                                        <span className="text-zinc-300 text-xs">
+                                            {teacher.groupIds.length} {teacher.groupIds.length === 1 ? 'группа' : 'групп'}
+                                        </span>
                                     ) : (
                                         <span className="text-zinc-600 text-xs italic">Нет групп</span>
                                     )}

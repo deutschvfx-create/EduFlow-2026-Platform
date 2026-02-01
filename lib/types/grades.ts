@@ -4,13 +4,10 @@ export type GradeRecord = {
     id: string;
 
     groupId: string;
-    groupName: string;
 
     courseId: string;
-    courseName: string;
 
     studentId: string;
-    studentName: string;
 
     type: GradeType;
     date: string; // YYYY-MM-DD

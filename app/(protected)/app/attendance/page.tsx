@@ -68,9 +68,6 @@ export default function AttendancePage() {
 
                 return {
                     ...item,
-                    groupName: grp ? grp.name : 'Unknown Group',
-                    courseName: 'Course', // Simplified mapping for build fix
-                    teacherName: 'Teacher',
                     dayOfWeek: typeof item.dayOfWeek === 'number' ? days[item.dayOfWeek] || 'MON' : item.dayOfWeek,
                     status: 'PLANNED',
                     createdAt: new Date().toISOString()
@@ -113,7 +110,7 @@ export default function AttendancePage() {
     const studentsInLesson = useMemo(() => {
         if (!currentLesson) return [];
         // Find students in group
-        return students.filter(s => s.groups.some((g: any) => g.id === currentLesson.groupId));
+        return students.filter(s => s.groupIds?.includes(currentLesson.groupId));
     }, [currentLesson, students]);
 
     const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
@@ -181,7 +178,7 @@ export default function AttendancePage() {
         // Iterate over filtered lessons for the day
         lessonsForDate.forEach(l => {
             // For simplicity, find mock students for this lesson's group
-            const studs = students.filter(s => s.groups.some((g: any) => g.id === l.groupId));
+            const studs = students.filter(s => s.groupIds?.includes(l.groupId));
             totalScheduled += studs.length;
 
             studs.forEach(s => {
@@ -310,10 +307,10 @@ export default function AttendancePage() {
                                             <span className="font-bold text-zinc-200">{lesson.startTime}</span>
                                             <Badge variant="secondary" className="text-[10px] h-5 bg-zinc-800 text-zinc-400">{lesson.room || 'online'}</Badge>
                                         </div>
-                                        <div className="text-sm font-medium text-indigo-300 mb-0.5">{lesson.groupName}</div>
-                                        <div className="text-xs text-zinc-500 truncate">{lesson.courseName}</div>
+                                        <div className="text-sm font-medium text-indigo-300 mb-0.5">Гр: {lesson.groupId}</div>
+                                        <div className="text-xs text-zinc-500 truncate">Курс: {lesson.courseId}</div>
                                         <div className="text-xs text-zinc-600 mt-2 flex items-center gap-1">
-                                            <Users className="h-3 w-3" /> {lesson.teacherName}
+                                            <Users className="h-3 w-3" /> Пр: {lesson.teacherId}
                                         </div>
                                     </div>
                                 ))
@@ -332,8 +329,8 @@ export default function AttendancePage() {
                                 <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
                                     <div>
                                         <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                                            {currentLesson.groupName}
-                                            <span className="text-zinc-500 font-normal text-sm">| {currentLesson.courseName}</span>
+                                            Группа {currentLesson.groupId}
+                                            <span className="text-zinc-500 font-normal text-sm">| Курс {currentLesson.courseId}</span>
                                         </h2>
                                         <p className="text-sm text-zinc-400">
                                             {format(date!, "d MMMM yyyy", { locale: ru })} • {currentLesson.startTime} - {currentLesson.endTime}

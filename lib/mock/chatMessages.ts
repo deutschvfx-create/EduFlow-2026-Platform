@@ -6,7 +6,6 @@ export const MOCK_MESSAGES: ChatMessage[] = [
         id: "m1",
         chatId: "c1",
         senderId: "u1",
-        senderName: "Анна Петрова",
         senderRole: "DIRECTOR",
         text: "Внимание всем преподавателям! В пятницу санитарный день.",
         createdAt: "2025-09-24T10:00:00Z"
@@ -15,7 +14,6 @@ export const MOCK_MESSAGES: ChatMessage[] = [
         id: "m2",
         chatId: "c1",
         senderId: "t1",
-        senderName: "Ирина Васильева",
         senderRole: "TEACHER",
         text: "Принято.",
         createdAt: "2025-09-24T10:05:00Z"
@@ -24,7 +22,6 @@ export const MOCK_MESSAGES: ChatMessage[] = [
         id: "m3",
         chatId: "c1",
         senderId: "u1",
-        senderName: "Анна Петрова",
         senderRole: "DIRECTOR",
         text: "Коллеги, собрание переносится на 15:00",
         createdAt: "2025-09-25T10:00:00Z"
@@ -35,7 +32,6 @@ export const MOCK_MESSAGES: ChatMessage[] = [
         id: "m4",
         chatId: "c2",
         senderId: "t1",
-        senderName: "Ирина Васильева",
         senderRole: "TEACHER",
         text: "Hello everyone! Welcome to the course.",
         createdAt: "2025-09-01T09:00:00Z",
@@ -45,7 +41,6 @@ export const MOCK_MESSAGES: ChatMessage[] = [
         id: "m5",
         chatId: "c2",
         senderId: "s1",
-        senderName: "Алексей Смирнов",
         senderRole: "STUDENT",
         text: "Good morning!",
         createdAt: "2025-09-01T09:05:00Z"
@@ -54,7 +49,6 @@ export const MOCK_MESSAGES: ChatMessage[] = [
         id: "m6",
         chatId: "c2",
         senderId: "t1",
-        senderName: "Ирина Васильева",
         senderRole: "TEACHER",
         text: "Домашнее задание на завтра: стр. 42",
         createdAt: "2025-09-25T14:30:00Z"

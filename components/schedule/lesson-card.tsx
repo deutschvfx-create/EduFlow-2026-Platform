@@ -24,7 +24,7 @@ export function LessonCard({ lesson, onClick }: LessonCardProps) {
             <CardContent className="p-3 space-y-2">
                 <div className="flex justify-between items-start gap-1">
                     <div className="font-semibold text-sm line-clamp-2 text-zinc-100 leading-tight">
-                        {lesson.courseName}
+                        ID: {lesson.courseId}
                     </div>
                     {isCancelled && <XCircle className="h-4 w-4 text-red-500 shrink-0" />}
                 </div>
@@ -32,11 +32,11 @@ export function LessonCard({ lesson, onClick }: LessonCardProps) {
                 <div className="space-y-1">
                     <div className="flex items-center gap-2 text-xs text-zinc-400">
                         <Users className="h-3 w-3" />
-                        <span className="truncate">{lesson.groupName}</span>
+                        <span className="truncate">Гр: {lesson.groupId}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-zinc-400">
                         <GraduationCap className="h-3 w-3" />
-                        <span className="truncate">{lesson.teacherName}</span>
+                        <span className="truncate">Пр: {lesson.teacherId}</span>
                     </div>
                 </div>
 

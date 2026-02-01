@@ -10,10 +10,12 @@ import { Plus, Mail, Loader2, Copy } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TeacherRole } from "@/lib/types/teacher";
 import { generateId } from "@/lib/utils";
+import { useOrganization } from "@/hooks/use-organization";
 
 export function AddTeacherModal() {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const { currentOrganizationId } = useOrganization();
 
     // Mock Toast
     const toast = { success: (m: string) => alert(m), error: (m: string) => alert(m) };
@@ -39,12 +41,13 @@ export function AddTeacherModal() {
             const { teachersRepo } = await import("@/lib/data/teachers.repo");
             teachersRepo.add({
                 id: generateId(),
+                organizationId: currentOrganizationId!,
                 firstName,
                 lastName,
                 specialization,
                 role,
                 status: 'ACTIVE',
-                groups: [],
+                groupIds: [],
                 email: `${firstName.toLowerCase()}@eduflow.com`,
                 createdAt: new Date().toISOString(),
                 permissions: {

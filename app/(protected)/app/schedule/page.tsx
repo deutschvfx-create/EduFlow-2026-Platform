@@ -116,24 +116,14 @@ export default function SchedulePage() {
 
     const handleLessonAdd = (newLessonData: any) => {
         // Mock implementation of adding a lesson
-        const id = Math.random().toString(36).substr(2, 9);
-        const group = groups.find(g => g.id === newLessonData.groupId);
-        const teacher = teachers.find(t => t.id === newLessonData.teacherId);
-        const course = courses.find(c => c.id === newLessonData.courseId);
-
         const newLesson: Lesson = {
-            id,
+            id: Math.random().toString(36).substr(2, 9),
             organizationId: currentOrganizationId!,
             status: 'PLANNED',
             createdAt: new Date().toISOString(),
-            // Mapped Data
             groupId: newLessonData.groupId,
-            groupName: group?.name || "Group",
             teacherId: newLessonData.teacherId,
-            teacherName: teacher ? `${teacher.firstName} ${teacher.lastName}` : "Teacher",
             courseId: newLessonData.courseId,
-            courseName: course?.name || "Course",
-            // Timing
             dayOfWeek: newLessonData.dayOfWeek,
             startTime: newLessonData.startTime,
             endTime: newLessonData.endTime,

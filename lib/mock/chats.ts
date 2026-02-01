@@ -14,7 +14,6 @@ export const MOCK_CHATS: Chat[] = [
         type: "GROUP",
         title: "English A1 (Morning)",
         groupId: "g1",
-        groupName: "English A1",
         lastMessage: "Домашнее задание на завтра: стр. 42",
         lastMessageAt: "2025-09-25T14:30:00Z",
         unreadCount: 0
@@ -24,7 +23,6 @@ export const MOCK_CHATS: Chat[] = [
         type: "GROUP",
         title: "Math Club (Advanced)",
         groupId: "g2",
-        groupName: "Math Club",
         lastMessage: "Кто сможет прийти на доп. занятие?",
         lastMessageAt: "2025-09-24T18:00:00Z",
         unreadCount: 5
@@ -34,7 +32,6 @@ export const MOCK_CHATS: Chat[] = [
         type: "GROUP",
         title: "German A2",
         groupId: "g5",
-        groupName: "German A2",
         lastMessage: "Guten Tag!",
         lastMessageAt: "2025-09-20T09:00:00Z",
         unreadCount: 0

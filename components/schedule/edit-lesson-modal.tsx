@@ -72,10 +72,6 @@ export function EditLessonModal({ lesson, open, onOpenChange, onSave }: EditLess
             endTime,
             room,
             status,
-            // Update denormalized names
-            groupName: MOCK_GROUPS_FULL.find(g => g.id === groupId)?.name || lesson.groupName,
-            courseName: MOCK_COURSES.find(c => c.id === courseId)?.name || lesson.courseName,
-            teacherName: MOCK_TEACHERS.find(t => t.id === teacherId)?.lastName || lesson.teacherName, // Using LastName for brevity if needed, but keeping consistent with mock
         });
 
         setLoading(false);

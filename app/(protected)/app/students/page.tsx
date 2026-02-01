@@ -39,7 +39,7 @@ export default function StudentsPage() {
 
         const matchesStatus = statusFilter === 'all' || student.status === statusFilter;
 
-        const matchesGroup = groupFilter === 'all' || student.groups.some((g: any) => g.id === groupFilter);
+        const matchesGroup = groupFilter === 'all' || student.groupIds?.includes(groupFilter);
 
         return matchesSearch && matchesStatus && matchesGroup;
     });

@@ -28,7 +28,7 @@ export default function ReportsPage() {
     // 1. Attendance Report Logic
     const attendanceReportData = useMemo(() => {
         // Filter students by group
-        const filteredStudents = MOCK_STUDENTS.filter(s => groupId === 'all' || s.groups.some(g => g.id === groupId));
+        const filteredStudents = MOCK_STUDENTS.filter(s => groupId === 'all' || s.groupIds?.includes(groupId));
 
         return filteredStudents.map(student => {
             // Get records for student
@@ -54,7 +54,7 @@ export default function ReportsPage() {
 
     // 2. Grades Report Logic
     const gradesReportData = useMemo(() => {
-        const filteredStudents = MOCK_STUDENTS.filter(s => groupId === 'all' || s.groups.some(g => g.id === groupId));
+        const filteredStudents = MOCK_STUDENTS.filter(s => groupId === 'all' || s.groupIds?.includes(groupId));
 
         return filteredStudents.map(student => {
             const grades = MOCK_GRADES.filter(g => g.studentId === student.id && (courseId === 'all' || g.courseId === courseId));

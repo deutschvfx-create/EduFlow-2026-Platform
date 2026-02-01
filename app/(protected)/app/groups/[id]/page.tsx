@@ -53,9 +53,9 @@ export default function GroupDetailsPage() {
                     <div className="text-zinc-400 text-sm flex gap-4 items-center mt-1">
                         <span className="font-mono bg-zinc-800 px-2 rounded text-zinc-300">{group.code}</span>
                         <span className="flex items-center gap-2">
-                            <Badge variant="secondary" className="text-[10px] h-4 py-0">{group.facultyCode}</Badge>
+                            <Badge variant="secondary" className="text-[10px] h-4 py-0">ID: {group.facultyId}</Badge>
                             <span className="text-xs text-zinc-500">/</span>
-                            <span className="text-xs">{group.departmentName}</span>
+                            <span className="text-xs">ID: {group.departmentId}</span>
                         </span>
                     </div>
                 </div>
@@ -127,8 +127,8 @@ export default function GroupDetailsPage() {
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="space-y-1">
-                            <div className="text-xs text-zinc-500 uppercase font-semibold">Куратор</div>
-                            <div className="text-zinc-300 font-medium">{group.curatorTeacherName || 'Не назначен'}</div>
+                            <div className="text-xs text-zinc-500 uppercase font-semibold">Куратор (ID)</div>
+                            <div className="text-zinc-300 font-medium">{group.curatorTeacherId || 'Не назначен'}</div>
                         </div>
                         <div className="flex justify-between">
                             <div className="space-y-1">
@@ -141,12 +141,12 @@ export default function GroupDetailsPage() {
                             </div>
                         </div>
                         <div className="space-y-1">
-                            <div className="text-xs text-zinc-500 uppercase font-semibold">Факультет</div>
-                            <div className="text-zinc-300 font-medium">{group.facultyName}</div>
+                            <div className="text-xs text-zinc-500 uppercase font-semibold">Факультет (ID)</div>
+                            <div className="text-zinc-300 font-medium">{group.facultyId}</div>
                         </div>
                         <div className="space-y-1">
-                            <div className="text-xs text-zinc-500 uppercase font-semibold">Кафедра</div>
-                            <div className="text-zinc-300 font-medium">{group.departmentName}</div>
+                            <div className="text-xs text-zinc-500 uppercase font-semibold">Кафедра (ID)</div>
+                            <div className="text-zinc-300 font-medium">{group.departmentId}</div>
                         </div>
                     </CardContent>
                 </Card>

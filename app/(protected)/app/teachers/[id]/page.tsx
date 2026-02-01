@@ -121,11 +121,11 @@ export default function TeacherProfilePage() {
                         <div className="space-y-1">
                             <div className="text-xs text-zinc-500 uppercase font-semibold">Группы</div>
                             <div className="flex flex-wrap gap-2 pt-1">
-                                {teacher.groups.length > 0 ? teacher.groups.map(g => (
-                                    <Badge key={g.id} variant="secondary" className="bg-zinc-800 text-zinc-300">
-                                        {g.name}
-                                    </Badge>
-                                )) : <span className="text-zinc-500 italic text-sm">Нет групп</span>}
+                                {teacher.groupIds && teacher.groupIds.length > 0 ? (
+                                    <span className="text-zinc-300 text-sm">
+                                        {teacher.groupIds.length} {teacher.groupIds.length === 1 ? 'группа' : 'групп'}
+                                    </span>
+                                ) : <span className="text-zinc-500 italic text-sm">Нет групп</span>}
                             </div>
                         </div>
                         <div className="space-y-1">

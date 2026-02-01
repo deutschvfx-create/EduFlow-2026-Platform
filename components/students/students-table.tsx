@@ -110,12 +110,10 @@ export function StudentsTable({ students }: StudentsTableProps) {
                             </TableCell>
                             <TableCell className="hidden laptop:table-cell">
                                 <div className="flex flex-wrap gap-1 max-w-[200px]">
-                                    {(student.groups?.length || 0) > 0 ? (
-                                        student.groups.map(g => (
-                                            <Badge key={g.id} variant="secondary" className="bg-zinc-900/50 text-zinc-400 border border-zinc-800/50 text-[9px] px-1.5 py-0 h-5 font-bold uppercase tracking-tighter hover:bg-zinc-800 transition-colors">
-                                                {g.name}
-                                            </Badge>
-                                        ))
+                                    {(student.groupIds?.length || 0) > 0 ? (
+                                        <span className="text-zinc-400 text-[9px] font-bold uppercase tracking-tighter">
+                                            {student.groupIds.length} {student.groupIds.length === 1 ? 'группа' : 'групп'}
+                                        </span>
                                     ) : (
                                         <span className="text-zinc-700 text-[10px] font-bold uppercase italic">Без группы</span>
                                     )}

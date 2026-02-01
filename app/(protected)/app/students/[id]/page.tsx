@@ -255,11 +255,11 @@ export default function StudentProfilePage() {
                                 <div className="flex justify-between items-center text-sm py-2 border-b border-zinc-800/30">
                                     <span className="text-zinc-500 font-bold uppercase text-[10px] tracking-widest">Группы ученика</span>
                                     <div className="flex flex-wrap gap-1 justify-end">
-                                        {student.groups.length > 0 ? student.groups.map(g => (
-                                            <Badge key={g.id} variant="secondary" className="bg-zinc-800 text-zinc-400 text-[9px] font-bold uppercase tracking-tighter">
-                                                {g.name}
-                                            </Badge>
-                                        )) : <span className="text-zinc-600 italic text-[10px]">Нет групп</span>}
+                                        {student.groupIds && student.groupIds.length > 0 ? (
+                                            <span className="text-zinc-400 text-[9px] font-bold uppercase tracking-tighter">
+                                                {student.groupIds.length} {student.groupIds.length === 1 ? 'группа' : 'групп'}
+                                            </span>
+                                        ) : <span className="text-zinc-600 italic text-[10px]">Нет групп</span>}
                                     </div>
                                 </div>
                                 <div className="flex justify-between items-center text-sm py-2 border-b border-zinc-800/30">
@@ -446,8 +446,8 @@ export default function StudentProfilePage() {
                                                 </div>
                                                 <div className="h-8 w-[1px] bg-zinc-800" />
                                                 <div>
-                                                    <div className="text-sm font-bold text-zinc-200">{record.subject}</div>
-                                                    <div className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest text-left">{record.teacher}</div>
+                                                    <div className="text-sm font-bold text-zinc-200">Занятие</div>
+                                                    <div className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest text-left">{new Date(record.date || '').toLocaleDateString()}</div>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-3">
@@ -492,7 +492,7 @@ export default function StudentProfilePage() {
                                                 </div>
                                                 <div>
                                                     <div className="text-sm font-bold text-zinc-100">{grade.type === 'EXAM' ? 'Экзаменационная работа' : 'Домашнее задание'}</div>
-                                                    <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest text-left">{grade.subject} • {new Date(grade.date).toLocaleDateString()}</div>
+                                                    <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest text-left">{new Date(grade.date).toLocaleDateString()}</div>
                                                 </div>
                                             </div>
                                             <div className="max-w-[200px] text-zinc-500 text-[11px] italic font-medium text-right line-clamp-2">

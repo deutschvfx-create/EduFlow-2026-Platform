@@ -85,9 +85,9 @@ export function GroupsTable({ groups, onEdit }: GroupsTableProps) {
                             <TableCell>
                                 <div className="flex flex-col gap-1">
                                     <Badge variant="secondary" className="bg-zinc-800 text-zinc-300 w-fit text-[10px]">
-                                        {group.facultyCode}
+                                        ID: {group.facultyId}
                                     </Badge>
-                                    <span className="text-zinc-500 text-xs">{group.departmentName}</span>
+                                    <span className="text-zinc-500 text-xs text-[10px]">ID: {group.departmentId}</span>
                                 </div>
                             </TableCell>
                             <TableCell>
@@ -106,7 +106,7 @@ export function GroupsTable({ groups, onEdit }: GroupsTableProps) {
                                 <GroupPaymentBadge type={group.paymentType} />
                             </TableCell>
                             <TableCell className="text-zinc-400">
-                                {group.curatorTeacherName || <span className="text-zinc-600 italic">Не назначен</span>}
+                                {group.curatorTeacherId || <span className="text-zinc-600 italic">Не назначен</span>}
                             </TableCell>
                             <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                                 <DropdownMenu>

@@ -55,15 +55,15 @@ export function AddLessonModal({ lessons, children }: { lessons: Lesson[], child
             if (overlap) {
                 // 1. Teacher Conflict
                 if (teacherId && l.teacherId === teacherId) {
-                    newConflicts.teacher = `Преподаватель занят: ${l.groupName} (${l.startTime}-${l.endTime})`;
+                    newConflicts.teacher = `Преподаватель занят: Группа ${l.groupId} (${l.startTime}-${l.endTime})`;
                 }
                 // 2. Group Conflict
                 if (groupId && l.groupId === groupId) {
-                    newConflicts.group = `У группы уже есть урок: ${l.courseName} (${l.startTime}-${l.endTime})`;
+                    newConflicts.group = `У группы уже есть урок: Предмет ${l.courseId} (${l.startTime}-${l.endTime})`;
                 }
                 // 3. Room Conflict
                 if (room && l.room === room && modules.classrooms) {
-                    newConflicts.room = `Аудитория занята: ${l.groupName} (${l.startTime}-${l.endTime})`;
+                    newConflicts.room = `Аудитория занята: Группа ${l.groupId} (${l.startTime}-${l.endTime})`;
                 }
             }
         });

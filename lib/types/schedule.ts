@@ -6,13 +6,10 @@ export type Lesson = {
     id: string;
     organizationId: string; // Multi-tenant: lesson belongs to organization
     groupId: string;
-    groupName: string;
 
     courseId: string;
-    courseName: string;
 
     teacherId: string;
-    teacherName: string;
 
     dayOfWeek: DayOfWeek;
     startTime: string; // "09:00"

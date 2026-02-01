@@ -11,8 +11,10 @@ import { MOCK_TEACHERS } from "@/lib/mock/teachers";
 import { MOCK_FACULTIES } from "@/lib/mock/faculties";
 import { MOCK_DEPARTMENTS } from "@/lib/mock/departments";
 import { generateId } from "@/lib/utils";
+import { useOrganization } from "@/hooks/use-organization";
 
 export function AddGroupModal() {
+    const { currentOrganizationId } = useOrganization();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -55,20 +57,14 @@ export function AddGroupModal() {
             const { groupsRepo } = await import("@/lib/data/groups.repo");
             groupsRepo.add({
                 id: generateId(),
+                organizationId: currentOrganizationId!,
                 name,
                 code,
                 facultyId,
-                facultyName: MOCK_FACULTIES.find(f => f.id === facultyId)?.name || 'Неизвестен',
-                facultyCode: MOCK_FACULTIES.find(f => f.id === facultyId)?.code || 'UNK',
                 departmentId,
-                departmentName: MOCK_DEPARTMENTS.find(d => d.id === departmentId)?.name || 'Неизвестна',
-                departmentCode: MOCK_DEPARTMENTS.find(d => d.id === departmentId)?.code || 'UNK',
                 level,
                 paymentType,
                 curatorTeacherId: curatorId || undefined,
-                curatorTeacherName: MOCK_TEACHERS.find(t => t.id === curatorId)
-                    ? `${MOCK_TEACHERS.find(t => t.id === curatorId)?.firstName} ${MOCK_TEACHERS.find(t => t.id === curatorId)?.lastName}`
-                    : undefined,
                 maxStudents: parseInt(maxStudents) || 15,
                 studentsCount: 0,
                 teachersCount: curatorId ? 1 : 0,

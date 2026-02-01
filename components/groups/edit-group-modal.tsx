@@ -76,13 +76,6 @@ export function EditGroupModal({ group, open, onOpenChange, onSave }: EditGroupM
             curatorTeacherId: curatorId,
             maxStudents: parseInt(maxStudents) || 15,
             status,
-            curatorTeacherName: MOCK_TEACHERS.find(t => t.id === curatorId)
-                ? `${MOCK_TEACHERS.find(t => t.id === curatorId)?.firstName} ${MOCK_TEACHERS.find(t => t.id === curatorId)?.lastName}`
-                : undefined,
-            facultyName: MOCK_FACULTIES.find(f => f.id === facultyId)?.name || group.facultyName,
-            facultyCode: MOCK_FACULTIES.find(f => f.id === facultyId)?.code || group.facultyCode,
-            departmentName: MOCK_DEPARTMENTS.find(d => d.id === departmentId)?.name || group.departmentName,
-            departmentCode: MOCK_DEPARTMENTS.find(d => d.id === departmentId)?.code || group.departmentCode,
         });
 
         setLoading(false);

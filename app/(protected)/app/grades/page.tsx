@@ -64,7 +64,7 @@ export default function GradesPage() {
     // Derived: Students in Group
     const studentsInGroup = useMemo(() => {
         if (groupId === 'all') return [];
-        return allStudents.filter(s => s.groups.some((g: any) => g.id === groupId));
+        return allStudents.filter(s => s.groupIds?.includes(groupId));
     }, [groupId, allStudents]);
 
     // Initial Load / Sync with Selection

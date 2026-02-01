@@ -6,7 +6,6 @@ export type Chat = {
     title: string;
 
     groupId?: string; // If linked to a student group
-    groupName?: string;
 
     lastMessage?: string;
     lastMessageAt?: string; // ISO
@@ -18,7 +17,6 @@ export type ChatMessage = {
     chatId: string;
 
     senderId: string;
-    senderName: string;
     senderRole: "DIRECTOR" | "TEACHER" | "STUDENT";
 
     text: string;

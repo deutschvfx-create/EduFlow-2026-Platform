@@ -78,17 +78,17 @@ export const MOCK_GROUPS = [
 ];
 
 export const MOCK_ATTENDANCE = [
-    { id: "a1", studentId: "s1", scheduleId: "sc1", date: "2026-01-27T10:00:00Z", status: "PRESENT", subject: "English A1", teacher: "Mr. Wilson" },
-    { id: "a2", studentId: "s1", scheduleId: "sc2", date: "2026-01-25T10:00:00Z", status: "PRESENT", subject: "English A1", teacher: "Mr. Wilson" },
-    { id: "a3", studentId: "s1", scheduleId: "sc3", date: "2026-01-23T10:00:00Z", status: "LATE", subject: "English A1", teacher: "Mr. Wilson" },
-    { id: "a4", studentId: "s1", scheduleId: "sc4", date: "2026-01-21T10:00:00Z", status: "PRESENT", subject: "English A1", teacher: "Mr. Wilson" },
-    { id: "a5", studentId: "s1", scheduleId: "sc5", date: "2026-01-19T10:00:00Z", status: "ABSENT", subject: "English A1", teacher: "Mr. Wilson" },
+    { id: "a1", studentId: "s1", scheduleId: "sc1", date: "2026-01-27T10:00:00Z", status: "PRESENT" },
+    { id: "a2", studentId: "s1", scheduleId: "sc2", date: "2026-01-25T10:00:00Z", status: "PRESENT" },
+    { id: "a3", studentId: "s1", scheduleId: "sc3", date: "2026-01-23T10:00:00Z", status: "LATE" },
+    { id: "a4", studentId: "s1", scheduleId: "sc4", date: "2026-01-21T10:00:00Z", status: "PRESENT" },
+    { id: "a5", studentId: "s1", scheduleId: "sc5", date: "2026-01-19T10:00:00Z", status: "ABSENT" },
 ];
 
 export const MOCK_GRADES = [
-    { id: "g1", studentId: "s1", courseId: "c1", value: 5, date: "2026-01-26T14:00:00Z", type: "HOMEWORK", subject: "English A1", comment: "Excellent work on grammar!" },
-    { id: "g2", studentId: "s1", courseId: "c1", value: 4, date: "2026-01-20T14:00:00Z", type: "QUIZ", subject: "English A1", comment: "Good vocabulary usage." },
-    { id: "g3", studentId: "s1", courseId: "c1", value: 5, date: "2026-01-15T14:00:00Z", type: "EXAM", subject: "English A1", comment: "Perfect listening score." },
+    { id: "g1", studentId: "s1", courseId: "c1", value: 5, date: "2026-01-26T14:00:00Z", type: "HOMEWORK", comment: "Excellent work on grammar!" },
+    { id: "g2", studentId: "s1", courseId: "c1", value: 4, date: "2026-01-20T14:00:00Z", type: "QUIZ", comment: "Good vocabulary usage." },
+    { id: "g3", studentId: "s1", courseId: "c1", value: 5, date: "2026-01-15T14:00:00Z", type: "EXAM", comment: "Perfect listening score." },
 ];
 
 export const MOCK_PAYMENTS = [

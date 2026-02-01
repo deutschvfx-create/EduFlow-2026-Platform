@@ -72,19 +72,10 @@ export function TeacherCard({
                 <div className="space-y-2">
                     <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Группы</p>
                     <div className="flex flex-wrap gap-1.5 h-6 overflow-hidden">
-                        {(teacher.groups?.length || 0) > 0 ? (
-                            <>
-                                {teacher.groups.slice(0, 2).map(g => (
-                                    <Badge key={g.id} variant="secondary" className="bg-zinc-800 text-zinc-300 border-zinc-700 text-[10px] px-1.5 py-0 h-5">
-                                        {g.name}
-                                    </Badge>
-                                ))}
-                                {teacher.groups.length > 2 && (
-                                    <Badge variant="outline" className="text-zinc-500 border-zinc-800 text-[10px] px-1.5 h-5">
-                                        +{teacher.groups.length - 2}
-                                    </Badge>
-                                )}
-                            </>
+                        {(teacher.groupIds?.length || 0) > 0 ? (
+                            <span className="text-zinc-300 text-xs">
+                                {teacher.groupIds.length} {teacher.groupIds.length === 1 ? 'группа' : 'групп'}
+                            </span>
                         ) : (
                             <span className="text-zinc-600 text-xs italic">Нет привязанных групп</span>
                         )}
