@@ -2,9 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { GradeRecord, GradeType } from "@/lib/types/grades";
-// import { MOCK_GRADES } from "@/lib/mock/grades";
-// import { MOCK_STUDENTS } from "@/lib/mock/students";
-// import { MOCK_COURSES } from "@/lib/mock/courses";
+// Removed mock imports
 import { GradesFilters } from "@/components/grades/grades-filters";
 import { GradesTable } from "@/components/grades/grades-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -206,9 +204,10 @@ export default function GradesPage() {
     };
 
     // Stats
-    const totalGrades = Object.keys(gradesData).length; // or better stat logic
-    // Mock averages
-    const avgScore = 85;
+    const totalGrades = Object.values(gradesData).filter(g => g.score !== undefined && g.score !== null).length;
+    const scores = Object.values(gradesData).map(g => g.score).filter(s => s !== undefined && s !== null) as number[];
+    const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+    const unrated = studentsInGroup.length - Object.values(displayMap).filter(g => g.score !== undefined && g.score !== null).length;
 
     return (
         <ModuleGuard module="grades">
@@ -244,7 +243,7 @@ export default function GradesPage() {
                             <AlertCircle className="h-4 w-4 text-amber-500" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-white">12</div>
+                            <div className="text-2xl font-bold text-white">{unrated > 0 ? unrated : 0}</div>
                         </CardContent>
                     </Card>
                 </div>

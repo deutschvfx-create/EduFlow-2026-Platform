@@ -1,8 +1,6 @@
 
 import { db } from "@/lib/firebase";
 import { Student } from "@/lib/types/student";
-import { MOCK_STUDENTS } from "@/lib/mock/students";
-import { withFallback } from "./utils";
 import {
     collection,
     doc,
@@ -12,78 +10,65 @@ import {
     updateDoc,
     deleteDoc,
     query,
-    where,
-    writeBatch
+    where
 } from "firebase/firestore";
 
 const COLLECTION = "users";
 
 export const studentsRepo = {
     getAll: async (organizationId: string, options?: { groupIds?: string[] }): Promise<Student[]> => {
-        let filteredMock = MOCK_STUDENTS.filter(s => s.organizationId === organizationId);
-        if (options?.groupIds && options.groupIds.length > 0) {
-            filteredMock = filteredMock.filter(s => s.groupIds?.some(id => options.groupIds!.includes(id)));
-        }
+        try {
+            const collRef = collection(db, COLLECTION);
+            let q = query(
+                collRef,
+                where("role", "==", "STUDENT"),
+                where("organizationId", "==", organizationId)
+            );
 
-        return withFallback((async () => {
-            try {
-                const collRef = collection(db, COLLECTION);
-                let q = query(
-                    collRef,
-                    where("role", "==", "STUDENT"),
-                    where("organizationId", "==", organizationId)
-                );
-
-                if (options?.groupIds && options.groupIds.length > 0) {
-                    q = query(q, where("groupIds", "array-contains-any", options.groupIds.slice(0, 10)));
-                }
-
-                const snapshot = await getDocs(q);
-
-                // Auto-seed if empty (Only if using org_1 for now to represent first user)
-                if (snapshot.empty && organizationId === "org_1") {
-                    console.log("Seeding mock students to Firestore...");
-                    const batch = writeBatch(db);
-                    const seeded: Student[] = [];
-
-                    filteredMock.forEach(s => {
-                        const ref = doc(db, COLLECTION, s.id);
-                        const userData = {
-                            ...s,
-                            uid: s.id,
-                            role: "STUDENT",
-                            organizationId: organizationId,
-                        };
-                        batch.set(ref, userData);
-                        seeded.push(userData as unknown as Student);
-                    });
-
-                    await batch.commit();
-                    return seeded;
-                }
-
-                return snapshot.docs.map(doc => {
-                    const data = doc.data();
-                    return {
-                        id: doc.id,
-                        ...data
-                    } as unknown as Student;
-                });
-            } catch (e) {
-                console.error("Failed to fetch students", e);
-                throw e;
+            if (options?.groupIds && options.groupIds.length > 0) {
+                // Firestore 'array-contains-any' limit is 10
+                q = query(q, where("groupIds", "array-contains-any", options.groupIds.slice(0, 10)));
             }
-        })(), filteredMock);
+
+            const snapshot = await getDocs(q);
+
+            return snapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    ...data
+                } as unknown as Student;
+            });
+        } catch (e) {
+            console.error("Failed to fetch students", e);
+            throw e;
+        }
+    },
+
+    getById: async (organizationId: string, id: string): Promise<Student | null> => {
+        try {
+            const ref = doc(db, COLLECTION, id);
+            const snap = await getDoc(ref);
+            if (!snap.exists()) return null;
+            const data = snap.data();
+            if (data.organizationId !== organizationId) return null;
+            return { id: snap.id, ...data } as unknown as Student;
+        } catch (e) {
+            console.error("Failed to fetch student", id, e);
+            return null;
+        }
     },
 
     add: async (student: Student) => {
         const ref = student.id ? doc(db, COLLECTION, student.id) : doc(collection(db, COLLECTION));
-        await setDoc(ref, {
+        const newStudent = {
             ...student,
+            id: ref.id,
             role: "STUDENT",
-            createdAt: new Date().toISOString()
-        });
-        return { ...student, id: ref.id };
+            createdAt: student.createdAt || new Date().toISOString()
+        };
+        await setDoc(ref, newStudent);
+        return newStudent;
     },
 
     update: async (id: string, updates: Partial<Student>) => {

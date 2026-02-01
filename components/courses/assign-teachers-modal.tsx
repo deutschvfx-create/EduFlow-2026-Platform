@@ -5,7 +5,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Button } from "@/components/ui/button";
 import { Loader2, Search, Check, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { MOCK_TEACHERS } from "@/lib/mock/teachers";
+import { useOrganization } from "@/hooks/use-organization";
+import { Teacher } from "@/lib/types/teacher";
 import { Course } from "@/lib/types/course";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,9 +19,19 @@ interface AssignTeachersModalProps {
 }
 
 export function AssignTeachersModal({ course, open, onOpenChange, onSave }: AssignTeachersModalProps) {
+    const { currentOrganizationId } = useOrganization();
     const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState("");
+    const [teachers, setTeachers] = useState<Teacher[]>([]);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+    useEffect(() => {
+        if (open && currentOrganizationId) {
+            import("@/lib/data/teachers.repo").then(({ teachersRepo }) => {
+                teachersRepo.getAll(currentOrganizationId).then(setTeachers);
+            });
+        }
+    }, [open, currentOrganizationId]);
 
     useEffect(() => {
         if (course) {
@@ -31,7 +42,7 @@ export function AssignTeachersModal({ course, open, onOpenChange, onSave }: Assi
         setSearch("");
     }, [course]);
 
-    const filteredTeachers = MOCK_TEACHERS.filter(t =>
+    const filteredTeachers = teachers.filter(t =>
     (t.firstName.toLowerCase().includes(search.toLowerCase()) ||
         t.lastName.toLowerCase().includes(search.toLowerCase()))
     );

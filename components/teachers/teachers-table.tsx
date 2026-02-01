@@ -27,17 +27,11 @@ import { useRouter } from "next/navigation";
 interface TeachersTableProps {
     teachers: Teacher[];
     onEditPermissions: (teacher: Teacher) => void;
+    onAction: (action: string, id: string) => void;
 }
 
-export function TeachersTable({ teachers, onEditPermissions }: TeachersTableProps) {
+export function TeachersTable({ teachers, onEditPermissions, onAction }: TeachersTableProps) {
     const router = useRouter();
-
-    const handleAction = (action: string, id: string) => {
-        if (action === 'archive') {
-            if (!confirm("Вы уверены, что хотите архивировать этого преподавателя?")) return;
-        }
-        alert(`Action ${action} triggered for teacher ${id}`);
-    };
 
     if (teachers.length === 0) {
         return (
@@ -126,18 +120,18 @@ export function TeachersTable({ teachers, onEditPermissions }: TeachersTableProp
                                         <DropdownMenuSeparator className="bg-zinc-800" />
 
                                         {teacher.status === 'INVITED' && (
-                                            <DropdownMenuItem onClick={() => handleAction('activate', teacher.id)} className="text-green-400 cursor-pointer hover:bg-zinc-800 hover:text-green-300">
+                                            <DropdownMenuItem onClick={() => onAction('activate', teacher.id)} className="text-green-400 cursor-pointer hover:bg-zinc-800 hover:text-green-300">
                                                 <Shield className="mr-2 h-4 w-4" /> Активировать
                                             </DropdownMenuItem>
                                         )}
 
                                         {teacher.status === 'ACTIVE' && (
-                                            <DropdownMenuItem onClick={() => handleAction('suspend', teacher.id)} className="text-amber-400 cursor-pointer hover:bg-zinc-800 hover:text-amber-300">
+                                            <DropdownMenuItem onClick={() => onAction('suspend', teacher.id)} className="text-amber-400 cursor-pointer hover:bg-zinc-800 hover:text-amber-300">
                                                 <ShieldAlert className="mr-2 h-4 w-4" /> Заблокировать
                                             </DropdownMenuItem>
                                         )}
 
-                                        <DropdownMenuItem onClick={() => handleAction('archive', teacher.id)} className="text-zinc-500 cursor-pointer hover:bg-zinc-800">
+                                        <DropdownMenuItem onClick={() => onAction('archive', teacher.id)} className="text-zinc-500 cursor-pointer hover:bg-zinc-800">
                                             <Archive className="mr-2 h-4 w-4" /> В архив
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>

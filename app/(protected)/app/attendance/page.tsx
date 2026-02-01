@@ -1,9 +1,6 @@
 'use client';
 
 import { useState, useMemo, useEffect } from "react";
-import { MOCK_STUDENTS } from "@/lib/mock/students";
-import { MOCK_ATTENDANCE } from "@/lib/mock/attendance";
-import { MOCK_GROUPS_FULL } from "@/lib/mock/groups";
 import { AttendanceStatusBadge } from "@/components/attendance/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +17,6 @@ import { cn } from "@/lib/utils";
 import { AttendanceRecord, AttendanceStatus } from "@/lib/types/attendance";
 // import { toast } from "sonner"; // Removed missing dependency
 const toast = { success: (m: string) => alert(m), error: (m: string) => alert(m) };
-import { MOCK_COURSES } from "@/lib/mock/courses";
 import { Lesson } from "@/lib/types/schedule";
 import { ModuleGuard } from "@/components/system/module-guard";
 import { useOrganization } from "@/hooks/use-organization";
@@ -32,7 +28,7 @@ type LocalAttendanceMap = Record<string, AttendanceRecord>;
 
 export default function AttendancePage() {
     // Filters
-    const [date, setDate] = useState<Date | undefined>(new Date("2025-09-01")); // start with mock date
+    const [date, setDate] = useState<Date | undefined>(new Date());
     const [groupId, setGroupId] = useState("all");
     const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
 

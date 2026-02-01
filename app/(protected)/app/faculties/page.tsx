@@ -59,8 +59,18 @@ export default function FacultiesPage() {
         setEditModalOpen(true);
     };
 
-    const handleSaveUpdate = (id: string, updates: Partial<Faculty>) => {
-        alert(`Факультет ${updates.code} обновлен`);
+    const handleSaveUpdate = async (id: string, updates: Partial<Faculty>) => {
+        if (!currentOrganizationId) return;
+        try {
+            const { facultiesRepo } = await import("@/lib/data/faculties.repo");
+            const faculty = faculties.find(f => f.id === id);
+            if (!faculty) return;
+            await facultiesRepo.update(currentOrganizationId, { ...faculty, ...updates });
+            setFaculties(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f));
+        } catch (error) {
+            console.error(error);
+            alert("Ошибка при обновлении факультета");
+        }
     };
 
     if (!isLoaded) return <div className="p-8 text-zinc-500">Загрузка данных...</div>;

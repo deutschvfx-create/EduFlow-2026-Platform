@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
-// import { MOCK_COURSES } from "@/lib/mock/courses";
+// Removed mock imports
 import { CourseFilters } from "@/components/courses/course-filters";
 import { CoursesTable } from "@/components/courses/courses-table";
 import { AddCourseModal } from "@/components/courses/add-course-modal";
@@ -13,6 +13,7 @@ import { BookOpen, CheckCircle2, XCircle, Archive } from "lucide-react";
 import { Course } from "@/lib/types/course";
 import { ModuleGuard } from "@/components/system/module-guard";
 import { useOrganization } from "@/hooks/use-organization";
+import { coursesRepo } from "@/lib/data/courses.repo";
 
 export default function CoursesPage() {
     const [search, setSearch] = useState("");
@@ -34,12 +35,14 @@ export default function CoursesPage() {
     const { currentOrganizationId } = useOrganization();
 
     useEffect(() => {
-        import("@/lib/data/courses.repo").then(async ({ coursesRepo }) => {
-            const data = await coursesRepo.getAll(currentOrganizationId!);
-            setCourses(data as any);
-            setIsLoaded(true);
-        });
-    }, []);
+        if (currentOrganizationId) {
+            import("@/lib/data/courses.repo").then(async ({ coursesRepo }) => {
+                const data = await coursesRepo.getAll(currentOrganizationId);
+                setCourses(data as any);
+                setIsLoaded(true);
+            });
+        }
+    }, [currentOrganizationId]);
 
     // Filter Logic
     const filteredCourses = courses.filter(c => {
@@ -78,16 +81,26 @@ export default function CoursesPage() {
         setLinkGroupsOpen(true);
     };
 
-    const handleSaveUpdate = (id: string, updates: Partial<Course>) => {
-        alert(`Предмет ${updates.code || id} обновлен`);
+    const handleSaveUpdate = async (id: string, updates: Partial<Course>) => {
+        if (!currentOrganizationId) return;
+        try {
+            const { coursesRepo } = await import("@/lib/data/courses.repo");
+            const course = courses.find(c => c.id === id);
+            if (!course) return;
+            await coursesRepo.update(currentOrganizationId, { ...course, ...updates });
+            setCourses(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+        } catch (error) {
+            console.error(error);
+            alert("Ошибка при обновлении предмета");
+        }
     };
 
-    const handleSaveTeachers = (id: string, teacherIds: string[]) => {
-        alert(`Преподаватели обновлены для предмета ${id}. Выбрано: ${teacherIds.length}`);
+    const handleSaveTeachers = async (id: string, teacherIds: string[]) => {
+        await handleSaveUpdate(id, { teacherIds });
     };
 
-    const handleSaveGroups = (id: string, groupIds: string[]) => {
-        alert(`Группы обновлены для предмета ${id}. Выбрано: ${groupIds.length}`);
+    const handleSaveGroups = async (id: string, groupIds: string[]) => {
+        await handleSaveUpdate(id, { groupIds });
     };
 
     return (

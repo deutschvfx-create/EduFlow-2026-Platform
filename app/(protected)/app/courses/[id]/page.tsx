@@ -1,30 +1,43 @@
 'use client';
 
 import { useParams, useRouter } from "next/navigation";
-import { MOCK_COURSES } from "@/lib/mock/courses";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit, Archive, Users, GraduationCap, Calendar, BarChart3, Building2 } from "lucide-react";
 import { CourseStatusBadge, CourseLevelBadge } from "@/components/courses/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { EditCourseModal } from "@/components/courses/edit-course-modal";
 import { AssignTeachersModal } from "@/components/courses/assign-teachers-modal";
 import { LinkGroupsModal } from "@/components/courses/link-groups-modal";
 import { Course } from "@/lib/types/course";
 import { Badge } from "@/components/ui/badge";
+import { useOrganization } from "@/hooks/use-organization";
 
 export default function CourseDetailsPage() {
     const params = useParams(); // { id: string }
     const router = useRouter();
     const id = params?.id as string;
+    const { currentOrganizationId } = useOrganization();
 
-    // State for modals
+    // State
+    const [course, setCourse] = useState<Course | null>(null);
+    const [loading, setLoading] = useState(true);
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [assignTeachersOpen, setAssignTeachersOpen] = useState(false);
     const [linkGroupsOpen, setLinkGroupsOpen] = useState(false);
 
-    const course = MOCK_COURSES.find(s => s.id === id);
+    useEffect(() => {
+        if (currentOrganizationId && id) {
+            import("@/lib/data/courses.repo").then(async ({ coursesRepo }) => {
+                const data = await coursesRepo.getById(currentOrganizationId, id);
+                setCourse(data);
+                setLoading(false);
+            });
+        }
+    }, [currentOrganizationId, id]);
+
+    if (loading) return <div className="p-8 text-zinc-500">Загрузка данных...</div>;
 
     if (!course) {
         return (
@@ -37,16 +50,38 @@ export default function CourseDetailsPage() {
         );
     }
 
-    const handleSaveUpdate = (id: string, updates: Partial<Course>) => {
-        alert(`Предмет ${updates.code} обновлен`);
+    const handleSaveUpdate = async (id: string, updates: Partial<Course>) => {
+        if (!currentOrganizationId) return;
+        try {
+            const { coursesRepo } = await import("@/lib/data/courses.repo");
+            await coursesRepo.update(currentOrganizationId, { ...course, ...updates });
+            setCourse(prev => prev ? { ...prev, ...updates } : null);
+        } catch (error) {
+            console.error(error);
+            alert("Ошибка при обновлении предмета");
+        }
     };
 
-    const handleSaveTeachers = (id: string, teacherIds: string[]) => {
-        alert(`Преподаватели обновлены. Выбрано: ${teacherIds.length}`);
+    const handleSaveTeachers = async (id: string, teacherIds: string[]) => {
+        if (!currentOrganizationId) return;
+        try {
+            const { coursesRepo } = await import("@/lib/data/courses.repo");
+            await coursesRepo.update(currentOrganizationId, { ...course, teacherIds });
+            setCourse(prev => prev ? { ...prev, teacherIds } : null);
+        } catch (error) {
+            console.error(error);
+        }
     };
 
-    const handleSaveGroups = (id: string, groupIds: string[]) => {
-        alert(`Группы обновлены. Выбрано: ${groupIds.length}`);
+    const handleSaveGroups = async (id: string, groupIds: string[]) => {
+        if (!currentOrganizationId) return;
+        try {
+            const { coursesRepo } = await import("@/lib/data/courses.repo");
+            await coursesRepo.update(currentOrganizationId, { ...course, groupIds });
+            setCourse(prev => prev ? { ...prev, groupIds } : null);
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     return (
@@ -85,8 +120,7 @@ export default function CourseDetailsPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-white flex items-center gap-2">
-                            <span className="text-zinc-600 text-lg font-normal">0/</span>
-                            {course.groupIds.length}
+                            {course.groupIds?.length || 0}
                             <Users className="h-4 w-4 text-zinc-600" />
                         </div>
                     </CardContent>
@@ -97,30 +131,8 @@ export default function CourseDetailsPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-white flex items-center gap-2">
-                            {course.teacherIds.length}
+                            {course.teacherIds?.length || 0}
                             <GraduationCap className="h-4 w-4 text-zinc-600" />
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="bg-zinc-900 border-zinc-800">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">Успеваемость</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-white flex items-center gap-2">
-                            4.5
-                            <BarChart3 className="h-4 w-4 text-zinc-600" />
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="bg-zinc-900 border-zinc-800">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">Посещаемость</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-white flex items-center gap-2">
-                            88%
-                            <Calendar className="h-4 w-4 text-green-600" />
                         </div>
                     </CardContent>
                 </Card>
@@ -141,14 +153,6 @@ export default function CourseDetailsPage() {
                             <div className="text-xs text-zinc-500 uppercase font-semibold">Уровень</div>
                             <CourseLevelBadge level={course.level} />
                         </div>
-                        <div className="space-y-1">
-                            <div className="text-xs text-zinc-500 uppercase font-semibold">Факультет (ID)</div>
-                            <div className="text-zinc-300 font-medium">{course.facultyId}</div>
-                        </div>
-                        <div className="space-y-1">
-                            <div className="text-xs text-zinc-500 uppercase font-semibold">Кафедра (ID)</div>
-                            <div className="text-zinc-300 font-medium">{course.departmentId}</div>
-                        </div>
                         <div className="pt-4 flex flex-col gap-2">
                             <Button variant="outline" className="w-full border-zinc-700 hover:bg-zinc-800" onClick={() => setAssignTeachersOpen(true)}>
                                 <GraduationCap className="mr-2 h-4 w-4" /> Назначить препод.
@@ -164,9 +168,6 @@ export default function CourseDetailsPage() {
                     <Tabs defaultValue="overview" className="w-full">
                         <TabsList className="w-full justify-start bg-zinc-900 border-b border-zinc-800 rounded-none h-auto p-0 flex-wrap">
                             <TabsTrigger value="overview" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-400 rounded-none py-3 px-4 text-zinc-400">Обзор</TabsTrigger>
-                            <TabsTrigger value="groups" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-400 rounded-none py-3 px-4 text-zinc-400">Группы</TabsTrigger>
-                            <TabsTrigger value="teachers" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-400 rounded-none py-3 px-4 text-zinc-400">Преподаватели</TabsTrigger>
-                            <TabsTrigger value="schedule" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-400 rounded-none py-3 px-4 text-zinc-400">Расписание</TabsTrigger>
                         </TabsList>
 
                         <div className="mt-6">
@@ -174,49 +175,6 @@ export default function CourseDetailsPage() {
                                 <Card className="bg-zinc-900 border-zinc-800 border-dashed">
                                     <CardContent className="flex flex-col items-center justify-center py-12 text-zinc-500">
                                         <p>Общая информация и новости по курсу</p>
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-                            <TabsContent value="groups">
-                                <div className="space-y-4">
-                                    {course.groupIds.length > 0 ? (
-                                        course.groupIds.map((id, i) => (
-                                            <Card key={i} className="bg-zinc-900 border-zinc-800 p-4 flex items-center justify-between">
-                                                <div className="font-medium text-zinc-200">Группа {id}</div>
-                                                <Button variant="ghost" size="sm" className="text-zinc-500">Детали</Button>
-                                            </Card>
-                                        ))
-                                    ) : (
-                                        <Card className="bg-zinc-900 border-zinc-800 border-dashed">
-                                            <CardContent className="flex flex-col items-center justify-center py-12 text-zinc-500">
-                                                <p>Группы не привязаны</p>
-                                            </CardContent>
-                                        </Card>
-                                    )}
-                                </div>
-                            </TabsContent>
-                            <TabsContent value="teachers">
-                                <div className="space-y-4">
-                                    {course.teacherIds.length > 0 ? (
-                                        course.teacherIds.map((id, i) => (
-                                            <Card key={i} className="bg-zinc-900 border-zinc-800 p-4 flex items-center justify-between">
-                                                <div className="font-medium text-zinc-200">Преподаватель {id}</div>
-                                                <Button variant="ghost" size="sm" className="text-zinc-500">Профиль</Button>
-                                            </Card>
-                                        ))
-                                    ) : (
-                                        <Card className="bg-zinc-900 border-zinc-800 border-dashed">
-                                            <CardContent className="flex flex-col items-center justify-center py-12 text-zinc-500">
-                                                <p>Преподаватели не назначены</p>
-                                            </CardContent>
-                                        </Card>
-                                    )}
-                                </div>
-                            </TabsContent>
-                            <TabsContent value="schedule">
-                                <Card className="bg-zinc-900 border-zinc-800 border-dashed">
-                                    <CardContent className="flex flex-col items-center justify-center py-12 text-zinc-500">
-                                        <p>Расписание занятий по предмету</p>
                                     </CardContent>
                                 </Card>
                             </TabsContent>

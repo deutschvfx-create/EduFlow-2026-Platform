@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from "react";
-import { MOCK_DEPARTMENTS } from "@/lib/mock/departments";
+import { useState, useEffect } from "react";
+import { useOrganization } from "@/hooks/use-organization";
 import { DepartmentFilters } from "@/components/departments/department-filters";
 import { DepartmentsTable } from "@/components/departments/departments-table";
 import { AddDepartmentModal } from "@/components/departments/add-department-modal";
@@ -12,6 +12,21 @@ import { Department } from "@/lib/types/department";
 import { ModuleGuard } from "@/components/system/module-guard";
 
 export default function DepartmentsPage() {
+    const { currentOrganizationId } = useOrganization();
+    const [departments, setDepartments] = useState<Department[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (currentOrganizationId) {
+            import("@/lib/data/departments.repo").then(({ departmentsRepo }) => {
+                departmentsRepo.getAll(currentOrganizationId).then(data => {
+                    setDepartments(data);
+                    setLoading(false);
+                });
+            });
+        }
+    }, [currentOrganizationId]);
+
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [facultyFilter, setFacultyFilter] = useState("all");
@@ -21,7 +36,7 @@ export default function DepartmentsPage() {
     const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
 
     // Filter Logic
-    const filteredDepartments = MOCK_DEPARTMENTS.filter(d => {
+    const filteredDepartments = departments.filter(d => {
         const matchesSearch =
             d.name.toLowerCase().includes(search.toLowerCase()) ||
             d.code.toLowerCase().includes(search.toLowerCase());
@@ -33,19 +48,28 @@ export default function DepartmentsPage() {
     });
 
     // Stats
-    const total = MOCK_DEPARTMENTS.length;
-    const active = MOCK_DEPARTMENTS.filter(s => s.status === 'ACTIVE').length;
-    const inactive = MOCK_DEPARTMENTS.filter(s => s.status === 'INACTIVE').length;
-    const archived = MOCK_DEPARTMENTS.filter(s => s.status === 'ARCHIVED').length;
+    const total = departments.length;
+    const active = departments.filter(s => s.status === 'ACTIVE').length;
+    const inactive = departments.filter(s => s.status === 'INACTIVE').length;
+    const archived = departments.filter(s => s.status === 'ARCHIVED').length;
 
     const handleEdit = (department: Department) => {
         setSelectedDepartment(department);
         setEditModalOpen(true);
     };
 
-    const handleSaveUpdate = (id: string, updates: Partial<Department>) => {
-        // Mock save logic
-        alert(`Кафедра ${updates.code || id} обновлена`);
+    const handleSaveUpdate = async (id: string, updates: Partial<Department>) => {
+        if (!currentOrganizationId) return;
+        try {
+            const { departmentsRepo } = await import("@/lib/data/departments.repo");
+            const dept = departments.find(d => d.id === id);
+            if (!dept) return;
+            await departmentsRepo.update(currentOrganizationId, { ...dept, ...updates });
+            setDepartments(prev => prev.map(d => d.id === id ? { ...d, ...updates } : d));
+        } catch (error) {
+            console.error(error);
+            alert("Ошибка при обновлении кафедры");
+        }
     };
 
     return (
@@ -115,6 +139,7 @@ export default function DepartmentsPage() {
                         departments={filteredDepartments}
                         onEdit={handleEdit}
                     />
+                    {loading && <div className="text-center py-10 text-zinc-500">Загрузка данных...</div>}
                 </div>
 
                 <EditDepartmentModal

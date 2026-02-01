@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
-// import { MOCK_GROUPS_FULL } from "@/lib/mock/groups";
+// Removed mock imports
 import { GroupFilters } from "@/components/groups/group-filters";
 import { GroupsTable } from "@/components/groups/groups-table";
 import { AddGroupModal } from "@/components/groups/add-group-modal";
@@ -11,6 +11,7 @@ import { Layers, CheckCircle2, XCircle, Archive } from "lucide-react";
 import { Group } from "@/lib/types/group";
 import { ModuleGuard } from "@/components/system/module-guard";
 import { useOrganization } from "@/hooks/use-organization";
+import { groupsRepo } from "@/lib/data/groups.repo";
 
 export default function GroupsPage() {
     const [search, setSearch] = useState("");
@@ -28,12 +29,13 @@ export default function GroupsPage() {
     const { currentOrganizationId } = useOrganization();
 
     useEffect(() => {
+        if (!currentOrganizationId) return;
         import("@/lib/data/groups.repo").then(async ({ groupsRepo }) => {
-            const data = await groupsRepo.getAll(currentOrganizationId!);
+            const data = await groupsRepo.getAll(currentOrganizationId);
             setGroups(data as any);
             setIsLoaded(true);
         });
-    }, []);
+    }, [currentOrganizationId]);
 
     // Filter Logic
     // Filter Logic
@@ -62,9 +64,18 @@ export default function GroupsPage() {
         setEditModalOpen(true);
     };
 
-    const handleSaveUpdate = (id: string, updates: Partial<Group>) => {
-        // Mock save logic
-        alert(`Группа ${updates.code || id} обновлена`);
+    const handleSaveUpdate = async (id: string, updates: Partial<Group>) => {
+        if (!currentOrganizationId) return;
+        try {
+            const { groupsRepo } = await import("@/lib/data/groups.repo");
+            const group = groups.find(g => g.id === id);
+            if (!group) return;
+            await groupsRepo.update(currentOrganizationId, { ...group, ...updates });
+            setGroups(prev => prev.map(g => g.id === id ? { ...g, ...updates } : g));
+        } catch (error) {
+            console.error(error);
+            alert("Ошибка при обновлении группы");
+        }
     };
 
     return (

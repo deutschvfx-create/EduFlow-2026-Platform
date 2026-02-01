@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Plus, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { MOCK_FACULTIES } from "@/lib/mock/faculties";
-import { MOCK_DEPARTMENTS } from "@/lib/mock/departments";
+import { useEffect } from "react";
+import { Faculty } from "@/lib/types/faculty";
+import { Department } from "@/lib/types/department";
 import { generateId } from "@/lib/utils";
 import { useOrganization } from "@/hooks/use-organization";
 
@@ -25,9 +26,23 @@ export function AddCourseModal() {
     const [departmentId, setDepartmentId] = useState("");
     const [level, setLevel] = useState("");
     const [description, setDescription] = useState("");
+    const [faculties, setFaculties] = useState<Faculty[]>([]);
+    const [allDepartments, setAllDepartments] = useState<Department[]>([]);
+
+    useEffect(() => {
+        if (open && currentOrganizationId) {
+            Promise.all([
+                import("@/lib/data/faculties.repo").then(m => m.facultiesRepo.getAll(currentOrganizationId)),
+                import("@/lib/data/departments.repo").then(m => m.departmentsRepo.getAll(currentOrganizationId))
+            ]).then(([f, d]) => {
+                setFaculties(f);
+                setAllDepartments(d);
+            });
+        }
+    }, [open, currentOrganizationId]);
 
     // Derived state
-    const departments = MOCK_DEPARTMENTS.filter(d => d.facultyId === facultyId);
+    const departments = allDepartments.filter(d => d.facultyId === facultyId);
 
     const handleFacultyChange = (val: string) => {
         setFacultyId(val);
@@ -110,7 +125,7 @@ export function AddCourseModal() {
                                     <SelectValue placeholder="Выберите факультет" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {MOCK_FACULTIES.map(f => (
+                                    {faculties.map(f => (
                                         <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
                                     ))}
                                 </SelectContent>

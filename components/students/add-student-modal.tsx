@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Plus, QrCode, Mail, Camera, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MOCK_GROUPS } from "@/lib/mock/students";
+import { useEffect } from "react";
+import { Group } from "@/lib/types/group";
 import { generateId } from "@/lib/utils";
 import { useOrganization } from "@/hooks/use-organization";
 
@@ -22,6 +23,15 @@ export function AddStudentModal() {
     const [lastName, setLastName] = useState("");
     const [birthDate, setBirthDate] = useState("");
     const [groupId, setGroupId] = useState("");
+    const [groups, setGroups] = useState<Group[]>([]);
+
+    useEffect(() => {
+        if (open && currentOrganizationId) {
+            import("@/lib/data/groups.repo").then(({ groupsRepo }) => {
+                groupsRepo.getAll(currentOrganizationId).then(setGroups);
+            });
+        }
+    }, [open, currentOrganizationId]);
 
     const handleManualSubmit = async () => {
         if (!firstName || !lastName || !birthDate) {
@@ -136,7 +146,8 @@ export function AddStudentModal() {
                                     <SelectValue placeholder="Выберите группу" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {MOCK_GROUPS.filter(g => g.id !== 'all').map(g => (
+                                    <SelectItem value="none">Без группы</SelectItem>
+                                    {groups.map(g => (
                                         <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
                                     ))}
                                 </SelectContent>

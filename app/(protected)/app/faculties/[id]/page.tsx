@@ -1,25 +1,38 @@
 'use client';
 
 import { useParams, useRouter } from "next/navigation";
-import { MOCK_FACULTIES } from "@/lib/mock/faculties";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit, Archive, Users, GraduationCap, LayoutDashboard, DoorOpen } from "lucide-react";
 import { FacultyStatusBadge } from "@/components/faculties/status-badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { EditFacultyModal } from "@/components/faculties/edit-faculty-modal";
 import { Faculty } from "@/lib/types/faculty";
+import { useOrganization } from "@/hooks/use-organization";
 
 export default function FacultyDetailsPage() {
     const params = useParams(); // { id: string }
     const router = useRouter();
     const id = params?.id as string;
+    const { currentOrganizationId } = useOrganization();
 
-    // State for edit modal
+    // State
+    const [faculty, setFaculty] = useState<Faculty | null>(null);
+    const [loading, setLoading] = useState(true);
     const [editModalOpen, setEditModalOpen] = useState(false);
 
-    const faculty = MOCK_FACULTIES.find(s => s.id === id);
+    useEffect(() => {
+        if (currentOrganizationId && id) {
+            import("@/lib/data/faculties.repo").then(async ({ facultiesRepo }) => {
+                const data = await facultiesRepo.getById(currentOrganizationId, id);
+                setFaculty(data);
+                setLoading(false);
+            });
+        }
+    }, [currentOrganizationId, id]);
+
+    if (loading) return <div className="p-8 text-zinc-500">Загрузка данных...</div>;
 
     if (!faculty) {
         return (
@@ -32,9 +45,16 @@ export default function FacultyDetailsPage() {
         );
     }
 
-    const handleSaveUpdate = (id: string, updates: Partial<Faculty>) => {
-        // Mock save logic
-        alert(`Факультет ${updates.code} обновлен`);
+    const handleSaveUpdate = async (id: string, updates: Partial<Faculty>) => {
+        if (!currentOrganizationId) return;
+        try {
+            const { facultiesRepo } = await import("@/lib/data/faculties.repo");
+            await facultiesRepo.update(currentOrganizationId, { ...faculty, ...updates });
+            setFaculty(prev => prev ? { ...prev, ...updates } : null);
+        } catch (error) {
+            console.error(error);
+            alert("Ошибка при обновлении факультета");
+        }
     };
 
     return (
@@ -51,7 +71,7 @@ export default function FacultyDetailsPage() {
                     </h1>
                     <div className="text-zinc-400 text-sm flex gap-4">
                         <span className="font-mono bg-zinc-800 px-2 rounded text-zinc-300">{faculty.code}</span>
-                        <span>Добавлен: {new Date(faculty.createdAt).toLocaleDateString()}</span>
+                        <span>Добавлен: {faculty.createdAt ? new Date(faculty.createdAt).toLocaleDateString() : '—'}</span>
                     </div>
                 </div>
                 <div className="ml-auto flex gap-2">
@@ -74,41 +94,8 @@ export default function FacultyDetailsPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-white flex items-center gap-2">
-                            {faculty.departmentsCount}
+                            {faculty.departmentsCount || 0}
                             <DoorOpen className="h-4 w-4 text-zinc-600" />
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="bg-zinc-900 border-zinc-800">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">Группы</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-white flex items-center gap-2">
-                            {faculty.groupsCount}
-                            <LayoutDashboard className="h-4 w-4 text-zinc-600" />
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="bg-zinc-900 border-zinc-800">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">Студенты</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-white flex items-center gap-2">
-                            {faculty.studentsCount}
-                            <Users className="h-4 w-4 text-zinc-600" />
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="bg-zinc-900 border-zinc-800">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">Преподаватели</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-white flex items-center gap-2">
-                            {faculty.teachersCount}
-                            <GraduationCap className="h-4 w-4 text-zinc-600" />
                         </div>
                     </CardContent>
                 </Card>
@@ -125,10 +112,6 @@ export default function FacultyDetailsPage() {
                             <div className="text-xs text-zinc-500 uppercase font-semibold">Описание</div>
                             <div className="text-zinc-300 text-sm leading-relaxed">{faculty.description || 'Описание отсутствует'}</div>
                         </div>
-                        <div className="space-y-1">
-                            <div className="text-xs text-zinc-500 uppercase font-semibold">Руководитель (ID)</div>
-                            <div className="text-zinc-300 font-medium">{faculty.headTeacherId || 'Не назначен'}</div>
-                        </div>
                     </CardContent>
                 </Card>
 
@@ -136,9 +119,6 @@ export default function FacultyDetailsPage() {
                     <Tabs defaultValue="overview" className="w-full">
                         <TabsList className="w-full justify-start bg-zinc-900 border-b border-zinc-800 rounded-none h-auto p-0">
                             <TabsTrigger value="overview" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-400 rounded-none py-3 px-6 text-zinc-400">Обзор</TabsTrigger>
-                            <TabsTrigger value="departments" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-400 rounded-none py-3 px-6 text-zinc-400">Кафедры</TabsTrigger>
-                            <TabsTrigger value="groups" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-400 rounded-none py-3 px-6 text-zinc-400">Группы</TabsTrigger>
-                            <TabsTrigger value="teachers" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-400 rounded-none py-3 px-6 text-zinc-400">Преподаватели</TabsTrigger>
                         </TabsList>
 
                         <div className="mt-6">
@@ -146,27 +126,6 @@ export default function FacultyDetailsPage() {
                                 <Card className="bg-zinc-900 border-zinc-800 border-dashed">
                                     <CardContent className="flex flex-col items-center justify-center py-12 text-zinc-500">
                                         <p>Сводная статистика и KPI факультета</p>
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-                            <TabsContent value="departments">
-                                <Card className="bg-zinc-900 border-zinc-800 border-dashed">
-                                    <CardContent className="flex flex-col items-center justify-center py-12 text-zinc-500">
-                                        <p>Список кафедр факультета</p>
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-                            <TabsContent value="groups">
-                                <Card className="bg-zinc-900 border-zinc-800 border-dashed">
-                                    <CardContent className="flex flex-col items-center justify-center py-12 text-zinc-500">
-                                        <p>Список учебных групп</p>
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-                            <TabsContent value="teachers">
-                                <Card className="bg-zinc-900 border-zinc-800 border-dashed">
-                                    <CardContent className="flex flex-col items-center justify-center py-12 text-zinc-500">
-                                        <p>Педагогический состав</p>
                                     </CardContent>
                                 </Card>
                             </TabsContent>

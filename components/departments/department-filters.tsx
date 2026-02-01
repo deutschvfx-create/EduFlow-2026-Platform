@@ -4,7 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { MOCK_FACULTIES } from "@/lib/mock/faculties";
+import { useState, useEffect } from 'react';
+import { useOrganization } from '@/hooks/use-organization';
+import { Faculty } from '@/lib/types/faculty';
 
 interface DepartmentFiltersProps {
     search: string;
@@ -23,6 +25,17 @@ export function DepartmentFilters({
     facultyFilter,
     onFacultyChange
 }: DepartmentFiltersProps) {
+    const { currentOrganizationId } = useOrganization();
+    const [faculties, setFaculties] = useState<Faculty[]>([]);
+
+    useEffect(() => {
+        if (currentOrganizationId) {
+            import("@/lib/data/faculties.repo").then(({ facultiesRepo }) => {
+                facultiesRepo.getAll(currentOrganizationId).then(setFaculties);
+            });
+        }
+    }, [currentOrganizationId]);
+
     const hasActiveFilters = search || statusFilter !== 'all' || facultyFilter !== 'all';
 
     const clearFilters = () => {
@@ -49,7 +62,7 @@ export function DepartmentFilters({
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">Все факультеты</SelectItem>
-                        {MOCK_FACULTIES.map(f => (
+                        {faculties.map(f => (
                             <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
                         ))}
                     </SelectContent>

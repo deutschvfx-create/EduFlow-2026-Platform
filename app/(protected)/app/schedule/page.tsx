@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
-// import { MOCK_SCHEDULE } from "@/lib/mock/schedule";
+// Removed mock imports
 import { ScheduleFilters } from "@/components/schedule/schedule-filters";
 import { AddLessonModal } from "@/components/schedule/add-lesson-modal";
 import { EditLessonModal } from "@/components/schedule/edit-lesson-modal";
@@ -274,6 +274,11 @@ export default function SchedulePage() {
                                 currentDate={currentDate}
                                 onLessonClick={handleLessonClick}
                                 onLessonAdd={handleLessonAdd}
+                                onLessonUpdate={handleSaveUpdate}
+                                onLessonDelete={handleLessonDelete}
+                                groups={groups}
+                                teachers={teachers}
+                                courses={courses}
                             />
                         </div>
                     </div>

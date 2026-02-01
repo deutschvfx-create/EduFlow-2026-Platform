@@ -1,8 +1,6 @@
 
-import { db } from "@/lib/firebase"; // Using Client SDK
+import { db } from "@/lib/firebase";
 import { Teacher } from "@/lib/types/teacher";
-import { MOCK_TEACHERS } from "@/lib/mock/teachers";
-import { withFallback } from "./utils";
 import {
     collection,
     doc,
@@ -12,75 +10,63 @@ import {
     updateDoc,
     deleteDoc,
     query,
-    where,
-    writeBatch
+    where
 } from "firebase/firestore";
 
 const COLLECTION = "users";
 
 export const teachersRepo = {
     getAll: async (organizationId: string): Promise<Teacher[]> => {
-        const filteredMock = MOCK_TEACHERS.filter(t => t.organizationId === organizationId);
-        return withFallback((async () => {
-            try {
-                const q = query(
-                    collection(db, COLLECTION),
-                    where("role", "==", "TEACHER"),
-                    where("organizationId", "==", organizationId)
-                );
-                const snapshot = await getDocs(q);
+        try {
+            const q = query(
+                collection(db, COLLECTION),
+                where("role", "==", "TEACHER"),
+                where("organizationId", "==", organizationId)
+            );
+            const snapshot = await getDocs(q);
 
-                // Auto-seed if empty
-                if (snapshot.empty && organizationId === "org_1") {
-                    console.log("Seeding mock teachers to Firestore...");
-                    const batch = writeBatch(db);
-                    const seeded: Teacher[] = [];
+            return snapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    ...data
+                } as unknown as Teacher;
+            });
+        } catch (e) {
+            console.error("Failed to fetch teachers", e);
+            throw e;
+        }
+    },
 
-                    filteredMock.forEach(t => {
-                        const ref = doc(db, COLLECTION, t.id);
-                        const userData = {
-                            ...t,
-                            uid: t.id,
-                            role: "TEACHER",
-                            organizationId: organizationId,
-                        };
-                        batch.set(ref, userData);
-                        seeded.push(userData as unknown as Teacher);
-                    });
-
-                    await batch.commit();
-                    return seeded;
-                }
-
-                return snapshot.docs.map(doc => {
-                    const data = doc.data();
-                    return {
-                        id: doc.id,
-                        ...data
-                    } as unknown as Teacher;
-                });
-            } catch (e) {
-                console.error("Failed to fetch teachers", e);
-                throw e;
-            }
-        })(), filteredMock);
+    getById: async (organizationId: string, id: string): Promise<Teacher | null> => {
+        try {
+            const ref = doc(db, COLLECTION, id);
+            const snap = await getDoc(ref);
+            if (!snap.exists()) return null;
+            const data = snap.data();
+            if (data.organizationId !== organizationId) return null;
+            return { id: snap.id, ...data } as unknown as Teacher;
+        } catch (e) {
+            console.error("Failed to fetch teacher", id, e);
+            return null;
+        }
     },
 
     add: async (teacher: Teacher) => {
-        // Teacher ID is usually generated, but if provided use it, else generate
         const ref = teacher.id ? doc(db, COLLECTION, teacher.id) : doc(collection(db, COLLECTION));
-        await setDoc(ref, {
+        const newTeacher = {
             ...teacher,
+            id: ref.id,
             role: "TEACHER",
-            createdAt: new Date().toISOString()
-        });
-        return { ...teacher, id: ref.id };
+            createdAt: teacher.createdAt || new Date().toISOString()
+        };
+        await setDoc(ref, newTeacher);
+        return newTeacher;
     },
 
     update: async (id: string, updates: Partial<Teacher>) => {
         const ref = doc(db, COLLECTION, id);
         await updateDoc(ref, updates);
-        // Return updated object (fetching it again to be sure, or merge)
         const snap = await getDoc(ref);
         return { id: snap.id, ...snap.data() } as unknown as Teacher;
     },

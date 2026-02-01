@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { MOCK_TEACHERS } from "@/lib/mock/teachers";
-import { MOCK_FACULTIES } from "@/lib/mock/faculties";
+import { useOrganization } from "@/hooks/use-organization";
+import { Teacher } from "@/lib/types/teacher";
+import { Faculty } from "@/lib/types/faculty";
 import { Department, DepartmentStatus } from "@/lib/types/department";
 
 interface EditDepartmentModalProps {
@@ -20,6 +21,7 @@ interface EditDepartmentModalProps {
 }
 
 export function EditDepartmentModal({ department, open, onOpenChange, onSave }: EditDepartmentModalProps) {
+    const { currentOrganizationId } = useOrganization();
     const [loading, setLoading] = useState(false);
 
     // Form State
@@ -29,6 +31,20 @@ export function EditDepartmentModal({ department, open, onOpenChange, onSave }: 
     const [description, setDescription] = useState("");
     const [headTeacherId, setHeadTeacherId] = useState("");
     const [status, setStatus] = useState<DepartmentStatus>("ACTIVE");
+    const [teachers, setTeachers] = useState<Teacher[]>([]);
+    const [faculties, setFaculties] = useState<Faculty[]>([]);
+
+    useEffect(() => {
+        if (open && currentOrganizationId) {
+            Promise.all([
+                import("@/lib/data/teachers.repo").then(m => m.teachersRepo.getAll(currentOrganizationId)),
+                import("@/lib/data/faculties.repo").then(m => m.facultiesRepo.getAll(currentOrganizationId))
+            ]).then(([t, f]) => {
+                setTeachers(t);
+                setFaculties(f);
+            });
+        }
+    }, [open, currentOrganizationId]);
 
     useEffect(() => {
         if (department) {
@@ -83,7 +99,7 @@ export function EditDepartmentModal({ department, open, onOpenChange, onSave }: 
                                 <SelectValue placeholder="Выберите факультет" />
                             </SelectTrigger>
                             <SelectContent>
-                                {MOCK_FACULTIES.map(f => (
+                                {faculties.map(f => (
                                     <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
                                 ))}
                             </SelectContent>
@@ -128,7 +144,7 @@ export function EditDepartmentModal({ department, open, onOpenChange, onSave }: 
                                     <SelectValue placeholder="Не назначен" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {MOCK_TEACHERS.map(t => (
+                                    {teachers.map(t => (
                                         <SelectItem key={t.id} value={t.id}>
                                             {t.firstName} {t.lastName}
                                         </SelectItem>

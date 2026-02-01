@@ -2,17 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+// import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Plus, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MOCK_GROUPS_FULL } from "@/lib/mock/groups";
-import { MOCK_TEACHERS } from "@/lib/mock/teachers";
-import { MOCK_COURSES } from "@/lib/mock/courses";
-import { MOCK_CLASSROOMS } from "@/lib/mock/classrooms";
 import { DayOfWeek, Lesson } from "@/lib/types/schedule";
 import { useModules } from "@/hooks/use-modules";
+import { useOrganization } from "@/hooks/use-organization";
+import { Classroom } from "@/lib/data/classrooms.repo";
 
 export function AddLessonModal({
     lessons,
@@ -31,7 +29,9 @@ export function AddLessonModal({
 }) {
     const [open, setOpen] = useState(false);
     const { modules } = useModules();
+    const { currentOrganizationId } = useOrganization();
     const [loading, setLoading] = useState(false);
+    const [classrooms, setClassrooms] = useState<Classroom[]>([]);
 
     // Form State
     const [groupId, setGroupId] = useState("");
@@ -48,6 +48,15 @@ export function AddLessonModal({
         group?: string;
         room?: string;
     }>({});
+
+    useEffect(() => {
+        if (open && currentOrganizationId && modules.classrooms) {
+            import("@/lib/data/classrooms.repo").then(async ({ classroomsRepo }) => {
+                const data = await classroomsRepo.getAll(currentOrganizationId);
+                setClassrooms(data);
+            });
+        }
+    }, [open, currentOrganizationId, modules.classrooms]);
 
     // Helper: Check for overlaps
     const checkConflicts = () => {
@@ -86,8 +95,6 @@ export function AddLessonModal({
     };
 
     // Real-time check effect
-    // We verify whenever any dependency changes
-    /* eslint-disable react-hooks/exhaustive-deps */
     useEffect(() => {
         checkConflicts();
     }, [groupId, teacherId, room, dayOfWeek, startTime, endTime]);
@@ -124,16 +131,15 @@ export function AddLessonModal({
                 };
                 await onSave(lessonData);
                 setOpen(false);
-                // Reset form optionally here
-            } else {
-                // Fallback Mock
-                await new Promise(r => setTimeout(r, 1000));
-                setOpen(false);
-                alert(`Занятие успешно добавлено!`);
+                // Reset form
+                setGroupId("");
+                setCourseId("");
+                setTeacherId("");
+                setDayOfWeek("");
+                setRoom("");
             }
         } catch (error) {
             console.error("Modal save error:", error);
-            // Alert handled by parent or here if needed
         } finally {
             setLoading(false);
         }
@@ -219,8 +225,16 @@ export function AddLessonModal({
                                     <SelectValue placeholder="День" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map(d => (
-                                        <SelectItem key={d} value={d}>{d}</SelectItem>
+                                    {[
+                                        { v: "MON", l: "Понедельник" },
+                                        { v: "TUE", l: "Вторник" },
+                                        { v: "WED", l: "Среда" },
+                                        { v: "THU", l: "Четверг" },
+                                        { v: "FRI", l: "Пятница" },
+                                        { v: "SAT", l: "Суббота" },
+                                        { v: "SUN", l: "Воскресенье" }
+                                    ].map(d => (
+                                        <SelectItem key={d.v} value={d.v}>{d.l}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -236,7 +250,7 @@ export function AddLessonModal({
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="max-h-[200px]">
-                                    {["08:00", "09:00", "09:30", "11:00", "12:30", "14:00", "15:30", "17:00", "18:30"].map(t => (
+                                    {["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00"].map(t => (
                                         <SelectItem key={t} value={t}>{t}</SelectItem>
                                     ))}
                                 </SelectContent>
@@ -249,13 +263,13 @@ export function AddLessonModal({
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="max-h-[200px]">
-                                    {["09:30", "10:30", "11:00", "12:30", "14:00", "15:30", "17:00", "18:30", "20:00"].map(t => (
+                                    {["08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00"].map(t => (
                                         <SelectItem key={t} value={t}>{t}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
-                        {modules.classrooms && MOCK_CLASSROOMS.length > 0 && (
+                        {modules.classrooms && (
                             <div className="space-y-2">
                                 <Label className={conflicts.room ? "text-red-400" : ""}>
                                     Аудитория {conflicts.room && "*"}
@@ -266,61 +280,16 @@ export function AddLessonModal({
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="__none__">Не выбрана</SelectItem>
-                                        {MOCK_CLASSROOMS.length >= 10 ? (
-                                            // Grouped view for 10+ classrooms
-                                            (() => {
-                                                const grouped = MOCK_CLASSROOMS.reduce((acc, cls) => {
-                                                    const key = cls.building || "Без корпуса";
-                                                    if (!acc[key]) acc[key] = [];
-                                                    acc[key].push(cls);
-                                                    return acc;
-                                                }, {} as Record<string, typeof MOCK_CLASSROOMS>);
-
-                                                return Object.entries(grouped)
-                                                    .sort(([a], [b]) => a.localeCompare(b))
-                                                    .map(([building, classrooms]) => (
-                                                        <div key={building}>
-                                                            <div className="px-2 py-1.5 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
-                                                                {building}
-                                                            </div>
-                                                            {classrooms
-                                                                .sort((a, b) => {
-                                                                    if (a.floor && b.floor && a.floor !== b.floor) {
-                                                                        return a.floor.localeCompare(b.floor);
-                                                                    }
-                                                                    return a.name.localeCompare(b.name);
-                                                                })
-                                                                .map(cls => (
-                                                                    <SelectItem key={cls.id} value={cls.name}>
-                                                                        <div className="flex items-center gap-2">
-                                                                            <span>{cls.name}</span>
-                                                                            {cls.type === 'ONLINE' && (
-                                                                                <span className="text-[10px] text-cyan-400">Онлайн</span>
-                                                                            )}
-                                                                            {cls.floor && cls.type !== 'ONLINE' && (
-                                                                                <span className="text-[10px] text-zinc-500">· {cls.floor} эт.</span>
-                                                                            )}
-                                                                        </div>
-                                                                    </SelectItem>
-                                                                ))}
-                                                        </div>
-                                                    ));
-                                            })()
-                                        ) : (
-                                            // Flat list for < 10 classrooms
-                                            MOCK_CLASSROOMS
-                                                .sort((a, b) => a.name.localeCompare(b.name))
-                                                .map(cls => (
-                                                    <SelectItem key={cls.id} value={cls.name}>
-                                                        <div className="flex items-center gap-2">
-                                                            <span>{cls.name}</span>
-                                                            {cls.type === 'ONLINE' && (
-                                                                <span className="text-[10px] text-cyan-400">Онлайн</span>
-                                                            )}
-                                                        </div>
-                                                    </SelectItem>
-                                                ))
-                                        )}
+                                        {classrooms.map(cls => (
+                                            <SelectItem key={cls.id} value={cls.name}>
+                                                <div className="flex items-center gap-2">
+                                                    <span>{cls.name}</span>
+                                                    {cls.type === 'ONLINE' && (
+                                                        <span className="text-[10px] text-cyan-400">Онлайн</span>
+                                                    )}
+                                                </div>
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                                 {conflicts.room && (

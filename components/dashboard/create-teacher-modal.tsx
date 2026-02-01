@@ -21,16 +21,17 @@ export function CreateTeacherModal({ onSuccess }: CreateTeacherModalProps) {
     const [lastName, setLastName] = useState('');
     const { currentOrganizationId } = useOrganization();
 
-    const handleSubmit = () => {
-        if (!firstName) return;
+    const handleSubmit = async () => {
+        if (!firstName || !currentOrganizationId) return;
 
-        import("@/lib/data/teachers.repo").then(({ teachersRepo }) => {
-            teachersRepo.add({
+        try {
+            const { teachersRepo } = await import("@/lib/data/teachers.repo");
+            await teachersRepo.add({
                 id: generateId(),
-                organizationId: currentOrganizationId!,
+                organizationId: currentOrganizationId,
                 firstName,
                 lastName,
-                email: `${firstName.toLowerCase()}@eduflow.com`,
+                email: `${firstName.toLowerCase()}.${lastName.toLowerCase() || 'teacher'}@eduflow.com`,
                 role: 'TEACHER',
                 status: 'ACTIVE',
                 groupIds: [],
@@ -49,7 +50,10 @@ export function CreateTeacherModal({ onSuccess }: CreateTeacherModalProps) {
             setFirstName('');
             setLastName('');
             onSuccess();
-        });
+        } catch (error) {
+            console.error("Failed to create teacher:", error);
+            alert("Ошибка при создании преподавателя. Попробуйте еще раз.");
+        }
     };
 
     return (

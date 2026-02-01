@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { MOCK_TEACHERS } from '@/lib/mock/teachers';
+import { useEffect } from 'react';
+import { Teacher } from '@/lib/types/teacher';
 import { Layers } from "lucide-react";
 import { generateId } from "@/lib/utils";
 import { useOrganization } from "@/hooks/use-organization";
@@ -37,32 +38,46 @@ export function CreateGroupModal({ onSuccess }: CreateGroupModalProps) {
     const [open, setOpen] = useState(false);
     const [name, setName] = useState('');
     const [teacher, setTeacher] = useState('');
+    const [teachers, setTeachers] = useState<Teacher[]>([]);
 
-    const handleSubmit = () => {
+    useEffect(() => {
+        if (open && currentOrganizationId) {
+            import("@/lib/data/teachers.repo").then(({ teachersRepo }) => {
+                teachersRepo.getAll(currentOrganizationId).then(setTeachers);
+            });
+        }
+    }, [open, currentOrganizationId]);
+
+    const handleSubmit = async () => {
         if (!name || !currentOrganizationId) return;
 
-        import("@/lib/data/groups.repo").then(({ groupsRepo }) => {
-            groupsRepo.add({
+        try {
+            const { groupsRepo } = await import("@/lib/data/groups.repo");
+            await groupsRepo.add({
                 id: generateId(),
                 organizationId: currentOrganizationId,
                 name,
                 curatorTeacherId: teacher || undefined,
                 studentsCount: 0,
                 status: 'ACTIVE',
-                code: 'NEW',
-                facultyId: 'unknown',
-                departmentId: 'unknown',
+                code: name.substring(0, 3).toUpperCase() + '-' + Math.floor(Math.random() * 1000),
+                facultyId: 'default',
+                departmentId: 'default',
                 paymentType: 'FREE',
                 level: 'A1',
                 maxStudents: 30,
-                teachersCount: 1,
+                teachersCount: teacher ? 1 : 0,
                 coursesCount: 0,
                 createdAt: new Date().toISOString()
             });
             setOpen(false);
             setName('');
+            setTeacher('');
             onSuccess();
-        });
+        } catch (error) {
+            console.error("Failed to create group:", error);
+            alert("Ошибка при создании группы. Попробуйте еще раз.");
+        }
     };
 
     return (
@@ -94,7 +109,7 @@ export function CreateGroupModal({ onSuccess }: CreateGroupModalProps) {
                                 <SelectValue placeholder="Выберите куратора..." />
                             </SelectTrigger>
                             <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-300">
-                                {MOCK_TEACHERS.map(t => (
+                                {teachers.map(t => (
                                     <SelectItem key={t.id} value={t.id}>{t.firstName} {t.lastName}</SelectItem>
                                 ))}
                             </SelectContent>

@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { MOCK_TEACHERS } from "@/lib/mock/teachers";
 import { Faculty, FacultyStatus } from "@/lib/types/faculty";
+import { Teacher } from "@/lib/types/teacher";
+import { useOrganization } from "@/hooks/use-organization";
 
 interface EditFacultyModalProps {
     faculty: Faculty | null;
@@ -19,7 +20,9 @@ interface EditFacultyModalProps {
 }
 
 export function EditFacultyModal({ faculty, open, onOpenChange, onSave }: EditFacultyModalProps) {
+    const { currentOrganizationId } = useOrganization();
     const [loading, setLoading] = useState(false);
+    const [teachers, setTeachers] = useState<Teacher[]>([]);
 
     // Form State
     const [name, setName] = useState("");
@@ -36,7 +39,14 @@ export function EditFacultyModal({ faculty, open, onOpenChange, onSave }: EditFa
             setHeadTeacherId(faculty.headTeacherId || "");
             setStatus(faculty.status);
         }
-    }, [faculty]);
+
+        if (open && currentOrganizationId) {
+            import("@/lib/data/teachers.repo").then(async ({ teachersRepo }) => {
+                const data = await teachersRepo.getAll(currentOrganizationId);
+                setTeachers(data);
+            });
+        }
+    }, [faculty, open, currentOrganizationId]);
 
     const handleSubmit = async () => {
         if (!faculty) return;
@@ -46,14 +56,14 @@ export function EditFacultyModal({ faculty, open, onOpenChange, onSave }: EditFa
         }
 
         setLoading(true);
-        // Simulate API call
+        // Simulate minor delay for UX feedback
         await new Promise(r => setTimeout(r, 600));
 
         onSave(faculty.id, {
             name,
             code,
             description,
-            headTeacherId,
+            headTeacherId: headTeacherId || undefined,
             status,
         });
 
@@ -108,9 +118,9 @@ export function EditFacultyModal({ faculty, open, onOpenChange, onSave }: EditFa
                                     <SelectValue placeholder="Не назначен" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {MOCK_TEACHERS.map(t => (
+                                    {teachers.map(t => (
                                         <SelectItem key={t.id} value={t.id}>
-                                            {t.firstName} {t.lastName}
+                                            {t.firstName} {t.lastName} ({t.specialization || "Преподаватель"})
                                         </SelectItem>
                                     ))}
                                 </SelectContent>

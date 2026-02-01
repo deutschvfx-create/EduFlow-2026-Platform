@@ -1,26 +1,39 @@
 'use client';
 
 import { useParams, useRouter } from "next/navigation";
-import { MOCK_GROUPS_FULL } from "@/lib/mock/groups";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit, Archive, Users, GraduationCap, Calendar, BookOpen, Building2 } from "lucide-react";
 import { GroupStatusBadge, GroupLevelBadge, GroupPaymentBadge } from "@/components/groups/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { EditGroupModal } from "@/components/groups/edit-group-modal";
 import { Group } from "@/lib/types/group";
 import { Badge } from "@/components/ui/badge";
+import { useOrganization } from "@/hooks/use-organization";
 
 export default function GroupDetailsPage() {
     const params = useParams(); // { id: string }
     const router = useRouter();
     const id = params?.id as string;
+    const { currentOrganizationId } = useOrganization();
 
-    // State for edit modal
+    // State
+    const [group, setGroup] = useState<Group | null>(null);
+    const [loading, setLoading] = useState(true);
     const [editModalOpen, setEditModalOpen] = useState(false);
 
-    const group = MOCK_GROUPS_FULL.find(s => s.id === id);
+    useEffect(() => {
+        if (currentOrganizationId && id) {
+            import("@/lib/data/groups.repo").then(async ({ groupsRepo }) => {
+                const data = await groupsRepo.getById(currentOrganizationId, id);
+                setGroup(data);
+                setLoading(false);
+            });
+        }
+    }, [currentOrganizationId, id]);
+
+    if (loading) return <div className="p-8 text-zinc-500">Загрузка данных...</div>;
 
     if (!group) {
         return (
@@ -33,9 +46,16 @@ export default function GroupDetailsPage() {
         );
     }
 
-    const handleSaveUpdate = (id: string, updates: Partial<Group>) => {
-        // Mock save logic
-        alert(`Группа ${updates.code} обновлена`);
+    const handleSaveUpdate = async (id: string, updates: Partial<Group>) => {
+        if (!currentOrganizationId) return;
+        try {
+            const { groupsRepo } = await import("@/lib/data/groups.repo");
+            await groupsRepo.update(id, updates);
+            setGroup(prev => prev ? { ...prev, ...updates } : null);
+        } catch (error) {
+            console.error(error);
+            alert("Ошибка при обновлении группы");
+        }
     };
 
     return (
@@ -53,9 +73,8 @@ export default function GroupDetailsPage() {
                     <div className="text-zinc-400 text-sm flex gap-4 items-center mt-1">
                         <span className="font-mono bg-zinc-800 px-2 rounded text-zinc-300">{group.code}</span>
                         <span className="flex items-center gap-2">
-                            <Badge variant="secondary" className="text-[10px] h-4 py-0">ID: {group.facultyId}</Badge>
-                            <span className="text-xs text-zinc-500">/</span>
-                            <span className="text-xs">ID: {group.departmentId}</span>
+                            {group.facultyId && <Badge variant="secondary" className="text-[10px] h-4 py-0">FAC: {group.facultyId.substring(0, 8)}</Badge>}
+                            {group.departmentId && <span className="text-xs">DEPT: {group.departmentId.substring(0, 8)}</span>}
                         </span>
                     </div>
                 </div>
@@ -79,7 +98,7 @@ export default function GroupDetailsPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-white flex items-center gap-2">
-                            {group.studentsCount} <span className="text-zinc-600 text-lg font-normal">/ {group.maxStudents}</span>
+                            {group.studentsCount || 0} <span className="text-zinc-600 text-lg font-normal">/ {group.maxStudents || 15}</span>
                             <Users className="h-4 w-4 text-zinc-600" />
                         </div>
                     </CardContent>
@@ -90,30 +109,8 @@ export default function GroupDetailsPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-white flex items-center gap-2">
-                            {group.teachersCount}
+                            {group.teachersCount || 0}
                             <GraduationCap className="h-4 w-4 text-zinc-600" />
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="bg-zinc-900 border-zinc-800">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">Предметы</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-white flex items-center gap-2">
-                            {group.coursesCount}
-                            <BookOpen className="h-4 w-4 text-zinc-600" />
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="bg-zinc-900 border-zinc-800">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">Посещаемость</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-white flex items-center gap-2">
-                            95%
-                            <Calendar className="h-4 w-4 text-green-600" />
                         </div>
                     </CardContent>
                 </Card>
@@ -127,7 +124,7 @@ export default function GroupDetailsPage() {
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="space-y-1">
-                            <div className="text-xs text-zinc-500 uppercase font-semibold">Куратор (ID)</div>
+                            <div className="text-xs text-zinc-500 uppercase font-semibold">Куратор</div>
                             <div className="text-zinc-300 font-medium">{group.curatorTeacherId || 'Не назначен'}</div>
                         </div>
                         <div className="flex justify-between">
@@ -140,14 +137,6 @@ export default function GroupDetailsPage() {
                                 <GroupPaymentBadge type={group.paymentType} />
                             </div>
                         </div>
-                        <div className="space-y-1">
-                            <div className="text-xs text-zinc-500 uppercase font-semibold">Факультет (ID)</div>
-                            <div className="text-zinc-300 font-medium">{group.facultyId}</div>
-                        </div>
-                        <div className="space-y-1">
-                            <div className="text-xs text-zinc-500 uppercase font-semibold">Кафедра (ID)</div>
-                            <div className="text-zinc-300 font-medium">{group.departmentId}</div>
-                        </div>
                     </CardContent>
                 </Card>
 
@@ -157,8 +146,6 @@ export default function GroupDetailsPage() {
                             <TabsTrigger value="overview" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-400 rounded-none py-3 px-4 text-zinc-400">Обзор</TabsTrigger>
                             <TabsTrigger value="students" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-400 rounded-none py-3 px-4 text-zinc-400">Студенты</TabsTrigger>
                             <TabsTrigger value="teachers" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-400 rounded-none py-3 px-4 text-zinc-400">Преподаватели</TabsTrigger>
-                            <TabsTrigger value="courses" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-400 rounded-none py-3 px-4 text-zinc-400">Предметы</TabsTrigger>
-                            <TabsTrigger value="schedule" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-400 rounded-none py-3 px-4 text-zinc-400">Расписание</TabsTrigger>
                         </TabsList>
 
                         <div className="mt-6">
@@ -180,20 +167,6 @@ export default function GroupDetailsPage() {
                                 <Card className="bg-zinc-900 border-zinc-800 border-dashed">
                                     <CardContent className="flex flex-col items-center justify-center py-12 text-zinc-500">
                                         <p>Преподаватели, закрепленные за группой</p>
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-                            <TabsContent value="courses">
-                                <Card className="bg-zinc-900 border-zinc-800 border-dashed">
-                                    <CardContent className="flex flex-col items-center justify-center py-12 text-zinc-500">
-                                        <p>Учебный план группы</p>
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-                            <TabsContent value="schedule">
-                                <Card className="bg-zinc-900 border-zinc-800 border-dashed">
-                                    <CardContent className="flex flex-col items-center justify-center py-12 text-zinc-500">
-                                        <p>Расписание занятий</p>
                                     </CardContent>
                                 </Card>
                             </TabsContent>

@@ -4,8 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { MOCK_FACULTIES } from "@/lib/mock/faculties";
-import { MOCK_DEPARTMENTS } from "@/lib/mock/departments";
+import { useState, useEffect } from 'react';
+import { useOrganization } from '@/hooks/use-organization';
+import { Faculty } from '@/lib/types/faculty';
+import { Department } from '@/lib/types/department';
 
 interface GroupFiltersProps {
     search: string;
@@ -28,12 +30,28 @@ export function GroupFilters({
     departmentFilter,
     onDepartmentChange
 }: GroupFiltersProps) {
+    const { currentOrganizationId } = useOrganization();
+    const [faculties, setFaculties] = useState<Faculty[]>([]);
+    const [departments, setDepartments] = useState<Department[]>([]);
+
+    useEffect(() => {
+        if (currentOrganizationId) {
+            Promise.all([
+                import("@/lib/data/faculties.repo").then(m => m.facultiesRepo.getAll(currentOrganizationId)),
+                import("@/lib/data/departments.repo").then(m => m.departmentsRepo.getAll(currentOrganizationId))
+            ]).then(([f, d]) => {
+                setFaculties(f);
+                setDepartments(d);
+            });
+        }
+    }, [currentOrganizationId]);
+
     const hasActiveFilters = search || statusFilter !== 'all' || facultyFilter !== 'all' || departmentFilter !== 'all';
 
     // Filter departments based on selected faculty
     const availableDepartments = facultyFilter === 'all'
-        ? MOCK_DEPARTMENTS
-        : MOCK_DEPARTMENTS.filter(d => d.facultyId === facultyFilter);
+        ? departments
+        : departments.filter(d => d.facultyId === facultyFilter);
 
     const clearFilters = () => {
         onSearchChange('');
@@ -60,7 +78,7 @@ export function GroupFilters({
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">Все факультеты</SelectItem>
-                        {MOCK_FACULTIES.map(f => (
+                        {faculties.map(f => (
                             <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
                         ))}
                     </SelectContent>

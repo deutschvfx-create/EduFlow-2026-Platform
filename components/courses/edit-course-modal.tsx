@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { MOCK_FACULTIES } from "@/lib/mock/faculties";
-import { MOCK_DEPARTMENTS } from "@/lib/mock/departments";
+import { useOrganization } from "@/hooks/use-organization";
+import { Faculty } from "@/lib/types/faculty";
+import { Department } from "@/lib/types/department";
 import { Course, CourseStatus } from "@/lib/types/course";
 
 interface EditCourseModalProps {
@@ -20,6 +21,7 @@ interface EditCourseModalProps {
 }
 
 export function EditCourseModal({ course, open, onOpenChange, onSave }: EditCourseModalProps) {
+    const { currentOrganizationId } = useOrganization();
     const [loading, setLoading] = useState(false);
 
     // Form State
@@ -30,6 +32,20 @@ export function EditCourseModal({ course, open, onOpenChange, onSave }: EditCour
     const [level, setLevel] = useState("");
     const [description, setDescription] = useState("");
     const [status, setStatus] = useState<CourseStatus>("ACTIVE");
+    const [faculties, setFaculties] = useState<Faculty[]>([]);
+    const [allDepartments, setAllDepartments] = useState<Department[]>([]);
+
+    useEffect(() => {
+        if (open && currentOrganizationId) {
+            Promise.all([
+                import("@/lib/data/faculties.repo").then(m => m.facultiesRepo.getAll(currentOrganizationId)),
+                import("@/lib/data/departments.repo").then(m => m.departmentsRepo.getAll(currentOrganizationId))
+            ]).then(([f, d]) => {
+                setFaculties(f);
+                setAllDepartments(d);
+            });
+        }
+    }, [open, currentOrganizationId]);
 
     useEffect(() => {
         if (course) {
@@ -44,7 +60,7 @@ export function EditCourseModal({ course, open, onOpenChange, onSave }: EditCour
     }, [course]);
 
     // Derived state
-    const departments = MOCK_DEPARTMENTS.filter(d => d.facultyId === facultyId);
+    const departments = allDepartments.filter(d => d.facultyId === facultyId);
 
     const handleFacultyChange = (val: string) => {
         setFacultyId(val);
@@ -95,7 +111,7 @@ export function EditCourseModal({ course, open, onOpenChange, onSave }: EditCour
                                     <SelectValue placeholder="Выберите факультет" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {MOCK_FACULTIES.map(f => (
+                                    {faculties.map(f => (
                                         <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
                                     ))}
                                 </SelectContent>

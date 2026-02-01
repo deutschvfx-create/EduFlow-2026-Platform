@@ -8,10 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Plus, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea"; // Using the component we created earlier
-import { MOCK_TEACHERS } from "@/lib/mock/teachers";
-import { MOCK_FACULTIES } from "@/lib/mock/faculties";
+import { useEffect } from "react";
+import { useOrganization } from "@/hooks/use-organization";
+import { Teacher } from "@/lib/types/teacher";
+import { Faculty } from "@/lib/types/faculty";
+import { generateId } from "@/lib/utils";
 
 export function AddDepartmentModal() {
+    const { currentOrganizationId } = useOrganization();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -21,6 +25,20 @@ export function AddDepartmentModal() {
     const [facultyId, setFacultyId] = useState("");
     const [description, setDescription] = useState("");
     const [headTeacherId, setHeadTeacherId] = useState("");
+    const [teachers, setTeachers] = useState<Teacher[]>([]);
+    const [faculties, setFaculties] = useState<Faculty[]>([]);
+
+    useEffect(() => {
+        if (open && currentOrganizationId) {
+            Promise.all([
+                import("@/lib/data/teachers.repo").then(m => m.teachersRepo.getAll(currentOrganizationId)),
+                import("@/lib/data/faculties.repo").then(m => m.facultiesRepo.getAll(currentOrganizationId))
+            ]).then(([t, f]) => {
+                setTeachers(t);
+                setFaculties(f);
+            });
+        }
+    }, [open, currentOrganizationId]);
 
     const handleNameChange = (val: string) => {
         setName(val);
@@ -38,12 +56,27 @@ export function AddDepartmentModal() {
             return;
         }
 
-        setLoading(true);
-        // Simulate API call
-        await new Promise(r => setTimeout(r, 1000));
-        setLoading(false);
-        setOpen(false);
-        alert(`Кафедра ${name} успешно создана (Mock)`);
+        try {
+            const { departmentsRepo } = await import("@/lib/data/departments.repo");
+            await departmentsRepo.add(currentOrganizationId!, {
+                id: generateId(),
+                organizationId: currentOrganizationId!,
+                name,
+                code,
+                facultyId,
+                description,
+                headTeacherId,
+                status: 'ACTIVE',
+                createdAt: new Date().toISOString()
+            });
+            setOpen(false);
+            window.location.reload();
+        } catch (error) {
+            console.error(error);
+            alert("Ошибка при создании кафедры");
+        } finally {
+            setLoading(false);
+        }
 
         // Reset form
         setName("");
@@ -75,7 +108,7 @@ export function AddDepartmentModal() {
                                 <SelectValue placeholder="Выберите факультет" />
                             </SelectTrigger>
                             <SelectContent>
-                                {MOCK_FACULTIES.map(f => (
+                                {faculties.map(f => (
                                     <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
                                 ))}
                             </SelectContent>
@@ -122,7 +155,7 @@ export function AddDepartmentModal() {
                                 <SelectValue placeholder="Выберите преподавателя" />
                             </SelectTrigger>
                             <SelectContent>
-                                {MOCK_TEACHERS.map(t => (
+                                {teachers.map(t => (
                                     <SelectItem key={t.id} value={t.id}>
                                         {t.firstName} {t.lastName} ({t.specialization})
                                     </SelectItem>

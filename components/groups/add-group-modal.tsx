@@ -7,16 +7,22 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Plus, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MOCK_TEACHERS } from "@/lib/mock/teachers";
-import { MOCK_FACULTIES } from "@/lib/mock/faculties";
-import { MOCK_DEPARTMENTS } from "@/lib/mock/departments";
+import { useEffect } from "react";
 import { generateId } from "@/lib/utils";
 import { useOrganization } from "@/hooks/use-organization";
+import { Faculty } from "@/lib/types/faculty";
+import { Department } from "@/lib/types/department";
+import { Teacher } from "@/lib/types/teacher";
 
 export function AddGroupModal() {
     const { currentOrganizationId } = useOrganization();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    // Data lists
+    const [faculties, setFaculties] = useState<Faculty[]>([]);
+    const [allDepartments, setAllDepartments] = useState<Department[]>([]);
+    const [teachers, setTeachers] = useState<Teacher[]>([]);
 
     // Form State
     const [name, setName] = useState("");
@@ -28,8 +34,36 @@ export function AddGroupModal() {
     const [curatorId, setCuratorId] = useState("");
     const [maxStudents, setMaxStudents] = useState("15");
 
+    useEffect(() => {
+        if (open && currentOrganizationId) {
+            loadMetaData();
+        }
+    }, [open, currentOrganizationId]);
+
+    const loadMetaData = async () => {
+        try {
+            const [facM, depM, teaM] = await Promise.all([
+                import("@/lib/data/faculties.repo"),
+                import("@/lib/data/departments.repo"),
+                import("@/lib/data/teachers.repo")
+            ]);
+
+            const [f, d, t] = await Promise.all([
+                facM.facultiesRepo.getAll(currentOrganizationId!),
+                depM.departmentsRepo.getAll(currentOrganizationId!),
+                teaM.teachersRepo.getAll(currentOrganizationId!)
+            ]);
+
+            setFaculties(f);
+            setAllDepartments(d);
+            setTeachers(t);
+        } catch (e) {
+            console.error("Failed to load metadata", e);
+        }
+    };
+
     // Derived state
-    const departments = MOCK_DEPARTMENTS.filter(d => d.facultyId === facultyId);
+    const filteredDepartments = allDepartments.filter(d => d.facultyId === facultyId);
 
     const handleFacultyChange = (val: string) => {
         setFacultyId(val);
@@ -120,7 +154,7 @@ export function AddGroupModal() {
                                     <SelectValue placeholder="Выберите факультет" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {MOCK_FACULTIES.map(f => (
+                                    {faculties.map(f => (
                                         <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
                                     ))}
                                 </SelectContent>
@@ -133,7 +167,7 @@ export function AddGroupModal() {
                                     <SelectValue placeholder={!facultyId ? "Сначала выберите факультет" : "Выберите кафедру"} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {departments.map(d => (
+                                    {filteredDepartments.map(d => (
                                         <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
                                     ))}
                                 </SelectContent>
@@ -206,7 +240,7 @@ export function AddGroupModal() {
                                     <SelectValue placeholder="Не назначен" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {MOCK_TEACHERS.map(t => (
+                                    {teachers.map(t => (
                                         <SelectItem key={t.id} value={t.id}>
                                             {t.firstName} {t.lastName}
                                         </SelectItem>

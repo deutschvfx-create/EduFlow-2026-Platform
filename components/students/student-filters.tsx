@@ -4,7 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Search, Filter, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { MOCK_GROUPS } from "@/lib/mock/students";
+import { useState, useEffect } from 'react';
+import { useOrganization } from '@/hooks/use-organization';
+import { Group } from '@/lib/types/group';
 
 interface StudentFiltersProps {
     search: string;
@@ -23,6 +25,17 @@ export function StudentFilters({
     groupFilter,
     onGroupChange
 }: StudentFiltersProps) {
+    const { currentOrganizationId } = useOrganization();
+    const [groups, setGroups] = useState<Group[]>([]);
+
+    useEffect(() => {
+        if (currentOrganizationId) {
+            import("@/lib/data/groups.repo").then(({ groupsRepo }) => {
+                groupsRepo.getAll(currentOrganizationId).then(setGroups);
+            });
+        }
+    }, [currentOrganizationId]);
+
     const hasActiveFilters = search || statusFilter !== 'all' || groupFilter !== 'all';
 
     const clearFilters = () => {
@@ -61,7 +74,8 @@ export function StudentFilters({
                         <SelectValue placeholder="Группа" />
                     </SelectTrigger>
                     <SelectContent>
-                        {MOCK_GROUPS.map(g => (
+                        <SelectItem value="all">Все группы</SelectItem>
+                        {groups.map(g => (
                             <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
                         ))}
                     </SelectContent>

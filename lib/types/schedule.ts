@@ -17,6 +17,7 @@ export type Lesson = {
 
     room?: string;
     status: LessonStatus;
+    duration?: number; // Minutes
 
     createdAt: string;
 };

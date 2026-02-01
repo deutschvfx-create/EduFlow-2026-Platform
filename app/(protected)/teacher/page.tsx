@@ -6,23 +6,35 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Plus, Check, X, Clock, AlertCircle, ArrowRight, Loader2, Scan } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { APP_CONFIG, MOCK_ATTENDANCE } from "@/lib/data"
+import { APP_CONFIG } from "@/lib/data"
 import { useQuery } from "@tanstack/react-query"
-import api from "@/lib/api"
 import Link from "next/link"
+import { useState, useEffect } from "react";
 
 import { CreateGroupDialog } from "@/components/create-group-dialog"
+import { useAuth } from "@/components/auth/auth-provider";
+import { useOrganization } from "@/hooks/use-organization";
+import { Group } from "@/lib/types/group";
 
 function MyGroupsList() {
-    const { data: groups, isLoading } = useQuery({
-        queryKey: ['teacher-groups'],
-        queryFn: async () => {
-            const { data } = await api.get('/teacher/groups')
-            return data
-        }
-    })
+    const { userData } = useAuth();
+    const { currentOrganizationId } = useOrganization();
+    const [groups, setGroups] = useState<Group[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    if (isLoading) return <div className="flex items-center gap-2 text-zinc-500"><Loader2 className="animate-spin h-4 w-4" /> Загрузка групп...</div>
+    useEffect(() => {
+        if (currentOrganizationId && userData?.uid) {
+            import("@/lib/data/groups.repo").then(async ({ groupsRepo }) => {
+                const allGroups = await groupsRepo.getAll(currentOrganizationId);
+                // Filter groups where this teacher is a curator
+                const myGroups = allGroups.filter(g => g.curatorTeacherId === userData.uid);
+                setGroups(myGroups);
+                setLoading(false);
+            });
+        }
+    }, [currentOrganizationId, userData?.uid]);
+
+    if (loading) return <div className="flex items-center gap-2 text-zinc-500"><Loader2 className="animate-spin h-4 w-4" /> Загрузка групп...</div>
 
     if (!groups?.length) return <div className="text-zinc-500">У вас пока нет активных групп.</div>
 
@@ -30,11 +42,11 @@ function MyGroupsList() {
         <ScrollArea className="h-[300px] pr-4">
             <div className="space-y-3">
                 {groups.map((g: any) => (
-                    <Link key={g.id} href={`/teacher/groups/${g.id}`}>
+                    <Link key={g.id} href={`/app/groups/${g.id}`}>
                         <div className="flex items-center justify-between p-4 rounded-lg bg-zinc-950/50 border border-zinc-800 hover:border-indigo-500/50 hover:bg-zinc-900 transition-all cursor-pointer group">
                             <div>
                                 <h3 className="font-medium text-zinc-200 group-hover:text-indigo-400 transition-colors">{g.name}</h3>
-                                <p className="text-xs text-zinc-500">{g.schedule || 'Без расписания'}</p>
+                                <p className="text-xs text-zinc-500">{g.code}</p>
                             </div>
                             <Button size="icon" variant="ghost" className="text-zinc-500 group-hover:text-indigo-400">
                                 <ArrowRight className="h-4 w-4" />

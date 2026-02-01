@@ -1,7 +1,6 @@
 
 import { db } from "@/lib/firebase";
 import { Announcement } from "@/lib/types/announcement";
-import { withFallback } from "./utils";
 import {
     collection,
     doc,
@@ -11,55 +10,41 @@ import {
     updateDoc,
     deleteDoc,
     query,
-    orderBy,
-    writeBatch
+    where,
+    orderBy
 } from "firebase/firestore";
 
 const COLLECTION = "announcements";
 
-const MOCK_ANNOUNCEMENTS: Announcement[] = [
-    {
-        id: "a1",
-        title: "Начало семестра",
-        content: "Учеба начинается 1 сентября. Ждем всех вовремя!",
-        status: 'PUBLISHED',
-        authorId: 'system',
-        authorName: 'Администрация',
-        authorRole: 'DIRECTOR',
-        targetType: 'ALL',
-        createdAt: new Date().toISOString(),
-        publishedAt: new Date().toISOString()
-    }
-];
-
 export const announcementsRepo = {
-    getAll: async (): Promise<Announcement[]> => {
-        return withFallback((async () => {
-            try {
-                const q = query(collection(db, COLLECTION), orderBy("createdAt", "desc"));
-                const snapshot = await getDocs(q);
+    getAll: async (organizationId: string): Promise<Announcement[]> => {
+        try {
+            const q = query(
+                collection(db, COLLECTION),
+                where("organizationId", "==", organizationId),
+                orderBy("createdAt", "desc")
+            );
+            const snapshot = await getDocs(q);
 
-                if (snapshot.empty) {
-                    const batch = writeBatch(db);
-                    MOCK_ANNOUNCEMENTS.forEach(a => {
-                        batch.set(doc(db, COLLECTION, a.id), a);
-                    });
-                    await batch.commit();
-                    return MOCK_ANNOUNCEMENTS;
-                }
-
-                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Announcement));
-            } catch (e) {
-                console.error("Failed to fetch announcements", e);
-                return MOCK_ANNOUNCEMENTS;
-            }
-        })(), MOCK_ANNOUNCEMENTS);
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Announcement));
+        } catch (e) {
+            console.error("Failed to fetch announcements", e);
+            throw e;
+        }
     },
 
     add: async (announcement: Announcement) => {
+        if (!announcement.organizationId) {
+            throw new Error("organizationId is required");
+        }
         const ref = announcement.id ? doc(db, COLLECTION, announcement.id) : doc(collection(db, COLLECTION));
-        await setDoc(ref, { ...announcement, id: ref.id });
-        return { ...announcement, id: ref.id };
+        const newAnnouncement = {
+            ...announcement,
+            id: ref.id,
+            createdAt: announcement.createdAt || new Date().toISOString()
+        };
+        await setDoc(ref, newAnnouncement);
+        return newAnnouncement;
     },
 
     delete: async (id: string) => {

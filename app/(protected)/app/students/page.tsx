@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
-// import { MOCK_STUDENTS } from "@/lib/mock/students";
+// Removed mock imports
 import { StudentFilters } from "@/components/students/student-filters";
 import { StudentsTable } from "@/components/students/students-table";
 import { AddStudentModal } from "@/components/students/add-student-modal";
@@ -23,12 +23,35 @@ export default function StudentsPage() {
     const { currentOrganizationId } = useOrganization();
 
     useEffect(() => {
+        if (currentOrganizationId) {
+            loadStudents(currentOrganizationId);
+        }
+    }, [currentOrganizationId]);
+
+    const loadStudents = (orgId: string) => {
         import("@/lib/data/students.repo").then(async ({ studentsRepo }) => {
-            const data = await studentsRepo.getAll(currentOrganizationId!);
+            const data = await studentsRepo.getAll(orgId);
             setStudents(data);
             setIsLoaded(true);
         });
-    }, []);
+    };
+
+    const handleAction = async (action: string, id: string) => {
+        if (!currentOrganizationId) return;
+        try {
+            const { studentsRepo } = await import("@/lib/data/students.repo");
+            if (action === 'activate') await studentsRepo.update(id, { status: 'ACTIVE' } as any);
+            if (action === 'suspend') await studentsRepo.update(id, { status: 'SUSPENDED' } as any);
+            if (action === 'archive') {
+                if (confirm("Вы уверены?")) await studentsRepo.update(id, { status: 'ARCHIVED' } as any);
+                else return;
+            }
+            loadStudents(currentOrganizationId);
+        } catch (error) {
+            console.error(error);
+            alert("Ошибка при выполнении действия");
+        }
+    };
 
     // Filter Logic
     const filteredStudents = students.filter(student => {
@@ -124,7 +147,10 @@ export default function StudentsPage() {
                     </div>
 
                     <div className="p-1">
-                        <StudentsTable students={filteredStudents} />
+                        <StudentsTable
+                            students={filteredStudents}
+                            onAction={handleAction}
+                        />
                     </div>
                 </div>
             </div>

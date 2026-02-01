@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
-// import { MOCK_TEACHERS } from "@/lib/mock/teachers";
+// Removed mock imports
 import { TeacherFilters } from "@/components/teachers/teacher-filters";
 import { TeachersTable } from "@/components/teachers/teachers-table";
 import { AddTeacherModal } from "@/components/teachers/add-teacher-modal";
@@ -12,7 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Teacher, TeacherPermissions } from "@/lib/types/teacher";
 import { ModuleGuard } from "@/components/system/module-guard";
 import { useOrganization } from "@/hooks/use-organization";
-
+import { teachersRepo } from "@/lib/data/teachers.repo";
+// import { groupsRepo } from "@/lib/data/groups.repo";
 import { TeacherGrid } from "@/components/teachers/teacher-grid";
 import { LayoutGrid, List, ShieldCheck } from "lucide-react";
 import { TeacherControlToolbar } from "@/components/teachers/teacher-control-toolbar";
@@ -93,11 +94,17 @@ export default function TeachersPage() {
 
         if (action === 'delete') {
             if (!confirm(`Удалить ${selectedIds.length} преподавателей?`)) return;
-            selectedIds.forEach(id => teachersRepo.delete(id));
+            for (const id of selectedIds) {
+                await teachersRepo.delete(id);
+            }
         } else if (action === 'suspend') {
-            selectedIds.forEach(id => teachersRepo.update(id, { status: 'SUSPENDED' }));
+            for (const id of selectedIds) {
+                await teachersRepo.update(id, { status: 'SUSPENDED' });
+            }
         } else if (action === 'activate') {
-            selectedIds.forEach(id => teachersRepo.update(id, { status: 'ACTIVE' }));
+            for (const id of selectedIds) {
+                await teachersRepo.update(id, { status: 'ACTIVE' });
+            }
         } else if (action === 'assign_groups') {
             setAssignmentRoadmapOpen(true);
             return;
@@ -144,10 +151,34 @@ export default function TeachersPage() {
         setPermissionsModalOpen(true);
     };
 
-    const handleSavePermissions = (teacherId: string, newPermissions: TeacherPermissions) => {
-        // Mock save logic
-        alert(`Permissions updated for teacher ${teacherId}`);
-        // In real app, we would update state or call API
+    const handleSavePermissions = async (teacherId: string, newPermissions: TeacherPermissions) => {
+        if (!currentOrganizationId) return;
+        try {
+            const teacher = teachers.find(t => t.id === teacherId);
+            if (!teacher) return;
+            await teachersRepo.update(currentOrganizationId, { ...teacher, permissions: newPermissions });
+            setTeachers(prev => prev.map(t => t.id === teacherId ? { ...t, permissions: newPermissions } : t));
+            // toast.success("Права обновлены");
+        } catch (error) {
+            console.error(error);
+            alert("Ошибка при обновлении прав");
+        }
+    };
+
+    const handleTableAction = async (action: string, id: string) => {
+        if (!currentOrganizationId) return;
+        try {
+            if (action === 'activate') await teachersRepo.update(id, { status: 'ACTIVE' });
+            if (action === 'suspend') await teachersRepo.update(id, { status: 'SUSPENDED' });
+            if (action === 'archive') {
+                if (confirm("Вы уверены?")) await teachersRepo.update(id, { status: 'ARCHIVED' });
+                else return;
+            }
+            loadTeachers(currentOrganizationId);
+        } catch (error) {
+            console.error(error);
+            alert("Ошибка при выполнении действия");
+        }
     };
 
     return (
@@ -318,6 +349,7 @@ export default function TeachersPage() {
                         <TeachersTable
                             teachers={filteredTeachers}
                             onEditPermissions={handleEditPermissions}
+                            onAction={handleTableAction}
                         />
                     ) : (
                         <TeacherGrid

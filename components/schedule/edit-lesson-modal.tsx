@@ -2,20 +2,19 @@
 
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+// import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2, Trash2, XCircle, Minus, Plus } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MOCK_GROUPS_FULL } from "@/lib/mock/groups";
-import { MOCK_TEACHERS } from "@/lib/mock/teachers";
-import { MOCK_COURSES } from "@/lib/mock/courses";
-import { MOCK_CLASSROOMS } from "@/lib/mock/classrooms";
 import { DayOfWeek, Lesson, LessonStatus } from "@/lib/types/schedule";
 import { useModules } from "@/hooks/use-modules";
+import { useOrganization } from "@/hooks/use-organization";
+import { Classroom } from "@/lib/data/classrooms.repo";
 
 // Helper to add minutes to "HH:MM"
 const addMinutes = (time: string, minutes: number) => {
+    if (!time) return "09:00";
     const [h, m] = time.split(':').map(Number);
     const date = new Date();
     date.setHours(h, m);
@@ -45,8 +44,9 @@ export function EditLessonModal({
     courses = []
 }: EditLessonModalProps) {
     const [loading, setLoading] = useState(false);
-    const [isDeleting, setIsDeleting] = useState(false);
     const { modules } = useModules();
+    const { currentOrganizationId } = useOrganization();
+    const [classrooms, setClassrooms] = useState<Classroom[]>([]);
 
     // Form State
     const [groupId, setGroupId] = useState("");
@@ -69,12 +69,19 @@ export function EditLessonModal({
             setRoom(lesson.room || "");
             setStatus(lesson.status);
         }
-    }, [lesson]);
+
+        if (open && currentOrganizationId && modules.classrooms) {
+            import("@/lib/data/classrooms.repo").then(async ({ classroomsRepo }) => {
+                const data = await classroomsRepo.getAll(currentOrganizationId);
+                setClassrooms(data);
+            });
+        }
+    }, [lesson, open, currentOrganizationId, modules.classrooms]);
 
     const handleSubmit = async () => {
         if (!lesson) return;
         setLoading(true);
-        // Simulate API call
+        // Simulate minor UX delay
         await new Promise(r => setTimeout(r, 600));
 
         onSave(lesson.id, {
@@ -84,7 +91,7 @@ export function EditLessonModal({
             dayOfWeek: dayOfWeek as DayOfWeek,
             startTime,
             endTime,
-            room,
+            room: room === "__none__" ? "" : room,
             status,
         });
 
@@ -182,7 +189,7 @@ export function EditLessonModal({
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent className="max-h-[200px]">
-                                        {["08:00", "09:00", "09:30", "11:00", "12:30", "14:00", "15:30", "17:00", "18:30"].map(t => (
+                                        {["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00"].map(t => (
                                             <SelectItem key={t} value={t}>{t}</SelectItem>
                                         ))}
                                     </SelectContent>
@@ -209,7 +216,7 @@ export function EditLessonModal({
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent className="max-h-[200px]">
-                                        {["09:30", "10:30", "11:00", "12:30", "14:00", "15:30", "17:00", "18:30", "20:00"].map(t => (
+                                        {["08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00"].map(t => (
                                             <SelectItem key={t} value={t}>{t}</SelectItem>
                                         ))}
                                     </SelectContent>
@@ -223,7 +230,7 @@ export function EditLessonModal({
                             </div>
                         </div>
 
-                        {modules.classrooms && MOCK_CLASSROOMS.length > 0 && (
+                        {modules.classrooms && (
                             <div className="space-y-2">
                                 <Label>Аудитория</Label>
                                 <Select value={room || "__none__"} onValueChange={setRoom}>
@@ -232,61 +239,16 @@ export function EditLessonModal({
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="__none__">Не выбрана</SelectItem>
-                                        {MOCK_CLASSROOMS.length >= 10 ? (
-                                            // Grouped view for 10+ classrooms
-                                            (() => {
-                                                const grouped = MOCK_CLASSROOMS.reduce((acc, cls) => {
-                                                    const key = cls.building || "Без корпуса";
-                                                    if (!acc[key]) acc[key] = [];
-                                                    acc[key].push(cls);
-                                                    return acc;
-                                                }, {} as Record<string, typeof MOCK_CLASSROOMS>);
-
-                                                return Object.entries(grouped)
-                                                    .sort(([a], [b]) => a.localeCompare(b))
-                                                    .map(([building, classrooms]) => (
-                                                        <div key={building}>
-                                                            <div className="px-2 py-1.5 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
-                                                                {building}
-                                                            </div>
-                                                            {classrooms
-                                                                .sort((a, b) => {
-                                                                    if (a.floor && b.floor && a.floor !== b.floor) {
-                                                                        return a.floor.localeCompare(b.floor);
-                                                                    }
-                                                                    return a.name.localeCompare(b.name);
-                                                                })
-                                                                .map(cls => (
-                                                                    <SelectItem key={cls.id} value={cls.name}>
-                                                                        <div className="flex items-center gap-2">
-                                                                            <span>{cls.name}</span>
-                                                                            {cls.type === 'ONLINE' && (
-                                                                                <span className="text-[10px] text-cyan-400">Онлайн</span>
-                                                                            )}
-                                                                            {cls.floor && cls.type !== 'ONLINE' && (
-                                                                                <span className="text-[10px] text-zinc-500">· {cls.floor} эт.</span>
-                                                                            )}
-                                                                        </div>
-                                                                    </SelectItem>
-                                                                ))}
-                                                        </div>
-                                                    ));
-                                            })()
-                                        ) : (
-                                            // Flat list for < 10 classrooms
-                                            MOCK_CLASSROOMS
-                                                .sort((a, b) => a.name.localeCompare(b.name))
-                                                .map(cls => (
-                                                    <SelectItem key={cls.id} value={cls.name}>
-                                                        <div className="flex items-center gap-2">
-                                                            <span>{cls.name}</span>
-                                                            {cls.type === 'ONLINE' && (
-                                                                <span className="text-[10px] text-cyan-400">Онлайн</span>
-                                                            )}
-                                                        </div>
-                                                    </SelectItem>
-                                                ))
-                                        )}
+                                        {classrooms.map(cls => (
+                                            <SelectItem key={cls.id} value={cls.name}>
+                                                <div className="flex items-center gap-2">
+                                                    <span>{cls.name}</span>
+                                                    {cls.type === 'ONLINE' && (
+                                                        <span className="text-[10px] text-cyan-400">Онлайн</span>
+                                                    )}
+                                                </div>
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -321,9 +283,8 @@ export function EditLessonModal({
                                     variant="destructive"
                                     className="bg-red-600 hover:bg-red-700 text-white"
                                     onClick={() => onDelete(lesson.id)}
-                                    disabled={isDeleting}
                                 >
-                                    {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                    <Trash2 className="h-4 w-4" />
                                 </Button>
                             )}
                         </div>

@@ -8,17 +8,33 @@ import { Button } from "@/components/ui/button";
 import { Plus, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { MOCK_TEACHERS } from "@/lib/mock/teachers";
+import { useEffect } from "react";
+import { useOrganization } from "@/hooks/use-organization";
+import { Teacher } from "@/lib/types/teacher";
+import { generateId } from "@/lib/utils";
 
 export function AddFacultyModal() {
+    const { currentOrganizationId } = useOrganization();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    // Dynamic data
+    const [teachers, setTeachers] = useState<Teacher[]>([]);
 
     // Form State
     const [name, setName] = useState("");
     const [code, setCode] = useState("");
     const [description, setDescription] = useState("");
     const [headTeacherId, setHeadTeacherId] = useState("");
+
+    useEffect(() => {
+        if (open && currentOrganizationId) {
+            import("@/lib/data/teachers.repo").then(async ({ teachersRepo }) => {
+                const data = await teachersRepo.getAll(currentOrganizationId);
+                setTeachers(data);
+            });
+        }
+    }, [open, currentOrganizationId]);
 
     const handleNameChange = (val: string) => {
         setName(val);
@@ -34,18 +50,39 @@ export function AddFacultyModal() {
             return;
         }
 
-        setLoading(true);
-        // Simulate API call
-        await new Promise(r => setTimeout(r, 1000));
-        setLoading(false);
-        setOpen(false);
-        alert(`Факультет ${name} успешно создан (Mock)`);
+        if (!currentOrganizationId) return;
 
-        // Reset form
-        setName("");
-        setCode("");
-        setDescription("");
-        setHeadTeacherId("");
+        setLoading(true);
+        try {
+            const { facultiesRepo } = await import("@/lib/data/faculties.repo");
+            await facultiesRepo.add({
+                id: generateId(),
+                organizationId: currentOrganizationId,
+                name,
+                code,
+                description,
+                headTeacherId: headTeacherId || undefined,
+                createdAt: new Date().toISOString(),
+                departmentsCount: 0,
+                groupsCount: 0,
+                studentsCount: 0,
+                teachersCount: 0,
+                status: 'ACTIVE'
+            });
+
+            setOpen(false);
+            // Reset form
+            setName("");
+            setCode("");
+            setDescription("");
+            setHeadTeacherId("");
+            window.location.reload();
+        } catch (error) {
+            console.error(error);
+            alert("Ошибка при создании факультета");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -101,9 +138,9 @@ export function AddFacultyModal() {
                                 <SelectValue placeholder="Выберите преподавателя" />
                             </SelectTrigger>
                             <SelectContent>
-                                {MOCK_TEACHERS.map(t => (
+                                {teachers.map(t => (
                                     <SelectItem key={t.id} value={t.id}>
-                                        {t.firstName} {t.lastName} ({t.specialization})
+                                        {t.firstName} {t.lastName} ({t.specialization || "Преподаватель"})
                                     </SelectItem>
                                 ))}
                             </SelectContent>

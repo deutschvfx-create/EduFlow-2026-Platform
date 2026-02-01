@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Megaphone } from "lucide-react";
 import { Textarea } from '@/components/ui/textarea';
+import { useOrganization } from "@/hooks/use-organization";
 import { generateId } from "@/lib/utils";
 
 interface CreateAnnouncementModalProps {
@@ -16,20 +17,23 @@ interface CreateAnnouncementModalProps {
 }
 
 export function CreateAnnouncementModal({ onSuccess }: CreateAnnouncementModalProps) {
+    const { currentOrganizationId } = useOrganization();
     const [open, setOpen] = useState(false);
     const [title, setTitle] = useState('');
 
-    const handleSubmit = () => {
-        if (!title) return;
+    const handleSubmit = async () => {
+        if (!title || !currentOrganizationId) return;
 
-        import("@/lib/data/announcements.repo").then(({ announcementsRepo }) => {
-            announcementsRepo.add({
+        try {
+            const { announcementsRepo } = await import("@/lib/data/announcements.repo");
+            await announcementsRepo.add({
                 id: generateId(),
+                organizationId: currentOrganizationId,
                 title,
                 content: (document.getElementById('content') as HTMLTextAreaElement)?.value || '',
                 status: 'PUBLISHED',
-                authorId: 'director-id', // Mock
-                authorName: 'Admin', // Mock
+                authorId: 'director-id', // Still mock but at least repo call will work
+                authorName: 'Admin',
                 authorRole: 'DIRECTOR',
                 targetType: 'ALL',
                 createdAt: new Date().toISOString()
@@ -37,7 +41,10 @@ export function CreateAnnouncementModal({ onSuccess }: CreateAnnouncementModalPr
             setOpen(false);
             setTitle('');
             onSuccess();
-        });
+        } catch (error) {
+            console.error("Failed to create announcement:", error);
+            alert("Ошибка при создании объявления");
+        }
     };
 
     return (

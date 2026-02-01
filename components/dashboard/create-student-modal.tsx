@@ -21,11 +21,12 @@ export function CreateStudentModal({ onSuccess }: CreateStudentModalProps) {
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!firstName || !lastName || !currentOrganizationId) return;
 
-        import("@/lib/data/students.repo").then(({ studentsRepo }) => {
-            studentsRepo.add({
+        try {
+            const { studentsRepo } = await import("@/lib/data/students.repo");
+            await studentsRepo.add({
                 id: generateId(),
                 organizationId: currentOrganizationId,
                 firstName,
@@ -39,7 +40,10 @@ export function CreateStudentModal({ onSuccess }: CreateStudentModalProps) {
             setFirstName('');
             setLastName('');
             onSuccess();
-        });
+        } catch (error) {
+            console.error("Failed to create student:", error);
+            alert("Ошибка при создании студента. Попробуйте еще раз.");
+        }
     };
 
     return (

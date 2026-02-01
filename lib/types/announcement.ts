@@ -8,6 +8,7 @@ export type AnnouncementTargetType =
 
 export type Announcement = {
     id: string;
+    organizationId: string;
     title: string;
     content: string;
 

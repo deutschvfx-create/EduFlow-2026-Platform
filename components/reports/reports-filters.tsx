@@ -8,11 +8,14 @@ import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { CalendarIcon, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { MOCK_GROUPS_FULL } from "@/lib/mock/groups";
-import { MOCK_COURSES } from "@/lib/mock/courses";
-import { MOCK_TEACHERS } from "@/lib/mock/teachers";
+import { Group } from "@/lib/types/group";
+import { Course } from "@/lib/types/course";
+import { Teacher } from "@/lib/types/teacher";
 
 interface ReportsFiltersProps {
+    groups: Group[];
+    courses: Course[];
+    teachers: Teacher[];
     groupId: string;
     onGroupChange: (val: string) => void;
     courseId: string;
@@ -24,6 +27,9 @@ interface ReportsFiltersProps {
 }
 
 export function ReportsFilters({
+    groups,
+    courses,
+    teachers,
     groupId,
     onGroupChange,
     courseId,
@@ -51,7 +57,7 @@ export function ReportsFilters({
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">Все группы</SelectItem>
-                            {MOCK_GROUPS_FULL.map(g => (
+                            {groups.map(g => (
                                 <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
                             ))}
                         </SelectContent>
@@ -63,7 +69,7 @@ export function ReportsFilters({
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">Все предметы</SelectItem>
-                            {MOCK_COURSES.map(c => (
+                            {courses.map(c => (
                                 <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                             ))}
                         </SelectContent>
@@ -75,7 +81,7 @@ export function ReportsFilters({
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">Все преподаватели</SelectItem>
-                            {MOCK_TEACHERS.map(t => (
+                            {teachers.map(t => (
                                 <SelectItem key={t.id} value={t.id}>{t.firstName} {t.lastName}</SelectItem>
                             ))}
                         </SelectContent>

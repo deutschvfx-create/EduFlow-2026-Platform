@@ -5,7 +5,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Button } from "@/components/ui/button";
 import { Loader2, Search, Check, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { MOCK_GROUPS_FULL } from "@/lib/mock/groups";
+import { useOrganization } from "@/hooks/use-organization";
+import { Group } from "@/lib/types/group";
 import { Course } from "@/lib/types/course";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,9 +19,19 @@ interface LinkGroupsModalProps {
 }
 
 export function LinkGroupsModal({ course, open, onOpenChange, onSave }: LinkGroupsModalProps) {
+    const { currentOrganizationId } = useOrganization();
     const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState("");
+    const [groups, setGroups] = useState<Group[]>([]);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+    useEffect(() => {
+        if (open && currentOrganizationId) {
+            import("@/lib/data/groups.repo").then(({ groupsRepo }) => {
+                groupsRepo.getAll(currentOrganizationId).then(setGroups);
+            });
+        }
+    }, [open, currentOrganizationId]);
 
     useEffect(() => {
         if (course) {
@@ -31,7 +42,7 @@ export function LinkGroupsModal({ course, open, onOpenChange, onSave }: LinkGrou
         setSearch("");
     }, [course]);
 
-    const filteredGroups = MOCK_GROUPS_FULL.filter(g =>
+    const filteredGroups = groups.filter(g =>
     (g.name.toLowerCase().includes(search.toLowerCase()) ||
         g.code.toLowerCase().includes(search.toLowerCase()))
     );

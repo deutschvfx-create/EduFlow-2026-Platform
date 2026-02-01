@@ -7,9 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MOCK_TEACHERS } from "@/lib/mock/teachers";
-import { MOCK_FACULTIES } from "@/lib/mock/faculties";
-import { MOCK_DEPARTMENTS } from "@/lib/mock/departments";
+import { useOrganization } from "@/hooks/use-organization";
+import { Teacher } from "@/lib/types/teacher";
+import { Faculty } from "@/lib/types/faculty";
+import { Department } from "@/lib/types/department";
 import { Group, GroupStatus } from "@/lib/types/group";
 
 interface EditGroupModalProps {
@@ -20,6 +21,7 @@ interface EditGroupModalProps {
 }
 
 export function EditGroupModal({ group, open, onOpenChange, onSave }: EditGroupModalProps) {
+    const { currentOrganizationId } = useOrganization();
     const [loading, setLoading] = useState(false);
 
     // Form State
@@ -32,6 +34,23 @@ export function EditGroupModal({ group, open, onOpenChange, onSave }: EditGroupM
     const [curatorId, setCuratorId] = useState("");
     const [maxStudents, setMaxStudents] = useState("15");
     const [status, setStatus] = useState<GroupStatus>("ACTIVE");
+    const [teachers, setTeachers] = useState<Teacher[]>([]);
+    const [faculties, setFaculties] = useState<Faculty[]>([]);
+    const [allDepartments, setAllDepartments] = useState<Department[]>([]);
+
+    useEffect(() => {
+        if (open && currentOrganizationId) {
+            Promise.all([
+                import("@/lib/data/teachers.repo").then(m => m.teachersRepo.getAll(currentOrganizationId)),
+                import("@/lib/data/faculties.repo").then(m => m.facultiesRepo.getAll(currentOrganizationId)),
+                import("@/lib/data/departments.repo").then(m => m.departmentsRepo.getAll(currentOrganizationId))
+            ]).then(([t, f, d]) => {
+                setTeachers(t);
+                setFaculties(f);
+                setAllDepartments(d);
+            });
+        }
+    }, [open, currentOrganizationId]);
 
     useEffect(() => {
         if (group) {
@@ -48,7 +67,7 @@ export function EditGroupModal({ group, open, onOpenChange, onSave }: EditGroupM
     }, [group]);
 
     // Derived state
-    const departments = MOCK_DEPARTMENTS.filter(d => d.facultyId === facultyId);
+    const departments = allDepartments.filter(d => d.facultyId === facultyId);
 
     const handleFacultyChange = (val: string) => {
         setFacultyId(val);
@@ -101,7 +120,7 @@ export function EditGroupModal({ group, open, onOpenChange, onSave }: EditGroupM
                                     <SelectValue placeholder="Выберите факультет" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {MOCK_FACULTIES.map(f => (
+                                    {faculties.map(f => (
                                         <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
                                     ))}
                                 </SelectContent>
@@ -198,7 +217,7 @@ export function EditGroupModal({ group, open, onOpenChange, onSave }: EditGroupM
                                     <SelectValue placeholder="Не назначен" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {MOCK_TEACHERS.map(t => (
+                                    {teachers.map(t => (
                                         <SelectItem key={t.id} value={t.id}>
                                             {t.firstName} {t.lastName}
                                         </SelectItem>

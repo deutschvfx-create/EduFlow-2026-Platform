@@ -1,8 +1,6 @@
 
 import { db } from "@/lib/firebase";
 import { Faculty } from "@/lib/types/faculty";
-import { MOCK_FACULTIES } from "@/lib/mock/faculties";
-import { withFallback } from "./utils";
 import {
     collection,
     doc,
@@ -12,54 +10,47 @@ import {
     updateDoc,
     deleteDoc,
     query,
-    where,
-    writeBatch
+    where
 } from "firebase/firestore";
 
 const COLLECTION = "faculties";
 
 export const facultiesRepo = {
     getAll: async (organizationId: string): Promise<Faculty[]> => {
-        const filteredMock = MOCK_FACULTIES.filter(f => f.organizationId === organizationId);
-        return withFallback((async () => {
-            try {
-                const q = query(collection(db, COLLECTION), where("organizationId", "==", organizationId));
-                const snapshot = await getDocs(q);
+        try {
+            const q = query(collection(db, COLLECTION), where("organizationId", "==", organizationId));
+            const snapshot = await getDocs(q);
 
-                // Auto-seed if empty (Only if using org_1 for now to represent first user)
-                if (snapshot.empty && organizationId === "org_1") {
-                    console.log("Seeding mock faculties to Firestore...");
-                    const batch = writeBatch(db);
-                    const seeded: Faculty[] = [];
-
-                    filteredMock.forEach(f => {
-                        const ref = doc(db, COLLECTION, f.id);
-                        batch.set(ref, f);
-                        seeded.push(f);
-                    });
-
-                    await batch.commit();
-                    return seeded;
-                }
-
-                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Faculty));
-            } catch (e) {
-                console.error("Failed to fetch faculties", e);
-                throw e;
-            }
-        })(), filteredMock);
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Faculty));
+        } catch (e) {
+            console.error("Failed to fetch faculties", e);
+            throw e;
+        }
     },
 
-    getById: async (id: string): Promise<Faculty | undefined> => {
-        const snap = await getDoc(doc(db, COLLECTION, id));
-        return snap.exists() ? ({ id: snap.id, ...snap.data() } as Faculty) : undefined;
+    getById: async (organizationId: string, id: string): Promise<Faculty | null> => {
+        try {
+            const ref = doc(db, COLLECTION, id);
+            const snap = await getDoc(ref);
+            if (!snap.exists()) return null;
+            const data = snap.data();
+            if (data.organizationId !== organizationId) return null;
+            return { id: snap.id, ...data } as Faculty;
+        } catch (e) {
+            console.error("Failed to fetch faculty", id, e);
+            return null;
+        }
     },
 
     add: async (faculty: Faculty) => {
         const ref = faculty.id ? doc(db, COLLECTION, faculty.id) : doc(collection(db, COLLECTION));
-        const newFaculty = { ...faculty, createdAt: new Date().toISOString() };
+        const newFaculty = {
+            ...faculty,
+            id: ref.id,
+            createdAt: faculty.createdAt || new Date().toISOString()
+        };
         await setDoc(ref, newFaculty);
-        return { ...newFaculty, id: ref.id };
+        return newFaculty;
     },
 
     update: async (id: string, updates: Partial<Faculty>) => {

@@ -27,18 +27,11 @@ import { useRouter } from "next/navigation";
 
 interface StudentsTableProps {
     students: Student[];
+    onAction: (action: string, id: string) => void;
 }
 
-export function StudentsTable({ students }: StudentsTableProps) {
+export function StudentsTable({ students, onAction }: StudentsTableProps) {
     const router = useRouter();
-
-    const handleAction = (action: string, id: string) => {
-        // Mock action
-        if (action === 'delete') {
-            if (!confirm("Вы уверены? Это действие нельзя отменить.")) return;
-        }
-        alert(`Action ${action} triggered for student ${id}`);
-    };
 
     if (students.length === 0) {
         return (
@@ -159,18 +152,18 @@ export function StudentsTable({ students }: StudentsTableProps) {
                                         <DropdownMenuSeparator className="bg-zinc-800" />
 
                                         {student.status !== 'ACTIVE' && (
-                                            <DropdownMenuItem onClick={() => handleAction('activate', student.id)} className="text-emerald-400 cursor-pointer hover:bg-emerald-500/10 focus:bg-emerald-500/10 py-2">
+                                            <DropdownMenuItem onClick={() => onAction('activate', student.id)} className="text-emerald-400 cursor-pointer hover:bg-emerald-500/10 focus:bg-emerald-500/10 py-2">
                                                 <Shield className="mr-2 h-4 w-4" /> Активировать
                                             </DropdownMenuItem>
                                         )}
 
                                         {student.status === 'ACTIVE' && (
-                                            <DropdownMenuItem onClick={() => handleAction('suspend', student.id)} className="text-rose-400 cursor-pointer hover:bg-rose-500/10 focus:bg-rose-500/10 py-2">
+                                            <DropdownMenuItem onClick={() => onAction('suspend', student.id)} className="text-rose-400 cursor-pointer hover:bg-rose-500/10 focus:bg-rose-500/10 py-2">
                                                 <ShieldAlert className="mr-2 h-4 w-4" /> Заблокировать
                                             </DropdownMenuItem>
                                         )}
 
-                                        <DropdownMenuItem onClick={() => handleAction('archive', student.id)} className="text-zinc-500 cursor-pointer hover:bg-zinc-800 py-2">
+                                        <DropdownMenuItem onClick={() => onAction('archive', student.id)} className="text-zinc-500 cursor-pointer hover:bg-zinc-800 py-2">
                                             <Archive className="mr-2 h-4 w-4" /> В архив
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>

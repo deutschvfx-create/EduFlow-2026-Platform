@@ -1,7 +1,6 @@
 'use client';
 
 import { useParams, useRouter } from "next/navigation";
-import { MOCK_TEACHERS } from "@/lib/mock/teachers";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit, Shield, ShieldAlert, Archive, Trash, MoreVertical, Lock } from "lucide-react";
 import { TeacherStatusBadge, TeacherRoleBadge } from "@/components/teachers/status-badge";
@@ -16,19 +15,33 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { EditPermissionsModal } from "@/components/teachers/permissions-modal";
-import { TeacherPermissions } from "@/lib/types/teacher";
+import { Teacher, TeacherPermissions } from "@/lib/types/teacher";
+import { useOrganization } from "@/hooks/use-organization";
 
 export default function TeacherProfilePage() {
     const params = useParams(); // { id: string }
     const router = useRouter();
     const id = params?.id as string;
+    const { currentOrganizationId } = useOrganization();
 
-    // State for permissions modal
+    // State
+    const [teacher, setTeacher] = useState<Teacher | null>(null);
+    const [loading, setLoading] = useState(true);
     const [permissionsModalOpen, setPermissionsModalOpen] = useState(false);
 
-    const teacher = MOCK_TEACHERS.find(s => s.id === id);
+    useEffect(() => {
+        if (currentOrganizationId && id) {
+            import("@/lib/data/teachers.repo").then(async ({ teachersRepo }) => {
+                const data = await teachersRepo.getById(currentOrganizationId, id);
+                setTeacher(data);
+                setLoading(false);
+            });
+        }
+    }, [currentOrganizationId, id]);
+
+    if (loading) return <div className="p-8 text-zinc-500">Загрузка данных...</div>;
 
     if (!teacher) {
         return (
@@ -41,9 +54,27 @@ export default function TeacherProfilePage() {
         );
     }
 
-    const handleSavePermissions = (teacherId: string, newPermissions: TeacherPermissions) => {
-        // Mock save logic
-        alert(`Permissions updated for teacher ${teacherId}`);
+    const handleSavePermissions = async (teacherId: string, newPermissions: TeacherPermissions) => {
+        if (!currentOrganizationId) return;
+        try {
+            const { teachersRepo } = await import("@/lib/data/teachers.repo");
+            await teachersRepo.update(teacherId, { permissions: newPermissions });
+            setTeacher(prev => prev ? { ...prev, permissions: newPermissions } : null);
+        } catch (error) {
+            console.error(error);
+            alert("Ошибка при обновлении прав");
+        }
+    };
+
+    const handleStatusChange = async (newStatus: 'ACTIVE' | 'SUSPENDED' | 'ARCHIVED') => {
+        if (!currentOrganizationId) return;
+        try {
+            const { teachersRepo } = await import("@/lib/data/teachers.repo");
+            await teachersRepo.update(id, { status: newStatus } as any);
+            setTeacher(prev => prev ? { ...prev, status: newStatus } : null);
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     return (
@@ -84,18 +115,18 @@ export default function TeacherProfilePage() {
                             </DropdownMenuItem>
 
                             {teacher.status !== 'ACTIVE' && (
-                                <DropdownMenuItem className="text-green-400 cursor-pointer hover:bg-zinc-800">
+                                <DropdownMenuItem onClick={() => handleStatusChange('ACTIVE')} className="text-green-400 cursor-pointer hover:bg-zinc-800">
                                     <Shield className="mr-2 h-4 w-4" /> Активировать
                                 </DropdownMenuItem>
                             )}
 
                             {teacher.status === 'ACTIVE' && (
-                                <DropdownMenuItem className="text-amber-400 cursor-pointer hover:bg-zinc-800">
+                                <DropdownMenuItem onClick={() => handleStatusChange('SUSPENDED')} className="text-amber-400 cursor-pointer hover:bg-zinc-800">
                                     <ShieldAlert className="mr-2 h-4 w-4" /> Заблокировать
                                 </DropdownMenuItem>
                             )}
 
-                            <DropdownMenuItem className="text-zinc-500 cursor-pointer hover:bg-zinc-800">
+                            <DropdownMenuItem onClick={() => handleStatusChange('ARCHIVED')} className="text-zinc-500 cursor-pointer hover:bg-zinc-800">
                                 <Archive className="mr-2 h-4 w-4" /> В архив
                             </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -167,7 +198,7 @@ export default function TeacherProfilePage() {
                                         <CardDescription>Только просмотр. Для изменения нажмите "Настроить доступ".</CardDescription>
                                     </CardHeader>
                                     <CardContent className="grid gap-2">
-                                        {Object.entries(teacher.permissions).map(([key, value]) => (
+                                        {teacher.permissions ? Object.entries(teacher.permissions).map(([key, value]) => (
                                             <div key={key} className="flex justify-between items-center py-2 border-b border-zinc-800 last:border-0">
                                                 <span className="text-zinc-400 font-mono text-sm">{key}</span>
                                                 {value ? (
@@ -176,7 +207,7 @@ export default function TeacherProfilePage() {
                                                     <Badge variant="outline" className="text-red-500 border-red-500/20">Нет</Badge>
                                                 )}
                                             </div>
-                                        ))}
+                                        )) : <p className="text-zinc-500 italic">Права не настроены</p>}
                                     </CardContent>
                                 </Card>
                             </TabsContent>

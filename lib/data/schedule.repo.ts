@@ -1,6 +1,6 @@
+
 import { db as indexedDb } from "@/lib/offline-db/client";
 import { Lesson } from "@/lib/types/schedule";
-import { MOCK_SCHEDULE } from "@/lib/mock/schedule";
 import { db as firestoreDb } from "@/lib/firebase";
 import {
     collection,
@@ -14,24 +14,15 @@ import {
     Unsubscribe
 } from "firebase/firestore";
 
-// Firestore collection name
 const COLLECTION_NAME = "lessons";
-
-// Active subscriptions tracker
 const subscriptions = new Map<string, Unsubscribe>();
 
 export const scheduleRepo = {
-    /**
-     * Get all lessons for an organization with realtime updates
-     * Returns a Promise that resolves immediately with current data
-     * and sets up realtime listener if callback is provided
-     */
     getAll: async (
         organizationId: string,
         onUpdate?: (lessons: Lesson[]) => void,
         options?: { teacherId?: string }
     ): Promise<Lesson[]> => {
-        // Try Firestore first
         if (typeof window !== 'undefined' && firestoreDb) {
             try {
                 const lessonsRef = collection(firestoreDb, COLLECTION_NAME);
@@ -41,7 +32,6 @@ export const scheduleRepo = {
                     q = query(q, where("teacherId", "==", options.teacherId));
                 }
 
-                // If callback provided, set up realtime listener
                 if (onUpdate) {
                     const unsubscribe = onSnapshot(q, (snapshot) => {
                         const lessons = snapshot.docs.map(doc => ({
@@ -51,20 +41,14 @@ export const scheduleRepo = {
                         onUpdate(lessons);
                     }, (error) => {
                         console.error("Firestore listener error:", error);
-                        // Fallback to IndexedDB on error
-                        indexedDb.seedIfEmpty('schedule', MOCK_SCHEDULE).then(() => {
-                            return indexedDb.getAll<Lesson>('schedule');
-                        }).then(all => {
+                        indexedDb.getAll<Lesson>('schedule').then(all => {
                             const filtered = all.filter(lesson => lesson.organizationId === organizationId);
                             onUpdate(filtered);
                         });
                     });
-
-                    // Store subscription for cleanup
                     subscriptions.set(organizationId, unsubscribe);
                 }
 
-                // Return initial data synchronously
                 return new Promise((resolve) => {
                     const unsubscribe = onSnapshot(q, (snapshot) => {
                         const lessons = snapshot.docs.map(doc => ({
@@ -76,27 +60,21 @@ export const scheduleRepo = {
                     }, (error) => {
                         console.error("Firestore initial fetch error:", error);
                         unsubscribe();
-                        // Fallback to IndexedDB
-                        indexedDb.seedIfEmpty('schedule', MOCK_SCHEDULE).then(() => {
-                            return indexedDb.getAll<Lesson>('schedule');
-                        }).then(all => {
+                        indexedDb.getAll<Lesson>('schedule').then(all => {
                             resolve(all.filter(lesson => lesson.organizationId === organizationId));
                         });
                     });
                 });
             } catch (error) {
-                console.error("Firestore error, falling back to IndexedDB:", error);
+                console.error("Firestore error:", error);
             }
         }
 
-        // Fallback to IndexedDB (SSR or Firestore unavailable)
-        await indexedDb.seedIfEmpty('schedule', MOCK_SCHEDULE);
         const all = await indexedDb.getAll<Lesson>('schedule');
         return all.filter(lesson => lesson.organizationId === organizationId);
     },
 
     getById: async (organizationId: string, id: string): Promise<Lesson | undefined> => {
-        // Try Firestore first
         if (typeof window !== 'undefined' && firestoreDb) {
             try {
                 const docRef = doc(firestoreDb, COLLECTION_NAME, id);
@@ -116,7 +94,6 @@ export const scheduleRepo = {
                     }, (error) => {
                         console.error("Firestore getById error:", error);
                         unsubscribe();
-                        // Fallback to IndexedDB
                         indexedDb.getById<Lesson>('schedule', id).then(lesson => {
                             if (lesson && lesson.organizationId === organizationId) {
                                 resolve(lesson);
@@ -127,11 +104,10 @@ export const scheduleRepo = {
                     });
                 });
             } catch (error) {
-                console.error("Firestore error, falling back to IndexedDB:", error);
+                console.error("Firestore error:", error);
             }
         }
 
-        // Fallback to IndexedDB
         const lesson = await indexedDb.getById<Lesson>('schedule', id);
         if (lesson && lesson.organizationId === organizationId) {
             return lesson;
@@ -144,21 +120,18 @@ export const scheduleRepo = {
             throw new Error('Lesson organizationId does not match provided organizationId');
         }
 
-        // Try Firestore first
         if (typeof window !== 'undefined' && firestoreDb) {
             try {
                 const lessonsRef = collection(firestoreDb, COLLECTION_NAME);
-                await addDoc(lessonsRef, lesson);
-                // Also add to IndexedDB for offline support
-                await indexedDb.add('schedule', lesson);
+                const docRef = await addDoc(lessonsRef, { ...lesson, id: undefined });
+                const newLesson = { ...lesson, id: docRef.id };
+                await indexedDb.add('schedule', newLesson);
                 return;
             } catch (error) {
-                console.error("Firestore add error, falling back to IndexedDB:", error);
+                console.error("Firestore add error:", error);
             }
         }
-
-        // Fallback to IndexedDB
-        return indexedDb.add('schedule', lesson);
+        await indexedDb.add('schedule', lesson);
     },
 
     update: async (organizationId: string, lesson: Lesson): Promise<void> => {
@@ -166,50 +139,38 @@ export const scheduleRepo = {
             throw new Error('Lesson organizationId does not match provided organizationId');
         }
 
-        // Try Firestore first
         if (typeof window !== 'undefined' && firestoreDb) {
             try {
                 const docRef = doc(firestoreDb, COLLECTION_NAME, lesson.id);
                 await updateDoc(docRef, { ...lesson });
-                // Also update IndexedDB for offline support
                 await indexedDb.update('schedule', lesson);
                 return;
             } catch (error) {
-                console.error("Firestore update error, falling back to IndexedDB:", error);
+                console.error("Firestore update error:", error);
             }
         }
-
-        // Fallback to IndexedDB
-        return indexedDb.update('schedule', lesson);
+        await indexedDb.update('schedule', lesson);
     },
 
     delete: async (organizationId: string, id: string): Promise<void> => {
-        // Verify ownership first
         const lesson = await scheduleRepo.getById(organizationId, id);
         if (lesson && lesson.organizationId !== organizationId) {
             throw new Error('Cannot delete lesson from different organization');
         }
 
-        // Try Firestore first
         if (typeof window !== 'undefined' && firestoreDb) {
             try {
                 const docRef = doc(firestoreDb, COLLECTION_NAME, id);
                 await deleteDoc(docRef);
-                // Also delete from IndexedDB for offline support
                 await indexedDb.delete('schedule', id);
                 return;
             } catch (error) {
-                console.error("Firestore delete error, falling back to IndexedDB:", error);
+                console.error("Firestore delete error:", error);
             }
         }
-
-        // Fallback to IndexedDB
-        return indexedDb.delete('schedule', id);
+        await indexedDb.delete('schedule', id);
     },
 
-    /**
-     * Unsubscribe from realtime updates for an organization
-     */
     unsubscribe: (organizationId: string): void => {
         const unsubscribe = subscriptions.get(organizationId);
         if (unsubscribe) {

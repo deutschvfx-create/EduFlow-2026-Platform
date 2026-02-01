@@ -4,9 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { MOCK_FACULTIES } from "@/lib/mock/faculties";
-import { MOCK_DEPARTMENTS } from "@/lib/mock/departments";
-import { MOCK_TEACHERS } from "@/lib/mock/teachers";
+import { useState, useEffect } from 'react';
+import { useOrganization } from '@/hooks/use-organization';
+import { Faculty } from '@/lib/types/faculty';
+import { Department } from '@/lib/types/department';
+import { Teacher } from '@/lib/types/teacher';
 
 interface CourseFiltersProps {
     search: string;
@@ -33,12 +35,31 @@ export function CourseFilters({
     teacherFilter,
     onTeacherChange
 }: CourseFiltersProps) {
+    const { currentOrganizationId } = useOrganization();
+    const [faculties, setFaculties] = useState<Faculty[]>([]);
+    const [departments, setDepartments] = useState<Department[]>([]);
+    const [teachers, setTeachers] = useState<Teacher[]>([]);
+
+    useEffect(() => {
+        if (currentOrganizationId) {
+            Promise.all([
+                import("@/lib/data/faculties.repo").then(m => m.facultiesRepo.getAll(currentOrganizationId)),
+                import("@/lib/data/departments.repo").then(m => m.departmentsRepo.getAll(currentOrganizationId)),
+                import("@/lib/data/teachers.repo").then(m => m.teachersRepo.getAll(currentOrganizationId))
+            ]).then(([f, d, t]) => {
+                setFaculties(f);
+                setDepartments(d);
+                setTeachers(t);
+            });
+        }
+    }, [currentOrganizationId]);
+
     const hasActiveFilters = search || statusFilter !== 'all' || facultyFilter !== 'all' || departmentFilter !== 'all' || teacherFilter !== 'all';
 
     // Filter departments based on selected faculty
     const availableDepartments = facultyFilter === 'all'
-        ? MOCK_DEPARTMENTS
-        : MOCK_DEPARTMENTS.filter(d => d.facultyId === facultyFilter);
+        ? departments
+        : departments.filter(d => d.facultyId === facultyFilter);
 
     const clearFilters = () => {
         onSearchChange('');
@@ -87,7 +108,7 @@ export function CourseFilters({
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">Все факультеты</SelectItem>
-                        {MOCK_FACULTIES.map(f => (
+                        {faculties.map(f => (
                             <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
                         ))}
                     </SelectContent>
@@ -111,7 +132,7 @@ export function CourseFilters({
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">Все преподаватели</SelectItem>
-                        {MOCK_TEACHERS.map(t => (
+                        {teachers.map(t => (
                             <SelectItem key={t.id} value={t.id}>{t.firstName} {t.lastName}</SelectItem>
                         ))}
                     </SelectContent>
