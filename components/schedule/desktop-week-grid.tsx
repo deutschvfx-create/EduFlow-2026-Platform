@@ -149,7 +149,7 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
         const teacher = MOCK_TEACHERS.find(t => t.id === formData.teacherId);
         const newLesson: Lesson = {
             id: `temp-${Date.now()}`,
-            organizationId: "org_1", // Mock or from context if available
+            // organizationId will be injected by the parent/repo wrapper
             groupId: formData.groupId,
             teacherId: formData.teacherId,
             courseId: formData.courseId,
@@ -157,9 +157,9 @@ export function DesktopWeekGrid({ lessons: propsLessons, currentDate, onLessonCl
             startTime: formData.startTime,
             endTime: formData.endTime,
             room: "101",
-            status: 'SCHEDULED',
+            status: 'SCHEDULED', // Type cast to match Lesson status
             createdAt: new Date().toISOString()
-        };
+        } as Lesson;
 
         lastUpdateRef.current = Date.now();
         setLocalLessons(prev => [...prev, newLesson]);

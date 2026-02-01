@@ -14,7 +14,21 @@ import { MOCK_CLASSROOMS } from "@/lib/mock/classrooms";
 import { DayOfWeek, Lesson } from "@/lib/types/schedule";
 import { useModules } from "@/hooks/use-modules";
 
-export function AddLessonModal({ lessons, children }: { lessons: Lesson[], children?: React.ReactNode }) {
+export function AddLessonModal({
+    lessons,
+    groups = [],
+    teachers = [],
+    courses = [],
+    onSave,
+    children
+}: {
+    lessons: Lesson[],
+    groups?: any[],
+    teachers?: any[],
+    courses?: any[],
+    onSave?: (lesson: any) => Promise<void>,
+    children?: React.ReactNode
+}) {
     const [open, setOpen] = useState(false);
     const { modules } = useModules();
     const [loading, setLoading] = useState(false);
@@ -96,14 +110,33 @@ export function AddLessonModal({ lessons, children }: { lessons: Lesson[], child
         }
 
         setLoading(true);
-        // Simulate API call
-        await new Promise(r => setTimeout(r, 1000));
-        setLoading(false);
-        setOpen(false);
-        alert(`Занятие успешно добавлено!`);
-
-        // Reset (optional)
-        // setRoom("");
+        try {
+            if (onSave) {
+                // Construct lesson data compatible with SchedulePage
+                const lessonData = {
+                    groupId,
+                    courseId,
+                    teacherId,
+                    dayOfWeek,
+                    startTime,
+                    endTime,
+                    room: room === "__none__" ? "" : (room || "")
+                };
+                await onSave(lessonData);
+                setOpen(false);
+                // Reset form optionally here
+            } else {
+                // Fallback Mock
+                await new Promise(r => setTimeout(r, 1000));
+                setOpen(false);
+                alert(`Занятие успешно добавлено!`);
+            }
+        } catch (error) {
+            console.error("Modal save error:", error);
+            // Alert handled by parent or here if needed
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -134,7 +167,7 @@ export function AddLessonModal({ lessons, children }: { lessons: Lesson[], child
                                     <SelectValue placeholder="Выберите группу" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {MOCK_GROUPS_FULL.map(g => (
+                                    {groups.map(g => (
                                         <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
                                     ))}
                                 </SelectContent>
@@ -150,7 +183,7 @@ export function AddLessonModal({ lessons, children }: { lessons: Lesson[], child
                                     <SelectValue placeholder="Выберите предмет" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {MOCK_COURSES.map(c => (
+                                    {courses.map(c => (
                                         <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                                     ))}
                                 </SelectContent>
@@ -169,8 +202,8 @@ export function AddLessonModal({ lessons, children }: { lessons: Lesson[], child
                                     <SelectValue placeholder="Преподаватель" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {MOCK_TEACHERS.map(t => (
-                                        <SelectItem key={t.id} value={t.id}>{t.firstName} {t.lastName}</SelectItem>
+                                    {teachers.map(t => (
+                                        <SelectItem key={t.id} value={t.id}>{t.firstName || t.name} {t.lastName || ""}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>

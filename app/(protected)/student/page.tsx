@@ -5,8 +5,9 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calendar, Clock, MapPin, QrCode } from "lucide-react"
 import { MOCK_STUDENTS } from "@/lib/mock/students"
-import { MOCK_SCHEDULE } from "@/lib/mock/schedule"
 import QRCode from "react-qr-code"
+import { useState, useEffect } from "react"
+import { Lesson } from "@/lib/types/schedule"
 
 // Mock config for current student and app settings, replacing missing "@/lib/data"
 const CURRENT_STUDENT_ID = "s1";
@@ -14,6 +15,14 @@ const APP_CONFIG = { orgType: 'LanguageSchool' };
 
 export default function StudentDashboard() {
     const rawStudent = MOCK_STUDENTS.find(s => s.id === CURRENT_STUDENT_ID) || MOCK_STUDENTS[0];
+    const [schedule, setSchedule] = useState<Lesson[]>([]);
+
+    useEffect(() => {
+        // Load schedule from repository
+        import("@/lib/data/schedule.repo").then(m =>
+            m.scheduleRepo.getAll(rawStudent.organizationId)
+        ).then(setSchedule);
+    }, [rawStudent.organizationId]);
 
     // Extend raw student with UI helpers
     const student = {
@@ -26,7 +35,7 @@ export default function StudentDashboard() {
 
     // Get Today's Schedule (Mock logic: showing all for now or filtering by "MON" to simulate today)
     const todayLessons = student.groupIds?.[0]
-        ? MOCK_SCHEDULE.filter(l => l.groupId === student.groupIds[0]).slice(0, 3)
+        ? schedule.filter(l => l.groupId === student.groupIds[0]).slice(0, 3)
         : [];
 
     return (

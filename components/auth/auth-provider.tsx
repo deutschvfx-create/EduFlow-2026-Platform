@@ -41,8 +41,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     // Basic Route Protection - Only redirect if we are on login/register
                     // AND not already handled by the page logic
                     if (data && (pathname === '/login' || pathname === '/register')) {
-                        const target = data.role === 'STUDENT' ? '/student' : '/app/dashboard';
-                        router.push(target);
+                        if (data.organizationId) {
+                            const target = data.role === 'STUDENT' ? '/student' : '/app/dashboard';
+                            router.push(target);
+                        } else {
+                            // If logged in but no org, stay on register to complete onboarding
+                            if (pathname !== '/register') router.push('/register');
+                        }
                     }
                 } catch (e) {
                     console.error("Failed to fetch user data in AuthProvider:", e);
@@ -56,27 +61,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return () => unsubscribe();
     }, [pathname, router]);
 
-    // Protected Routes Check - ВРЕМЕННО ОТКЛЮЧЕНО
-    // Раскомментируйте когда настроите Firebase Auth
-    /*
     useEffect(() => {
         if (loading) return;
 
-        if (!user && (pathname.startsWith('/student') || pathname.startsWith('/director') || pathname.startsWith('/app'))) {
+        const isProtected = pathname.startsWith('/student') || pathname.startsWith('/app') || pathname.startsWith('/teacher');
+
+        if (!user && isProtected) {
             router.push('/login');
+            return;
         }
 
-        if (userData) {
-            if (pathname.startsWith('/director') && userData.role === 'STUDENT') {
-                router.push('/student');
-            }
-            if (pathname.startsWith('/student') && ['OWNER', 'DIRECTOR'].includes(userData.role)) {
-                // Optional: Directors might want to see student view? For now strict.
-                router.push('/director');
+        if (user && !loading) {
+            // If logged in but missing critical meta, force onboarding (at /register)
+            if (userData && !userData.organizationId && isProtected) {
+                router.push('/register');
             }
         }
     }, [user, userData, loading, pathname, router]);
-    */
 
     return (
         <AuthContext.Provider value={{ user, userData, loading }}>

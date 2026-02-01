@@ -65,19 +65,61 @@ export default function SchedulePage() {
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
-        Promise.all([
-            import("@/lib/data/schedule.repo").then(m => m.scheduleRepo.getAll(currentOrganizationId!)),
-            import("@/lib/data/groups.repo").then(m => m.groupsRepo.getAll(currentOrganizationId!)),
-            import("@/lib/data/teachers.repo").then(m => m.teachersRepo.getAll(currentOrganizationId!)),
-            import("@/lib/data/courses.repo").then(m => m.coursesRepo.getAll(currentOrganizationId!))
-        ]).then(([l, g, t, c]) => {
-            setLessons(l as any);
-            setGroups(g);
-            setTeachers(t);
-            setCourses(c);
-            setIsLoaded(true);
-        });
-    }, []);
+        // Guard: do not subscribe until we have an organizationId
+        if (!currentOrganizationId) {
+            setIsLoaded(true); // Clear loading state if no organization is defined (prevents deadlock)
+            return;
+        }
+
+        // Reset loading state for the current organization context
+        setIsLoaded(false);
+        let active = true;
+
+        const initializeRealtime = async () => {
+            try {
+                // Dynamic imports for repositories
+                const [schM, grpM, teaM, couM] = await Promise.all([
+                    import("@/lib/data/schedule.repo"),
+                    import("@/lib/data/groups.repo"),
+                    import("@/lib/data/teachers.repo"),
+                    import("@/lib/data/courses.repo")
+                ]);
+
+                if (!active) return;
+
+                // Start realtime subscription and load metadata
+                const [l, g, t, c] = await Promise.all([
+                    schM.scheduleRepo.getAll(currentOrganizationId, (updated) => {
+                        if (active) setLessons(updated);
+                    }),
+                    grpM.groupsRepo.getAll(currentOrganizationId),
+                    teaM.teachersRepo.getAll(currentOrganizationId),
+                    couM.coursesRepo.getAll(currentOrganizationId)
+                ]);
+
+                if (active) {
+                    setLessons(l);
+                    setGroups(g);
+                    setTeachers(t);
+                    setCourses(c);
+                    setIsLoaded(true); // Data loaded successfully
+                }
+            } catch (error) {
+                console.error("Schedule initialization error:", error);
+                if (active) setIsLoaded(true); // Clear loading state even on failure to avoid infinite spinner
+            }
+        };
+
+        initializeRealtime();
+
+        return () => {
+            active = false;
+            // Clean up subscription
+            import("@/lib/data/schedule.repo").then(m => {
+                m.scheduleRepo.unsubscribe(currentOrganizationId);
+            });
+        };
+    }, [currentOrganizationId]);
 
     // Role based filtering
     useEffect(() => {
@@ -91,9 +133,35 @@ export default function SchedulePage() {
     }, [userData]);
 
     const handleSaveUpdate = async (id: string, updates: Partial<Lesson>) => {
-        // Here we would call the API
-        console.log("Saving updates", id, updates);
-        setEditModalOpen(false);
+        if (!currentOrganizationId) return;
+        try {
+            const { scheduleRepo } = await import("@/lib/data/schedule.repo");
+            const lessonToUpdate = lessons.find(l => l.id === id);
+            if (!lessonToUpdate) return;
+
+            await scheduleRepo.update(currentOrganizationId, {
+                ...lessonToUpdate,
+                ...updates
+            } as Lesson);
+            setEditModalOpen(false);
+        } catch (error) {
+            console.error("Failed to update lesson:", error);
+            alert("Ошибка при сохранении изменений");
+        }
+    };
+
+    const handleLessonDelete = async (id: string) => {
+        if (!currentOrganizationId) return;
+        if (!confirm("Вы уверены, что хотите удалить это занятие?")) return;
+
+        try {
+            const { scheduleRepo } = await import("@/lib/data/schedule.repo");
+            await scheduleRepo.delete(currentOrganizationId, id);
+            setEditModalOpen(false);
+        } catch (error) {
+            console.error("Failed to delete lesson:", error);
+            alert("Ошибка при удалении занятия");
+        }
     };
 
     const filteredLessons = lessons.filter(l => {
@@ -112,25 +180,37 @@ export default function SchedulePage() {
         setEditModalOpen(true);
     };
 
-    // ...
+    const handleLessonAdd = async (newLessonData: any) => {
+        if (!currentOrganizationId) {
+            console.error("handleLessonAdd: No organization ID");
+            return;
+        }
 
-    const handleLessonAdd = (newLessonData: any) => {
-        // Mock implementation of adding a lesson
-        const newLesson: Lesson = {
-            id: Math.random().toString(36).substr(2, 9),
-            organizationId: currentOrganizationId!,
-            status: 'PLANNED',
-            createdAt: new Date().toISOString(),
-            groupId: newLessonData.groupId,
-            teacherId: newLessonData.teacherId,
-            courseId: newLessonData.courseId,
-            dayOfWeek: newLessonData.dayOfWeek,
-            startTime: newLessonData.startTime,
-            endTime: newLessonData.endTime,
-            room: newLessonData.room
-        };
+        console.log("Creating lesson for org:", currentOrganizationId, newLessonData);
 
-        setLessons(prev => [...prev, newLesson]);
+        try {
+            const { scheduleRepo } = await import("@/lib/data/schedule.repo");
+            const newLesson: Omit<Lesson, 'id'> = {
+                organizationId: currentOrganizationId,
+                status: 'PLANNED',
+                createdAt: new Date().toISOString(),
+                groupId: newLessonData.groupId,
+                teacherId: newLessonData.teacherId,
+                courseId: newLessonData.courseId,
+                dayOfWeek: newLessonData.dayOfWeek,
+                startTime: newLessonData.startTime,
+                endTime: newLessonData.endTime,
+                room: newLessonData.room
+            };
+
+            await scheduleRepo.add(currentOrganizationId, newLesson as Lesson);
+            console.log("Lesson created successfully");
+        } catch (error: any) {
+            console.error("Failed to add lesson:", error);
+            console.error("Error code:", error.code);
+            console.error("Error message:", error.message);
+            alert(`Ошибка при создании занятия: ${error.message}`);
+        }
     };
 
     return (
@@ -235,7 +315,13 @@ export default function SchedulePage() {
                 {/* Floating Action Button - Only for Admins */}
                 {canEdit && (
                     <div className="fixed bottom-6 right-4 md:bottom-8 md:right-8 z-40">
-                        <AddLessonModal lessons={lessons}>
+                        <AddLessonModal
+                            lessons={lessons}
+                            groups={groups}
+                            teachers={teachers}
+                            courses={courses}
+                            onSave={handleLessonAdd}
+                        >
                             <Button size="icon" className="h-14 w-14 rounded-full bg-violet-600 hover:bg-violet-700 shadow-lg shadow-violet-900/40 border border-white/10">
                                 <Plus className="h-6 w-6" />
                             </Button>
@@ -248,6 +334,10 @@ export default function SchedulePage() {
                     open={editModalOpen}
                     onOpenChange={setEditModalOpen}
                     onSave={handleSaveUpdate}
+                    onDelete={handleLessonDelete}
+                    groups={groups}
+                    teachers={teachers}
+                    courses={courses}
                 />
             </div>
         </ModuleGuard>

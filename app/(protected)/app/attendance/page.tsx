@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useMemo, useEffect } from "react";
-import { MOCK_SCHEDULE } from "@/lib/mock/schedule";
 import { MOCK_STUDENTS } from "@/lib/mock/students";
 import { MOCK_ATTENDANCE } from "@/lib/mock/attendance";
 import { MOCK_GROUPS_FULL } from "@/lib/mock/groups";

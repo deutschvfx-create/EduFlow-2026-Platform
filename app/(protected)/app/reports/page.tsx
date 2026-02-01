@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { MOCK_STUDENTS } from "@/lib/mock/students";
 import { MOCK_TEACHERS } from "@/lib/mock/teachers";
 import { MOCK_GROUPS_FULL } from "@/lib/mock/groups";
 import { MOCK_COURSES } from "@/lib/mock/courses";
 import { MOCK_ATTENDANCE } from "@/lib/mock/attendance";
 import { MOCK_GRADES } from "@/lib/mock/grades";
-import { MOCK_SCHEDULE } from "@/lib/mock/schedule";
+import { Lesson } from "@/lib/types/schedule";
+import { useOrganization } from "@/hooks/use-organization";
 
 import { ReportsFilters } from "@/components/reports/reports-filters";
 import { AttendanceReportTable } from "@/components/reports/attendance-report-table";
@@ -19,6 +20,17 @@ import { Users, UserCheck, BarChart, TrendingUp, CalendarDays } from "lucide-rea
 import { ModuleGuard } from "@/components/system/module-guard";
 
 export default function ReportsPage() {
+    const { currentOrganizationId } = useOrganization();
+    const [schedule, setSchedule] = useState<Lesson[]>([]);
+
+    useEffect(() => {
+        if (currentOrganizationId) {
+            import("@/lib/data/schedule.repo").then(m =>
+                m.scheduleRepo.getAll(currentOrganizationId)
+            ).then(setSchedule);
+        }
+    }, [currentOrganizationId]);
+
     // Filters State
     const [groupId, setGroupId] = useState("all");
     const [courseId, setCourseId] = useState("all");
@@ -80,7 +92,7 @@ export default function ReportsPage() {
             const courses = MOCK_COURSES.filter(c => c.teacherIds.includes(teacher.id));
             const groupsCount = new Set(courses.flatMap(c => c.groupIds)).size;
             // Mock hours per week based on schedule
-            const lessons = MOCK_SCHEDULE.filter(l => l.teacherId === teacher.id);
+            const lessons = schedule.filter(l => l.teacherId === teacher.id);
             // Assume each lesson is 1.5h
             const hours = lessons.length * 1.5;
 
@@ -91,7 +103,7 @@ export default function ReportsPage() {
                 hoursPerWeek: hours
             }
         });
-    }, [teacherId]);
+    }, [teacherId, schedule]);
 
 
     // KPI Stats (Global or Filtered?) -> Let's do Global + Filter Context mix

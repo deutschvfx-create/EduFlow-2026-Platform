@@ -1,191 +1,368 @@
 
 "use client"
 
+import { useState, useEffect, Suspense } from "react"
+import { useRouter } from "next/navigation"
+import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useState, Suspense } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { createUserWithEmailAndPassword } from "firebase/auth"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth"
 import { auth } from "@/lib/firebase"
-import { UserService } from "@/lib/services/firestore"
+import { UserService, OrganizationService, UserRole } from "@/lib/services/firestore"
 import { setStoredUser } from "@/lib/auth-helpers"
-import { GraduationCap, Briefcase, Mail, Lock, User as UserIcon, ArrowRight, Sparkles } from "lucide-react"
-import { Mascot } from "@/components/shared/mascot"
-import { motion, AnimatePresence } from "framer-motion"
+import { useAuth } from "@/components/auth/auth-provider"
+import { Globe, Mail, Lock, User as UserIcon, Building2, ArrowRight, Loader2, CheckCircle2 } from "lucide-react"
 
-function RegisterForm() {
-    const searchParams = useSearchParams()
-    const roleParam = searchParams.get('role')
-    const initialName = searchParams.get('name') || ""
-    const initialLang = searchParams.get('lang') || "ru"
+type Step = 'language' | 'auth' | 'info' | 'org' | 'success';
 
-    const role = roleParam === 'student' ? 'STUDENT' : 'DIRECTOR';
+function RegisterFlow() {
+    const router = useRouter()
+    const { user, userData } = useAuth()
+    const [step, setStep] = useState<Step>('language')
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
 
-    const [name, setName] = useState(initialName)
+    // Form Data
+    const [lang, setLang] = useState<string>(() => (typeof window !== 'undefined' ? localStorage.getItem('lang') || 'RU' : 'RU'))
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
-    const [loading, setLoading] = useState(false)
-    const [mascotStatus, setMascotStatus] = useState<"idle" | "typing" | "success" | "looking_away" | "thinking">("idle")
-    const router = useRouter()
+    const [firstName, setFirstName] = useState("")
+    const [lastName, setLastName] = useState("")
+    const [role, setRole] = useState<UserRole>('DIRECTOR')
+    const [orgName, setOrgName] = useState("")
+    const [orgType, setOrgType] = useState("")
 
-    const handleRegister = async () => {
-        if (!email || !password || !name) {
-            setMascotStatus("looking_away")
-            setTimeout(() => setMascotStatus("idle"), 2000)
-            return
+    // Skip language selection if already set
+    useEffect(() => {
+        if (typeof window !== 'undefined' && localStorage.getItem('lang')) {
+            // setStep('auth'); // User asked to SHOW only language selector as Step 1.
         }
+    }, [])
 
+    // If already logged in but no orgId, move to info/org step
+    useEffect(() => {
+        if (user && !loading) {
+            if (userData && !userData.organizationId) {
+                if (!userData.firstName) setStep('info');
+                else setStep('org');
+            } else if (userData?.organizationId) {
+                // Already has org, redirect
+                router.push('/app/dashboard');
+            }
+        }
+    }, [user, userData, loading, router])
+
+    const saveLang = (l: string) => {
+        setLang(l)
+        localStorage.setItem('lang', l)
+        setStep('auth')
+    }
+
+    const handleAuth = async () => {
         setLoading(true)
-        setMascotStatus("thinking")
+        setError(null)
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password)
-            const uid = userCredential.user.uid
-
-            const userData = {
-                email,
-                name,
-                role: role === 'DIRECTOR' ? 'OWNER' : 'STUDENT',
-                organizationId: role === 'DIRECTOR' ? null : 'pending_invite',
-                createdAt: Date.now()
-            }
-            // @ts-ignore
-            await UserService.createUser(uid, userData)
-
-            setMascotStatus("success")
-
-            // Persist session for WebView/Client components
-            const token = await userCredential.user.getIdToken()
-            setStoredUser(userData, token)
-
-            await new Promise(r => setTimeout(r, 1000))
-
-            if (role === 'DIRECTOR') {
-                router.push('/app/dashboard')
-            } else {
-                router.push('/student')
-            }
-
+            await createUserWithEmailAndPassword(auth, email, password)
+            setStep('info')
         } catch (e: any) {
-            console.error(e)
-            setMascotStatus("looking_away")
-            alert("Registration failed: " + e.message)
+            if (e.code === 'auth/email-already-in-use') {
+                setError("Этот email уже используется. Попробуйте войти.")
+            } else {
+                setError(e.message)
+            }
         } finally {
             setLoading(false)
         }
     }
 
+    const handleInfo = () => {
+        if (!firstName || !lastName) {
+            setError("Пожалуйста, заполните имя и фамилию")
+            return
+        }
+        setError(null)
+        setStep('org')
+    }
+
+    const handleOrgCreation = async () => {
+        if (!orgName || !orgType) {
+            setError("Пожалуйста, заполните данные организации")
+            return
+        }
+        if (!user) return
+
+        setLoading(true)
+        setError(null)
+        try {
+            // Atomic Bootstrap: Create Organization AND User Profile in one go
+            const orgId = await OrganizationService.bootstrapOrganization(
+                user.uid,
+                {
+                    uid: user.uid,
+                    email: email || user.email || "",
+                    firstName,
+                    lastName,
+                    name: `${firstName} ${lastName}`,
+                    role: role === 'DIRECTOR' ? 'OWNER' : role,
+                    createdAt: Date.now()
+                },
+                {
+                    name: orgName,
+                    type: orgType
+                }
+            )
+
+            if (!orgId) throw new Error("Failed to initialize organization")
+
+            // 3. Persist and Redirect
+            const finalUserData = {
+                uid: user.uid,
+                email: email || user.email || "",
+                firstName,
+                lastName,
+                name: `${firstName} ${lastName}`,
+                role: role === 'DIRECTOR' ? 'OWNER' : role as any,
+                organizationId: orgId,
+                organizationType: orgType,
+                createdAt: Date.now()
+            }
+
+            localStorage.setItem('edu_org_id', orgId)
+            setStoredUser(finalUserData, await user.getIdToken())
+
+            setStep('success')
+            setTimeout(() => {
+                router.push('/app/dashboard')
+            }, 1000)
+
+        } catch (e: any) {
+            console.error(e)
+            setError(e.message)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const renderStep = () => {
+        switch (step) {
+            case 'language':
+                return (
+                    <div className="space-y-6">
+                        <div className="text-center space-y-2">
+                            <h2 className="text-2xl font-black text-white uppercase tracking-tight">Choose Language</h2>
+                            <p className="text-zinc-500 text-xs font-bold uppercase">Выберите язык интерфейса</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            {['RU', 'EN', 'DE', 'TJ'].map((l) => (
+                                <Button
+                                    key={l}
+                                    variant="outline"
+                                    onClick={() => saveLang(l)}
+                                    className="h-16 text-lg font-black border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800 hover:border-indigo-500 transition-all"
+                                >
+                                    {l}
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
+                )
+
+            case 'auth':
+                return (
+                    <div className="space-y-6">
+                        <div className="text-center space-y-2">
+                            <h2 className="text-2xl font-black text-white uppercase tracking-tight">Account Access</h2>
+                            <p className="text-zinc-500 text-xs font-bold uppercase">Создайте аккаунт или войдите</p>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Email</Label>
+                                <div className="relative">
+                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-700" />
+                                    <Input
+                                        type="email"
+                                        placeholder="your@email.com"
+                                        className="h-14 pl-12 bg-zinc-950/50 border-zinc-800 text-white font-bold"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Password</Label>
+                                <div className="relative">
+                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-700" />
+                                    <Input
+                                        type="password"
+                                        placeholder="••••••••"
+                                        className="h-14 pl-12 bg-zinc-950/50 border-zinc-800 text-white font-bold"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            {error && <p className="text-red-500 text-[10px] font-bold uppercase text-center">{error}</p>}
+                            <Button
+                                onClick={handleAuth}
+                                disabled={loading || !email || !password}
+                                className="w-full h-14 bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-widest text-base group"
+                            >
+                                {loading ? <Loader2 className="animate-spin h-5 w-5" /> : 'Следующий шаг'}
+                                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                            </Button>
+                            <div className="text-center">
+                                <a href="/login" className="text-[10px] font-black uppercase text-zinc-600 hover:text-white transition-colors">Я уже зарегистрирован</a>
+                            </div>
+                        </div>
+                    </div>
+                )
+
+            case 'info':
+                return (
+                    <div className="space-y-6">
+                        <div className="text-center space-y-2">
+                            <h2 className="text-2xl font-black text-white uppercase tracking-tight">Your Identity</h2>
+                            <p className="text-zinc-500 text-xs font-bold uppercase">Как вас зовут?</p>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-600">First Name</Label>
+                                    <Input
+                                        placeholder="Имя"
+                                        className="h-14 bg-zinc-950/50 border-zinc-800 text-white font-bold"
+                                        value={firstName}
+                                        onChange={(e) => setFirstName(e.target.value)}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Last Name</Label>
+                                    <Input
+                                        placeholder="Фамилия"
+                                        className="h-14 bg-zinc-950/50 border-zinc-800 text-white font-bold"
+                                        value={lastName}
+                                        onChange={(e) => setLastName(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Project Role</Label>
+                                <Select value={role} onValueChange={(v) => setRole(v as UserRole)}>
+                                    <SelectTrigger className="h-14 bg-zinc-950/50 border-zinc-800 text-white font-bold">
+                                        <SelectValue placeholder="Выберите роль" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-zinc-900 border-zinc-800">
+                                        <SelectItem value="DIRECTOR" className="text-white">Директор (Owner)</SelectItem>
+                                        <SelectItem value="TEACHER" className="text-white">Преподаватель</SelectItem>
+                                        <SelectItem value="STUDENT" className="text-white">Студент</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            {error && <p className="text-red-500 text-[10px] font-bold uppercase text-center">{error}</p>}
+                            <Button
+                                onClick={handleInfo}
+                                className="w-full h-14 bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-widest text-base"
+                            >
+                                Создать организацию
+                            </Button>
+                        </div>
+                    </div>
+                )
+
+            case 'org':
+                return (
+                    <div className="space-y-6">
+                        <div className="text-center space-y-2">
+                            <h2 className="text-2xl font-black text-white uppercase tracking-tight">Organization</h2>
+                            <p className="text-zinc-500 text-xs font-bold uppercase">Настройка структуры подписки</p>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Org Name</Label>
+                                <div className="relative">
+                                    <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-700" />
+                                    <Input
+                                        placeholder="Название школы..."
+                                        className="h-14 pl-12 bg-zinc-950/50 border-zinc-800 text-white font-bold"
+                                        value={orgName}
+                                        onChange={(e) => setOrgName(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Org Type</Label>
+                                <Select value={orgType} onValueChange={setOrgType}>
+                                    <SelectTrigger className="h-14 bg-zinc-950/50 border-zinc-800 text-white font-bold">
+                                        <SelectValue placeholder="Тип обучения" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-zinc-900 border-zinc-800">
+                                        <SelectItem value="School" className="text-white">Школа</SelectItem>
+                                        <SelectItem value="University" className="text-white">Университет</SelectItem>
+                                        <SelectItem value="Courses" className="text-white">Курсы / Языки</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            {error && <p className="text-red-500 text-[10px] font-bold uppercase text-center">{error}</p>}
+                            <Button
+                                onClick={handleOrgCreation}
+                                disabled={loading}
+                                className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-widest text-base"
+                            >
+                                {loading ? <Loader2 className="animate-spin h-5 w-5" /> : 'Завершить регистрацию'}
+                            </Button>
+                        </div>
+                    </div>
+                )
+
+            case 'success':
+                return (
+                    <div className="text-center space-y-6 py-10">
+                        <div className="flex justify-center">
+                            <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="h-20 w-20 bg-emerald-500/20 rounded-full flex items-center justify-center border-2 border-emerald-500"
+                            >
+                                <CheckCircle2 className="h-10 w-10 text-emerald-500" />
+                            </motion.div>
+                        </div>
+                        <div>
+                            <h2 className="text-3xl font-black text-white uppercase tracking-tight">Success!</h2>
+                            <p className="text-zinc-500 text-xs font-bold uppercase mt-2">Система готова. Перенаправляем...</p>
+                        </div>
+                    </div>
+                )
+        }
+    }
+
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-[400px] relative mt-12 mb-12"
-        >
-            {/* Mascot Integration */}
-            <div className="absolute -top-20 md:-top-32 left-1/2 -translate-x-1/2 w-24 h-24 md:w-40 md:h-40 z-20 pointer-events-none">
-                <Mascot status={mascotStatus} className="w-full h-full" />
-            </div>
-
-            <div className="bg-zinc-900/40 border border-white/5 backdrop-blur-2xl rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
-
-                <div className="space-y-6 md:space-y-8">
-                    <div className="space-y-2 text-center">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest mb-3 md:mb-4">
-                            <Sparkles className="h-3 w-3" /> EduFlow Core 2.0
-                        </div>
-                        <h1 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">
-                            {role === 'STUDENT' ? 'Регистрация Ученика' : 'Регистрация Директора'}
-                        </h1>
-                        <p className="text-zinc-500 text-[10px] md:text-xs font-bold uppercase tracking-widest">
-                            Начните свой путь в экосистеме
-                        </p>
-                    </div>
-
-                    <div className="space-y-4">
-                        <div className="space-y-2 group">
-                            <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600 px-1">Ваше Имя</Label>
-                            <div className="relative">
-                                <UserIcon className="absolute left-4 md:left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-700 group-focus-within:text-indigo-400 transition-colors" />
-                                <Input
-                                    placeholder="Иван Петров"
-                                    className="h-14 md:h-16 pl-12 md:pl-14 bg-zinc-950/50 border-zinc-800 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 rounded-xl md:rounded-2xl text-white font-bold"
-                                    value={name}
-                                    onChange={(e) => {
-                                        setName(e.target.value)
-                                        setMascotStatus("typing")
-                                    }}
-                                    onBlur={() => setMascotStatus("idle")}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2 group">
-                            <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600 px-1">Email</Label>
-                            <div className="relative">
-                                <Mail className="absolute left-4 md:left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-700 group-focus-within:text-indigo-400 transition-colors" />
-                                <Input
-                                    type="email"
-                                    placeholder="your@email.com"
-                                    className="h-14 md:h-16 pl-12 md:pl-14 bg-zinc-950/50 border-zinc-800 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 rounded-xl md:rounded-2xl text-white font-bold"
-                                    value={email}
-                                    onChange={(e) => {
-                                        setEmail(e.target.value)
-                                        setMascotStatus("typing")
-                                    }}
-                                    onBlur={() => setMascotStatus("idle")}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2 group">
-                            <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600 px-1">Пароль</Label>
-                            <div className="relative">
-                                <Lock className="absolute left-4 md:left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-700 group-focus-within:text-pink-400 transition-colors" />
-                                <Input
-                                    type="password"
-                                    placeholder="••••••••"
-                                    className="h-14 md:h-16 pl-12 md:pl-14 bg-zinc-950/50 border-zinc-800 focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 rounded-xl md:rounded-2xl text-white font-bold"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    onFocus={() => setMascotStatus("looking_away")}
-                                    onBlur={() => setMascotStatus("idle")}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <Button
-                        onClick={handleRegister}
-                        disabled={loading}
-                        className={`w-full h-14 md:h-16 rounded-xl md:rounded-2xl text-white font-black uppercase tracking-widest text-base md:text-lg transition-all gap-3 shadow-xl ${role === 'STUDENT'
-                            ? 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-500/20'
-                            : 'bg-purple-600 hover:bg-purple-500 shadow-purple-500/20'
-                            }`}
-                    >
-                        {loading ? 'Создание...' : 'Создать аккаунт'}
-                        <ArrowRight className="h-5 w-5" />
-                    </Button>
-
-                    <div className="text-[10px] text-zinc-600 font-black uppercase tracking-[0.2em] text-center">
-                        Уже зарегистрированы?{' '}
-                        <a href="/login" className="text-zinc-400 hover:text-white underline underline-offset-4 transition-colors">Войти</a>
-                    </div>
-                </div>
-            </div>
-        </motion.div>
+        <div className="w-full max-w-sm">
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={step}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="bg-zinc-900/50 border border-white/5 backdrop-blur-3xl rounded-[2.5rem] p-8 md:p-10 shadow-3xl"
+                >
+                    {renderStep()}
+                </motion.div>
+            </AnimatePresence>
+        </div>
     )
 }
 
 export default function RegisterPage() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-4 relative overflow-hidden">
-            {/* Background elements */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none" />
-            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
+            {/* Background Decor */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-500/5 rounded-full blur-[160px] pointer-events-none" />
+            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none" />
 
-            <Suspense fallback={<div className="text-zinc-500 font-black uppercase tracking-widest text-xs animate-pulse">Инициализация...</div>}>
-                <RegisterForm />
+            <Suspense fallback={<Loader2 className="h-8 w-8 animate-spin text-zinc-500" />}>
+                <RegisterFlow />
             </Suspense>
         </div>
     )

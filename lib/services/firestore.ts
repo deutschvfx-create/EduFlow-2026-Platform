@@ -9,7 +9,10 @@ export interface UserData {
     email: string;
     role: UserRole;
     name?: string;
-    organizationId?: string;
+    firstName?: string;
+    lastName?: string;
+    organizationId?: string | null;
+    organizationType?: string;
     createdAt: number;
 }
 
@@ -74,6 +77,71 @@ export const DashboardService = {
         } catch (e) {
             console.error("Failed to fetch stats", e);
             return { students: 0, teachers: 0, groups: 0, subjects: 0 };
+        }
+    }
+};
+
+export const OrganizationService = {
+    async createOrganization(data: { name: string, type: string, ownerId: string }) {
+        if (typeof window === 'undefined' || !db) return null;
+        try {
+            const { collection, doc, setDoc } = await import("firebase/firestore");
+            const newDocRef = doc(collection(db, "organizations"));
+            const orgId = newDocRef.id;
+
+            await setDoc(newDocRef, {
+                ...data,
+                id: orgId,
+                organizationId: orgId,
+                createdAt: Date.now()
+            });
+            return orgId;
+        } catch (e) {
+            console.error("OrganizationService.createOrganization failed:", e);
+            throw e;
+        }
+    },
+
+    async bootstrapOrganization(uid: string, userData: UserData, orgData: { name: string, type: string }) {
+        if (typeof window === 'undefined' || !db) return null;
+        console.log("Starting bootstrap for UID:", uid);
+
+        try {
+            const { collection, doc, setDoc } = await import("firebase/firestore");
+
+            // 1. Create Organization
+            const orgRef = doc(collection(db, "organizations"));
+            const orgId = orgRef.id;
+            const organization = {
+                ...orgData,
+                id: orgId,
+                organizationId: orgId,
+                ownerId: uid,
+                createdAt: Date.now()
+            };
+
+            console.log("Attempting to create organization at:", orgRef.path, organization);
+            await setDoc(orgRef, organization);
+            console.log("Organization created successfully:", orgId);
+
+            // 2. Create User Profile
+            const userRef = doc(db, "users", uid);
+            const userUpdate = {
+                ...userData,
+                uid,
+                organizationId: orgId,
+                organizationType: orgData.type,
+                createdAt: Date.now()
+            };
+
+            console.log("Attempting to create user profile at:", userRef.path, userUpdate);
+            await setDoc(userRef, userUpdate);
+            console.log("User profile created successfully");
+
+            return orgId;
+        } catch (e: any) {
+            console.error("Bootstrap failed at some step:", e.code, e.message);
+            throw e;
         }
     }
 };

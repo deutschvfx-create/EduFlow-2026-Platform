@@ -7,9 +7,11 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useState, useEffect, Suspense } from "react"
 import { Mascot } from "@/components/shared/mascot"
 import { motion, AnimatePresence } from "framer-motion"
-import { Mail, Lock, ArrowRight, Sparkles, Terminal } from "lucide-react"
+import { Mail, Lock, ArrowRight, Sparkles } from "lucide-react"
 import { setStoredUser } from "@/lib/auth-helpers"
-import { safeSet } from "@/lib/storage"
+import { signInWithEmailAndPassword } from "firebase/auth"
+import { auth } from "@/lib/firebase"
+import { UserService } from "@/lib/services/firestore"
 
 function LoginForm() {
     const router = useRouter()
@@ -18,7 +20,6 @@ function LoginForm() {
     const [password, setPassword] = useState("")
     const [loading, setLoading] = useState(false)
     const [mascotStatus, setMascotStatus] = useState<"idle" | "typing" | "success" | "looking_away" | "thinking">("idle")
-    const [showDevMode, setShowDevMode] = useState(false)
 
     // Auto-fill from URL params (from Onboarding)
     useEffect(() => {
@@ -36,51 +37,38 @@ function LoginForm() {
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
+        if (!email || !password) return
+
         setLoading(true)
         setMascotStatus("thinking")
 
-        // Mock login delay
-        await new Promise(r => setTimeout(r, 1500))
+        try {
+            const userCredential = await signInWithEmailAndPassword(auth, email, password)
+            const uid = userCredential.user.uid
 
-        let targetRole = 'STUDENT'
-        let redirectUrl = '/student'
+            // Get data from Firestore
+            const data = await UserService.getUser(uid)
 
-        // Director Login Logic
-        if (email.includes('director') || email === 'rajlatipov01@gmail.com') {
-            targetRole = 'OWNER'
-            redirectUrl = '/app/dashboard'
-        }
+            if (data) {
+                setMascotStatus("success")
+                const token = await userCredential.user.getIdToken()
+                setStoredUser(data, token)
 
-        // Student Login Logic
-        if (email.includes('student')) {
-            targetRole = 'STUDENT'
-            redirectUrl = '/student'
-        }
-
-        if (email) {
-            setMascotStatus("success")
-            setStoredUser({
-                email: email,
-                role: targetRole,
-                name: 'Raj Latipov'
-            }, "mock-token-login"); // Pass a mock token for development bypass
-            router.push(redirectUrl)
-        } else {
+                if (data.organizationId) {
+                    router.push(data.role === 'STUDENT' ? '/student' : '/app/dashboard')
+                } else {
+                    router.push('/register')
+                }
+            } else {
+                throw new Error("Профиль пользователя не найден")
+            }
+        } catch (error: any) {
+            console.error(error)
             setMascotStatus("looking_away")
-            alert("Пожалуйста, введите Email.")
+            alert(error.message)
+        } finally {
+            setLoading(false)
         }
-        setLoading(false)
-    }
-
-    const skipAuth = async (role: 'director' | 'student') => {
-        setMascotStatus("success")
-        setStoredUser({
-            email: role === 'director' ? 'director@eduflow.com' : 'student@eduflow.com',
-            role: role.toUpperCase() === 'DIRECTOR' ? 'OWNER' : 'STUDENT',
-            name: 'Demo User'
-        }, "mock-token-skip");
-        await new Promise(r => setTimeout(r, 800));
-        router.push(role === 'director' ? '/app/dashboard' : '/student');
     }
 
     return (
@@ -143,48 +131,10 @@ function LoginForm() {
                 <div className="flex flex-col gap-4 text-center">
                     <div className="text-xs text-zinc-500 font-medium">
                         Нет аккаунта?{' '}
-                        <a href="/onboarding" className="text-indigo-400 hover:text-indigo-300 transition-colors">Регистрация</a>
+                        <a href="/register" className="text-indigo-400 hover:text-indigo-300 transition-colors font-bold lowercase tracking-wider">Регистрация</a>
                     </div>
-
-                    <button
-                        type="button"
-                        onClick={() => setShowDevMode(!showDevMode)}
-                        className="flex items-center justify-center gap-2 text-[9px] text-zinc-800 hover:text-zinc-600 font-black uppercase tracking-widest transition-colors mt-4"
-                    >
-                        <Terminal className="h-3 w-3" /> Terminal Access
-                    </button>
                 </div>
             </form>
-
-            {/* Discrete Dev Mode */}
-            <AnimatePresence>
-                {showDevMode && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="mt-8 pt-8 border-t border-zinc-800 space-y-3"
-                    >
-                        <p className="text-[9px] text-rose-500/50 font-black uppercase tracking-[0.3em] text-center mb-4">Development Bypass Active</p>
-                        <div className="grid grid-cols-2 gap-2">
-                            <Button
-                                onClick={() => skipAuth('director')}
-                                variant="outline"
-                                className="border-zinc-800 bg-zinc-950/50 text-[10px] font-black uppercase text-zinc-500 hover:text-white hover:border-zinc-600 h-10 rounded-xl"
-                            >
-                                Director
-                            </Button>
-                            <Button
-                                onClick={() => skipAuth('student')}
-                                variant="outline"
-                                className="border-zinc-800 bg-zinc-950/50 text-[10px] font-black uppercase text-zinc-500 hover:text-white hover:border-zinc-600 h-10 rounded-xl"
-                            >
-                                Student
-                            </Button>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </div>
     )
 }

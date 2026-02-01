@@ -28,10 +28,24 @@ interface EditLessonModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSave: (id: string, updates: Partial<Lesson>) => void;
+    onDelete?: (id: string) => void;
+    groups?: any[];
+    teachers?: any[];
+    courses?: any[];
 }
 
-export function EditLessonModal({ lesson, open, onOpenChange, onSave }: EditLessonModalProps) {
+export function EditLessonModal({
+    lesson,
+    open,
+    onOpenChange,
+    onSave,
+    onDelete,
+    groups = [],
+    teachers = [],
+    courses = []
+}: EditLessonModalProps) {
     const [loading, setLoading] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const { modules } = useModules();
 
     // Form State
@@ -97,7 +111,7 @@ export function EditLessonModal({ lesson, open, onOpenChange, onSave }: EditLess
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {MOCK_GROUPS_FULL.map(g => (
+                                    {groups.map(g => (
                                         <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
                                     ))}
                                 </SelectContent>
@@ -110,7 +124,7 @@ export function EditLessonModal({ lesson, open, onOpenChange, onSave }: EditLess
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {MOCK_COURSES.map(c => (
+                                    {courses.map(c => (
                                         <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                                     ))}
                                 </SelectContent>
@@ -126,8 +140,8 @@ export function EditLessonModal({ lesson, open, onOpenChange, onSave }: EditLess
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {MOCK_TEACHERS.map(t => (
-                                        <SelectItem key={t.id} value={t.id}>{t.firstName} {t.lastName}</SelectItem>
+                                    {teachers.map(t => (
+                                        <SelectItem key={t.id} value={t.id}>{t.firstName || t.name} {t.lastName || ""}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -299,6 +313,17 @@ export function EditLessonModal({ lesson, open, onOpenChange, onSave }: EditLess
                                     onClick={() => setStatus('PLANNED')}
                                 >
                                     <Loader2 className="mr-2 h-4 w-4" /> Восстановить занятие
+                                </Button>
+                            )}
+                            {onDelete && (
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    className="bg-red-600 hover:bg-red-700 text-white"
+                                    onClick={() => onDelete(lesson.id)}
+                                    disabled={isDeleting}
+                                >
+                                    {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                                 </Button>
                             )}
                         </div>

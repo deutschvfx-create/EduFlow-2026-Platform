@@ -1,0 +1,58 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // --- HELPERS ---
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function getOrgId() {
+      let path = /databases/$(database)/documents/users/$(request.auth.uid);
+      return exists(path) ? get(path).data.get('organizationId', null) : null;
+    }
+
+    // --- USER PROFILE RULES ---
+    
+    match /users/{userId} {
+      // Allow read if it's own profile or same organization
+      allow read: if isSignedIn() && (
+        request.auth.uid == userId || 
+        (exists(/databases/$(database)/documents/users/$(userId)) && get(/databases/$(database)/documents/users/$(userId)).data.get('organizationId', 'none') == getOrgId())
+      );
+      
+      // Allow create if it's the user's own UID
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      
+      // Allow update for own profile
+      allow update: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // --- ORGANIZATION RULES ---
+    
+    match /organizations/{orgId} {
+      // BOOTSTRAP: Allow signed-in users to create an organization 
+      // if they don't have one yet in their user profile.
+      allow create: if isSignedIn() && 
+                    (getOrgId() == null) &&
+                    request.resource.data.ownerId == request.auth.uid &&
+                    request.resource.data.organizationId == orgId;
+
+      // Read/Update allowed for owners or members
+      allow read, update: if isSignedIn() && (
+        resource.data.ownerId == request.auth.uid || 
+        resource.data.organizationId == getOrgId()
+      );
+    }
+
+    // --- MULTI-TENANT DOMAIN RULES ---
+    
+    match /{collection}/{document=**} {
+      allow read, write: if isSignedIn() && 
+                          !(collection in ["users", "organizations"]) && 
+                          (resource == null ? request.resource.data.organizationId == getOrgId() : resource.data.organizationId == getOrgId());
+    }
+  }
+}
