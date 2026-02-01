@@ -17,6 +17,7 @@ const COLLECTION = "users";
 
 export const studentsRepo = {
     getAll: async (organizationId: string, options?: { groupIds?: string[] }): Promise<Student[]> => {
+        if (!organizationId) throw new Error("organizationId is required");
         try {
             const collRef = collection(db, COLLECTION);
             let q = query(
@@ -46,6 +47,7 @@ export const studentsRepo = {
     },
 
     getById: async (organizationId: string, id: string): Promise<Student | null> => {
+        if (!organizationId) throw new Error("organizationId is required");
         try {
             const ref = doc(db, COLLECTION, id);
             const snap = await getDoc(ref);
@@ -60,6 +62,7 @@ export const studentsRepo = {
     },
 
     add: async (organizationId: string, student: Student) => {
+        if (!organizationId) throw new Error("organizationId is required");
         const ref = student.id ? doc(db, COLLECTION, student.id) : doc(collection(db, COLLECTION));
         const newStudent = {
             ...student,
@@ -73,13 +76,15 @@ export const studentsRepo = {
     },
 
     update: async (organizationId: string, id: string, updates: Partial<Student>) => {
+        if (!organizationId) throw new Error("organizationId is required");
         const ref = doc(db, COLLECTION, id);
         await updateDoc(ref, updates);
         const snap = await getDoc(ref);
         return { id: snap.id, ...snap.data() } as unknown as Student;
     },
 
-    delete: async (id: string) => {
+    delete: async (organizationId: string, id: string) => {
+        if (!organizationId) throw new Error("organizationId is required");
         await deleteDoc(doc(db, COLLECTION, id));
     }
 };

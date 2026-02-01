@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">EduApp</string>
+    <string name="app_name">Uni Prime</string>
     <string name="title_activity_main">EduApp</string>
     <string name="package_name">com.edu.app</string>
     <string name="custom_url_scheme">com.edu.app</string>

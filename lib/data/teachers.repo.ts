@@ -17,12 +17,15 @@ const COLLECTION = "users";
 
 export const teachersRepo = {
     getAll: async (organizationId: string): Promise<Teacher[]> => {
+        if (!organizationId) throw new Error("organizationId is required");
         try {
+            const collRef = collection(db, COLLECTION);
             const q = query(
-                collection(db, COLLECTION),
+                collRef,
                 where("role", "==", "TEACHER"),
                 where("organizationId", "==", organizationId)
             );
+
             const snapshot = await getDocs(q);
 
             return snapshot.docs.map(doc => {
@@ -39,6 +42,7 @@ export const teachersRepo = {
     },
 
     getById: async (organizationId: string, id: string): Promise<Teacher | null> => {
+        if (!organizationId) throw new Error("organizationId is required");
         try {
             const ref = doc(db, COLLECTION, id);
             const snap = await getDoc(ref);
@@ -53,6 +57,7 @@ export const teachersRepo = {
     },
 
     add: async (organizationId: string, teacher: Teacher) => {
+        if (!organizationId) throw new Error("organizationId is required");
         const ref = teacher.id ? doc(db, COLLECTION, teacher.id) : doc(collection(db, COLLECTION));
         const newTeacher = {
             ...teacher,
@@ -66,13 +71,15 @@ export const teachersRepo = {
     },
 
     update: async (organizationId: string, id: string, updates: Partial<Teacher>) => {
+        if (!organizationId) throw new Error("organizationId is required");
         const ref = doc(db, COLLECTION, id);
         await updateDoc(ref, updates);
         const snap = await getDoc(ref);
         return { id: snap.id, ...snap.data() } as unknown as Teacher;
     },
 
-    delete: async (id: string) => {
+    delete: async (organizationId: string, id: string) => {
+        if (!organizationId) throw new Error("organizationId is required");
         await deleteDoc(doc(db, COLLECTION, id));
     }
 };

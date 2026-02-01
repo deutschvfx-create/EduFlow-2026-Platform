@@ -16,18 +16,24 @@ import {
 const COLLECTION = "groups";
 
 export const groupsRepo = {
-    getAll: async (organizationId: string, options?: { groupIds?: string[] }): Promise<Group[]> => {
+    getAll: async (organizationId: string): Promise<Group[]> => {
+        if (!organizationId) throw new Error("organizationId is required");
         try {
-            let q = query(collection(db, COLLECTION), where("organizationId", "==", organizationId));
-
-            if (options?.groupIds && options.groupIds.length > 0) {
-                // Firestore 'in' has a limit of 30
-                q = query(q, where("__name__", "in", options.groupIds.slice(0, 30)));
-            }
+            const collRef = collection(db, COLLECTION);
+            const q = query(
+                collRef,
+                where("organizationId", "==", organizationId)
+            );
 
             const snapshot = await getDocs(q);
 
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Group));
+            return snapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    ...data
+                } as unknown as Group;
+            });
         } catch (e) {
             console.error("Failed to fetch groups", e);
             throw e;
@@ -35,25 +41,22 @@ export const groupsRepo = {
     },
 
     getById: async (organizationId: string, id: string): Promise<Group | null> => {
+        if (!organizationId) throw new Error("organizationId is required");
         try {
-            const snap = await getDoc(doc(db, COLLECTION, id));
+            const ref = doc(db, COLLECTION, id);
+            const snap = await getDoc(ref);
             if (!snap.exists()) return null;
             const data = snap.data();
             if (data.organizationId !== organizationId) return null;
-            return { id: snap.id, ...data } as Group;
+            return { id: snap.id, ...data } as unknown as Group;
         } catch (e) {
             console.error("Failed to fetch group", id, e);
             return null;
         }
     },
 
-    getByFaculty: async (facultyId: string): Promise<Group[]> => {
-        const q = query(collection(db, COLLECTION), where("facultyId", "==", facultyId));
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Group));
-    },
-
     add: async (organizationId: string, group: Group) => {
+        if (!organizationId) throw new Error("organizationId is required");
         const ref = group.id ? doc(db, COLLECTION, group.id) : doc(collection(db, COLLECTION));
         const newGroup = {
             ...group,
@@ -66,13 +69,15 @@ export const groupsRepo = {
     },
 
     update: async (organizationId: string, id: string, updates: Partial<Group>) => {
+        if (!organizationId) throw new Error("organizationId is required");
         const ref = doc(db, COLLECTION, id);
         await updateDoc(ref, updates);
         const snap = await getDoc(ref);
-        return { id: snap.id, ...snap.data() } as Group;
+        return { id: snap.id, ...snap.data() } as unknown as Group;
     },
 
-    delete: async (id: string) => {
+    delete: async (organizationId: string, id: string) => {
+        if (!organizationId) throw new Error("organizationId is required");
         await deleteDoc(doc(db, COLLECTION, id));
     }
 };
