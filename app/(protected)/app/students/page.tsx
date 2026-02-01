@@ -23,9 +23,11 @@ export default function StudentsPage() {
     const { currentOrganizationId } = useOrganization();
 
     useEffect(() => {
-        if (currentOrganizationId) {
-            loadStudents(currentOrganizationId);
+        if (!currentOrganizationId) {
+            setIsLoaded(false);
+            return;
         }
+        loadStudents(currentOrganizationId);
     }, [currentOrganizationId]);
 
     const loadStudents = (orgId: string) => {
