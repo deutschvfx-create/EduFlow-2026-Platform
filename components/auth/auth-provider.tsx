@@ -95,6 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const stopMirroring = async () => {
+        setIsMirrored(false);
         if (isSupportSession && user && db) {
             const deviceId = localStorage.getItem('eduflow_device_id');
             if (deviceId) {
@@ -103,8 +104,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
         } else if (followingSessionId && user && db) {
             const sessionRef = doc(db, "users", user.uid, "sessions", followingSessionId);
-            await updateDoc(sessionRef, { mirrored: false, lastUpdated: serverTimestamp() });
             setFollowingSessionId(null);
+            await updateDoc(sessionRef, { mirrored: false, lastUpdated: serverTimestamp() });
         }
     };
 

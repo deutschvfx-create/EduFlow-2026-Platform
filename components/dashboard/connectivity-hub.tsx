@@ -49,10 +49,12 @@ export function ConnectivityHub() {
                     ${isLive ? 'border-rose-500/40 bg-rose-950/30' : ''}
                 `}
             >
-                <div className="relative">
-                    <div className={`h-2.5 w-2.5 rounded-full ${getStatusColor()} animate-pulse`} />
-                    <div className={`absolute inset-0 h-2.5 w-2.5 rounded-full ${getStatusColor()} blur-sm opacity-50`} />
-                </div>
+                {!isLive && (
+                    <div className="relative">
+                        <div className={`h-2.5 w-2.5 rounded-full ${getStatusColor()} animate-pulse`} />
+                        <div className={`absolute inset-0 h-2.5 w-2.5 rounded-full ${getStatusColor()} blur-sm opacity-50`} />
+                    </div>
+                )}
 
                 <div className="flex items-center gap-2 text-[10px] font-medium tracking-tight text-zinc-400">
                     {isLive ? (
