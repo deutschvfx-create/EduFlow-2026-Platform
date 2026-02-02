@@ -6,6 +6,8 @@ import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, onSnapshot, setDoc, serverTimestamp } from "firebase/firestore";
 import { UserData } from "@/lib/services/firestore";
 import { useRouter, usePathname } from "next/navigation";
+import { PauseCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface AuthContextType {
     user: User | null;
@@ -69,6 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [userData, setUserData] = useState<UserData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isBlocked, setIsBlocked] = useState(false);
     const router = useRouter();
     const pathname = usePathname();
 
@@ -97,12 +100,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                             status: 'active'
                         }, { merge: true });
 
-                        // MONITOR THIS SESSION (for remote logout)
+                        // MONITOR THIS SESSION 
                         unsubscribeSession = onSnapshot(sessionRef, (doc) => {
-                            if (!doc.exists() || doc.data()?.status === 'blocked') {
-                                console.log("🚨 Session revoked or blocked. Logging out...");
+                            if (!doc.exists()) {
+                                // If session deleted -> Force Logout
                                 auth.signOut();
-                                router.push('/login');
+                                return;
+                            }
+
+                            const status = doc.data()?.status;
+                            if (status === 'blocked') {
+                                setIsBlocked(true);
+                            } else {
+                                setIsBlocked(false);
                             }
                         });
                     } catch (e) {
@@ -138,6 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 }
             } else {
                 setUserData(null);
+                setIsBlocked(false);
                 if (unsubscribeSnapshot) {
                     unsubscribeSnapshot();
                     unsubscribeSnapshot = null;
@@ -176,7 +187,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return (
         <AuthContext.Provider value={{ user, userData, loading }}>
-            {children}
+            {isBlocked ? (
+                <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
+                    <div className="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mb-6">
+                        <PauseCircle className="w-8 h-8" />
+                    </div>
+                    <h1 className="text-xl font-bold text-white mb-2">Аккаунт приостановлен</h1>
+                    <p className="text-neutral-400 max-w-xs text-sm mb-8">
+                        Ваша сессия была временно заблокирована администратором. Доступ восстановится автоматически, когда ограничение будет снято.
+                    </p>
+                    <Button
+                        variant="ghost"
+                        onClick={() => auth.signOut()}
+                        className="text-neutral-500 hover:text-white"
+                    >
+                        Выйти из аккаунта
+                    </Button>
+                </div>
+            ) : children}
         </AuthContext.Provider>
     );
 }
