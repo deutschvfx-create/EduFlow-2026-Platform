@@ -1,10 +1,10 @@
-
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { UserService, UserData } from "@/lib/services/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
+import { UserData } from "@/lib/services/firestore";
 import { useRouter, usePathname } from "next/navigation";
 
 interface AuthContextType {
@@ -29,37 +29,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        let unsubscribeSnapshot: (() => void) | null = null;
+
+        const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
             setUser(firebaseUser);
 
             if (firebaseUser) {
-                // Fetch extended user data from Firestore
-                try {
-                    const data = await UserService.getUser(firebaseUser.uid);
-                    setUserData(data);
+                // Subscribe to real-time user data
+                if (db) {
+                    unsubscribeSnapshot = onSnapshot(doc(db, "users", firebaseUser.uid), (doc) => {
+                        if (doc.exists()) {
+                            const data = doc.data() as UserData;
+                            setUserData(data);
 
-                    // Basic Route Protection - Only redirect if we are on login/register
-                    // AND not already handled by the page logic
-                    if (data && (pathname === '/login' || pathname === '/register')) {
-                        if (data.organizationId) {
-                            const target = data.role === 'student' ? '/student' : '/app/dashboard';
-                            router.push(target);
+                            // Basic Route Protection - Only redirect if we are on login/register
+                            // AND not already handled by the page logic
+                            if (window.location.pathname === '/login' || window.location.pathname === '/register') {
+                                if (data.organizationId) {
+                                    const target = data.role === 'student' ? '/student' : '/app/dashboard';
+                                    router.push(target);
+                                } else {
+                                    // If logged in but no org, stay on register to complete onboarding
+                                    if (window.location.pathname !== '/register') router.push('/register');
+                                }
+                            }
                         } else {
-                            // If logged in but no org, stay on register to complete onboarding
-                            if (pathname !== '/register') router.push('/register');
+                            setUserData(null);
                         }
-                    }
-                } catch (e) {
-                    console.error("Failed to fetch user data in AuthProvider:", e);
+                        setLoading(false);
+                    }, (error) => {
+                        console.error("Failed to subscribe to user data:", error);
+                        setLoading(false);
+                    });
+                } else {
+                    setLoading(false);
                 }
             } else {
                 setUserData(null);
+                if (unsubscribeSnapshot) {
+                    unsubscribeSnapshot();
+                    unsubscribeSnapshot = null;
+                }
+                setLoading(false);
             }
-            setLoading(false);
         });
 
-        return () => unsubscribe();
-    }, [pathname, router]);
+        return () => {
+            unsubscribeAuth();
+            if (unsubscribeSnapshot) {
+                unsubscribeSnapshot();
+            }
+        };
+    }, [router]); // Removed pathname dependency to prevent re-subscribing on navigation
 
     useEffect(() => {
         if (loading) return;
