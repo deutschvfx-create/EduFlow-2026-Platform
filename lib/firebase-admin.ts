@@ -6,28 +6,42 @@ const formatPrivateKey = (key: string) => {
     return key.replace(/\\n/g, '\n').replace(/"/g, '').replace(/\\r/g, '');
 };
 
-// Initialize Firebase Admin
-// We check if apps are already initialized to avoid "Release" errors in dev HMR
-if (!admin.apps.length) {
-    // Only attempt init if keys are present (prevents build crash)
-    if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
-        try {
-            admin.initializeApp({
-                credential: admin.credential.cert({
-                    projectId: process.env.FIREBASE_PROJECT_ID,
-                    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-                    privateKey: formatPrivateKey(process.env.FIREBASE_PRIVATE_KEY),
-                }),
-            });
-            console.log("🔥 Firebase Admin Initialized");
-        } catch (error) {
-            console.error("❌ Firebase Admin Init Error:", error);
+function initFirebaseAdmin() {
+    if (!admin.apps.length) {
+        if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
+            try {
+                admin.initializeApp({
+                    credential: admin.credential.cert({
+                        projectId: process.env.FIREBASE_PROJECT_ID,
+                        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+                        privateKey: formatPrivateKey(process.env.FIREBASE_PRIVATE_KEY),
+                    }),
+                });
+                console.log("🔥 Firebase Admin Initialized");
+            } catch (error) {
+                console.error("❌ Firebase Admin Init Error:", error);
+            }
+        } else {
+            // Log usage to help debug
+            const missing = [];
+            if (!process.env.FIREBASE_PROJECT_ID) missing.push("FIREBASE_PROJECT_ID");
+            if (!process.env.FIREBASE_CLIENT_EMAIL) missing.push("FIREBASE_CLIENT_EMAIL");
+            if (!process.env.FIREBASE_PRIVATE_KEY) missing.push("FIREBASE_PRIVATE_KEY");
+            console.warn(`⚠️ Firebase Admin skipped. Missing: ${missing.join(", ")}`);
         }
-    } else {
-        console.warn("⚠️ Firebase Admin skipped: Missing Env Vars");
     }
 }
 
-// Exports are nullable if init failed/skipped
-export const adminAuth = admin.apps.length ? admin.auth() : null;
-export const adminDb = admin.apps.length ? admin.firestore() : null;
+export function getAdminAuth() {
+    initFirebaseAdmin();
+    return admin.apps.length ? admin.auth() : null;
+}
+
+export function getAdminDb() {
+    initFirebaseAdmin();
+    return admin.apps.length ? admin.firestore() : null;
+}
+
+// Deprecated exports for backward compatibility (but might be null if called early)
+export const adminAuth = null;
+export const adminDb = null;
