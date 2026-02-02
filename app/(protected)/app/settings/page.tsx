@@ -24,7 +24,6 @@ import {
     MapPin
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { OrganizationProfileCard } from "@/components/settings/organization-profile-card";
 import { UserProfileCard } from "@/components/settings/user-profile-card";
 
 export default function SettingsPage() {
@@ -232,11 +231,8 @@ export default function SettingsPage() {
                 </div>
             </div>
 
-            {/* USER PROFILE CARD */}
-            <UserProfileCard onSave={() => showToast("Личный профиль сохранён")} />
-
-            {/* ORGANIZATION PROFILE CARD */}
-            <OrganizationProfileCard onSave={() => showToast("Профиль организации сохранён")} />
+            {/* UNIFIED SETTINGS CARD (Profile, Organization, Security) */}
+            <UserProfileCard onSave={() => showToast("Настройки сохранены")} />
 
             {/* ENHANCED QUICK SETTINGS PANEL */}
             <div className="relative bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-pink-500/5 border-l-4 border-indigo-500 rounded-lg p-6 shadow-lg shadow-indigo-500/5" data-help-id="settings-toggle-group">

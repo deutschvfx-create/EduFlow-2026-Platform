@@ -168,5 +168,28 @@ export const OrganizationService = {
             console.error("Bootstrap failed at some step:", e.code, e.message);
             throw e;
         }
+    },
+
+    async getOrganization(orgId: string) {
+        if (typeof window === 'undefined' || !db) return null;
+        try {
+            const { getDoc, doc } = await import("firebase/firestore");
+            const snap = await getDoc(doc(db, "organizations", orgId));
+            return snap.exists() ? snap.data() : null;
+        } catch (e) {
+            console.error("OrganizationService.getOrganization failed:", e);
+            return null;
+        }
+    },
+
+    async updateOrganization(orgId: string, data: any) {
+        if (typeof window === 'undefined' || !db) return;
+        try {
+            const { updateDoc, doc } = await import("firebase/firestore");
+            await updateDoc(doc(db, "organizations", orgId), data);
+        } catch (e) {
+            console.error("OrganizationService.updateOrganization failed:", e);
+            throw e;
+        }
     }
 };
