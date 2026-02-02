@@ -65,16 +65,24 @@ export const UserService = {
 };
 
 export const DashboardService = {
-    async getStats() {
-        if (typeof window === 'undefined' || !db) {
+    async getStats(organizationId: string) {
+        if (typeof window === 'undefined' || !db || !organizationId) {
             return { students: 0, teachers: 0, groups: 0, subjects: 0 };
         }
 
         try {
             const { collection, getCountFromServer, query, where } = await import("firebase/firestore");
 
-            const studentsQuery = query(collection(db, "users"), where("role", "==", "student"));
-            const teachersQuery = query(collection(db, "users"), where("role", "==", "teacher"));
+            const studentsQuery = query(
+                collection(db, "users"),
+                where("role", "==", "student"),
+                where("organizationId", "==", organizationId)
+            );
+            const teachersQuery = query(
+                collection(db, "users"),
+                where("role", "==", "teacher"),
+                where("organizationId", "==", organizationId)
+            );
 
             const [studentsSnap, teachersSnap] = await Promise.all([
                 getCountFromServer(studentsQuery),

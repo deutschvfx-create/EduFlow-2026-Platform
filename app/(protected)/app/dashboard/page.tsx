@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { FeaturePlaceholder } from "@/components/shared/feature-placeholder";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { useOrganization } from "@/hooks/use-organization";
 
 export default function DashboardPage() {
     const [stats, setStats] = useState({
@@ -26,14 +27,17 @@ export default function DashboardPage() {
 
     const [user, setUser] = useState<any>(null);
 
+    const { currentOrganizationId } = useOrganization();
+
     useEffect(() => {
         async function fetchStats() {
-            const data = await DashboardService.getStats();
+            if (!currentOrganizationId) return;
+            const data = await DashboardService.getStats(currentOrganizationId);
             setStats(data);
         }
         fetchStats();
         setUser(getStoredUser());
-    }, []);
+    }, [currentOrganizationId]);
 
     const isOwner = user ? (user.role === 'OWNER' || user.role === 'DIRECTOR') : false;
 
