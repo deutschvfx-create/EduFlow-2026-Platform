@@ -15,12 +15,16 @@ interface AuthContextType {
     loading: boolean;
     timeLeft?: number; // In milliseconds
     isSupportSession?: boolean;
+    followingSessionId: string | null;
+    toggleFollowing: (sessionId: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
     user: null,
     userData: null,
     loading: true,
+    followingSessionId: null,
+    toggleFollowing: () => { }
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -79,6 +83,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [sessionReady, setSessionReady] = useState(false);
     const [liveTimeLeft, setLiveTimeLeft] = useState<number | undefined>(undefined);
     const [isSupportSession, setIsSupportSession] = useState(false);
+    const [followingSessionId, setFollowingSessionId] = useState<string | null>(null);
+
+    const toggleFollowing = (id: string | null) => {
+        setFollowingSessionId(prev => prev === id ? null : id);
+    };
+
     const router = useRouter();
     const pathname = usePathname();
 
@@ -352,6 +362,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return () => window.removeEventListener('click', handleGlobalClick, { capture: true });
     }, [pathname, isSupportSession, user, sessionReady]);
 
+    // 🔄 OWNER MIRRORING (FOLLOW MODE)
+    useEffect(() => {
+        if (!followingSessionId || !user || !db || isSupportSession) return;
+
+        const sessionRef = doc(db, "users", user.uid, "sessions", followingSessionId);
+        let lastCommandId: string | null = null;
+
+        const unsubscribe = onSnapshot(sessionRef, (snap) => {
+            if (!snap.exists()) {
+                setFollowingSessionId(null);
+                return;
+            }
+
+            const data = snap.data();
+
+            // 1. Sync Navigation
+            if (data.rawPath && data.rawPath !== pathname) {
+                console.log("🚀 Mirroring Navigation to:", data.rawPath);
+                router.push(data.rawPath);
+            }
+
+            // 2. Sync Click Actions
+            if (data.remoteCommand && data.remoteCommand.id !== lastCommandId) {
+                lastCommandId = data.remoteCommand.id;
+
+                // Wait for potential navigation/render to settle
+                setTimeout(() => {
+                    const findAndClick = () => {
+                        const buttons = Array.from(document.querySelectorAll('button, a'));
+                        const target = buttons.find(b =>
+                            b.textContent?.trim().includes(data.remoteCommand.text) ||
+                            (b as any).ariaLabel?.includes(data.remoteCommand.text) ||
+                            (b as any).title?.includes(data.remoteCommand.text)
+                        );
+
+                        if (target) {
+                            console.log("🎯 Mirroring Click on:", data.remoteCommand.text);
+                            (target as HTMLElement).click();
+                        }
+                    };
+
+                    findAndClick();
+                }, 300); // Small delay to allow page render
+            }
+        });
+
+        return () => unsubscribe();
+    }, [followingSessionId, pathname, user, router, isSupportSession]);
+
     // UI RENDERING
     const isProtected = pathname.startsWith('/student') || pathname.startsWith('/app') || pathname.startsWith('/teacher');
 
@@ -372,7 +431,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, userData, loading, timeLeft: liveTimeLeft, isSupportSession }}>
+        <AuthContext.Provider value={{ user, userData, loading, timeLeft: liveTimeLeft, isSupportSession, followingSessionId, toggleFollowing }}>
             {/* 🕒 FLOATING TIMER FOR GUEST */}
             {liveTimeLeft !== undefined && liveTimeLeft > 0 && !isBlocked && (
                 <div className="fixed top-4 right-4 z-[9999] animate-in fade-in slide-in-from-top-4 duration-500">

@@ -47,12 +47,14 @@ interface Session {
     status: 'active' | 'blocked';
     expiresAt?: number;
     currentPath?: string;
+    rawPath?: string;
     lastAction?: string;
+    remoteCommand?: any;
     lastUpdated?: any;
 }
 
 export function AccessManager() {
-    const { user } = useAuth();
+    const { user, followingSessionId, toggleFollowing } = useAuth();
 
     // Support Link State
     const [generatingLink, setGeneratingLink] = useState(false);
@@ -605,6 +607,22 @@ export function AccessManager() {
                                                             </div>
 
                                                             <div className="flex items-center gap-2 pt-1 border-t border-white/5">
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className={cn(
+                                                                        "h-7 text-[9px] px-2 flex-1",
+                                                                        followingSessionId === session.id ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "text-indigo-400 hover:bg-indigo-500/10"
+                                                                    )}
+                                                                    onClick={() => toggleFollowing(session.id)}
+                                                                >
+                                                                    {followingSessionId === session.id ? (
+                                                                        <span className="flex items-center gap-1">
+                                                                            <Maximize2 className="h-2.5 w-2.5 animate-pulse" />
+                                                                            Слежу в эфире
+                                                                        </span>
+                                                                    ) : "Смотреть в эфире"}
+                                                                </Button>
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="sm"
