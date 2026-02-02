@@ -199,14 +199,14 @@ export default function SettingsPage() {
                 </div>
 
                 {isDisabled && (
-                    <div className="absolute inset-0 flex items-center justify-center rounded-xl overflow-hidden bg-zinc-950/20 backdrop-blur-[0.5px]">
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900/90 rounded-lg border border-zinc-800 shadow-2xl">
-                            <div className="relative flex h-1.5 w-1.5">
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-[2px] rounded-xl transition-all duration-300">
+                        <div className="flex items-center gap-2.5">
+                            <div className="relative flex h-2 w-2">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-yellow-500"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.6)]"></span>
                             </div>
-                            <span className="text-[9px] text-zinc-100 font-bold uppercase tracking-widest">
-                                НУЖЕН: {missingReqs.map(r => {
+                            <span className="text-[10px] text-white font-black uppercase tracking-widest drop-shadow-md">
+                                {missingReqs.map(r => {
                                     const names: any = { groups: 'ГРУППЫ', courses: 'ПРЕДМЕТЫ', schedule: 'РАСПИСАНИЕ', faculties: 'ФАКУЛЬТЕТЫ' };
                                     return names[r] || r.toUpperCase();
                                 }).join(', ')}
