@@ -31,7 +31,6 @@ import {
     Maximize2,
     Monitor,
     Smartphone,
-    Qty,
     QrCode,
     Link as LinkIcon,
     History,
@@ -40,6 +39,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/components/auth/auth-provider";
+import { AccessManager } from "./security/access-manager";
 import { compressImage } from "@/lib/utils";
 import { UserData, UserService, OrganizationService } from "@/lib/services/firestore";
 import { Slider } from "@/components/ui/slider";
