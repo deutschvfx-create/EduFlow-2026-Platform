@@ -101,14 +101,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         }, { merge: true });
 
                         // MONITOR THIS SESSION 
-                        unsubscribeSession = onSnapshot(sessionRef, (doc) => {
-                            if (!doc.exists()) {
-                                // If session deleted -> Force Logout
+                        unsubscribeSession = onSnapshot(sessionRef, (docSnap) => {
+                            if (!docSnap.exists()) {
+                                console.log("🚨 Session record deleted. Logging out...");
                                 auth.signOut();
                                 return;
                             }
 
-                            const status = doc.data()?.status;
+                            const data = docSnap.data();
+                            const status = data?.status;
+                            console.log("📡 Remote session status:", status);
+
                             if (status === 'blocked') {
                                 setIsBlocked(true);
                             } else {
