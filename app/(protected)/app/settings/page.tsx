@@ -247,26 +247,28 @@ export default function SettingsPage() {
         }, []);
 
         return (
-            <div className="bg-zinc-950/50 border border-zinc-900 rounded-2xl p-6 space-y-6 mt-12">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-4 border-b border-zinc-900/50">
-                    <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
-                            <RotateCcw className="h-6 w-6 text-amber-500" />
+            <div className="bg-zinc-950/30 border border-zinc-900/50 rounded-xl p-4 mt-6">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-3">
+                    <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-lg bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                            <RotateCcw className="h-4 w-4 text-amber-500" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-black text-white tracking-widest italic uppercase flex items-center gap-2">
+                            <h2 className="text-xs font-black text-white tracking-widest italic uppercase flex items-center gap-2">
                                 DATA CENTER
                                 <span className="h-1.5 w-1.5 bg-amber-500 rounded-full animate-pulse" />
                             </h2>
-                            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-0.5">Локальная БД и хранилище</p>
+                            <p className="text-[9px] text-zinc-500 font-medium uppercase tracking-wider mt-0.5">
+                                Локальное хранилище
+                            </p>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-5 gap-6">
+                    <div className="flex items-center gap-4 bg-zinc-900/40 rounded-lg px-3 py-1.5 border border-zinc-900/50">
                         {Object.entries(stats).map(([key, count]) => (
-                            <div key={key} className="flex flex-col items-center">
-                                <span className="text-base font-black text-white">{count}</span>
-                                <span className="text-[8px] text-zinc-600 font-bold uppercase tracking-tighter">
+                            <div key={key} className="flex flex-col items-center px-1">
+                                <span className="text-[10px] font-black text-white leading-none">{count}</span>
+                                <span className="text-[7px] text-zinc-600 font-bold uppercase tracking-wider mt-0.5">
                                     {key === 'students' && 'Студ.'}
                                     {key === 'teachers' && 'Преп.'}
                                     {key === 'groups' && 'Группы'}
@@ -278,10 +280,10 @@ export default function SettingsPage() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-t border-zinc-900/50 pt-3">
                     <Button
                         variant="ghost"
-                        className="h-14 rounded-xl bg-zinc-900/40 hover:bg-zinc-800/60 border border-zinc-800 text-zinc-400 font-bold group"
+                        className="h-9 rounded-lg bg-zinc-900/30 hover:bg-zinc-800/50 border border-zinc-900/50 text-zinc-400 hover:text-zinc-200 font-medium group"
                         onClick={() => {
                             const data = {
                                 students: localStorage.getItem('eduflow.students'),
@@ -297,23 +299,23 @@ export default function SettingsPage() {
                             a.href = url;
                             a.download = `eduflow-backup-${new Date().toISOString().split('T')[0]}.json`;
                             a.click();
-                            showToast("Резервная копия скачана");
+                            showToast("Резервная копия скачана", "success");
                         }}
                     >
-                        <div className="flex items-center gap-3">
-                            <Upload className="h-4 w-4 text-indigo-400" />
-                            <span className="text-xs uppercase tracking-widest font-black">Экспорт JSON</span>
+                        <div className="flex items-center gap-2">
+                            <Upload className="h-3.5 w-3.5 text-indigo-500/70 group-hover:scale-110 transition-transform" />
+                            <span className="text-[9px] uppercase tracking-wider">Экспорт</span>
                         </div>
                     </Button>
 
                     <div className="relative group">
                         <Button
                             variant="ghost"
-                            className="h-14 w-full rounded-xl bg-zinc-900/40 hover:bg-zinc-800/60 border border-zinc-800 text-zinc-400 font-bold"
+                            className="h-9 w-full rounded-lg bg-zinc-900/30 hover:bg-zinc-800/50 border border-zinc-900/50 text-zinc-400 hover:text-zinc-200 font-medium"
                         >
-                            <div className="flex items-center gap-3">
-                                <RotateCcw className="h-4 w-4 text-emerald-400" />
-                                <span className="text-xs uppercase tracking-widest font-black">Импорт JSON</span>
+                            <div className="flex items-center gap-2">
+                                <RotateCcw className="h-3.5 w-3.5 text-emerald-500/70 group-hover:rotate-180 transition-transform duration-500" />
+                                <span className="text-[9px] uppercase tracking-wider">Импорт</span>
                             </div>
                         </Button>
                         <input
@@ -333,7 +335,7 @@ export default function SettingsPage() {
                                         if (data.courses) localStorage.setItem('eduflow.courses', data.courses);
                                         if (data.announcements) localStorage.setItem('eduflow.announcements', data.announcements);
                                         if (data.modules) localStorage.setItem('eduflow-modules-config', data.modules);
-                                        showToast("Данные успешно импортированы!");
+                                        showToast("Данные успешно импортированы!", "success");
                                         setTimeout(() => window.location.reload(), 1000);
                                     } catch (err) {
                                         alert("Ошибка импорта: Неверный формат файла");
@@ -346,7 +348,7 @@ export default function SettingsPage() {
 
                     <Button
                         variant="ghost"
-                        className="h-14 rounded-xl bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 text-red-500/70 hover:text-red-400 font-bold"
+                        className="h-9 rounded-lg bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 text-red-500/60 hover:text-red-400 font-medium group"
                         onClick={() => {
                             if (confirm("ВНИМАНИЕ: Это полностью очистит локальную базу данных. Продолжить?")) {
                                 const keys = ['eduflow.students', 'eduflow.teachers', 'eduflow.groups', 'eduflow.courses', 'eduflow.announcements', 'eduflow-modules-config'];
@@ -356,9 +358,9 @@ export default function SettingsPage() {
                             }
                         }}
                     >
-                        <div className="flex items-center gap-3">
-                            <Zap className="h-4 w-4" />
-                            <span className="text-xs uppercase tracking-widest font-black">СБРОС ДАННЫХ</span>
+                        <div className="flex items-center gap-2">
+                            <Zap className="h-3.5 w-3.5 text-red-500/70 group-hover:scale-125 transition-transform" />
+                            <span className="text-[9px] uppercase tracking-wider">Сброс</span>
                         </div>
                     </Button>
                 </div>
