@@ -5,10 +5,15 @@ import { adminAuth } from "@/lib/firebase-admin";
 export async function POST(req: NextRequest) {
     try {
         // 1. Get the ID token from the request headers
-        const authHeader = req.headers.get("Authorization");
         if (!authHeader?.startsWith("Bearer ")) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+
+        if (!adminAuth) {
+            console.error("Firebase Admin not initialized (Missing Env Vars)");
+            return NextResponse.json({ error: "Server Configuration Error" }, { status: 500 });
+        }
+
         const idToken = authHeader.split("Bearer ")[1];
 
         // 2. Verify the ID token using Firebase Admin
