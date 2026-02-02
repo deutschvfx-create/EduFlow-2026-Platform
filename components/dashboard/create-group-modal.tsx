@@ -33,6 +33,9 @@ const toast = { success: (m: string) => alert(m), error: (m: string) => alert(m)
 import { useModules } from '@/hooks/use-modules';
 import { Faculty } from '@/lib/types/faculty';
 import { Department } from '@/lib/types/department';
+import { useTeachers } from '@/hooks/use-teachers';
+import { useFaculties } from '@/hooks/use-faculties';
+import { useDepartments } from '@/hooks/use-departments';
 
 interface CreateGroupModalProps {
     onSuccess: () => void;
@@ -47,27 +50,19 @@ export function CreateGroupModal({ onSuccess }: CreateGroupModalProps) {
     const [facultyId, setFacultyId] = useState<string>('default');
     const [departmentId, setDepartmentId] = useState<string>('default');
 
-    const [teachers, setTeachers] = useState<Teacher[]>([]);
-    const [faculties, setFaculties] = useState<Faculty[]>([]);
-    const [departments, setDepartments] = useState<Department[]>([]);
+    const { teachers } = useTeachers();
+    const { faculties } = useFaculties();
+    const { departments } = useDepartments();
 
+    // Reset fields when modal closes
     useEffect(() => {
-        if (open && currentOrganizationId) {
-            import("@/lib/data/teachers.repo").then(({ teachersRepo }) => {
-                teachersRepo.getAll(currentOrganizationId).then(setTeachers);
-            });
-            if (modules.faculties) {
-                import("@/lib/data/faculties.repo").then(({ facultiesRepo }) => {
-                    facultiesRepo.getAll(currentOrganizationId).then(setFaculties);
-                });
-            }
-            if (modules.departments) {
-                import("@/lib/data/departments.repo").then(({ departmentsRepo }) => {
-                    departmentsRepo.getAll(currentOrganizationId).then(setDepartments);
-                });
-            }
+        if (!open) {
+            setName('');
+            setTeacher('');
+            setFacultyId('default');
+            setDepartmentId('default');
         }
-    }, [open, currentOrganizationId, modules.faculties, modules.departments]);
+    }, [open]);
 
     const filteredDepartments = departmentId === 'default'
         ? departments.filter(d => facultyId === 'default' || d.facultyId === facultyId)

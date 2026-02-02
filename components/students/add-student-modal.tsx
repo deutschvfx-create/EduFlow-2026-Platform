@@ -12,6 +12,7 @@ import { useEffect } from "react";
 import { Group } from "@/lib/types/group";
 import { generateId } from "@/lib/utils";
 import { useOrganization } from "@/hooks/use-organization";
+import { useGroups } from "@/hooks/use-groups";
 
 export function AddStudentModal() {
     const [open, setOpen] = useState(false);
@@ -23,15 +24,8 @@ export function AddStudentModal() {
     const [lastName, setLastName] = useState("");
     const [birthDate, setBirthDate] = useState("");
     const [groupId, setGroupId] = useState("");
-    const [groups, setGroups] = useState<Group[]>([]);
 
-    useEffect(() => {
-        if (open && currentOrganizationId) {
-            import("@/lib/data/groups.repo").then(({ groupsRepo }) => {
-                groupsRepo.getAll(currentOrganizationId).then(setGroups);
-            });
-        }
-    }, [open, currentOrganizationId]);
+    const { groups } = useGroups();
 
     const handleManualSubmit = async () => {
         if (!firstName || !lastName || !birthDate) {

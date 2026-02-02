@@ -13,6 +13,9 @@ import { Teacher } from "@/lib/types/teacher";
 import { Faculty } from "@/lib/types/faculty";
 import { Department } from "@/lib/types/department";
 import { Group, GroupStatus } from "@/lib/types/group";
+import { useTeachers } from "@/hooks/use-teachers";
+import { useFaculties } from "@/hooks/use-faculties";
+import { useDepartments } from "@/hooks/use-departments";
 
 interface EditGroupModalProps {
     group: Group | null;
@@ -26,6 +29,11 @@ export function EditGroupModal({ group, open, onOpenChange, onSave }: EditGroupM
     const { modules } = useModules();
     const [loading, setLoading] = useState(false);
 
+    // Real-time Data
+    const { teachers } = useTeachers();
+    const { faculties } = useFaculties();
+    const { departments: allDepartments } = useDepartments();
+
     // Form State
     const [name, setName] = useState("");
     const [code, setCode] = useState("");
@@ -36,23 +44,7 @@ export function EditGroupModal({ group, open, onOpenChange, onSave }: EditGroupM
     const [curatorId, setCuratorId] = useState("");
     const [maxStudents, setMaxStudents] = useState("15");
     const [status, setStatus] = useState<GroupStatus>("ACTIVE");
-    const [teachers, setTeachers] = useState<Teacher[]>([]);
-    const [faculties, setFaculties] = useState<Faculty[]>([]);
-    const [allDepartments, setAllDepartments] = useState<Department[]>([]);
-
-    useEffect(() => {
-        if (open && currentOrganizationId) {
-            Promise.all([
-                import("@/lib/data/teachers.repo").then(m => m.teachersRepo.getAll(currentOrganizationId)),
-                import("@/lib/data/faculties.repo").then(m => m.facultiesRepo.getAll(currentOrganizationId)),
-                import("@/lib/data/departments.repo").then(m => m.departmentsRepo.getAll(currentOrganizationId))
-            ]).then(([t, f, d]) => {
-                setTeachers(t);
-                setFaculties(f);
-                setAllDepartments(d);
-            });
-        }
-    }, [open, currentOrganizationId]);
+    // Removed local state for teachers/faculties/departments
 
     useEffect(() => {
         if (group) {

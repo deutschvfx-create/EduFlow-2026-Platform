@@ -15,6 +15,8 @@ import { ModuleGuard } from "@/components/system/module-guard";
 import { useOrganization } from "@/hooks/use-organization";
 import { groupsRepo } from "@/lib/data/groups.repo";
 
+import { useGroups } from "@/hooks/use-groups";
+
 export default function GroupsPage() {
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
@@ -26,36 +28,9 @@ export default function GroupsPage() {
     const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
 
     // Filter Logic
-    const [groups, setGroups] = useState<Group[]>([]);
-    const [isLoaded, setIsLoaded] = useState(false);
+    const { groups, loading } = useGroups();
     const [error, setError] = useState<string | null>(null);
     const { currentOrganizationId } = useOrganization();
-
-    const loadGroups = (orgId: string) => {
-        setIsLoaded(false);
-        setError(null);
-        import("@/lib/data/groups.repo").then(async ({ groupsRepo }) => {
-            try {
-                const data = await groupsRepo.getAll(orgId);
-                setGroups(data as any);
-                setIsLoaded(true);
-            } catch (err: any) {
-                console.error("Groups load error:", err);
-                setError(err.message || "Не удалось загрузить группы");
-                setIsLoaded(true);
-            }
-        }).catch(err => {
-            console.error("Repo import error:", err);
-            setError("Ошибка загрузки модуля");
-            setIsLoaded(true);
-        });
-    };
-
-    useEffect(() => {
-        if (currentOrganizationId) {
-            loadGroups(currentOrganizationId);
-        }
-    }, [currentOrganizationId]);
 
     // Filter Logic
     // Filter Logic
@@ -77,7 +52,7 @@ export default function GroupsPage() {
     const inactive = groups.filter(s => s.status === 'INACTIVE').length;
     const archived = groups.filter(s => s.status === 'ARCHIVED').length;
 
-    if (!isLoaded) return (
+    if (loading) return (
         <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4 text-zinc-500">
             <div className="h-10 w-10 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
             <p className="font-medium animate-pulse">Загрузка групп...</p>
@@ -93,10 +68,8 @@ export default function GroupsPage() {
         if (!currentOrganizationId) return;
         try {
             const { groupsRepo } = await import("@/lib/data/groups.repo");
-            const group = groups.find(g => g.id === id);
-            if (!group) return;
-            await groupsRepo.update(currentOrganizationId, group.id, updates);
-            setGroups(prev => prev.map(g => g.id === id ? { ...g, ...updates } : g));
+            await groupsRepo.update(currentOrganizationId, id, updates);
+            // Real-time hook will update automatically
         } catch (error) {
             console.error(error);
             alert("Ошибка при обновлении группы");
@@ -123,10 +96,10 @@ export default function GroupsPage() {
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => loadGroups(currentOrganizationId!)}
+                                    onClick={() => setError(null)}
                                     className="mt-4 border-red-500/50 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-black uppercase tracking-widest text-[10px] h-10 rounded-xl px-6"
                                 >
-                                    <RefreshCcw className="mr-2 h-3 w-3" /> Попробовать снова
+                                    <RefreshCcw className="mr-2 h-3 w-3" /> Сбросить ошибку
                                 </Button>
                             </div>
                         </motion.div>

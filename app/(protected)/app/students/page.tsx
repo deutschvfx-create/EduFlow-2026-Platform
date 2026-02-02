@@ -14,54 +14,26 @@ import { useOrganization } from "@/hooks/use-organization";
 import { StudentCards } from "@/components/students/student-cards";
 import { LayoutGrid, List } from "lucide-react";
 
+import { useStudents } from "@/hooks/use-students";
+
 export default function StudentsPage() {
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [groupFilter, setGroupFilter] = useState("all");
     const [viewMode, setViewMode] = useState<"table" | "cards">("table");
 
-    // Filter Logic
-    const [students, setStudents] = useState<any[]>([]);
-    const [isLoaded, setIsLoaded] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const { students, loading } = useStudents();
     const { currentOrganizationId } = useOrganization();
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const savedView = localStorage.getItem("students-view-preference") as "table" | "cards";
         if (savedView) setViewMode(savedView);
-
-        if (!currentOrganizationId) {
-            setIsLoaded(false);
-            return;
-        }
-        loadStudents(currentOrganizationId);
-    }, [currentOrganizationId]);
+    }, []);
 
     const toggleView = (mode: "table" | "cards") => {
         setViewMode(mode);
         localStorage.setItem("students-view-preference", mode);
-    };
-
-    const loadStudents = (orgId: string) => {
-        console.log(`[StudentsPage] Loading students for org: ${orgId}`);
-        import("@/lib/data/students.repo")
-            .then(async ({ studentsRepo }) => {
-                try {
-                    const data = await studentsRepo.getAll(orgId);
-                    console.log(`[StudentsPage] Loaded ${data.length} students`);
-                    setStudents(data);
-                    setError(null);
-                } catch (err: any) {
-                    console.error("[StudentsPage] Failed to load students:", err);
-                    setError(err.message || "Ошибка при загрузке студентов");
-                } finally {
-                    setIsLoaded(true);
-                }
-            })
-            .catch(err => {
-                console.error("[StudentsPage] Failed to import repo:", err);
-                setIsLoaded(true);
-            });
     };
 
     const handleAction = async (action: string, id: string) => {
@@ -74,7 +46,7 @@ export default function StudentsPage() {
                 if (confirm("Вы уверены?")) await studentsRepo.update(currentOrganizationId, id, { status: 'ARCHIVED' } as any);
                 else return;
             }
-            loadStudents(currentOrganizationId);
+            // Real-time hook will update automatically
         } catch (error) {
             console.error(error);
             alert("Ошибка при выполнении действия");
@@ -101,7 +73,7 @@ export default function StudentsPage() {
     const pending = students.filter(s => s.status === 'PENDING').length;
     const suspended = students.filter(s => s.status === 'SUSPENDED').length;
 
-    if (!isLoaded && !error) return <div className="p-8 text-zinc-500 font-bold uppercase tracking-widest animate-pulse">Загрузка данных...</div>;
+    if (loading && !error) return <div className="p-8 text-zinc-500 font-bold uppercase tracking-widest animate-pulse">Загрузка данных...</div>;
 
     return (
         <ModuleGuard module="students">
@@ -124,13 +96,12 @@ export default function StudentsPage() {
                                     variant="outline"
                                     size="sm"
                                     onClick={() => {
-                                        setIsLoaded(false);
                                         setError(null);
-                                        loadStudents(currentOrganizationId!);
+                                        // Refetch not needed with real-time listeners unless auth changed
                                     }}
                                     className="mt-4 border-red-500/50 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-black uppercase tracking-widest text-[10px] h-10 rounded-xl px-6"
                                 >
-                                    <RefreshCcw className="mr-2 h-3 w-3" /> Попробовать снова
+                                    <RefreshCcw className="mr-2 h-3 w-3" /> Сбросить ошибку
                                 </Button>
                             </div>
                         </motion.div>
