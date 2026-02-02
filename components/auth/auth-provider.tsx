@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { doc, onSnapshot, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, onSnapshot, setDoc, serverTimestamp, getDoc, updateDoc } from "firebase/firestore";
 import { UserData } from "@/lib/services/firestore";
 import { useRouter, usePathname } from "next/navigation";
 import { PauseCircle } from "lucide-react";
@@ -90,15 +90,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     const { type, name } = getDeviceInfo();
 
                     try {
-                        await setDoc(sessionRef, {
-                            id: deviceId,
-                            device: name,
-                            userAgent: navigator.userAgent,
-                            lastActive: serverTimestamp(),
-                            isCurrent: true,
-                            type: type,
-                            status: 'active'
-                        }, { merge: true });
+                        // Check if session already exists to avoid overwriting 'blocked' status
+                        const sessionSnap = await getDoc(sessionRef);
+
+                        if (!sessionSnap.exists()) {
+                            await setDoc(sessionRef, {
+                                id: deviceId,
+                                device: name,
+                                userAgent: navigator.userAgent,
+                                lastActive: serverTimestamp(),
+                                isCurrent: true,
+                                type: type,
+                                status: 'active'
+                            });
+                        } else {
+                            // Just update activity and metadata, but NOT status
+                            await updateDoc(sessionRef, {
+                                lastActive: serverTimestamp(),
+                                device: name,
+                                isCurrent: true
+                            });
+                        }
 
                         // MONITOR THIS SESSION 
                         unsubscribeSession = onSnapshot(sessionRef, (docSnap) => {
