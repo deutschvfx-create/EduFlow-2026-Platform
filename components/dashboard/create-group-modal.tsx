@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect } from 'react';
 import { Teacher } from '@/lib/types/teacher';
 import { Layers } from "lucide-react";
-import { generateId } from "@/lib/utils";
+import { generateId, generateReadableId } from "@/lib/utils";
 import { useOrganization } from "@/hooks/use-organization";
 // import { toast } from "sonner";
 const toast = { success: (m: string) => alert(m), error: (m: string) => alert(m) }; // Using custom toast or this if available, reverting to alert if needed or custom hook from settings? 
@@ -74,7 +74,7 @@ export function CreateGroupModal({ onSuccess }: CreateGroupModalProps) {
         try {
             const { groupsRepo } = await import("@/lib/data/groups.repo");
             await groupsRepo.add(currentOrganizationId, {
-                id: generateId(),
+                id: generateReadableId(name),
                 organizationId: currentOrganizationId,
                 name,
                 curatorTeacherId: teacher || undefined,

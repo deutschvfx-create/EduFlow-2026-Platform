@@ -8,7 +8,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GraduationCap } from "lucide-react";
-import { generateId } from "@/lib/utils";
+import { generateId, generateReadableId } from "@/lib/utils";
 import { useOrganization } from "@/hooks/use-organization";
 
 interface CreateTeacherModalProps {
@@ -27,7 +27,7 @@ export function CreateTeacherModal({ onSuccess }: CreateTeacherModalProps) {
         try {
             const { teachersRepo } = await import("@/lib/data/teachers.repo");
             await teachersRepo.add(currentOrganizationId, {
-                id: generateId(),
+                id: generateReadableId(`${firstName}-${lastName}`),
                 organizationId: currentOrganizationId,
                 firstName,
                 lastName,

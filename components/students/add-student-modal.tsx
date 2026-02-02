@@ -9,8 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, QrCode, Mail, Camera, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEffect } from "react";
-import { Group } from "@/lib/types/group";
-import { generateId } from "@/lib/utils";
+import { generateId, generateReadableId } from "@/lib/utils";
 import { useOrganization } from "@/hooks/use-organization";
 import { useGroups } from "@/hooks/use-groups";
 
@@ -48,7 +47,7 @@ export function AddStudentModal() {
         try {
             const { studentsRepo } = await import("@/lib/data/students.repo");
             await studentsRepo.add(currentOrganizationId!, {
-                id: generateId(),
+                id: generateReadableId(`${firstName}-${lastName}`),
                 organizationId: currentOrganizationId!,
                 firstName,
                 lastName,
