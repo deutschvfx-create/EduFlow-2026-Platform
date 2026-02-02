@@ -4,15 +4,19 @@
 import React, { useState } from 'react';
 import { useConnectivity } from '@/lib/connectivity-context';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wifi, WifiOff, Globe, Zap, Clock } from 'lucide-react';
+import { Wifi, WifiOff, Globe, Zap, Clock, X } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { useAuth } from '@/components/auth/auth-provider';
 
 export function ConnectivityHub() {
     const { isOnline, latency, lastSync, downlink } = useConnectivity();
+    const { user, isSupportSession, followingSessionId, stopMirroring } = useAuth();
+    const isLive = isSupportSession || !!followingSessionId;
     const [isHovered, setIsHovered] = useState(false);
 
     const getStatusColor = () => {
+        if (isLive) return 'bg-rose-500';
         if (!isOnline) return 'bg-red-500';
         if (latency && latency > 1000) return 'bg-yellow-500';
         return 'bg-emerald-500';
@@ -35,6 +39,7 @@ export function ConnectivityHub() {
                     flex items-center gap-3 px-3 py-1 rounded-full 
                     bg-zinc-900/60 backdrop-blur-md border border-white/10
                     shadow-2xl cursor-default select-none
+                    ${isLive ? 'border-rose-500/30 bg-rose-950/20' : ''}
                 `}
             >
                 <div className="relative">
@@ -43,12 +48,22 @@ export function ConnectivityHub() {
                 </div>
 
                 <div className="flex items-center gap-2 text-[10px] font-medium tracking-tight text-zinc-400">
-                    <span className="flex items-center gap-1">
-                        {isOnline ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3 text-red-400" />}
-                        {isOnline ? 'Онлайн' : 'Оффлайн'}
-                    </span>
+                    {isLive ? (
+                        <span className="flex items-center gap-1.5 text-rose-400 font-bold uppercase tracking-widest animate-pulse">
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                            </span>
+                            В эфире
+                        </span>
+                    ) : (
+                        <span className="flex items-center gap-1">
+                            {isOnline ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3 text-red-400" />}
+                            {isOnline ? 'Онлайн' : 'Оффлайн'}
+                        </span>
+                    )}
 
-                    {isOnline && (
+                    {!isLive && isOnline && (
                         <>
                             <span className="h-3 w-px bg-white/10" />
                             <span className="flex items-center gap-1">
@@ -56,6 +71,19 @@ export function ConnectivityHub() {
                                 {getLatencyText()}
                             </span>
                         </>
+                    )}
+
+                    {isLive && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                stopMirroring();
+                            }}
+                            className="ml-1 p-0.5 hover:bg-rose-500/20 rounded-md text-rose-400 transition-colors"
+                            title="Остановить эфир"
+                        >
+                            <X className="h-3.5 w-3.5" />
+                        </button>
                     )}
                 </div>
             </motion.div>

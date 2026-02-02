@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { doc, onSnapshot, setDoc, serverTimestamp, getDoc, updateDoc } from "firebase/firestore";
+import { doc, onSnapshot, setDoc, serverTimestamp, getDoc, updateDoc, collection, query, where } from "firebase/firestore";
 import { UserData } from "@/lib/services/firestore";
 import { useRouter, usePathname } from "next/navigation";
 import { PauseCircle, Timer } from "lucide-react";
@@ -17,6 +17,7 @@ interface AuthContextType {
     isSupportSession?: boolean;
     followingSessionId: string | null;
     toggleFollowing: (sessionId: string | null) => void;
+    stopMirroring: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -24,7 +25,8 @@ const AuthContext = createContext<AuthContextType>({
     userData: null,
     loading: true,
     followingSessionId: null,
-    toggleFollowing: () => { }
+    toggleFollowing: () => { },
+    stopMirroring: () => { }
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -87,6 +89,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const toggleFollowing = (id: string | null) => {
         setFollowingSessionId(prev => prev === id ? null : id);
+    };
+
+    const stopMirroring = async () => {
+        if (isSupportSession && user && db) {
+            const deviceId = localStorage.getItem('eduflow_device_id');
+            if (deviceId) {
+                const sessionRef = doc(db, "users", user.uid, "sessions", deviceId);
+                await updateDoc(sessionRef, { status: 'paused', lastUpdated: serverTimestamp() });
+            }
+        } else {
+            setFollowingSessionId(null);
+        }
     };
 
     const router = useRouter();
@@ -308,7 +322,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, [user, userData, loading, sessionReady, pathname, router]);
 
-    // 🛡️ GUEST TELEMETRY (CO-BROWSING)
+    // 🛡️ AUTO-FOLLOW SUPPORT SESSIONS (FOR OWNER)
+    useEffect(() => {
+        if (!user || !db || isSupportSession) return;
+
+        const sessionsRef = collection(db, "users", user.uid, "sessions");
+        const q = query(sessionsRef, where("type", "==", "support"), where("status", "==", "active"));
+
+        const unsubscribe = onSnapshot(q, (snap) => {
+            const activeSupportSession = snap.docs.find(doc => {
+                const data = doc.data();
+                // Consider session active if updated in the last 2 minutes
+                const lastUpdated = data.lastUpdated?.toMillis() || 0;
+                return Date.now() - lastUpdated < 120000;
+            });
+
+            if (activeSupportSession) {
+                if (followingSessionId !== activeSupportSession.id) {
+                    console.log("🦾 Auto-following guest session:", activeSupportSession.id);
+                    setFollowingSessionId(activeSupportSession.id);
+                }
+            } else if (followingSessionId) {
+                // If the guest is gone, stop following
+                setFollowingSessionId(null);
+            }
+        });
+
+        return () => unsubscribe();
+    }, [user, isSupportSession, followingSessionId]);
+
+    // 🛡️ GUEST TELEMETRY & OWNER SYNC (BIDIRECTIONAL)
+    const isMirroringRef = useRef(false);
     useEffect(() => {
         if (!isSupportSession || !user || !db || !sessionReady) return;
 
@@ -345,17 +389,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             lastUpdated: serverTimestamp()
         }).catch(e => console.error("Telemetry Path Error:", e));
 
-        // 2. Sync Last Action (Clicks)
+        // 2. Sync Actions (Guest to Owner)
         const handleGlobalClick = (e: MouseEvent) => {
+            if (isMirroringRef.current) return;
             const target = e.target as HTMLElement;
-            // Capture anything interactive or meaningful
             const element = target.closest('button') || target.closest('a') || target.closest('[role="button"]') || (window.getComputedStyle(target).cursor === 'pointer' ? target : null);
 
             if (element) {
                 const actionText = element.textContent?.trim().substring(0, 40) || (element as any).ariaLabel || (element as any).title || "Действие";
 
                 updateDoc(sessionRef, {
-                    lastAction: `Нажал "${actionText}"`,
+                    lastAction: `Гость нажал "${actionText}"`,
                     remoteCommand: {
                         id: Math.random().toString(36).substr(2, 9),
                         type: 'click',
@@ -369,7 +413,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
 
         window.addEventListener('click', handleGlobalClick, { capture: true });
-        return () => window.removeEventListener('click', handleGlobalClick, { capture: true });
+
+        // 3. Listen for Owner Commands (Owner to Guest)
+        let lastOwnerCommandId: string | null = null;
+        const unsubscribe = onSnapshot(sessionRef, (snap) => {
+            const data = snap.data();
+            if (!data || !data.ownerCommand || data.ownerCommand.id === lastOwnerCommandId) return;
+
+            lastOwnerCommandId = data.ownerCommand.id;
+            console.log("👨‍🏫 Mirroring Owner Navigation to:", data.ownerCommand.path);
+            if (data.ownerCommand.path && data.ownerCommand.path !== normalizedPath) {
+                router.push(data.ownerCommand.path);
+            }
+
+            if (data.ownerCommand.type === 'click') {
+                console.log("👨‍🏫 Mirroring Owner Click:", data.ownerCommand.text);
+                // Use the same robust findAndClick logic as owner side
+                let attempts = 0;
+                const interval = setInterval(() => {
+                    attempts++;
+                    const elements = Array.from(document.querySelectorAll('button, a, [role="button"], .cursor-pointer'));
+                    const target = elements.find(el => {
+                        const match = data.ownerCommand.text.toLowerCase();
+                        return el.textContent?.toLowerCase().includes(match) || (el as any).ariaLabel?.toLowerCase().includes(match);
+                    });
+                    if (target) {
+                        isMirroringRef.current = true;
+                        (target as HTMLElement).click();
+                        setTimeout(() => { isMirroringRef.current = false; }, 100);
+                        clearInterval(interval);
+                    } else if (attempts >= 10) clearInterval(interval);
+                }, 400);
+            }
+        });
+
+        return () => {
+            window.removeEventListener('click', handleGlobalClick, { capture: true });
+            unsubscribe();
+        };
     }, [pathname, isSupportSession, user, sessionReady]);
 
     // 🔄 OWNER MIRRORING (FOLLOW MODE)
@@ -378,6 +459,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!followingSessionId || !user || !db || isSupportSession) return;
 
         const sessionRef = doc(db, "users", user.uid, "sessions", followingSessionId);
+        const normalizedCurrentPath = pathname.replace(/\/$/, "");
 
         const unsubscribe = onSnapshot(sessionRef, (snap) => {
             if (!snap.exists()) {
@@ -386,7 +468,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
 
             const data = snap.data();
-            const normalizedCurrentPath = pathname.replace(/\/$/, "");
 
             // 1. Sync Navigation
             if (data.rawPath && data.rawPath !== normalizedCurrentPath) {
@@ -422,7 +503,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                         if (target) {
                             console.log("🎯 Mirroring Click ON:", data.remoteCommand.text);
+                            isMirroringRef.current = true;
                             (target as HTMLElement).click();
+                            setTimeout(() => { isMirroringRef.current = false; }, 100);
                             clearInterval(interval);
                             return true;
                         }
@@ -436,7 +519,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
         });
 
-        return () => unsubscribe();
+        // 3. Capture Owner Actions to Sync Back to Guest
+        const handleOwnerClick = (e: MouseEvent) => {
+            if (isMirroringRef.current) return;
+            const target = e.target as HTMLElement;
+            const element = target.closest('button') || target.closest('a') || target.closest('[role="button"]') || (window.getComputedStyle(target).cursor === 'pointer' ? target : null);
+            if (element) {
+                const actionText = element.textContent?.trim().substring(0, 40) || (element as any).ariaLabel || (element as any).title || "Действие";
+                updateDoc(sessionRef, {
+                    ownerCommand: {
+                        id: Math.random().toString(36).substr(2, 9),
+                        type: 'click',
+                        text: actionText,
+                        path: normalizedCurrentPath,
+                        timestamp: Date.now()
+                    },
+                    lastUpdated: serverTimestamp()
+                }).catch(e => console.error("Owner Telemetry Error:", e));
+            }
+        };
+
+        window.addEventListener('click', handleOwnerClick, { capture: true });
+
+        return () => {
+            unsubscribe();
+            window.removeEventListener('click', handleOwnerClick, { capture: true });
+        };
     }, [followingSessionId, pathname, user, router, isSupportSession]);
 
     // UI RENDERING
@@ -459,7 +567,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, userData, loading, timeLeft: liveTimeLeft, isSupportSession, followingSessionId, toggleFollowing }}>
+        <AuthContext.Provider value={{ user, userData, loading, timeLeft: liveTimeLeft, isSupportSession, followingSessionId, toggleFollowing, stopMirroring }}>
             {/* 🕒 FLOATING TIMER FOR GUEST */}
             {liveTimeLeft !== undefined && liveTimeLeft > 0 && !isBlocked && (
                 <div className="fixed top-4 right-4 z-[9999] animate-in fade-in slide-in-from-top-4 duration-500">
