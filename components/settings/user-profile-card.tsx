@@ -680,10 +680,7 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                 )}
 
                                 {activeTab === "access" && (
-                                    <div className="text-center py-10 text-zinc-500">
-                                        <Monitor className="h-10 w-10 mx-auto mb-3 opacity-20" />
-                                        <p className="text-sm">Центр управления доступом и сессиями в разработке...</p>
-                                    </div>
+                                    <AccessManager />
                                 )}
                             </div>
                         </CardContent>
