@@ -280,10 +280,10 @@ export default function SettingsPage() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 border-t border-zinc-900/50 pt-3">
+                <div className="flex flex-wrap items-center justify-start gap-3 border-t border-zinc-900/50 pt-3">
                     <Button
                         variant="ghost"
-                        className="h-9 rounded-lg bg-zinc-900/30 hover:bg-zinc-800/50 border border-zinc-900/50 text-zinc-400 hover:text-zinc-200 font-medium group"
+                        className="h-9 px-4 rounded-lg bg-zinc-900/30 hover:bg-zinc-800/50 border border-zinc-900/50 text-zinc-400 hover:text-zinc-200 font-medium group"
                         onClick={() => {
                             const data = {
                                 students: localStorage.getItem('eduflow.students'),
@@ -311,7 +311,7 @@ export default function SettingsPage() {
                     <div className="relative group">
                         <Button
                             variant="ghost"
-                            className="h-9 w-full rounded-lg bg-zinc-900/30 hover:bg-zinc-800/50 border border-zinc-900/50 text-zinc-400 hover:text-zinc-200 font-medium"
+                            className="h-9 px-4 rounded-lg bg-zinc-900/30 hover:bg-zinc-800/50 border border-zinc-900/50 text-zinc-400 hover:text-zinc-200 font-medium"
                         >
                             <div className="flex items-center gap-2">
                                 <RotateCcw className="h-3.5 w-3.5 text-emerald-500/70 group-hover:rotate-180 transition-transform duration-500" />
@@ -346,9 +346,11 @@ export default function SettingsPage() {
                         />
                     </div>
 
+                    <div className="flex-1" />
+
                     <Button
                         variant="ghost"
-                        className="h-9 rounded-lg bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 text-red-500/60 hover:text-red-400 font-medium group"
+                        className="h-9 px-4 rounded-lg bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 text-red-500/60 hover:text-red-400 font-medium group"
                         onClick={() => {
                             if (confirm("ВНИМАНИЕ: Это полностью очистит локальную базу данных. Продолжить?")) {
                                 const keys = ['eduflow.students', 'eduflow.teachers', 'eduflow.groups', 'eduflow.courses', 'eduflow.announcements', 'eduflow-modules-config'];
