@@ -76,10 +76,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
 
     useEffect(() => {
-        let unsubscribeSnapshot: (() => void) | null = null;
-        let unsubscribeSession: (() => void) | null = null;
+        let unsubscribeSnapshot: any = null;
+        let unsubscribeSession: any = null;
 
         const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+            // Clean up previous listeners if user changes or auth state re-triggers
+            if (unsubscribeSnapshot) {
+                unsubscribeSnapshot();
+                unsubscribeSnapshot = null;
+            }
+            if (unsubscribeSession) {
+                unsubscribeSession();
+                unsubscribeSession = null;
+            }
+
             setUser(firebaseUser);
 
             if (firebaseUser) {
