@@ -46,6 +46,9 @@ interface Session {
     type: 'desktop' | 'mobile' | 'support';
     status: 'active' | 'blocked';
     expiresAt?: number;
+    currentPath?: string;
+    lastAction?: string;
+    lastUpdated?: any;
 }
 
 export function AccessManager() {
@@ -546,7 +549,16 @@ export function AccessManager() {
                                                                         <Shield className="h-3.5 w-3.5" />
                                                                     </div>
                                                                     <div className="min-w-0">
-                                                                        <p className="text-[11px] font-bold text-zinc-200 truncate">{session.device}</p>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <p className="text-[11px] font-bold text-zinc-200 truncate">{session.device}</p>
+                                                                            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-[8px] font-bold text-emerald-400 uppercase tracking-widest border border-emerald-500/20">
+                                                                                <span className="relative flex h-1.5 w-1.5">
+                                                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                                                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                                                                                </span>
+                                                                                Live
+                                                                            </span>
+                                                                        </div>
                                                                         <div className="flex items-center gap-1.5 text-[9px] text-zinc-500">
                                                                             <span>{formatLastActive(session.lastActive)}</span>
                                                                             {session.expiresAt && (
@@ -575,6 +587,23 @@ export function AccessManager() {
                                                                     </Button>
                                                                 </div>
                                                             </div>
+
+                                                            {/* 🌐 LIVE TELEMETRY DISPLAY */}
+                                                            <div className="flex flex-col gap-1.5 p-2 bg-black/40 rounded-lg border border-white/5 mt-1">
+                                                                <div className="flex items-center justify-between">
+                                                                    <span className="text-[9px] text-zinc-500 uppercase tracking-wider font-medium">Сейчас смотрит:</span>
+                                                                    <span className="text-[10px] text-indigo-300 font-bold truncate max-w-[140px]">
+                                                                        {session.currentPath || "Панель управления"}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center justify-between">
+                                                                    <span className="text-[9px] text-zinc-500 uppercase tracking-wider font-medium">Последнее действие:</span>
+                                                                    <span className="text-[9px] text-emerald-400/80 italic font-medium truncate max-w-[140px]">
+                                                                        {session.lastAction || "Ожидание..."}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+
                                                             <div className="flex items-center gap-2 pt-1 border-t border-white/5">
                                                                 <Button
                                                                     variant="ghost"

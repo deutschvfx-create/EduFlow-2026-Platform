@@ -298,6 +298,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, [user, userData, loading, sessionReady, pathname, router]);
 
+    // 🛡️ GUEST TELEMETRY (CO-BROWSING)
+    useEffect(() => {
+        if (!isSupportSession || !user || !db || !sessionReady) return;
+
+        const deviceId = typeof window !== 'undefined' ? localStorage.getItem('eduflow_device_id') : null;
+        if (!deviceId) return;
+
+        const sessionRef = doc(db, "users", user.uid, "sessions", deviceId);
+
+        const PATH_MAP: Record<string, string> = {
+            '/app/dashboard': 'Дашборд',
+            '/app/attendance': 'Посещаемость',
+            '/app/groups': 'Группы',
+            '/app/students': 'Студенты',
+            '/app/teachers': 'Преподаватели',
+            '/app/faculties': 'Факультеты',
+            '/app/departments': 'Кафедры',
+            '/app/classrooms': 'Аудитории',
+            '/app/subjects': 'Предметы',
+            '/app/schedule': 'Расписание',
+            '/app/grades': 'Оценки',
+            '/app/announcements': 'Объявления',
+            '/app/chats': 'Чаты',
+            '/app/reports': 'Отчёты',
+            '/app/settings': 'Настройки',
+        };
+
+        const readablePath = PATH_MAP[pathname] || pathname;
+
+        // 1. Sync Current Path
+        updateDoc(sessionRef, {
+            currentPath: readablePath,
+            lastUpdated: serverTimestamp()
+        }).catch(e => console.error("Telemetry Path Error:", e));
+
+        // 2. Sync Last Action (Clicks)
+        const handleGlobalClick = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            const element = target.closest('button') || target.closest('a') || (target.style.cursor === 'pointer' ? target : null);
+
+            if (element) {
+                const actionText = element.textContent?.trim().substring(0, 30) || (element as any).ariaLabel || (element as any).title || "Действие";
+
+                updateDoc(sessionRef, {
+                    lastAction: `Нажал "${actionText}"`,
+                    lastUpdated: serverTimestamp()
+                }).catch(e => console.error("Telemetry Action Error:", e));
+            }
+        };
+
+        window.addEventListener('click', handleGlobalClick, { capture: true });
+        return () => window.removeEventListener('click', handleGlobalClick, { capture: true });
+    }, [pathname, isSupportSession, user, sessionReady]);
+
     // UI RENDERING
     const isProtected = pathname.startsWith('/student') || pathname.startsWith('/app') || pathname.startsWith('/teacher');
 
