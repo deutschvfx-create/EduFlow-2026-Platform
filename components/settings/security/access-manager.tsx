@@ -191,9 +191,9 @@ export function AccessManager() {
                                         <Loader2 className="h-8 w-8 text-neutral-400 animate-spin" />
                                     </div>
                                 ) : magicError ? (
-                                    <div className="h-32 w-32 flex flex-col items-center justify-center text-red-500">
-                                        <AlertCircle className="h-8 w-8 mb-2" />
-                                        <span className="text-xs font-medium px-2">Ошибка подключения</span>
+                                    <div className="h-32 w-32 flex flex-col items-center justify-center text-red-500 text-center p-2">
+                                        <AlertCircle className="h-8 w-8 mb-2 flex-shrink-0" />
+                                        <span className="text-[10px] font-medium leading-tight max-w-full break-words">{magicError}</span>
                                         <button onClick={(e) => { e.stopPropagation(); generateMagicToken(); }} className="mt-2 text-[10px] underline text-neutral-500 hover:text-neutral-900">Повторить</button>
                                     </div>
                                 ) : magicToken ? (
