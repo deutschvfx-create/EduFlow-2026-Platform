@@ -178,11 +178,11 @@ export default function SettingsPage() {
                     ${isActive
                         ? 'bg-zinc-900/60 border-indigo-500/40 shadow-lg shadow-indigo-500/5'
                         : 'bg-zinc-950/40 border-zinc-900 hover:border-zinc-800'}
-                    ${isDisabled ? 'opacity-30 grayscale pointer-events-none' : 'opacity-100'}
+                    ${isDisabled ? 'pointer-events-none' : 'opacity-100'}
                 `}
                 onClick={() => handleToggle(mKey)}
             >
-                <div className="flex items-center gap-3 overflow-hidden">
+                <div className={`flex items-center gap-3 overflow-hidden ${isDisabled ? 'opacity-20 grayscale' : ''}`}>
                     <div className={`
                         h-9 w-9 rounded-lg flex items-center justify-center border transition-all duration-300
                         ${isActive
@@ -195,18 +195,21 @@ export default function SettingsPage() {
                         <span className={`text-[13px] font-bold transition-colors truncate ${isActive ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`}>
                             {label}
                         </span>
-                        {missingReqs.length > 0 && (
-                            <span className="text-[8px] text-amber-400 font-black uppercase tracking-widest animate-pulse mt-0.5">
-                                Нужен: {missingReqs.map(r => {
-                                    const names: any = { groups: 'Группы', courses: 'Предметы', schedule: 'Расписание', faculties: 'Факультеты' };
-                                    return names[r] || r;
-                                }).join(', ')}
-                            </span>
-                        )}
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                {isDisabled && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-xl backdrop-blur-[1px]">
+                        <span className="text-[9px] text-yellow-400 font-bold uppercase tracking-widest animate-pulse px-3 py-1 bg-zinc-950/90 rounded-lg border border-yellow-500/50 shadow-[0_0_15px_rgba(234,179,8,0.2)]">
+                            НУЖЕН: {missingReqs.map(r => {
+                                const names: any = { groups: 'ГРУППЫ', courses: 'ПРЕДМЕТЫ', schedule: 'РАСПИСАНИЕ', faculties: 'ФАКУЛЬТЕТЫ' };
+                                return names[r] || r.toUpperCase();
+                            }).join(', ')}
+                        </span>
+                    </div>
+                )}
+
+                <div className={`flex items-center gap-2 ${isDisabled ? 'opacity-20' : ''}`}>
                     {isActive && dependencies[mKey] && (
                         <div className="h-1.5 w-1.5 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
                     )}
