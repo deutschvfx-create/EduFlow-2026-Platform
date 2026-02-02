@@ -72,23 +72,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [userData, setUserData] = useState<UserData | null>(null);
     const [loading, setLoading] = useState(true);
     const [isBlocked, setIsBlocked] = useState(false);
+    const [statusChecking, setStatusChecking] = useState(false);
+    const [sessionReady, setSessionReady] = useState(false);
     const router = useRouter();
     const pathname = usePathname();
+
+    // Manual status check for the button
+    const checkStatus = async () => {
+        if (!user || !db) return;
+        setStatusChecking(true);
+        try {
+            const deviceId = getDeviceId();
+            const sessionRef = doc(db, "users", user.uid, "sessions", deviceId);
+            const snap = await getDoc(sessionRef);
+            if (snap.exists()) {
+                const status = snap.data().status;
+                setIsBlocked(status === 'blocked');
+            } else {
+                auth.signOut();
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            // Artificial delay for better UX
+            setTimeout(() => setStatusChecking(false), 800);
+        }
+    };
 
     useEffect(() => {
         let unsubscribeSnapshot: any = null;
         let unsubscribeSession: any = null;
 
         const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-            // Clean up previous listeners if user changes or auth state re-triggers
-            if (unsubscribeSnapshot) {
-                unsubscribeSnapshot();
-                unsubscribeSnapshot = null;
-            }
-            if (unsubscribeSession) {
-                unsubscribeSession();
-                unsubscribeSession = null;
-            }
+            // Clean up previous listeners
+            if (unsubscribeSnapshot) unsubscribeSnapshot();
+            if (unsubscribeSession) unsubscribeSession();
 
             setUser(firebaseUser);
 
@@ -100,7 +118,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     const { type, name } = getDeviceInfo();
 
                     try {
-                        // Check if session already exists to avoid overwriting 'blocked' status
                         const sessionSnap = await getDoc(sessionRef);
 
                         if (!sessionSnap.exists()) {
@@ -114,7 +131,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                                 status: 'active'
                             });
                         } else {
-                            // Just update activity and metadata, but NOT status
                             await updateDoc(sessionRef, {
                                 lastActive: serverTimestamp(),
                                 device: name,
@@ -125,24 +141,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         // MONITOR THIS SESSION 
                         unsubscribeSession = onSnapshot(sessionRef, (docSnap) => {
                             if (!docSnap.exists()) {
-                                console.log("🚨 Session record deleted. Logging out...");
                                 auth.signOut();
                                 return;
                             }
 
                             const data = docSnap.data();
-                            const status = data?.status;
-                            console.log("📡 Remote session status:", status);
-
-                            if (status === 'blocked') {
-                                setIsBlocked(true);
-                            } else {
-                                setIsBlocked(false);
-                            }
+                            setIsBlocked(data?.status === 'blocked');
+                            setSessionReady(true); // MARK AS VERIFIED
                         });
                     } catch (e) {
                         console.error("❌ Failed to register/monitor session:", e);
+                        setSessionReady(true);
                     }
+                } else {
+                    setSessionReady(true);
                 }
 
                 // Subscribe to real-time user data
@@ -174,14 +186,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             } else {
                 setUserData(null);
                 setIsBlocked(false);
-                if (unsubscribeSnapshot) {
-                    unsubscribeSnapshot();
-                    unsubscribeSnapshot = null;
-                }
-                if (unsubscribeSession) {
-                    unsubscribeSession();
-                    unsubscribeSession = null;
-                }
+                setSessionReady(false);
+                if (unsubscribeSnapshot) unsubscribeSnapshot();
+                if (unsubscribeSession) unsubscribeSession();
                 setLoading(false);
             }
         });
@@ -194,7 +201,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [router]);
 
     useEffect(() => {
-        if (loading) return;
+        if (loading || !sessionReady) return;
 
         const isProtected = pathname.startsWith('/student') || pathname.startsWith('/app') || pathname.startsWith('/teacher');
 
@@ -208,7 +215,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 router.push('/register');
             }
         }
-    }, [user, userData, loading, pathname, router]);
+    }, [user, userData, loading, sessionReady, pathname, router]);
+
+    // UI RENDERING
+    if (loading || (user && !sessionReady)) {
+        return (
+            <div className="min-h-screen bg-black flex items-center justify-center">
+                <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
 
     return (
         <AuthContext.Provider value={{ user, userData, loading }}>
@@ -219,15 +235,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     </div>
                     <h1 className="text-xl font-bold text-white mb-2">Аккаунт приостановлен</h1>
                     <p className="text-neutral-400 max-w-xs text-sm mb-8">
-                        Ваша сессия была временно заблокирована администратором. Доступ восстановится автоматически, когда ограничение будет снято.
+                        Ваша сессия была временно заблокирована администратором. Доступ восстановится автоматически.
                     </p>
                     <div className="flex gap-4">
                         <Button
                             variant="default"
-                            onClick={() => window.location.reload()}
-                            className="bg-indigo-600 hover:bg-indigo-500"
+                            onClick={checkStatus}
+                            disabled={statusChecking}
+                            className="bg-indigo-600 hover:bg-indigo-500 min-w-[140px]"
                         >
-                            Проверить статус
+                            {statusChecking ? (
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : "Проверить статус"}
                         </Button>
                         <Button
                             variant="ghost"
