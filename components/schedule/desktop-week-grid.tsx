@@ -104,8 +104,11 @@ export function DesktopWeekGrid({
     });
 
     useEffect(() => {
-        const now = Date.now();
-        if (now - lastUpdateRef.current > 2000 && !isDragging) {
+        // If we get an update from server (propsLessons changed), we generally want to sync.
+        // But if we just dragged locally (within last 2s), we might want to keep local state to prevent jumping
+        // UNLESS the prop update is actually the result of our save (containing the new data).
+        // For now, simpler logic: Always sync from props unless we are actively dragging.
+        if (!isDragging) {
             setLocalLessons(propsLessons);
         }
     }, [propsLessons, isDragging]);
@@ -265,26 +268,35 @@ export function DesktopWeekGrid({
         if (!isDragging) return;
         setDragDelta({ x: 0, y: deltaY });
 
-        const deltaMin = Math.round(deltaY / 5) * 5;
-        let newStartMin = initialGrab.startMin;
-        let newDuration = initialGrab.durationMin;
+        // Throttle updates slightly to improve performance using requestAnimationFrame
+        requestAnimationFrame(() => {
+            const deltaMin = Math.round(deltaY / 5) * 5;
+            let newStartMin = initialGrab.startMin;
+            let newDuration = initialGrab.durationMin;
 
-        if (dragType === 'move') {
-            newStartMin = Math.max(0, Math.min(15 * 60 - initialGrab.durationMin, initialGrab.startMin + deltaMin));
-        } else if (dragType === 'resize-top') {
-            newStartMin = Math.max(0, Math.min(initialGrab.startMin + initialGrab.durationMin - 15, initialGrab.startMin + deltaMin));
-            newDuration = (initialGrab.startMin + initialGrab.durationMin) - newStartMin;
-        } else if (dragType === 'resize-bottom') {
-            newDuration = Math.max(15, Math.min(15 * 60 - initialGrab.startMin, initialGrab.durationMin + deltaMin));
-        }
+            if (dragType === 'move') {
+                newStartMin = Math.max(0, Math.min(15 * 60 - initialGrab.durationMin, initialGrab.startMin + deltaMin));
+            } else if (dragType === 'resize-top') {
+                newStartMin = Math.max(0, Math.min(initialGrab.startMin + initialGrab.durationMin - 15, initialGrab.startMin + deltaMin));
+                newDuration = (initialGrab.startMin + initialGrab.durationMin) - newStartMin;
+            } else if (dragType === 'resize-bottom') {
+                newDuration = Math.max(15, Math.min(15 * 60 - initialGrab.startMin, initialGrab.durationMin + deltaMin));
+            }
 
-        const newStart = minutesToTime(newStartMin);
-        const newEnd = minutesToTime(newStartMin + newDuration);
-        setLiveTimeRange({ start: newStart, end: newEnd });
+            const newStart = minutesToTime(newStartMin);
+            const newEnd = minutesToTime(newStartMin + newDuration);
 
-        const activeDay = initialGrab.lesson.dayOfWeek;
-        const conflict = checkConflict(activeLessonId, activeDay, newStart, newEnd, initialGrab.lesson.teacherId);
-        setConflictError(conflict ? "Conflict" : null);
+            // Only update state if values changed to avoid re-renders
+            if (liveTimeRange && (liveTimeRange.start !== newStart || liveTimeRange.end !== newEnd)) {
+                setLiveTimeRange({ start: newStart, end: newEnd });
+
+                const activeDay = initialGrab.lesson.dayOfWeek;
+                const conflict = checkConflict(activeLessonId, activeDay, newStart, newEnd, initialGrab.lesson.teacherId);
+                setConflictError(conflict ? "Conflict" : null);
+            } else if (!liveTimeRange) {
+                setLiveTimeRange({ start: newStart, end: newEnd });
+            }
+        });
     };
 
     const handlePointerUp = (e: React.PointerEvent) => {
