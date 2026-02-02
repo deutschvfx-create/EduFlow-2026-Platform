@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/components/auth/auth-provider";
+import { compressImage } from "@/lib/utils";
 import { UserData, UserService, OrganizationService } from "@/lib/services/firestore";
 import { Slider } from "@/components/ui/slider";
 import { auth } from "@/lib/firebase";
@@ -160,35 +161,59 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
         }
     };
 
-    const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
+            try {
+                // Compress image to avoid Firestore 1MB limit
+                const compressedImage = await compressImage(file, 800, 0.7);
                 setFormData(prev => ({
                     ...prev,
-                    photoURL: event.target?.result as string,
+                    photoURL: compressedImage,
                     photoScale: 1,
                     photoPosition: { x: 0, y: 0 }
                 }));
-            };
-            reader.readAsDataURL(file);
+            } catch (error) {
+                console.error("Failed to compress image:", error);
+                // Fallback to raw (risky but better than nothing if compression fails context)
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    setFormData(prev => ({
+                        ...prev,
+                        photoURL: event.target?.result as string,
+                        photoScale: 1,
+                        photoPosition: { x: 0, y: 0 }
+                    }));
+                };
+                reader.readAsDataURL(file);
+            }
         }
     };
 
-    const handleOrgLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleOrgLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
+            try {
+                const compressedImage = await compressImage(file, 800, 0.7);
                 setOrgData((prev: any) => ({
                     ...prev,
-                    logo: event.target?.result as string,
+                    logo: compressedImage,
                     logoScale: 1,
                     logoPosition: { x: 50, y: 50 }
                 }));
-            };
-            reader.readAsDataURL(file);
+            } catch (error) {
+                console.error("Failed to compress logo:", error);
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    setOrgData((prev: any) => ({
+                        ...prev,
+                        logo: event.target?.result as string,
+                        logoScale: 1,
+                        logoPosition: { x: 50, y: 50 }
+                    }));
+                };
+                reader.readAsDataURL(file);
+            }
         }
     };
 
