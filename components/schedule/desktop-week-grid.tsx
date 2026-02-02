@@ -292,7 +292,10 @@ export function DesktopWeekGrid({
 
                 const activeDay = initialGrab.lesson.dayOfWeek;
                 const conflict = checkConflict(activeLessonId, activeDay, newStart, newEnd, initialGrab.lesson.teacherId);
-                setConflictError(conflict ? "Conflict" : null);
+                const conflictStr = conflict ? "Conflict" : null;
+                if (conflictStr !== conflictError) {
+                    setConflictError(conflictStr);
+                }
             } else if (!liveTimeRange) {
                 setLiveTimeRange({ start: newStart, end: newEnd });
             }

@@ -11,6 +11,7 @@ import { DayOfWeek, Lesson, LessonStatus } from "@/lib/types/schedule";
 import { useModules } from "@/hooks/use-modules";
 import { useOrganization } from "@/hooks/use-organization";
 import { Classroom } from "@/lib/data/classrooms.repo";
+import { IOSStyleTimePicker } from "@/components/ui/ios-time-picker";
 
 // Helper to add minutes to "HH:MM"
 const addMinutes = (time: string, minutes: number) => {
@@ -116,32 +117,24 @@ export function EditLessonModal({
                 </div>
 
                 <div className="p-4 space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5 flex flex-col items-center">
+                    <div className="flex gap-3">
+                        <div className="flex-1 space-y-1.5 flex flex-col items-center">
                             <Label className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Начало</Label>
-                            <Select value={startTime} onValueChange={setStartTime}>
-                                <SelectTrigger className="w-full h-8 bg-zinc-950 border-zinc-800 text-xs font-mono text-center"><SelectValue /></SelectTrigger>
-                                <SelectContent className="h-48">
-                                    {Array.from({ length: 29 }, (_, i) => {
-                                        const h = Math.floor(i / 2) + 8;
-                                        const m = (i % 2) * 30;
-                                        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-                                    }).map(t => <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
+                            <IOSStyleTimePicker
+                                value={startTime}
+                                onChange={setStartTime}
+                                className="w-full h-24 border-zinc-800/50 bg-black/40"
+                                minuteStep={5}
+                            />
                         </div>
-                        <div className="space-y-1.5 flex flex-col items-center">
+                        <div className="flex-1 space-y-1.5 flex flex-col items-center">
                             <Label className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Конец</Label>
-                            <Select value={endTime} onValueChange={setEndTime}>
-                                <SelectTrigger className="w-full h-8 bg-zinc-950 border-zinc-800 text-xs font-mono text-center"><SelectValue /></SelectTrigger>
-                                <SelectContent className="h-48">
-                                    {Array.from({ length: 29 }, (_, i) => {
-                                        const h = Math.floor(i / 2) + 8;
-                                        const m = (i % 2) * 30;
-                                        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-                                    }).map(t => <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
+                            <IOSStyleTimePicker
+                                value={endTime}
+                                onChange={setEndTime}
+                                className="w-full h-24 border-zinc-800/50 bg-black/40"
+                                minuteStep={5}
+                            />
                         </div>
                     </div>
 
@@ -235,6 +228,6 @@ export function EditLessonModal({
                     </div>
                 </div>
             </DialogContent>
-        </Dialog>
+        </Dialog >
     );
 }
