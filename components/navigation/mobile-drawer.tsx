@@ -171,12 +171,16 @@ export function MobileDrawer({ trigger, open: controlledOpen, onOpenChange }: Mo
                                             }`}
                                     >
                                         <Avatar className="h-10 w-10 border-2 border-indigo-500/20">
+                                            <AvatarImage src={userData?.photoURL} />
                                             <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold">
-                                                {userData?.name?.substring(0, 2).toUpperCase() || "US"}
+                                                {userData?.firstName?.[0] || userData?.name?.[0] || "U"}
+                                                {userData?.lastName?.[0] || userData?.name?.[1] || ""}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-bold text-white truncate">{userData?.name || "Пользователь"}</p>
+                                            <p className="text-sm font-bold text-white truncate">
+                                                {userData?.firstName || userData?.name || "Пользователь"} {userData?.lastName || ""}
+                                            </p>
                                             <p className="text-[10px] text-zinc-500 font-medium uppercase tracking-tighter">{role || "student"}</p>
                                         </div>
                                         <motion.div

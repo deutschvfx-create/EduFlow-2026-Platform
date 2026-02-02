@@ -11,6 +11,8 @@ export interface UserData {
     name?: string;
     firstName?: string;
     lastName?: string;
+    birthDate?: string;
+    photoURL?: string;
     organizationId?: string | null;
     organizationType?: string;
     createdAt: number;

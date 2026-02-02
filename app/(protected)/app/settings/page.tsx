@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { OrganizationProfileCard } from "@/components/settings/organization-profile-card";
+import { UserProfileCard } from "@/components/settings/user-profile-card";
 
 export default function SettingsPage() {
     const { modules, toggleModule, setAllModules, resetModules, isLoaded } = useModules();
@@ -230,6 +231,9 @@ export default function SettingsPage() {
                     <p className="text-sm text-zinc-400">Управление модулями</p>
                 </div>
             </div>
+
+            {/* USER PROFILE CARD */}
+            <UserProfileCard onSave={() => showToast("Личный профиль сохранён")} />
 
             {/* ORGANIZATION PROFILE CARD */}
             <OrganizationProfileCard onSave={() => showToast("Профиль организации сохранён")} />

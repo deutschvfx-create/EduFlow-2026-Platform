@@ -26,6 +26,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useModules } from "@/hooks/use-modules"; // Using hook instead of props
+import { useAuth } from "@/components/auth/auth-provider";
 
 const sidebarItems = [
     {
@@ -94,18 +95,7 @@ export default function ClientSidebar({
 
     // Use client-side hook for dynamic configuration
     const { modules, isLoaded } = useModules();
-    const [user, setUser] = useState<any>(null);
-
-    useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            try {
-                setUser(JSON.parse(storedUser));
-            } catch (e) {
-                console.error("Failed to parse user from localStorage", e);
-            }
-        }
-    }, []);
+    const { userData: user } = useAuth();
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -116,12 +106,12 @@ export default function ClientSidebar({
     // Dynamic items based on role
     const dynamicSidebarItems = [...sidebarItems];
 
-    if (user?.role === 'TEACHER') {
+    if (user?.role === 'teacher' || user?.role === 'owner') {
         const mainGroup = dynamicSidebarItems.find(g => g.title === "Главная");
         if (mainGroup && !mainGroup.items.find(i => i.href === '/teacher')) {
             mainGroup.items.unshift({ label: "Кабинет учителя", href: "/teacher", icon: LayoutDashboard });
         }
-    } else if (user?.role === 'STUDENT') {
+    } else if (user?.role === 'student') {
         const mainGroup = dynamicSidebarItems.find(g => g.title === "Главная");
         if (mainGroup && !mainGroup.items.find(i => i.href === '/student')) {
             mainGroup.items.unshift({ label: "Моё обучение", href: "/student", icon: LayoutDashboard });
@@ -131,7 +121,7 @@ export default function ClientSidebar({
     // Filter Items Logic (Client Side)
     const filteredItems = dynamicSidebarItems.map(group => {
         const newItems = group.items.map(item => {
-            if (user?.role === 'STUDENT' && item.href === '/app/grades') {
+            if (user?.role === 'student' && item.href === '/app/grades') {
                 return { ...item, href: '/student/grades' };
             }
             return item;
