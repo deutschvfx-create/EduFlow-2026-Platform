@@ -73,6 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true);
     const [isBlocked, setIsBlocked] = useState(false);
     const [statusChecking, setStatusChecking] = useState(false);
+    const [statusMessage, setStatusMessage] = useState<string | null>(null);
     const [sessionReady, setSessionReady] = useState(false);
     const router = useRouter();
     const pathname = usePathname();
@@ -81,21 +82,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const checkStatus = async () => {
         if (!user || !db) return;
         setStatusChecking(true);
+        setStatusMessage(null);
         try {
             const deviceId = getDeviceId();
             const sessionRef = doc(db, "users", user.uid, "sessions", deviceId);
             const snap = await getDoc(sessionRef);
             if (snap.exists()) {
                 const status = snap.data().status;
-                setIsBlocked(status === 'blocked');
+                const blocked = status === 'blocked';
+                setIsBlocked(blocked);
+                if (blocked) {
+                    setStatusMessage("Доступ всё еще ограничен");
+                }
             } else {
-                auth.signOut();
+                auth.signOut().then(() => window.location.href = '/login');
             }
         } catch (e) {
             console.error(e);
+            setStatusMessage("Ошибка проверки");
         } finally {
-            // Artificial delay for better UX
-            setTimeout(() => setStatusChecking(false), 800);
+            setTimeout(() => {
+                setStatusChecking(false);
+                setTimeout(() => setStatusMessage(null), 3000);
+            }, 800);
         }
     };
 
@@ -262,6 +271,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                             Выйти
                         </Button>
                     </div>
+                    {statusMessage && (
+                        <p className="mt-4 text-[10px] text-amber-500 animate-pulse">
+                            {statusMessage}
+                        </p>
+                    )}
                 </div>
             );
         }
