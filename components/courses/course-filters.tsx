@@ -9,6 +9,7 @@ import { useOrganization } from '@/hooks/use-organization';
 import { Faculty } from '@/lib/types/faculty';
 import { Department } from '@/lib/types/department';
 import { Teacher } from '@/lib/types/teacher';
+import { useModules } from '@/hooks/use-modules';
 
 interface CourseFiltersProps {
     search: string;
@@ -36,6 +37,7 @@ export function CourseFilters({
     onTeacherChange
 }: CourseFiltersProps) {
     const { currentOrganizationId } = useOrganization();
+    const { modules } = useModules();
     const [faculties, setFaculties] = useState<Faculty[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
     const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -102,29 +104,33 @@ export function CourseFilters({
             </div>
 
             <div className="flex flex-wrap gap-2">
-                <Select value={facultyFilter} onValueChange={(val) => { onFacultyChange(val); onDepartmentChange('all'); }}>
-                    <SelectTrigger className="w-[180px] bg-zinc-900 border-zinc-800">
-                        <SelectValue placeholder="Факультет" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">Все факультеты</SelectItem>
-                        {faculties.map(f => (
-                            <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+                {modules.faculties && (
+                    <Select value={facultyFilter} onValueChange={(val) => { onFacultyChange(val); onDepartmentChange('all'); }}>
+                        <SelectTrigger className="w-[180px] bg-zinc-900 border-zinc-800">
+                            <SelectValue placeholder="Факультет" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Все факультеты</SelectItem>
+                            {faculties.map(f => (
+                                <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                )}
 
-                <Select value={departmentFilter} onValueChange={onDepartmentChange} disabled={availableDepartments.length === 0}>
-                    <SelectTrigger className="w-[180px] bg-zinc-900 border-zinc-800">
-                        <SelectValue placeholder={availableDepartments.length === 0 && facultyFilter !== 'all' ? "Нет кафедр" : "Кафедра"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">Все кафедры</SelectItem>
-                        {availableDepartments.map(d => (
-                            <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+                {modules.departments && (
+                    <Select value={departmentFilter} onValueChange={onDepartmentChange} disabled={availableDepartments.length === 0}>
+                        <SelectTrigger className="w-[180px] bg-zinc-900 border-zinc-800">
+                            <SelectValue placeholder={availableDepartments.length === 0 && facultyFilter !== 'all' ? "Нет кафедр" : "Кафедра"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Все кафедры</SelectItem>
+                            {availableDepartments.map(d => (
+                                <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                )}
 
                 <Select value={teacherFilter} onValueChange={onTeacherChange}>
                     <SelectTrigger className="w-[180px] bg-zinc-900 border-zinc-800">
