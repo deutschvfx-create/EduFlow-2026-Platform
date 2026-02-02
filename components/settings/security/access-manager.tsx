@@ -146,13 +146,30 @@ export function AccessManager() {
 
 
     // Helper Actions
-    const generateSupportLink = () => {
+    const generateSupportLink = async () => {
+        if (!user) return;
         setGeneratingLink(true);
-        setTimeout(() => {
-            const token = Math.random().toString(36).substring(7);
-            setSupportLink(`${appUrl}/support-access?token=${token}&duration=${duration}`);
+        try {
+            const idToken = await user.getIdToken();
+            const response = await fetch('/api/auth/generate-support-token', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${idToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ duration })
+            });
+
+            if (!response.ok) throw new Error('Failed to generate support link');
+
+            const data = await response.json();
+            setSupportLink(data.url);
+        } catch (error) {
+            console.error("Support Link gen error:", error);
+            // We could add a local error state for support link if needed
+        } finally {
             setGeneratingLink(false);
-        }, 800);
+        }
     };
 
     const copyToClipboard = () => {
