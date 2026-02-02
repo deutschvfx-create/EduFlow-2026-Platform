@@ -45,6 +45,11 @@ service cloud.firestore {
          get(/databases/$(database)/documents/users/$(userId)).data.get('organizationId', 'none') == getOrgId() &&
          request.resource.data.get('role', '') in ['teacher', 'student'])
       );
+
+      // SESSIONS: Allow user to manage their own sessions
+      match /sessions/{sessionId} {
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
+      }
     }
 
     // --- ORGANIZATION RULES ---
