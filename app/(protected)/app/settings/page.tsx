@@ -182,7 +182,7 @@ export default function SettingsPage() {
                 `}
                 onClick={() => handleToggle(mKey)}
             >
-                <div className={`flex items-center gap-3 overflow-hidden ${isDisabled ? 'opacity-20 grayscale' : ''}`}>
+                <div className={`flex items-center gap-3 overflow-hidden ${isDisabled ? 'opacity-40 grayscale-[0.5]' : ''}`}>
                     <div className={`
                         h-9 w-9 rounded-lg flex items-center justify-center border transition-all duration-300
                         ${isActive
@@ -195,25 +195,25 @@ export default function SettingsPage() {
                         <span className={`text-[13px] font-bold transition-colors truncate ${isActive ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`}>
                             {label}
                         </span>
+                        {isDisabled && (
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                                <div className="relative flex h-1.5 w-1.5 shrink-0">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-yellow-500"></span>
+                                </div>
+                                <span className="text-[9px] text-zinc-400 font-medium truncate">
+                                    <span className="hidden sm:inline">Требует: </span>
+                                    <span className="text-zinc-200 font-bold uppercase tracking-wider">
+                                        {missingReqs.map(r => {
+                                            const names: any = { groups: 'ГРУППЫ', courses: 'ПРЕДМЕТЫ', schedule: 'РАСПИСАНИЕ', faculties: 'ФАКУЛЬТЕТЫ' };
+                                            return names[r] || r.toUpperCase();
+                                        }).join(', ')}
+                                    </span>
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
-
-                {isDisabled && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-[2px] rounded-xl transition-all duration-300">
-                        <div className="flex items-center gap-2.5">
-                            <div className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.6)]"></span>
-                            </div>
-                            <span className="text-[10px] text-white font-black uppercase tracking-widest drop-shadow-md">
-                                {missingReqs.map(r => {
-                                    const names: any = { groups: 'ГРУППЫ', courses: 'ПРЕДМЕТЫ', schedule: 'РАСПИСАНИЕ', faculties: 'ФАКУЛЬТЕТЫ' };
-                                    return names[r] || r.toUpperCase();
-                                }).join(', ')}
-                            </span>
-                        </div>
-                    </div>
-                )}
 
                 <div className={`flex items-center gap-2 ${isDisabled ? 'opacity-20' : ''}`}>
                     {isActive && dependencies[mKey] && (
