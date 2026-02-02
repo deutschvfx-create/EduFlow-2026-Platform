@@ -77,7 +77,33 @@ export function AccessManager() {
     }, []);
 
     // 1. Fetch Real Sessions
-    // ... (unchanged)
+    useEffect(() => {
+        if (!user || !db) return;
+
+        const q = query(
+            collection(db, "users", user.uid, "sessions"),
+            orderBy("lastActive", "desc")
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const sessionsData = snapshot.docs.map(doc => {
+                const data = doc.data();
+                // Check if this is the current device by comparing with localStorage
+                const currentDeviceId = typeof window !== 'undefined' ? localStorage.getItem('eduflow_device_id') : null;
+
+                return {
+                    id: doc.id,
+                    ...data,
+                    isCurrent: doc.id === currentDeviceId
+                } as Session;
+            });
+            setSessions(sessionsData);
+        }, (error) => {
+            console.error("Error fetching sessions:", error);
+        });
+
+        return () => unsubscribe();
+    }, [user]);
 
     // 2. Generate Magic Token (On Mount or Refresh)
     const generateMagicToken = async () => {
