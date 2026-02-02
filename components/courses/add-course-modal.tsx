@@ -73,13 +73,13 @@ export function AddCourseModal() {
 
         try {
             const { coursesRepo } = await import("@/lib/data/courses.repo");
-            coursesRepo.add(currentOrganizationId, {
+            await coursesRepo.add(currentOrganizationId, {
                 id: generateId(),
                 organizationId: currentOrganizationId,
                 name,
                 code,
-                facultyId,
-                departmentId,
+                facultyId: modules.faculties ? facultyId : "none",
+                departmentId: modules.departments ? departmentId : "none",
                 level,
                 description,
                 status: 'ACTIVE',
