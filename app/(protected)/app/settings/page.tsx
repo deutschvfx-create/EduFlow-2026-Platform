@@ -196,8 +196,11 @@ export default function SettingsPage() {
                             {label}
                         </span>
                         {missingReqs.length > 0 && (
-                            <span className="text-[8px] text-amber-500 font-bold uppercase tracking-tighter">
-                                Нужен {missingReqs[0] === 'groups' ? 'Группы' : missingReqs[0]}
+                            <span className="text-[8px] text-amber-400 font-black uppercase tracking-widest animate-pulse mt-0.5">
+                                Нужен: {missingReqs.map(r => {
+                                    const names: any = { groups: 'Группы', courses: 'Предметы', schedule: 'Расписание', faculties: 'Факультеты' };
+                                    return names[r] || r;
+                                }).join(', ')}
                             </span>
                         )}
                     </div>
