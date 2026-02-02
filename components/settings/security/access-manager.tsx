@@ -19,7 +19,8 @@ import {
     PauseCircle,
     PlayCircle,
     Maximize2,
-    ZoomIn
+    ZoomIn,
+    Loader2
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import QRCode from "react-qr-code";
@@ -30,43 +31,20 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog";
+import { collection, onSnapshot, orderBy, query, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import { db, auth } from "@/lib/firebase";
 
-// Interface for sessions to support the Disable feature
 interface Session {
     id: string;
     device: string;
-    ip: string;
-    location: string;
-    lastActive: string;
+    ip?: string;
+    location?: string;
+    lastActive: any; // Firestore Timestamp
     isCurrent: boolean;
     type: 'desktop' | 'mobile';
     status: 'active' | 'blocked';
 }
-
-const DEFAULT_SESSIONS: Session[] = [
-    {
-        id: "1",
-        device: "Windows PC (Chrome)",
-        ip: "192.168.1.105",
-        location: "Dushanbe, Tajikistan",
-        lastActive: "Сейчас",
-        isCurrent: true,
-        type: "desktop",
-        status: "active"
-    },
-    {
-        id: "2",
-        device: "iPhone 13 Pro",
-        ip: "10.0.0.1",
-        location: "Dushanbe, Tajikistan",
-        lastActive: "2 мин назад",
-        isCurrent: false,
-        type: "mobile",
-        status: "active"
-    }
-];
 
 export function AccessManager() {
     const { user } = useAuth();
@@ -77,41 +55,84 @@ export function AccessManager() {
     const [copied, setCopied] = useState(false);
     const [duration, setDuration] = useState("1h");
 
+    // Magic Login State
+    const [magicToken, setMagicToken] = useState<string | null>(null);
+    const [loadingMagic, setLoadingMagic] = useState(false);
+
     // QR Zoom State
     const [zoomedQr, setZoomedQr] = useState<string | null>(null);
 
     // App Link State
     const [appUrl, setAppUrl] = useState("https://eduflow.app");
 
-    // Sessions State with Persistence
-    const [sessions, setSessions] = useState<Session[]>(DEFAULT_SESSIONS);
+    // Real Sessions
+    const [sessions, setSessions] = useState<Session[]>([]);
 
     useEffect(() => {
         if (typeof window !== "undefined") {
             setAppUrl(window.location.origin);
-
-            // Load sessions from localStorage
-            const storedSessions = localStorage.getItem("eduflow-sessions");
-            if (storedSessions) {
-                try {
-                    const parsed = JSON.parse(storedSessions);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                        setSessions(parsed);
-                    }
-                } catch (e) {
-                    console.error("Failed to parse sessions", e);
-                }
-            }
         }
     }, []);
 
-    // Save sessions whenever they change
+    // 1. Fetch Real Sessions
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            localStorage.setItem("eduflow-sessions", JSON.stringify(sessions));
-        }
-    }, [sessions]);
+        if (!user || !db) return;
 
+        const currentDeviceId = localStorage.getItem('eduflow_device_id');
+        const sessionsRef = collection(db, "users", user.uid, "sessions");
+        const q = query(sessionsRef, orderBy("lastActive", "desc"));
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const fetched: Session[] = snapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    device: data.device || "Unknown Device",
+                    ip: data.ip,
+                    location: data.location,
+                    lastActive: data.lastActive,
+                    isCurrent: doc.id === currentDeviceId,
+                    type: data.type || 'desktop',
+                    status: data.status || 'active'
+                } as Session;
+            });
+            setSessions(fetched);
+        });
+
+        return () => unsubscribe();
+    }, [user]);
+
+    // 2. Generate Magic Token (On Mount or Refresh)
+    const generateMagicToken = async () => {
+        if (!user) return;
+        setLoadingMagic(true);
+        try {
+            const idToken = await user.getIdToken();
+            const res = await fetch('/app/api/auth/generate-magic-token', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${idToken}`
+                }
+            });
+            const data = await res.json();
+            if (data.url) {
+                setMagicToken(data.url);
+            }
+        } catch (e) {
+            console.error("Failed to generate magic token", e);
+        } finally {
+            setLoadingMagic(false);
+        }
+    };
+
+    // Auto-generate on mount
+    useEffect(() => {
+        generateMagicToken();
+        // Refresh token every 55 mins? Or simply when user clicks refresh.
+    }, [user]);
+
+
+    // Helper Actions
     const generateSupportLink = () => {
         setGeneratingLink(true);
         setTimeout(() => {
@@ -129,17 +150,33 @@ export function AccessManager() {
         }
     };
 
-    const toggleSessionStatus = (id: string) => {
-        setSessions(prev => prev.map(s => {
-            if (s.id === id) {
-                return { ...s, status: s.status === 'active' ? 'blocked' : 'active' };
-            }
-            return s;
-        }));
+    const toggleSessionStatus = async (id: string, currentStatus: string) => {
+        if (!user || !db) return;
+        const newStatus = currentStatus === 'active' ? 'blocked' : 'active';
+        await updateDoc(doc(db, "users", user.uid, "sessions", id), {
+            status: newStatus
+        });
     };
 
-    const removeSession = (id: string) => {
-        setSessions(prev => prev.filter(s => s.id !== id));
+    const removeSession = async (id: string) => {
+        if (!user || !db) return;
+        await deleteDoc(doc(db, "users", user.uid, "sessions", id));
+    };
+
+    // Format Date Helper
+    const formatLastActive = (timestamp: any) => {
+        if (!timestamp) return "Unknown";
+        // If Firestore Timestamp
+        if (timestamp.toDate) {
+            const date = timestamp.toDate();
+            // Simple relative time
+            const diff = (new Date().getTime() - date.getTime()) / 1000;
+            if (diff < 60) return "Just now";
+            if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+            return date.toLocaleDateString();
+        }
+        return "Recently";
     };
 
     return (
@@ -160,25 +197,35 @@ export function AccessManager() {
                                     Подключить устройство
                                 </h3>
                                 <p className="text-[11px] text-zinc-500 max-w-[200px] mx-auto">
-                                    Отсканируйте, чтобы войти с телефона
+                                    Отсканируйте, чтобы войти с телефона автоматически
                                 </p>
                             </div>
 
                             <div
                                 className="p-3 bg-white rounded-xl shadow-lg shadow-indigo-500/10 relative z-10 cursor-pointer transition-transform hover:scale-105 active:scale-95 duration-200 group/qr"
-                                onClick={() => setZoomedQr(appUrl)}
+                                onClick={() => magicToken && setZoomedQr(magicToken)}
                             >
-                                <QRCode
-                                    value={appUrl}
-                                    size={140}
-                                    style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                                    viewBox={`0 0 256 256`}
-                                />
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/10 opacity-0 group-hover/qr:opacity-100 transition-opacity rounded-xl backdrop-blur-[1px]">
-                                    <ZoomIn className="h-8 w-8 text-black drop-shadow-md" />
-                                </div>
+                                {loadingMagic || !magicToken ? (
+                                    <div className="h-[140px] w-[140px] flex items-center justify-center">
+                                        <Loader2 className="h-6 w-6 animate-spin text-zinc-400" />
+                                    </div>
+                                ) : (
+                                    <>
+                                        <QRCode
+                                            value={magicToken}
+                                            size={140}
+                                            style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                                            viewBox={`0 0 256 256`}
+                                        />
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/10 opacity-0 group-hover/qr:opacity-100 transition-opacity rounded-xl backdrop-blur-[1px]">
+                                            <ZoomIn className="h-8 w-8 text-black drop-shadow-md" />
+                                        </div>
+                                    </>
+                                )}
                             </div>
-                            <p className="text-[9px] text-zinc-600 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity pt-1">Нажмите для увеличения</p>
+                            <Button variant="link" className="text-[9px] h-auto p-0 text-zinc-600 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity pt-1" onClick={generateMagicToken}>
+                                Обновить QR
+                            </Button>
                         </div>
 
                         {/* 2. Active Sessions List */}
@@ -193,6 +240,9 @@ export function AccessManager() {
 
                             <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
                                 <AnimatePresence initial={false}>
+                                    {sessions.length === 0 && (
+                                        <p className="text-center text-xs text-zinc-600 py-4">Нет активных сессий</p>
+                                    )}
                                     {sessions.map((session) => (
                                         <motion.div
                                             key={session.id}
@@ -206,9 +256,9 @@ export function AccessManager() {
                                             )}
                                         >
                                             <div className="flex items-start justify-between">
-                                                <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-3 overflow-hidden">
                                                     <div className={cn(
-                                                        "relative h-9 w-9 rounded-full flex items-center justify-center transition-colors",
+                                                        "relative h-9 w-9 flex-shrink-0 rounded-full flex items-center justify-center transition-colors",
                                                         session.status === 'blocked' ? "bg-red-500/10 text-red-500" :
                                                             session.isCurrent ? "bg-emerald-500/10 text-emerald-500" : "bg-zinc-800 text-zinc-400"
                                                     )}>
@@ -224,16 +274,21 @@ export function AccessManager() {
                                                             <span className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-emerald-500 border-2 border-zinc-950 rounded-full"></span>
                                                         )}
                                                     </div>
-                                                    <div>
+                                                    <div className="min-w-0">
                                                         <div className="flex items-center gap-2">
-                                                            <span className="text-xs font-bold text-zinc-200">{session.device}</span>
+                                                            <span className="text-xs font-bold text-zinc-200 truncate">{session.device.substring(0, 25)}...</span>
                                                             {session.status === 'blocked' && <Badge variant="destructive" className="text-[9px] h-4 px-1">Приостановлен</Badge>}
                                                             {session.isCurrent && <Badge variant="outline" className="text-[9px] h-4 px-1 border-emerald-500/30 text-emerald-500 bg-emerald-500/5">Вы</Badge>}
                                                         </div>
                                                         <div className="flex items-center gap-2 text-[10px] text-zinc-500 mt-0.5">
-                                                            <span>{session.location}</span>
-                                                            <span className="text-zinc-700 mx-0.5">•</span>
-                                                            <span>{session.lastActive}</span>
+                                                            {/* Location optional if not provided */}
+                                                            {session.location && (
+                                                                <>
+                                                                    <span>{session.location}</span>
+                                                                    <span className="text-zinc-700 mx-0.5">•</span>
+                                                                </>
+                                                            )}
+                                                            <span>{formatLastActive(session.lastActive)}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -249,7 +304,7 @@ export function AccessManager() {
                                                             "h-7 text-[10px] flex-1",
                                                             session.status === 'blocked' ? "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-400/10" : "text-amber-500 hover:text-amber-400 hover:bg-amber-400/10"
                                                         )}
-                                                        onClick={() => toggleSessionStatus(session.id)}
+                                                        onClick={() => toggleSessionStatus(session.id, session.status)}
                                                     >
                                                         {session.status === 'blocked' ? (
                                                             <>
@@ -282,7 +337,7 @@ export function AccessManager() {
                         </div>
                     </div>
 
-                    {/* RIGHT COLUMN: Guest/Support Access */}
+                    {/* RIGHT COLUMN: Guest/Support Access (Kept mostly same, but cleaned up) */}
                     <div className="h-full">
                         <div className="h-full p-6 bg-indigo-500/5 border border-indigo-500/10 rounded-xl flex flex-col relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
@@ -423,7 +478,7 @@ export function AccessManager() {
                         )}
                     </div>
                     <p className="text-zinc-500 text-sm text-center">
-                        Наведите камеру устройства на экран
+                        Камера телефона авторизует вас автоматически
                     </p>
                 </DialogContent>
             </Dialog>

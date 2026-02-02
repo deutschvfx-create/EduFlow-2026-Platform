@@ -3,8 +3,23 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { doc, onSnapshot, setDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
-// ... imports
+import { doc, onSnapshot, setDoc, serverTimestamp } from "firebase/firestore";
+import { UserData } from "@/lib/services/firestore";
+import { useRouter, usePathname } from "next/navigation";
+
+interface AuthContextType {
+    user: User | null;
+    userData: UserData | null;
+    loading: boolean;
+}
+
+const AuthContext = createContext<AuthContextType>({
+    user: null,
+    userData: null,
+    loading: true,
+});
+
+export const useAuth = () => useContext(AuthContext);
 
 // Helper to get persistent device ID
 const getDeviceId = () => {
@@ -17,89 +32,109 @@ const getDeviceId = () => {
     return id;
 };
 
-// ... inside AuthProvider
-useEffect(() => {
-    let unsubscribeSnapshot: (() => void) | null = null;
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+    const [user, setUser] = useState<User | null>(null);
+    const [userData, setUserData] = useState<UserData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const router = useRouter();
+    const pathname = usePathname();
 
-    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-        setUser(firebaseUser);
+    useEffect(() => {
+        let unsubscribeSnapshot: (() => void) | null = null;
 
-        if (firebaseUser) {
-            // TRACK SESSION
-            if (db) {
-                const deviceId = getDeviceId();
-                const sessionRef = doc(db, "users", firebaseUser.uid, "sessions", deviceId);
+        const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+            setUser(firebaseUser);
 
-                // Detect device type roughly
-                const ua = navigator.userAgent;
-                let deviceType = 'desktop';
-                if (/mobile/i.test(ua)) deviceType = 'mobile';
+            if (firebaseUser) {
+                // TRACK SESSION
+                if (db) {
+                    const deviceId = getDeviceId();
+                    const sessionRef = doc(db, "users", firebaseUser.uid, "sessions", deviceId);
 
-                try {
-                    await setDoc(sessionRef, {
-                        id: deviceId,
-                        device: ua, // We'll parse this prettily in UI
-                        lastActive: serverTimestamp(),
-                        isCurrent: true, // Marker for UI
-                        type: deviceType,
-                        status: 'active'
-                    }, { merge: true });
-                } catch (e) {
-                    console.error("Failed to register session", e);
+                    // Detect device type roughly
+                    const ua = navigator.userAgent;
+                    let deviceType = 'desktop';
+                    if (/mobile/i.test(ua)) deviceType = 'mobile';
+
+                    try {
+                        await setDoc(sessionRef, {
+                            id: deviceId,
+                            device: ua,
+                            lastActive: serverTimestamp(),
+                            isCurrent: true,
+                            type: deviceType,
+                            status: 'active'
+                        }, { merge: true });
+                    } catch (e) {
+                        console.error("Failed to register session", e);
+                    }
                 }
-            }
 
-            // Subscribe to real-time user data
-            if (db) {
-                unsubscribeSnapshot = onSnapshot(doc(db, "users", firebaseUser.uid), (doc) => {
-                    // ... existing logic
-                }, (error) => {
-                    // ... error handling
-                });
+                // Subscribe to real-time user data
+                if (db) {
+                    unsubscribeSnapshot = onSnapshot(doc(db, "users", firebaseUser.uid), (doc) => {
+                        if (doc.exists()) {
+                            const data = doc.data() as UserData;
+                            setUserData(data);
+
+                            // Basic Route Protection
+                            if (window.location.pathname === '/login' || window.location.pathname === '/register') {
+                                if (data.organizationId) {
+                                    const target = data.role === 'student' ? '/student' : '/app/dashboard';
+                                    router.push(target);
+                                } else {
+                                    if (window.location.pathname !== '/register') router.push('/register');
+                                }
+                            }
+                        } else {
+                            setUserData(null);
+                        }
+                        setLoading(false);
+                    }, (error) => {
+                        console.error("Failed to subscribe to user data:", error);
+                        setLoading(false);
+                    });
+                } else {
+                    setLoading(false);
+                }
+            } else {
+                setUserData(null);
+                if (unsubscribeSnapshot) {
+                    unsubscribeSnapshot();
+                    unsubscribeSnapshot = null;
+                }
+                setLoading(false);
             }
-            setLoading(false);
-        } else {
-            // CLEANUP SESSION NOTIFICATION? 
-            // We don't delete on logout automatically to show history, 
-            // OR we can set status: 'inactive'. For now, let's leave it.
-            setUserData(null);
+        });
+
+        return () => {
+            unsubscribeAuth();
             if (unsubscribeSnapshot) {
                 unsubscribeSnapshot();
-                unsubscribeSnapshot = null;
             }
-            setLoading(false);
+        };
+    }, [router]);
+
+    useEffect(() => {
+        if (loading) return;
+
+        const isProtected = pathname.startsWith('/student') || pathname.startsWith('/app') || pathname.startsWith('/teacher');
+
+        if (!user && isProtected) {
+            router.push('/login');
+            return;
         }
-    });
 
-    return () => {
-        unsubscribeAuth();
-        if (unsubscribeSnapshot) {
-            unsubscribeSnapshot();
+        if (user && !loading) {
+            if (userData && !userData.organizationId && isProtected) {
+                router.push('/register');
+            }
         }
-    };
-}, [router]); // Removed pathname dependency to prevent re-subscribing on navigation
+    }, [user, userData, loading, pathname, router]);
 
-useEffect(() => {
-    if (loading) return;
-
-    const isProtected = pathname.startsWith('/student') || pathname.startsWith('/app') || pathname.startsWith('/teacher');
-
-    if (!user && isProtected) {
-        router.push('/login');
-        return;
-    }
-
-    if (user && !loading) {
-        // If logged in but missing critical meta, force onboarding (at /register)
-        if (userData && !userData.organizationId && isProtected) {
-            router.push('/register');
-        }
-    }
-}, [user, userData, loading, pathname, router]);
-
-return (
-    <AuthContext.Provider value={{ user, userData, loading }}>
-        {children}
-    </AuthContext.Provider>
-);
+    return (
+        <AuthContext.Provider value={{ user, userData, loading }}>
+            {children}
+        </AuthContext.Provider>
+    );
 }
