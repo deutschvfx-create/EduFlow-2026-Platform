@@ -50,6 +50,7 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
         firstName: "",
         lastName: "",
         birthDate: "",
+        phone: "",
         photoURL: "",
         photoScale: 1,
         photoPosition: { x: 0, y: 0 }
@@ -89,6 +90,7 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                 firstName: userData.firstName || "",
                 lastName: userData.lastName || "",
                 birthDate: userData.birthDate || "",
+                phone: userData.phone || "",
                 photoURL: userData.photoURL || "",
                 photoScale: userData.photoScale || 1,
                 photoPosition: userData.photoPosition || { x: 0, y: 0 }
@@ -258,9 +260,9 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                     {activeTab === "profile" && (
                         <div className="flex flex-col md:flex-row gap-6">
                             {/* Compact Avatar Section */}
-                            <div className="flex-shrink-0">
+                            <div className="flex-shrink-0 flex flex-col items-center gap-3">
                                 <div
-                                    className="relative group cursor-move h-20 w-20 rounded-full overflow-hidden border-2 border-zinc-800 bg-zinc-900"
+                                    className="relative group cursor-move h-24 w-24 rounded-full overflow-hidden border-2 border-zinc-800 bg-zinc-900"
                                     onMouseDown={() => setIsDragging(true)}
                                     onMouseMove={handleMouseMove}
                                 >
@@ -290,12 +292,24 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handlePhotoUpload} />
 
                                 {formData.photoURL && (
-                                    <div className="mt-2 text-center">
+                                    <div className="w-24 space-y-2">
+                                        <div className="flex items-center justify-between text-zinc-500">
+                                            <ZoomOut className="h-3 w-3" />
+                                            <Slider
+                                                value={[formData.photoScale || 1]}
+                                                min={0.5}
+                                                max={3}
+                                                step={0.1}
+                                                onValueChange={([val]) => setFormData(prev => ({ ...prev, photoScale: val }))}
+                                                className="mx-2 h-2"
+                                            />
+                                            <ZoomIn className="h-3 w-3" />
+                                        </div>
                                         <button
                                             onClick={() => setFormData(prev => ({ ...prev, photoScale: 1, photoPosition: { x: 0, y: 0 } }))}
-                                            className="text-[9px] text-zinc-500 hover:text-indigo-400 font-medium uppercase tracking-wider"
+                                            className="w-full text-[9px] text-zinc-500 hover:text-indigo-400 font-medium uppercase tracking-wider"
                                         >
-                                            Сбросить фото
+                                            Сброс
                                         </button>
                                     </div>
                                 )}
@@ -309,7 +323,7 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                         <Input
                                             value={formData.firstName}
                                             onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                                            className="h-8 bg-zinc-900/30 border-zinc-900 text-xs"
+                                            className="h-9 bg-zinc-900/30 border-zinc-900 text-xs"
                                         />
                                     </div>
                                     <div className="space-y-1">
@@ -317,29 +331,45 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                         <Input
                                             value={formData.lastName}
                                             onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                                            className="h-8 bg-zinc-900/30 border-zinc-900 text-xs"
+                                            className="h-9 bg-zinc-900/30 border-zinc-900 text-xs"
                                         />
                                     </div>
-                                </div>
-                                <div className="space-y-1">
-                                    <Label className="text-[9px] font-bold uppercase text-zinc-500">Дата рождения</Label>
-                                    <Input
-                                        type="date"
-                                        value={formData.birthDate}
-                                        onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
-                                        className="h-8 bg-zinc-900/30 border-zinc-900 text-xs text-zinc-300" // fixed text color for date input
-                                        style={{ colorScheme: 'dark' }}
-                                    />
+                                    <div className="space-y-1">
+                                        <Label className="text-[9px] font-bold uppercase text-zinc-500">Email (ID)</Label>
+                                        <Input
+                                            value={userData?.email || ""}
+                                            disabled
+                                            className="h-9 bg-zinc-900/50 border-zinc-900 text-xs text-zinc-500"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-[9px] font-bold uppercase text-zinc-500">Телефон</Label>
+                                        <Input
+                                            value={formData.phone}
+                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                            placeholder="+992..."
+                                            className="h-9 bg-zinc-900/30 border-zinc-900 text-xs"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-[9px] font-bold uppercase text-zinc-500">Дата рождения</Label>
+                                        <Input
+                                            type="date"
+                                            value={formData.birthDate}
+                                            onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
+                                            className="h-9 bg-zinc-900/30 border-zinc-900 text-xs text-zinc-300"
+                                            style={{ colorScheme: 'dark' }}
+                                        />
+                                    </div>
                                 </div>
 
                                 <div className="pt-2 flex justify-end">
                                     <Button
                                         onClick={handleSaveProfile}
                                         disabled={saving}
-                                        size="sm"
-                                        className="h-8 bg-white hover:bg-zinc-200 text-black text-[10px] font-black uppercase tracking-wider px-4"
+                                        className="h-9 bg-white hover:bg-zinc-200 text-black text-[10px] font-black uppercase tracking-wider px-6"
                                     >
-                                        {saving ? <RefreshCcw className="h-3 w-3 animate-spin mr-2" /> : <Save className="h-3 w-3 mr-2" />}
+                                        {saving ? <RefreshCcw className="h-3.5 w-3.5 animate-spin mr-2" /> : <Save className="h-3.5 w-3.5 mr-2" />}
                                         Сохранить
                                     </Button>
                                 </div>
@@ -350,9 +380,9 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                     {activeTab === "organization" && (
                         <div className="flex flex-col md:flex-row gap-6">
                             {/* Organization Logo */}
-                            <div className="flex-shrink-0">
+                            <div className="flex-shrink-0 flex flex-col items-center gap-3">
                                 <div
-                                    className="relative group cursor-move h-20 w-20 rounded-xl overflow-hidden border-2 border-zinc-800 bg-zinc-900"
+                                    className="relative group cursor-move h-24 w-24 rounded-xl overflow-hidden border-2 border-zinc-800 bg-zinc-900"
                                     onMouseDown={() => setIsDraggingOrgLogo(true)}
                                     onMouseMove={handleMouseMove}
                                 >
@@ -376,6 +406,29 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                     </button>
                                 </div>
                                 <input type="file" ref={orgLogoInputRef} className="hidden" accept="image/*" onChange={handleOrgLogoUpload} />
+
+                                {orgData.logo && (
+                                    <div className="w-24 space-y-2">
+                                        <div className="flex items-center justify-between text-zinc-500">
+                                            <ZoomOut className="h-3 w-3" />
+                                            <Slider
+                                                value={[orgData.logoScale || 1]}
+                                                min={0.5}
+                                                max={3}
+                                                step={0.1}
+                                                onValueChange={([val]) => setOrgData((prev: any) => ({ ...prev, logoScale: val }))}
+                                                className="mx-2 h-2"
+                                            />
+                                            <ZoomIn className="h-3 w-3" />
+                                        </div>
+                                        <button
+                                            onClick={() => setOrgData((prev: any) => ({ ...prev, logoScale: 1, logoPosition: { x: 50, y: 50 } }))}
+                                            className="w-full text-[9px] text-zinc-500 hover:text-indigo-400 font-medium uppercase tracking-wider"
+                                        >
+                                            Сброс
+                                        </button>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="flex-1 space-y-3">
@@ -384,7 +437,7 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                     <Input
                                         value={orgData.name}
                                         onChange={(e) => setOrgData({ ...orgData, name: e.target.value })}
-                                        className="h-8 bg-zinc-900/30 border-zinc-900 text-xs"
+                                        className="h-9 bg-zinc-900/30 border-zinc-900 text-xs"
                                     />
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
@@ -393,7 +446,7 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                         <select
                                             value={orgData.type}
                                             onChange={(e) => setOrgData({ ...orgData, type: e.target.value })}
-                                            className="w-full h-8 text-xs bg-zinc-900/30 border border-zinc-900 rounded-md px-2 text-zinc-300 outline-none"
+                                            className="w-full h-9 text-xs bg-zinc-900/30 border border-zinc-900 rounded-md px-2 text-zinc-300 outline-none"
                                         >
                                             <option value="university">🎓 Университет</option>
                                             <option value="language_school">🌍 Языковая школа</option>
@@ -405,7 +458,39 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                             type="number"
                                             value={orgData.establishedYear}
                                             onChange={(e) => setOrgData({ ...orgData, establishedYear: parseInt(e.target.value) })}
-                                            className="h-8 bg-zinc-900/30 border-zinc-900 text-xs"
+                                            className="h-9 bg-zinc-900/30 border-zinc-900 text-xs"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-[9px] font-bold uppercase text-zinc-500">Email</Label>
+                                        <Input
+                                            value={orgData.email}
+                                            onChange={(e) => setOrgData({ ...orgData, email: e.target.value })}
+                                            className="h-9 bg-zinc-900/30 border-zinc-900 text-xs"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-[9px] font-bold uppercase text-zinc-500">Телефон</Label>
+                                        <Input
+                                            value={orgData.phone}
+                                            onChange={(e) => setOrgData({ ...orgData, phone: e.target.value })}
+                                            className="h-9 bg-zinc-900/30 border-zinc-900 text-xs"
+                                        />
+                                    </div>
+                                    <div className="space-y-1 col-span-2">
+                                        <Label className="text-[9px] font-bold uppercase text-zinc-500">Веб-сайт</Label>
+                                        <Input
+                                            value={orgData.website}
+                                            onChange={(e) => setOrgData({ ...orgData, website: e.target.value })}
+                                            className="h-9 bg-zinc-900/30 border-zinc-900 text-xs"
+                                        />
+                                    </div>
+                                    <div className="space-y-1 col-span-2">
+                                        <Label className="text-[9px] font-bold uppercase text-zinc-500">Адрес</Label>
+                                        <Input
+                                            value={orgData.address}
+                                            onChange={(e) => setOrgData({ ...orgData, address: e.target.value })}
+                                            className="h-9 bg-zinc-900/30 border-zinc-900 text-xs"
                                         />
                                     </div>
                                 </div>
@@ -413,10 +498,9 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                     <Button
                                         onClick={handleSaveOrganization}
                                         disabled={saving}
-                                        size="sm"
-                                        className="h-8 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black uppercase tracking-wider px-4"
+                                        className="h-9 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black uppercase tracking-wider px-6"
                                     >
-                                        <Save className="h-3 w-3 mr-2" /> Сохранить
+                                        <Save className="h-3.5 w-3.5 mr-2" /> Сохранить
                                     </Button>
                                 </div>
                             </div>
@@ -433,7 +517,7 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                         value={passwords.new}
                                         onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
                                         placeholder="••••••••"
-                                        className="h-8 bg-zinc-900/30 border-zinc-900 text-xs pr-8"
+                                        className="h-9 bg-zinc-900/30 border-zinc-900 text-xs pr-8"
                                     />
                                     <button onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white">
                                         {showPassword ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
@@ -447,7 +531,7 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                     value={passwords.confirm}
                                     onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
                                     placeholder="••••••••"
-                                    className="h-8 bg-zinc-900/30 border-zinc-900 text-xs"
+                                    className="h-9 bg-zinc-900/30 border-zinc-900 text-xs"
                                 />
                             </div>
                             {securityError && <p className="text-[9px] font-bold text-red-400 flex items-center gap-1"><Lock className="h-3 w-3" />{securityError}</p>}
@@ -455,10 +539,9 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                 <Button
                                     onClick={handleSavePassword}
                                     disabled={saving || !passwords.new}
-                                    size="sm"
-                                    className="h-8 bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-black uppercase tracking-wider px-6"
+                                    className="h-9 bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-black uppercase tracking-wider px-6"
                                 >
-                                    <ShieldCheck className="h-3 w-3 mr-2" /> Обновить пароль
+                                    <ShieldCheck className="h-3.5 w-3.5 mr-2" /> Обновить пароль
                                 </Button>
                             </div>
                         </div>
