@@ -6,13 +6,14 @@ import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, onSnapshot, setDoc, serverTimestamp, getDoc, updateDoc } from "firebase/firestore";
 import { UserData } from "@/lib/services/firestore";
 import { useRouter, usePathname } from "next/navigation";
-import { PauseCircle } from "lucide-react";
+import { PauseCircle, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface AuthContextType {
     user: User | null;
     userData: UserData | null;
     loading: boolean;
+    timeLeft?: number; // In milliseconds
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -75,8 +76,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [statusChecking, setStatusChecking] = useState(false);
     const [statusMessage, setStatusMessage] = useState<string | null>(null);
     const [sessionReady, setSessionReady] = useState(false);
+    const [liveTimeLeft, setLiveTimeLeft] = useState<number | undefined>(undefined);
     const router = useRouter();
     const pathname = usePathname();
+
+    // Live countdown for Guest sessions
+    useEffect(() => {
+        if (liveTimeLeft === undefined) return;
+
+        const interval = setInterval(() => {
+            setLiveTimeLeft(prev => {
+                if (prev === undefined || prev <= 0) {
+                    clearInterval(interval);
+                    return 0;
+                }
+                return prev - 1000;
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [liveTimeLeft]);
 
     // Manual status check for the button
     const checkStatus = async () => {
@@ -117,8 +136,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Clean up previous listeners
             if (unsubscribeSnapshot) unsubscribeSnapshot();
             if (unsubscribeSession) unsubscribeSession();
-
             if (sessionTimer) clearTimeout(sessionTimer);
+            setLiveTimeLeft(undefined);
+
             setUser(firebaseUser);
 
             if (firebaseUser) {
@@ -160,6 +180,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                                 auth.signOut().then(() => window.location.href = '/login');
                                 return;
                             }
+
+                            setLiveTimeLeft(timeLeft);
 
                             // Set a client-side timer to kick the guest out
                             sessionTimer = setTimeout(() => {
@@ -229,8 +251,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setUserData(null);
                 setIsBlocked(false);
                 setSessionReady(false);
+                setLiveTimeLeft(undefined);
                 if (unsubscribeSnapshot) unsubscribeSnapshot();
                 if (unsubscribeSession) unsubscribeSession();
+                if (sessionTimer) clearTimeout(sessionTimer);
                 setLoading(false);
             }
         });
@@ -271,55 +295,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
     }
 
-    // 🚨 SECURITY: If on protected route but no user or blocked, do NOT show children
-    if (isProtected && (!user || isBlocked)) {
-        if (isBlocked) {
-            return (
-                <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
-                    <div className="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mb-6">
-                        <PauseCircle className="w-8 h-8" />
-                    </div>
-                    <h1 className="text-xl font-bold text-white mb-2">Аккаунт приостановлен</h1>
-                    <p className="text-neutral-400 max-w-xs text-sm mb-8">
-                        Ваша сессия была временно заблокирована администратором. Доступ восстановится автоматически.
-                    </p>
-                    <div className="flex gap-4">
-                        <Button
-                            variant="default"
-                            onClick={checkStatus}
-                            disabled={statusChecking}
-                            className="bg-indigo-600 hover:bg-indigo-500 min-w-[140px]"
-                        >
-                            {statusChecking ? (
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            ) : "Проверить статус"}
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            onClick={() => auth.signOut()}
-                            className="text-neutral-500 hover:text-white"
-                        >
-                            Выйти
-                        </Button>
-                    </div>
-                    {statusMessage && (
-                        <p className="mt-4 text-[10px] text-amber-500 animate-pulse">
-                            {statusMessage}
-                        </p>
-                    )}
-                </div>
-            );
-        }
-        return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-            </div>
-        );
-    }
+    // Helper for formatting timeLeft
+    const formatTimeLeft = (ms: number) => {
+        const totalSec = Math.floor(ms / 1000);
+        const m = Math.floor(totalSec / 60);
+        const s = totalSec % 60;
+        return `${m}:${s < 10 ? '0' : ''}${s}`;
+    };
 
     return (
-        <AuthContext.Provider value={{ user, userData, loading }}>
-            {children}
+        <AuthContext.Provider value={{ user, userData, loading, timeLeft: liveTimeLeft }}>
+            {/* 🕒 FLOATING TIMER FOR GUEST */}
+            {liveTimeLeft !== undefined && liveTimeLeft > 0 && !isBlocked && (
+                <div className="fixed top-4 right-4 z-[9999] animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div className="bg-amber-500 text-black px-4 py-2 rounded-2xl flex items-center gap-2 shadow-2xl font-bold border border-amber-400">
+                        <Timer className="w-4 h-4 animate-pulse" />
+                        <span className="text-xs uppercase tracking-tighter">Временный доступ:</span>
+                        <span className="font-mono text-sm">{formatTimeLeft(liveTimeLeft)}</span>
+                    </div>
+                </div>
+            )}
+
+            {isProtected && (!user || isBlocked) ? (
+                <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
+                    {isBlocked ? (
+                        <>
+                            <div className="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mb-6">
+                                <PauseCircle className="w-8 h-8" />
+                            </div>
+                            <h1 className="text-xl font-bold text-white mb-2">Аккаунт приостановлен</h1>
+                            <p className="text-neutral-400 max-w-xs text-sm mb-8">
+                                Ваша сессия была временно заблокирована администратором. Доступ восстановится автоматически.
+                            </p>
+                            <div className="flex gap-4">
+                                <Button
+                                    variant="default"
+                                    onClick={checkStatus}
+                                    disabled={statusChecking}
+                                    className="bg-indigo-600 hover:bg-indigo-500 min-w-[140px]"
+                                >
+                                    {statusChecking ? (
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    ) : "Проверить статус"}
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => auth.signOut()}
+                                    className="text-neutral-500 hover:text-white"
+                                >
+                                    Выйти
+                                </Button>
+                            </div>
+                            {statusMessage && (
+                                <p className="mt-4 text-[10px] text-amber-500 animate-pulse">
+                                    {statusMessage}
+                                </p>
+                            )}
+                        </>
+                    ) : (
+                        <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                    )}
+                </div>
+            ) : children}
         </AuthContext.Provider>
     );
 }
