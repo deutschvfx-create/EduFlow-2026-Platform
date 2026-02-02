@@ -22,9 +22,6 @@ import {
     ZoomIn,
     AlertCircle,
     Maximize2
-    Maximize2,
-    ZoomIn,
-    Loader2
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import QRCode from "react-qr-code";
