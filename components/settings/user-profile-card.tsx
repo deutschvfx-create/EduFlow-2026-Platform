@@ -26,7 +26,17 @@ import {
     Mail,
     Phone,
     Globe,
-    MapPin
+    MapPin,
+    Minimize2,
+    Maximize2,
+    Monitor,
+    Smartphone,
+    Qty,
+    QrCode,
+    Link as LinkIcon,
+    History,
+    LogOut,
+    Plus
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/components/auth/auth-provider";
@@ -43,9 +53,21 @@ interface UserProfileCardProps {
 
 export function UserProfileCard({ onSave }: UserProfileCardProps) {
     const { user, userData } = useAuth();
-    const [isExpanded, setIsExpanded] = useState(true);
-    const [activeTab, setActiveTab] = useState<"profile" | "organization" | "security">("profile");
-    const [saving, setSaving] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(false);
+
+    // Load collapse state
+    useEffect(() => {
+        const stored = localStorage.getItem("user-profile-collapsed");
+        if (stored) setIsCollapsed(JSON.parse(stored));
+    }, []);
+
+    const toggleCollapse = () => {
+        const newState = !isCollapsed;
+        setIsCollapsed(newState);
+        localStorage.setItem("user-profile-collapsed", JSON.stringify(newState));
+    };
+
+    // ... existing state ...
 
     // User Profile Form state
     const [formData, setFormData] = useState<Partial<UserData>>({
