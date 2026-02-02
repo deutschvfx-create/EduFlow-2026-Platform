@@ -21,10 +21,12 @@ import {
     BarChart3,
     RotateCcw,
     Zap,
-    MapPin
+    MapPin,
+    Upload
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { UserProfileCard } from "@/components/settings/user-profile-card";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function SettingsPage() {
     const { modules, toggleModule, setAllModules, resetModules, isLoaded } = useModules();
@@ -142,10 +144,13 @@ export default function SettingsPage() {
         }
     };
 
-    const Section = ({ title, children }: { title: string, children: React.ReactNode }) => (
-        <div className="space-y-3">
-            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider px-1">{title}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 laptop:grid-cols-3 gap-3">
+    const Section = ({ title, children, icon: Icon }: { title: string, children: React.ReactNode, icon?: any }) => (
+        <div className="space-y-4">
+            <div className="flex items-center gap-2 px-1">
+                {Icon && <Icon className="h-4 w-4 text-zinc-500" />}
+                <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">{title}</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {children}
             </div>
         </div>
@@ -155,247 +160,303 @@ export default function SettingsPage() {
         mKey,
         label,
         icon: Icon,
-        desc
     }: {
         mKey: ModuleKey,
         label: string,
-        icon: any,
-        desc: string
+        icon: any
     }) => {
         const requiredBy = requirements[mKey];
-        const depText = requiredBy ? `Зависит от: ${requiredBy.map(k => {
-            const map: any = { groups: 'Группы', courses: 'Предметы', schedule: 'Расписание', faculties: 'Факультеты' };
-            return map[k] || k;
-        }).join(', ')}` : null;
+        const isDependedOn = !!dependencies[mKey]?.some(k => modules[k]);
+        const isActive = modules[mKey];
+
+        // Check if this module is disabled because its requirements aren't met
+        const reqs = requirements[mKey] || [];
+        const missingReqs = reqs.filter(r => !modules[r]);
+        const isDisabled = missingReqs.length > 0;
 
         return (
             <div
-                className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 flex items-center justify-between hover:border-zinc-700 hover:bg-zinc-800/30 transition-all group cursor-pointer"
-                onClick={() => {
-                    if (!modules[mKey]) {
-                        // Enable if disabled
-                        handleToggle(mKey);
-                    }
-                    // Navigate
-                    if (moduleRoutes[mKey]) {
-                        router.push(moduleRoutes[mKey]!);
-                    }
-                }}
+                className={`
+                    relative group transition-all duration-300 rounded-2xl border p-4 cursor-pointer
+                    ${isActive
+                        ? 'bg-zinc-900/40 border-indigo-500/30 shadow-lg shadow-indigo-500/5'
+                        : 'bg-zinc-950/20 border-zinc-900 hover:border-zinc-800'}
+                    ${isDisabled ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}
+                `}
+                onClick={() => handleToggle(mKey)}
             >
-                <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="h-8 w-8 rounded-md bg-zinc-950 flex items-center justify-center border border-zinc-800 group-hover:border-indigo-500/30 transition-colors">
-                        <Icon className="h-4 w-4 text-indigo-400" />
+                <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                        <div className={`
+                            h-10 w-10 rounded-xl flex items-center justify-center border transition-all duration-300
+                            ${isActive
+                                ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-400'
+                                : 'bg-zinc-900 border-zinc-800 text-zinc-500 group-hover:text-zinc-300'}
+                        `}>
+                            <Icon className="h-5 w-5" />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                            <span className={`text-sm font-bold transition-colors ${isActive ? 'text-white' : 'text-zinc-400'}`}>
+                                {label}
+                            </span>
+                            {missingReqs.length > 0 && (
+                                <span className="text-[9px] text-amber-500 font-bold uppercase tracking-tighter mt-0.5">
+                                    Нужен: {missingReqs.map(r => {
+                                        const names: any = { groups: 'Группы', courses: 'Предметы', schedule: 'Расписание', faculties: 'Факультеты' };
+                                        return names[r] || r;
+                                    }).join(', ')}
+                                </span>
+                            )}
+                        </div>
                     </div>
-                    <div className="flex flex-col min-w-0">
-                        <span className="text-sm font-medium text-zinc-200 truncate group-hover:text-white transition-colors">
-                            {label}
-                        </span>
-                        {depText && (
-                            <span className="text-[10px] text-amber-500/90 leading-none truncate">{depText}</span>
-                        )}
+                    <Switch
+                        checked={isActive}
+                        onCheckedChange={() => handleToggle(mKey)}
+                        className="data-[state=checked]:bg-indigo-500"
+                    />
+                </div>
+
+                {isActive && dependencies[mKey] && (
+                    <div className="absolute -bottom-1 -right-1 h-3 w-3">
+                        <div className="absolute inset-0 bg-indigo-500/20 rounded-full animate-ping" />
+                        <div className="absolute inset-1 bg-indigo-500 rounded-full" />
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const DataCenter = () => {
+        const [stats, setStats] = useState<Record<string, number>>({});
+
+        useEffect(() => {
+            const keys = ['students', 'teachers', 'groups', 'courses', 'announcements'];
+            const newStats: any = {};
+            keys.forEach(k => {
+                try {
+                    const data = localStorage.getItem(`eduflow.${k}`);
+                    newStats[k] = data ? JSON.parse(data).length : 0;
+                } catch {
+                    newStats[k] = 0;
+                }
+            });
+            setStats(newStats);
+        }, []);
+
+        return (
+            <div className="bg-zinc-950/50 border border-zinc-900 rounded-3xl p-8 space-y-8 mt-12">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div className="flex items-center gap-4">
+                        <div className="h-14 w-14 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                            <RotateCcw className="h-7 w-7 text-amber-500" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-black text-white tracking-tight italic">DATA CENTER</h2>
+                            <p className="text-xs text-zinc-500 font-medium uppercase tracking-widest mt-1">
+                                Управление локальным хранилищем и миграция
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-4">
+                        {Object.entries(stats).map(([key, count]) => (
+                            <div key={key} className="flex flex-col items-center">
+                                <span className="text-lg font-black text-white">{count}</span>
+                                <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-tighter">
+                                    {key === 'students' && 'Студ.'}
+                                    {key === 'teachers' && 'Преп.'}
+                                    {key === 'groups' && 'Группы'}
+                                    {key === 'courses' && 'Предм.'}
+                                    {key === 'announcements' && 'Объяв.'}
+                                </span>
+                            </div>
+                        ))}
                     </div>
                 </div>
-                <div className="flex items-center" data-help-id={`module-toggle-${mKey}`}>
-                    <div onClick={(e) => e.stopPropagation()}>
-                        <Switch
-                            checked={modules[mKey]}
-                            onCheckedChange={() => handleToggle(mKey)}
-                            className="scale-90"
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-zinc-900/50 pt-8">
+                    <Button
+                        variant="ghost"
+                        className="h-16 rounded-2xl bg-zinc-900/50 hover:bg-zinc-800 border-zinc-800 text-zinc-300 font-bold group"
+                        onClick={() => {
+                            const data = {
+                                students: localStorage.getItem('eduflow.students'),
+                                teachers: localStorage.getItem('eduflow.teachers'),
+                                groups: localStorage.getItem('eduflow.groups'),
+                                courses: localStorage.getItem('eduflow.courses'),
+                                announcements: localStorage.getItem('eduflow.announcements'),
+                                modules: localStorage.getItem('eduflow-modules-config')
+                            };
+                            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `eduflow-backup-${new Date().toISOString().split('T')[0]}.json`;
+                            a.click();
+                            showToast("Резервная копия скачана");
+                        }}
+                    >
+                        <div className="flex flex-col items-center gap-1">
+                            <Upload className="h-5 w-5 text-indigo-400 group-hover:scale-110 transition-transform" />
+                            <span className="text-xs uppercase tracking-widest">Экспорт JSON</span>
+                        </div>
+                    </Button>
+
+                    <div className="relative group">
+                        <Button
+                            variant="ghost"
+                            className="h-16 w-full rounded-2xl bg-zinc-900/50 hover:bg-zinc-800 border-zinc-800 text-zinc-300 font-bold"
+                        >
+                            <div className="flex flex-col items-center gap-1">
+                                <RotateCcw className="h-5 w-5 text-emerald-400 group-hover:rotate-180 transition-transform duration-500" />
+                                <span className="text-xs uppercase tracking-widest">Импорт JSON</span>
+                            </div>
+                        </Button>
+                        <input
+                            type="file"
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                            accept=".json"
+                            onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const reader = new FileReader();
+                                reader.onload = (ev) => {
+                                    try {
+                                        const data = JSON.parse(ev.target?.result as string);
+                                        if (data.students) localStorage.setItem('eduflow.students', data.students);
+                                        if (data.teachers) localStorage.setItem('eduflow.teachers', data.teachers);
+                                        if (data.groups) localStorage.setItem('eduflow.groups', data.groups);
+                                        if (data.courses) localStorage.setItem('eduflow.courses', data.courses);
+                                        if (data.announcements) localStorage.setItem('eduflow.announcements', data.announcements);
+                                        if (data.modules) localStorage.setItem('eduflow-modules-config', data.modules);
+                                        showToast("Данные успешно импортированы!");
+                                        setTimeout(() => window.location.reload(), 1000);
+                                    } catch (err) {
+                                        alert("Ошибка импорта: Неверный формат файла");
+                                    }
+                                };
+                                reader.readAsText(file);
+                            }}
                         />
                     </div>
+
+                    <Button
+                        variant="ghost"
+                        className="h-16 rounded-2xl bg-red-500/5 hover:bg-red-500/10 border-red-500/20 text-red-400 font-bold group"
+                        onClick={() => {
+                            if (confirm("ВНИМАНИЕ: Это полностью очистит локальную базу данных. Продолжить?")) {
+                                const keys = ['eduflow.students', 'eduflow.teachers', 'eduflow.groups', 'eduflow.courses', 'eduflow.announcements', 'eduflow-modules-config'];
+                                keys.forEach(k => localStorage.removeItem(k));
+                                showToast("База данных очищена", 'info');
+                                setTimeout(() => window.location.reload(), 1000);
+                            }
+                        }}
+                    >
+                        <div className="flex flex-col items-center gap-1">
+                            <Zap className="h-5 w-5 text-red-500 group-hover:scale-125 transition-transform" />
+                            <span className="text-xs uppercase tracking-widest">Очистить базу</span>
+                        </div>
+                    </Button>
                 </div>
             </div>
         );
     };
 
     return (
-        <div className="space-y-6 max-w-5xl mx-auto pb-10 relative">
+        <div className="space-y-12 max-w-5xl mx-auto pb-20 px-4">
             {/* Custom Toast */}
-            {toastMsg && (
-                <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-5">
-                    <div className="bg-white text-zinc-900 px-4 py-2 rounded-lg shadow-xl border border-zinc-200 flex items-center gap-3">
-                        {toastMsg.type === 'success' ? (
-                            <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                        ) : (
-                            <div className="h-2 w-2 rounded-full bg-indigo-500" />
-                        )}
-                        <span className="font-medium text-sm">{toastMsg.text}</span>
-                    </div>
-                </div>
-            )}
+            <AnimatePresence>
+                {toastMsg && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        className="fixed bottom-8 right-8 z-[100]"
+                    >
+                        <div className="bg-zinc-900 border border-zinc-800 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4">
+                            <div className={`h-2 w-2 rounded-full ${toastMsg.type === 'success' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]'}`} />
+                            <span className="font-bold text-sm tracking-tight">{toastMsg.text}</span>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pt-4" data-help-id="settings-header">
-                <div className="hidden laptop:block">
-                    <h1 className="text-2xl font-bold tracking-tight text-white">Настройки</h1>
-                    <p className="text-sm text-zinc-400">Управление модулями</p>
-                </div>
-            </div>
+            {/* UNIFIED SETTINGS CARD */}
+            <UserProfileCard onSave={() => showToast("Профиль обновлен")} />
 
-            {/* UNIFIED SETTINGS CARD (Profile, Organization, Security) */}
-            <UserProfileCard onSave={() => showToast("Настройки сохранены")} />
+            {/* PRESETS PANEL */}
+            <div className="bg-zinc-950/50 border border-zinc-900 rounded-3xl p-8 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-[100px] -mr-32 -mt-32" />
 
-            {/* ENHANCED QUICK SETTINGS PANEL */}
-            <div className="relative bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-pink-500/5 border-l-4 border-indigo-500 rounded-lg p-6 shadow-lg shadow-indigo-500/5" data-help-id="settings-toggle-group">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
-
-                <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-                    <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                            <Zap className="h-6 w-6 text-white" />
+                <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                    <div className="flex items-center gap-5">
+                        <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-indigo-500/20">
+                            <Zap className="h-8 w-8 text-white" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                                Быстрые Настройки
-                                <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 font-black uppercase tracking-wider">
-                                    Presets
-                                </span>
-                            </h2>
-                            <p className="text-sm text-zinc-500 mt-0.5">Применить готовый шаблон конфигурации</p>
+                            <div className="flex items-center gap-3">
+                                <h2 className="text-xl font-black text-white tracking-tight">ПРЕСЕТЫ КОНФИГУРАЦИИ</h2>
+                                <span className="bg-indigo-500/20 text-indigo-400 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">v2.0</span>
+                            </div>
+                            <p className="text-sm text-zinc-500 mt-1 italic">Быстрая настройка под ваш тип обучения</p>
                         </div>
                     </div>
-                    <div className="flex flex-wrap gap-3" data-help-id="settings-templates">
+
+                    <div className="flex flex-wrap gap-3">
                         <Button
                             onClick={() => applyPreset('UNIVERSITY')}
-                            size="lg"
-                            className="bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 h-11 font-bold shadow-lg"
+                            className="bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 h-14 px-8 rounded-2xl font-black italic tracking-tighter shadow-xl transition-all hover:scale-105 active:scale-95"
                         >
-                            🎓 Университет
+                            УНИВЕРСИТЕТ
                         </Button>
                         <Button
                             onClick={() => applyPreset('SCHOOL')}
-                            size="lg"
-                            className="bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 h-11 font-bold shadow-lg"
+                            className="bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 h-14 px-8 rounded-2xl font-black italic tracking-tighter shadow-xl transition-all hover:scale-105 active:scale-95"
                         >
-                            🌍 Языковой курс
+                            ЯЗЫКОВАЯ ШКОЛА
                         </Button>
                         <Button
                             variant="ghost"
-                            size="lg"
                             onClick={handleReset}
-                            className="text-zinc-400 hover:text-white hover:bg-zinc-800/50 h-11 font-bold gap-2"
+                            className="text-zinc-500 hover:text-white hover:bg-zinc-900 h-14 rounded-2xl font-bold gap-2"
                         >
                             <RotateCcw className="h-4 w-4" />
-                            Сбросить
+                            СБРОСИТЬ
                         </Button>
                     </div>
                 </div>
             </div>
 
-            {/* Visual Separator */}
-            <div className="h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
+            {/* MODULES SECTIONS */}
+            <div className="space-y-12">
+                <Section title="Персонал и Студенты" icon={Users}>
+                    <ModuleCard mKey="students" label="Студенты" icon={Users} />
+                    <ModuleCard mKey="teachers" label="Преподаватели" icon={GraduationCap} />
+                </Section>
 
-            <Section title="Люди">
-                <ModuleCard mKey="students" label="Студенты" icon={Users} desc="" />
-                <ModuleCard mKey="teachers" label="Преподаватели" icon={GraduationCap} desc="" />
-            </Section>
+                <Section title="Инфраструктура модуля" icon={Building2}>
+                    <ModuleCard mKey="faculties" label="Факультеты" icon={Building2} />
+                    <ModuleCard mKey="departments" label="Кафедры" icon={DoorOpen} />
+                    <ModuleCard mKey="classrooms" label="Аудитории" icon={MapPin} />
+                    <ModuleCard mKey="groups" label="Группы" icon={Layers} />
+                </Section>
 
-            <Section title="Структура">
-                <ModuleCard mKey="faculties" label="Факультеты" icon={Building2} desc="" />
-                <ModuleCard mKey="departments" label="Кафедры" icon={DoorOpen} desc="" />
-                <ModuleCard mKey="groups" label="Группы" icon={Layers} desc="" />
-                <ModuleCard mKey="classrooms" label="Аудитории" icon={MapPin} desc="" />
-            </Section>
+                <Section title="Процесс обучения" icon={BookOpen}>
+                    <ModuleCard mKey="courses" label="Предметы" icon={BookOpen} />
+                    <ModuleCard mKey="schedule" label="Расписание" icon={Calendar} />
+                    <ModuleCard mKey="attendance" label="Посещаемость" icon={CheckSquare} />
+                    <ModuleCard mKey="grades" label="Оценки" icon={Award} />
+                </Section>
 
-            <Section title="Обучение">
-                <ModuleCard mKey="courses" label="Предметы" icon={BookOpen} desc="" />
-                <ModuleCard mKey="schedule" label="Расписание" icon={Calendar} desc="" />
-                <ModuleCard mKey="attendance" label="Посещаемость" icon={CheckSquare} desc="" />
-                <ModuleCard mKey="grades" label="Оценки" icon={Award} desc="" />
-            </Section>
+                <Section title="Внутренняя связь" icon={MessageSquare}>
+                    <ModuleCard mKey="announcements" label="Объявления" icon={Megaphone} />
+                    <ModuleCard mKey="chat" label="Чаты" icon={MessageSquare} />
+                    <ModuleCard mKey="reports" label="Аналитика" icon={BarChart3} />
+                </Section>
+            </div>
 
-            <Section title="Коммуникация">
-                <ModuleCard mKey="announcements" label="Объявления" icon={Megaphone} desc="" />
-                <ModuleCard mKey="chat" label="Чаты" icon={MessageSquare} desc="" />
-            </Section>
-
-            <Section title="Аналитика">
-                <ModuleCard mKey="reports" label="Отчёты" icon={BarChart3} desc="" />
-            </Section>
-            {/* ... previous sections ... */}
-
-            <Section title="Миграция данных">
-                <div className="md:col-span-3 bg-zinc-900 border border-zinc-800 rounded-lg p-4 space-y-4">
-                    <div className="flex items-center gap-3">
-                        <div className="h-10 w-1 bg-amber-500 rounded-full" />
-                        <div>
-                            <h2 className="text-sm font-semibold text-white">Управление данными</h2>
-                            <p className="text-xs text-zinc-500">Экспорт и импорт локальной базы данных (JSON)</p>
-                        </div>
-                    </div>
-                    <div className="flex flex-wrap gap-3">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-xs border-zinc-700 hover:bg-zinc-800 text-zinc-300"
-                            onClick={() => {
-                                const data = {
-                                    students: localStorage.getItem('eduflow.students'),
-                                    teachers: localStorage.getItem('eduflow.teachers'),
-                                    groups: localStorage.getItem('eduflow.groups'),
-                                    courses: localStorage.getItem('eduflow.courses'),
-                                    announcements: localStorage.getItem('eduflow.announcements'),
-                                    modules: localStorage.getItem('eduflow.modules')
-                                };
-                                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                                const url = URL.createObjectURL(blob);
-                                const a = document.createElement('a');
-                                a.href = url;
-                                a.download = `eduflow-backup-${new Date().toISOString().split('T')[0]}.json`;
-                                a.click();
-                                showToast("Данные экспортированы");
-                            }}
-                        >
-                            📥 Экспортировать JSON
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-xs border-zinc-700 hover:bg-zinc-800 text-zinc-300 relative"
-                        >
-                            <input
-                                type="file"
-                                className="absolute inset-0 opacity-0 cursor-pointer"
-                                accept=".json"
-                                onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (!file) return;
-                                    const reader = new FileReader();
-                                    reader.onload = (ev) => {
-                                        try {
-                                            const data = JSON.parse(ev.target?.result as string);
-                                            if (data.students) localStorage.setItem('eduflow.students', data.students);
-                                            if (data.teachers) localStorage.setItem('eduflow.teachers', data.teachers);
-                                            if (data.groups) localStorage.setItem('eduflow.groups', data.groups);
-                                            if (data.courses) localStorage.setItem('eduflow.courses', data.courses);
-                                            if (data.announcements) localStorage.setItem('eduflow.announcements', data.announcements);
-                                            if (data.modules) localStorage.setItem('eduflow.modules', data.modules);
-                                            // Reload to apply
-                                            window.location.reload();
-                                        } catch (err) {
-                                            alert("Ошибка импорта: Неверный формат файла");
-                                        }
-                                    };
-                                    reader.readAsText(file);
-                                }}
-                            />
-                            📤 Импортировать JSON
-                        </Button>
-                        <Button
-                            variant="destructive"
-                            size="sm"
-                            className="text-xs bg-red-900/20 hover:bg-red-900/40 text-red-400 border border-red-900/50"
-                            onClick={() => {
-                                if (confirm("ВНИМАНИЕ: Все данные будут удалены! Это действие необратимо.")) {
-                                    localStorage.clear();
-                                    window.location.reload();
-                                }
-                            }}
-                        >
-                            🗑️ Очистить всё
-                        </Button>
-                    </div>
-                </div>
-            </Section>
+            {/* DATA CENTER */}
+            <DataCenter />
         </div>
     );
 }
