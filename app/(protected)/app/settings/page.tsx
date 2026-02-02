@@ -203,7 +203,7 @@ export default function SettingsPage() {
                                 </div>
                                 <span className="text-[10px] text-zinc-400 font-medium truncate">
                                     <span className="hidden sm:inline">Требует: </span>
-                                    <span className="text-zinc-300 font-normal uppercase tracking-wider">
+                                    <span className="text-zinc-300 font-medium uppercase tracking-wider">
                                         {missingReqs.map(r => {
                                             const names: any = { groups: 'ГРУППЫ', courses: 'ПРЕДМЕТЫ', schedule: 'РАСПИСАНИЕ', faculties: 'ФАКУЛЬТЕТЫ' };
                                             return names[r] || r.toUpperCase();
