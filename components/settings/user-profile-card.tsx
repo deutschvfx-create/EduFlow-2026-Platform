@@ -198,8 +198,8 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                 <button
                                     onClick={() => setActiveTab("profile")}
                                     className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${activeTab === "profile"
-                                            ? "bg-zinc-800 text-white shadow-lg"
-                                            : "text-zinc-500 hover:text-zinc-300"
+                                        ? "bg-zinc-800 text-white shadow-lg"
+                                        : "text-zinc-500 hover:text-zinc-300"
                                         }`}
                                 >
                                     Профиль
@@ -207,8 +207,8 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                 <button
                                     onClick={() => setActiveTab("security")}
                                     className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${activeTab === "security"
-                                            ? "bg-zinc-800 text-white shadow-lg"
-                                            : "text-zinc-500 hover:text-zinc-300"
+                                        ? "bg-zinc-800 text-white shadow-lg"
+                                        : "text-zinc-500 hover:text-zinc-300"
                                         }`}
                                 >
                                     Безопасность
@@ -237,12 +237,12 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                             onMouseDown={handleMouseDown}
                                             onMouseMove={handleMouseMove}
                                         >
-                                            <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-zinc-900 bg-zinc-900 flex items-center justify-center shadow-2xl relative">
+                                            <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-zinc-900 bg-zinc-900 flex items-center justify-center shadow-2xl relative">
                                                 {formData.photoURL ? (
                                                     <motion.img
                                                         src={formData.photoURL}
                                                         alt="Profile"
-                                                        className="absolute max-w-none pointer-events-none"
+                                                        className="absolute w-full h-full object-cover pointer-events-none"
                                                         style={{
                                                             scale: formData.photoScale,
                                                             x: formData.photoPosition?.x,
