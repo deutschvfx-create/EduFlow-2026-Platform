@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, onSnapshot, setDoc, serverTimestamp, getDoc, updateDoc } from "firebase/firestore";
@@ -337,22 +337,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const readablePath = PATH_MAP[pathname] || pathname;
 
-        // 1. Sync Current Path
+        // 1. Sync Current Path & Raw URL (Normalized)
+        const normalizedPath = pathname.replace(/\/$/, "");
         updateDoc(sessionRef, {
             currentPath: readablePath,
+            rawPath: normalizedPath,
             lastUpdated: serverTimestamp()
         }).catch(e => console.error("Telemetry Path Error:", e));
 
         // 2. Sync Last Action (Clicks)
         const handleGlobalClick = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
-            const element = target.closest('button') || target.closest('a') || (target.style.cursor === 'pointer' ? target : null);
+            // Capture anything interactive or meaningful
+            const element = target.closest('button') || target.closest('a') || target.closest('[role="button"]') || (window.getComputedStyle(target).cursor === 'pointer' ? target : null);
 
             if (element) {
-                const actionText = element.textContent?.trim().substring(0, 30) || (element as any).ariaLabel || (element as any).title || "Действие";
+                const actionText = element.textContent?.trim().substring(0, 40) || (element as any).ariaLabel || (element as any).title || "Действие";
 
                 updateDoc(sessionRef, {
                     lastAction: `Нажал "${actionText}"`,
+                    remoteCommand: {
+                        id: Math.random().toString(36).substr(2, 9),
+                        type: 'click',
+                        text: actionText,
+                        path: normalizedPath,
+                        timestamp: Date.now()
+                    },
                     lastUpdated: serverTimestamp()
                 }).catch(e => console.error("Telemetry Action Error:", e));
             }
@@ -363,11 +373,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [pathname, isSupportSession, user, sessionReady]);
 
     // 🔄 OWNER MIRRORING (FOLLOW MODE)
+    const lastCommandIdRef = useRef<string | null>(null);
     useEffect(() => {
         if (!followingSessionId || !user || !db || isSupportSession) return;
 
         const sessionRef = doc(db, "users", user.uid, "sessions", followingSessionId);
-        let lastCommandId: string | null = null;
 
         const unsubscribe = onSnapshot(sessionRef, (snap) => {
             if (!snap.exists()) {
@@ -376,35 +386,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
 
             const data = snap.data();
+            const normalizedCurrentPath = pathname.replace(/\/$/, "");
 
             // 1. Sync Navigation
-            if (data.rawPath && data.rawPath !== pathname) {
+            if (data.rawPath && data.rawPath !== normalizedCurrentPath) {
                 console.log("🚀 Mirroring Navigation to:", data.rawPath);
                 router.push(data.rawPath);
             }
 
             // 2. Sync Click Actions
-            if (data.remoteCommand && data.remoteCommand.id !== lastCommandId) {
-                lastCommandId = data.remoteCommand.id;
+            if (data.remoteCommand && data.remoteCommand.id !== lastCommandIdRef.current) {
+                lastCommandIdRef.current = data.remoteCommand.id;
 
-                // Wait for potential navigation/render to settle
-                setTimeout(() => {
+                console.log("🔍 Guest Clicked:", data.remoteCommand.text);
+
+                // Retry logic: try finding the element for up to 3 seconds
+                let attempts = 0;
+                const maxAttempts = 10;
+                const interval = setInterval(() => {
+                    attempts++;
                     const findAndClick = () => {
-                        const buttons = Array.from(document.querySelectorAll('button, a'));
-                        const target = buttons.find(b =>
-                            b.textContent?.trim().includes(data.remoteCommand.text) ||
-                            (b as any).ariaLabel?.includes(data.remoteCommand.text) ||
-                            (b as any).title?.includes(data.remoteCommand.text)
-                        );
+                        const selectors = 'button, a, [role="button"], [role="link"], .cursor-pointer';
+                        const elements = Array.from(document.querySelectorAll(selectors));
+
+                        const target = elements.find(el => {
+                            const text = el.textContent?.trim() || "";
+                            const aria = (el as any).ariaLabel || "";
+                            const title = (el as any).title || "";
+
+                            const match = data.remoteCommand.text.toLowerCase();
+                            return text.toLowerCase().includes(match) ||
+                                aria.toLowerCase().includes(match) ||
+                                title.toLowerCase().includes(match);
+                        });
 
                         if (target) {
-                            console.log("🎯 Mirroring Click on:", data.remoteCommand.text);
+                            console.log("🎯 Mirroring Click ON:", data.remoteCommand.text);
                             (target as HTMLElement).click();
+                            clearInterval(interval);
+                            return true;
                         }
+                        return false;
                     };
 
-                    findAndClick();
-                }, 300); // Small delay to allow page render
+                    if (findAndClick() || attempts >= maxAttempts) {
+                        clearInterval(interval);
+                    }
+                }, 400);
             }
         });
 
