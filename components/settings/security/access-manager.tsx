@@ -45,6 +45,7 @@ interface Session {
     isCurrent: boolean;
     type: 'desktop' | 'mobile' | 'support';
     status: 'active' | 'blocked';
+    expiresAt?: number;
 }
 
 export function AccessManager() {
@@ -69,12 +70,39 @@ export function AccessManager() {
 
     // Real Sessions
     const [sessions, setSessions] = useState<Session[]>([]);
+    const [guestTimers, setGuestTimers] = useState<Record<string, number>>({});
 
     useEffect(() => {
         if (typeof window !== "undefined") {
             setAppUrl(window.location.origin);
         }
     }, []);
+
+    // 🕒 Owner-side countdown for guest sessions
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const now = Date.now();
+            const newTimers: Record<string, number> = {};
+
+            sessions.forEach(s => {
+                if (s.type === 'support' && s.expiresAt) {
+                    const left = s.expiresAt - now;
+                    newTimers[s.id] = left > 0 ? left : 0;
+                }
+            });
+
+            setGuestTimers(newTimers);
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [sessions]);
+
+    const formatCountdown = (ms: number) => {
+        if (ms <= 0) return "00:00";
+        const mins = Math.floor(ms / 60000);
+        const secs = Math.floor((ms % 60000) / 1000);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
 
     // 1. Fetch Real Sessions
     useEffect(() => {
@@ -270,15 +298,17 @@ export function AccessManager() {
                                     <Monitor className="h-3.5 w-3.5" />
                                     Ваши устройства
                                 </h3>
-                                <Badge variant="secondary" className="text-[9px] h-4 px-1 bg-zinc-800 text-zinc-400">{sessions.length}</Badge>
+                                <Badge variant="secondary" className="text-[9px] h-4 px-1 bg-zinc-800 text-zinc-400">
+                                    {sessions.filter(s => s.type !== 'support').length}
+                                </Badge>
                             </div>
 
                             <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
                                 <AnimatePresence initial={false}>
-                                    {sessions.length === 0 && (
+                                    {sessions.filter(s => s.type !== 'support').length === 0 && (
                                         <p className="text-center text-xs text-zinc-600 py-4">Нет активных сессий</p>
                                     )}
-                                    {sessions.map((session) => (
+                                    {sessions.filter(s => s.type !== 'support').map((session) => (
                                         <motion.div
                                             key={session.id}
                                             layout
@@ -490,6 +520,78 @@ export function AccessManager() {
                                             >
                                                 Аннулировать доступ
                                             </Button>
+
+                                            {/* 🛡️ GUEST SESSION DISPLAY (MOVED HERE) */}
+                                            {sessions.filter(s => s.type === 'support').length > 0 && (
+                                                <div className="pt-4 border-t border-indigo-500/10 mt-4 space-y-3">
+                                                    <h4 className="text-[10px] font-bold text-indigo-400/60 uppercase tracking-widest pl-1">Подключенные гости</h4>
+                                                    {sessions.filter(s => s.type === 'support').map((session) => (
+                                                        <motion.div
+                                                            key={session.id}
+                                                            initial={{ opacity: 0, y: 10 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            className={cn(
+                                                                "p-3 rounded-xl border transition-all flex flex-col gap-2",
+                                                                session.status === 'blocked'
+                                                                    ? "bg-red-500/5 border-red-500/20 opacity-70"
+                                                                    : "bg-black/40 border-indigo-500/20"
+                                                            )}
+                                                        >
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="flex items-center gap-2 overflow-hidden">
+                                                                    <div className={cn(
+                                                                        "h-7 w-7 rounded-full flex items-center justify-center",
+                                                                        session.status === 'blocked' ? "bg-red-500/10 text-red-500" : "bg-indigo-500/10 text-indigo-400"
+                                                                    )}>
+                                                                        <Shield className="h-3.5 w-3.5" />
+                                                                    </div>
+                                                                    <div className="min-w-0">
+                                                                        <p className="text-[11px] font-bold text-zinc-200 truncate">{session.device}</p>
+                                                                        <div className="flex items-center gap-1.5 text-[9px] text-zinc-500">
+                                                                            <span>{formatLastActive(session.lastActive)}</span>
+                                                                            {session.expiresAt && (
+                                                                                <>
+                                                                                    <span className="text-zinc-700 mx-0.5">•</span>
+                                                                                    <span className={cn(
+                                                                                        "font-mono font-bold flex items-center gap-1",
+                                                                                        guestTimers[session.id] && guestTimers[session.id] < 60000 ? "text-amber-500" : "text-indigo-400"
+                                                                                    )}>
+                                                                                        <Clock className="h-2.5 w-2.5" />
+                                                                                        {formatCountdown(guestTimers[session.id] || 0)}
+                                                                                    </span>
+                                                                                </>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex items-center gap-1">
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-7 w-7 text-zinc-500 hover:text-red-400"
+                                                                        onClick={() => removeSession(session.id)}
+                                                                    >
+                                                                        <Trash2 className="h-3 w-3" />
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center gap-2 pt-1 border-t border-white/5">
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className={cn(
+                                                                        "h-7 text-[9px] px-2 flex-1",
+                                                                        session.status === 'blocked' ? "text-emerald-400 hover:bg-emerald-400/10" : "text-amber-500 hover:bg-amber-400/10"
+                                                                    )}
+                                                                    onClick={() => toggleSessionStatus(session.id, session.status)}
+                                                                >
+                                                                    {session.status === 'blocked' ? "Возобновить" : "Пауза"}
+                                                                </Button>
+                                                            </div>
+                                                        </motion.div>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </motion.div>
                                     )}
                                 </div>
