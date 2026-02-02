@@ -17,6 +17,7 @@ export interface UserData {
     photoPosition?: { x: number; y: number };
     organizationId?: string | null;
     organizationType?: string;
+    phone?: string;
     createdAt: number;
 }
 
