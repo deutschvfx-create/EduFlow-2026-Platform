@@ -43,7 +43,7 @@ interface Session {
     location?: string;
     lastActive: any; // Firestore Timestamp
     isCurrent: boolean;
-    type: 'desktop' | 'mobile';
+    type: 'desktop' | 'mobile' | 'support';
     status: 'active' | 'blocked';
 }
 
@@ -299,6 +299,8 @@ export function AccessManager() {
                                                     )}>
                                                         {session.status === 'blocked' ? (
                                                             <PauseCircle className="h-4 w-4" />
+                                                        ) : session.type === 'support' ? (
+                                                            <Shield className="h-4 w-4" />
                                                         ) : session.type === 'mobile' ? (
                                                             <Smartphone className="h-4 w-4" />
                                                         ) : (
@@ -311,8 +313,9 @@ export function AccessManager() {
                                                     </div>
                                                     <div className="min-w-0">
                                                         <div className="flex items-center gap-2">
-                                                            <span className="text-xs font-bold text-zinc-200 truncate">{session.device.substring(0, 25)}...</span>
+                                                            <span className="text-xs font-bold text-zinc-200 truncate">{session.device.substring(0, 25)}</span>
                                                             {session.status === 'blocked' && <Badge variant="destructive" className="text-[9px] h-4 px-1">Приостановлен</Badge>}
+                                                            {session.type === 'support' && <Badge variant="outline" className="text-[9px] h-4 px-1 border-indigo-500/30 text-indigo-400 bg-indigo-500/5">Гость</Badge>}
                                                             {session.isCurrent && <Badge variant="outline" className="text-[9px] h-4 px-1 border-emerald-500/30 text-emerald-500 bg-emerald-500/5">Вы</Badge>}
                                                         </div>
                                                         <div className="flex items-center gap-2 text-[10px] text-zinc-500 mt-0.5">

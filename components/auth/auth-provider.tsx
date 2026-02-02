@@ -127,23 +127,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     const { type, name } = getDeviceInfo();
 
                     try {
+                        const idTokenResult = await firebaseUser.getIdTokenResult();
+                        const isSupport = idTokenResult.claims.supportAccess === true;
+
+                        // Check if session already exists
                         const sessionSnap = await getDoc(sessionRef);
 
                         if (!sessionSnap.exists()) {
                             await setDoc(sessionRef, {
                                 id: deviceId,
-                                device: name,
+                                device: isSupport ? `Guest (${name})` : name,
                                 userAgent: navigator.userAgent,
                                 lastActive: serverTimestamp(),
                                 isCurrent: true,
-                                type: type,
+                                type: isSupport ? 'support' : type,
                                 status: 'active'
                             });
                         } else {
                             await updateDoc(sessionRef, {
                                 lastActive: serverTimestamp(),
-                                device: name,
-                                isCurrent: true
+                                device: isSupport ? `Guest (${name})` : name,
+                                isCurrent: true,
+                                type: isSupport ? 'support' : type
                             });
                         }
 
