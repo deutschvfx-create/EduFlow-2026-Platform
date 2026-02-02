@@ -9,7 +9,9 @@ import { EditCourseModal } from "@/components/courses/edit-course-modal";
 import { AssignTeachersModal } from "@/components/courses/assign-teachers-modal";
 import { LinkGroupsModal } from "@/components/courses/link-groups-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, CheckCircle2, XCircle, Archive } from "lucide-react";
+import { BookOpen, CheckCircle2, XCircle, Archive, AlertCircle, RefreshCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence } from "framer-motion";
 import { Course } from "@/lib/types/course";
 import { ModuleGuard } from "@/components/system/module-guard";
 import { useOrganization } from "@/hooks/use-organization";
@@ -32,15 +34,32 @@ export default function CoursesPage() {
     // Filter Logic
     const [courses, setCourses] = useState<Course[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const { currentOrganizationId } = useOrganization();
+
+    const loadCourses = (orgId: string) => {
+        setIsLoaded(false);
+        setError(null);
+        import("@/lib/data/courses.repo").then(async ({ coursesRepo }) => {
+            try {
+                const data = await coursesRepo.getAll(orgId);
+                setCourses(data as any);
+                setIsLoaded(true);
+            } catch (err: any) {
+                console.error("Courses load error:", err);
+                setError(err.message || "Не удалось загрузить предметы");
+                setIsLoaded(true);
+            }
+        }).catch(err => {
+            console.error("Repo import error:", err);
+            setError("Ошибка загрузки модуля");
+            setIsLoaded(true);
+        });
+    };
 
     useEffect(() => {
         if (currentOrganizationId) {
-            import("@/lib/data/courses.repo").then(async ({ coursesRepo }) => {
-                const data = await coursesRepo.getAll(currentOrganizationId);
-                setCourses(data as any);
-                setIsLoaded(true);
-            });
+            loadCourses(currentOrganizationId);
         }
     }, [currentOrganizationId]);
 
@@ -64,7 +83,12 @@ export default function CoursesPage() {
     const inactive = courses.filter(s => s.status === 'INACTIVE').length;
     const archived = courses.filter(s => s.status === 'ARCHIVED').length;
 
-    if (!isLoaded) return <div className="p-8 text-zinc-500">Загрузка данных...</div>;
+    if (!isLoaded) return (
+        <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4 text-zinc-500">
+            <div className="h-10 w-10 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
+            <p className="font-medium animate-pulse">Загрузка предметов...</p>
+        </div>
+    );
 
     const handleEdit = (course: Course) => {
         setSelectedCourse(course);
@@ -106,6 +130,32 @@ export default function CoursesPage() {
     return (
         <ModuleGuard module="courses">
             <div className="space-y-6">
+                <AnimatePresence>
+                    {error && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl p-6 shadow-2xl backdrop-blur-md flex gap-4"
+                        >
+                            <AlertCircle className="h-6 w-6 mt-1 flex-shrink-0" />
+                            <div className="flex-1">
+                                <h3 className="font-black uppercase tracking-tight text-lg leading-tight">Ошибка загрузки</h3>
+                                <p className="text-sm font-bold opacity-80 mt-1">
+                                    {error}. Проверьте соединение или права доступа.
+                                </p>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => loadCourses(currentOrganizationId!)}
+                                    className="mt-4 border-red-500/50 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-black uppercase tracking-widest text-[10px] h-10 rounded-xl px-6"
+                                >
+                                    <RefreshCcw className="mr-2 h-3 w-3" /> Попробовать снова
+                                </Button>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="hidden laptop:block">
                         <h1 className="text-3xl font-bold tracking-tight text-white mb-1">Предметы</h1>

@@ -16,14 +16,27 @@ export default function DepartmentsPage() {
     const [departments, setDepartments] = useState<Department[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const loadDepartments = (orgId: string) => {
+        setLoading(true);
+        import("@/lib/data/departments.repo").then(({ departmentsRepo }) => {
+            departmentsRepo.getAll(orgId).then(data => {
+                setDepartments(data);
+                setLoading(false);
+            }).catch(err => {
+                console.error("Departments load error:", err);
+                setLoading(false);
+                // Simple alert for now as this page uses a table layout
+                alert("Ошибка при загрузке кафедр");
+            });
+        }).catch(err => {
+            console.error("Repo import error:", err);
+            setLoading(false);
+        });
+    };
+
     useEffect(() => {
         if (currentOrganizationId) {
-            import("@/lib/data/departments.repo").then(({ departmentsRepo }) => {
-                departmentsRepo.getAll(currentOrganizationId).then(data => {
-                    setDepartments(data);
-                    setLoading(false);
-                });
-            });
+            loadDepartments(currentOrganizationId);
         }
     }, [currentOrganizationId]);
 
@@ -139,7 +152,12 @@ export default function DepartmentsPage() {
                         departments={filteredDepartments}
                         onEdit={handleEdit}
                     />
-                    {loading && <div className="text-center py-10 text-zinc-500">Загрузка данных...</div>}
+                    {loading && (
+                        <div className="flex flex-col items-center justify-center py-20 text-zinc-500 space-y-4">
+                            <div className="h-8 w-8 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
+                            <p className="text-sm font-medium">Загрузка...</p>
+                        </div>
+                    )}
                 </div>
 
                 <EditDepartmentModal

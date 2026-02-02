@@ -6,7 +6,8 @@ import { FacultyCard } from "@/components/faculties/faculty-card";
 import { AddFacultyModal } from "@/components/faculties/add-faculty-modal";
 import { EditFacultyModal } from "@/components/faculties/edit-faculty-modal";
 import { GradientKPICard } from "@/components/shared/gradient-kpi-card";
-import { Building2, CheckCircle2, XCircle, Archive, ChevronRight, LayoutGrid } from "lucide-react";
+import { Building2, CheckCircle2, XCircle, Archive, ChevronRight, LayoutGrid, AlertCircle, RefreshCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Faculty } from "@/lib/types/faculty";
 import { ModuleGuard } from "@/components/system/module-guard";
 import { motion, AnimatePresence } from "framer-motion";
@@ -18,6 +19,7 @@ export default function FacultiesPage() {
     const [statusFilter, setStatusFilter] = useState("all");
     const [faculties, setFaculties] = useState<Faculty[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (currentOrganizationId) {
@@ -26,9 +28,21 @@ export default function FacultiesPage() {
     }, [currentOrganizationId]);
 
     const loadFaculties = (orgId: string) => {
+        setIsLoaded(false);
+        setError(null);
         import("@/lib/data/faculties.repo").then(async ({ facultiesRepo }) => {
-            const data = await facultiesRepo.getAll(orgId);
-            setFaculties(data);
+            try {
+                const data = await facultiesRepo.getAll(orgId);
+                setFaculties(data);
+                setIsLoaded(true);
+            } catch (err: any) {
+                console.error("Faculties load error:", err);
+                setError(err.message || "Не удалось загрузить данные");
+                setIsLoaded(true);
+            }
+        }).catch(err => {
+            console.error("Repo import error:", err);
+            setError("Ошибка загрузки модуля");
             setIsLoaded(true);
         });
     };
@@ -69,15 +83,47 @@ export default function FacultiesPage() {
             setFaculties(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f));
         } catch (error) {
             console.error(error);
-            alert("Ошибка при обновлении факультета");
+            // In a real app we'd use a toast here
         }
     };
 
-    if (!isLoaded) return <div className="p-8 text-zinc-500">Загрузка данных...</div>;
+    if (!isLoaded) return (
+        <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+            <div className="h-12 w-12 rounded-2xl border-2 border-indigo-500/20 border-t-indigo-500 animate-spin" />
+            <p className="text-zinc-500 font-medium animate-pulse">Загрузка факультетов...</p>
+        </div>
+    );
 
     return (
         <ModuleGuard module="faculties">
             <div className="max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <AnimatePresence>
+                    {error && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl p-6 shadow-2xl backdrop-blur-md flex gap-4"
+                        >
+                            <AlertCircle className="h-6 w-6 mt-1 flex-shrink-0" />
+                            <div className="flex-1">
+                                <h3 className="font-black uppercase tracking-tight text-lg leading-tight">Ошибка загрузки</h3>
+                                <p className="text-sm font-bold opacity-80 mt-1">
+                                    {error}. Проверьте соединение или права доступа.
+                                </p>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => loadFaculties(currentOrganizationId!)}
+                                    className="mt-4 border-red-500/50 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-black uppercase tracking-widest text-[10px] h-10 rounded-xl px-6"
+                                >
+                                    <RefreshCcw className="mr-2 h-3 w-3" /> Попробовать снова
+                                </Button>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-zinc-900" data-help-id="faculties-header">
                     <div className="space-y-1 hidden laptop:block">

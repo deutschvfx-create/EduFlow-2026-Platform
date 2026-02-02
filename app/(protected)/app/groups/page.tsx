@@ -7,7 +7,9 @@ import { GroupsTable } from "@/components/groups/groups-table";
 import { AddGroupModal } from "@/components/groups/add-group-modal";
 import { EditGroupModal } from "@/components/groups/edit-group-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Layers, CheckCircle2, XCircle, Archive } from "lucide-react";
+import { Layers, CheckCircle2, XCircle, Archive, AlertCircle, RefreshCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence } from "framer-motion";
 import { Group } from "@/lib/types/group";
 import { ModuleGuard } from "@/components/system/module-guard";
 import { useOrganization } from "@/hooks/use-organization";
@@ -26,15 +28,33 @@ export default function GroupsPage() {
     // Filter Logic
     const [groups, setGroups] = useState<Group[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const { currentOrganizationId } = useOrganization();
 
-    useEffect(() => {
-        if (!currentOrganizationId) return;
+    const loadGroups = (orgId: string) => {
+        setIsLoaded(false);
+        setError(null);
         import("@/lib/data/groups.repo").then(async ({ groupsRepo }) => {
-            const data = await groupsRepo.getAll(currentOrganizationId);
-            setGroups(data as any);
+            try {
+                const data = await groupsRepo.getAll(orgId);
+                setGroups(data as any);
+                setIsLoaded(true);
+            } catch (err: any) {
+                console.error("Groups load error:", err);
+                setError(err.message || "Не удалось загрузить группы");
+                setIsLoaded(true);
+            }
+        }).catch(err => {
+            console.error("Repo import error:", err);
+            setError("Ошибка загрузки модуля");
             setIsLoaded(true);
         });
+    };
+
+    useEffect(() => {
+        if (currentOrganizationId) {
+            loadGroups(currentOrganizationId);
+        }
     }, [currentOrganizationId]);
 
     // Filter Logic
@@ -57,7 +77,12 @@ export default function GroupsPage() {
     const inactive = groups.filter(s => s.status === 'INACTIVE').length;
     const archived = groups.filter(s => s.status === 'ARCHIVED').length;
 
-    if (!isLoaded) return <div className="p-8 text-zinc-500">Загрузка данных...</div>;
+    if (!isLoaded) return (
+        <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4 text-zinc-500">
+            <div className="h-10 w-10 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
+            <p className="font-medium animate-pulse">Загрузка групп...</p>
+        </div>
+    );
 
     const handleEdit = (group: Group) => {
         setSelectedGroup(group);
@@ -81,6 +106,32 @@ export default function GroupsPage() {
     return (
         <ModuleGuard module="groups">
             <div className="space-y-6">
+                <AnimatePresence>
+                    {error && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl p-6 shadow-2xl backdrop-blur-md flex gap-4"
+                        >
+                            <AlertCircle className="h-6 w-6 mt-1 flex-shrink-0" />
+                            <div className="flex-1">
+                                <h3 className="font-black uppercase tracking-tight text-lg leading-tight">Ошибка загрузки</h3>
+                                <p className="text-sm font-bold opacity-80 mt-1">
+                                    {error}. Проверьте соединение или права доступа.
+                                </p>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => loadGroups(currentOrganizationId!)}
+                                    className="mt-4 border-red-500/50 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-black uppercase tracking-widest text-[10px] h-10 rounded-xl px-6"
+                                >
+                                    <RefreshCcw className="mr-2 h-3 w-3" /> Попробовать снова
+                                </Button>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4" data-help-id="groups-header">
                     <div className="hidden laptop:block">
                         <h1 className="text-3xl font-bold tracking-tight text-white mb-1">Группы</h1>
