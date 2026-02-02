@@ -111,12 +111,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         let unsubscribeSnapshot: any = null;
         let unsubscribeSession: any = null;
+        let sessionTimer: any = null;
 
         const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
             // Clean up previous listeners
             if (unsubscribeSnapshot) unsubscribeSnapshot();
             if (unsubscribeSession) unsubscribeSession();
 
+            if (sessionTimer) clearTimeout(sessionTimer);
             setUser(firebaseUser);
 
             if (firebaseUser) {
@@ -129,27 +131,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     try {
                         const idTokenResult = await firebaseUser.getIdTokenResult();
                         const isSupport = idTokenResult.claims.supportAccess === true;
+                        const expiresAt = idTokenResult.claims.expiresAt as number | undefined;
 
                         // Check if session already exists
                         const sessionSnap = await getDoc(sessionRef);
 
+                        const sessionData = {
+                            id: deviceId,
+                            device: isSupport ? `Guest (${name})` : name,
+                            userAgent: navigator.userAgent,
+                            lastActive: serverTimestamp(),
+                            isCurrent: true,
+                            type: isSupport ? 'support' : type,
+                            status: 'active',
+                            ...(isSupport && expiresAt ? { expiresAt } : {})
+                        };
+
                         if (!sessionSnap.exists()) {
-                            await setDoc(sessionRef, {
-                                id: deviceId,
-                                device: isSupport ? `Guest (${name})` : name,
-                                userAgent: navigator.userAgent,
-                                lastActive: serverTimestamp(),
-                                isCurrent: true,
-                                type: isSupport ? 'support' : type,
-                                status: 'active'
-                            });
+                            await setDoc(sessionRef, sessionData);
                         } else {
-                            await updateDoc(sessionRef, {
-                                lastActive: serverTimestamp(),
-                                device: isSupport ? `Guest (${name})` : name,
-                                isCurrent: true,
-                                type: isSupport ? 'support' : type
-                            });
+                            await updateDoc(sessionRef, sessionData);
+                        }
+
+                        // 🕒 TIMER LOGIC: If this is a support session, set auto-logout
+                        if (isSupport && expiresAt) {
+                            const timeLeft = expiresAt - Date.now();
+                            if (timeLeft <= 0) {
+                                auth.signOut().then(() => window.location.href = '/login');
+                                return;
+                            }
+
+                            // Set a client-side timer to kick the guest out
+                            sessionTimer = setTimeout(() => {
+                                auth.signOut().then(() => window.location.href = '/login');
+                            }, timeLeft);
+
+                            // Note: we need to clean this up, but this is inside a state change callback
+                            // The outer cleanup handles basic unsubscribe, let's store it locally if possible
+                            // or rely on the fact that guest sessions are usually short-lived.
                         }
 
                         // MONITOR THIS SESSION 
@@ -164,7 +183,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                             const data = docSnap.data();
                             setIsBlocked(data?.status === 'blocked');
-                            setSessionReady(true); // MARK AS VERIFIED
+
+                            // Check expiry on snapshot too (extra safety)
+                            if (data?.expiresAt && data.expiresAt < Date.now()) {
+                                auth.signOut().then(() => window.location.href = '/login');
+                            }
+
+                            setSessionReady(true);
                         });
                     } catch (e) {
                         console.error("❌ Failed to register/monitor session:", e);
@@ -214,6 +239,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             unsubscribeAuth();
             if (unsubscribeSnapshot) unsubscribeSnapshot();
             if (unsubscribeSession) unsubscribeSession();
+            if (sessionTimer) clearTimeout(sessionTimer);
         };
     }, [router]);
 
