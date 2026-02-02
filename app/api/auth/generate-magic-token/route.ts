@@ -9,7 +9,15 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const adminAuth = getAdminAuth();
+        let adminAuth;
+        try {
+            adminAuth = getAdminAuth();
+        } catch (e: any) {
+            console.error("Firebase Admin Init Failed:", e);
+            return NextResponse.json({
+                error: `Init Error: ${e.message || e}`
+            }, { status: 500 });
+        }
 
         // 2. Check if Admin is initialized (Prevents runtime crash if keys are missing)
         if (!adminAuth) {
