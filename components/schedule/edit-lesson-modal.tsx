@@ -103,202 +103,155 @@ export function EditLessonModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[600px] bg-zinc-900 border-zinc-800 text-zinc-100">
-                <DialogHeader>
-                    <DialogTitle>Редактирование занятия</DialogTitle>
-                    <DialogDescription>Изменение параметров урока</DialogDescription>
-                </DialogHeader>
+            <DialogContent className="sm:max-w-[500px] bg-zinc-950 border-zinc-800 text-zinc-100 p-0 overflow-hidden shadow-2xl shadow-black/80">
+                <div className="px-6 py-6 border-b border-zinc-800 bg-zinc-900/50">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                            Редактирование занятия
+                        </DialogTitle>
+                        <DialogDescription className="text-zinc-400">
+                            Измените время, место или участников занятия.
+                        </DialogDescription>
+                    </DialogHeader>
+                </div>
 
-                <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-2 gap-4">
+                <div className="p-6 space-y-6">
+                    {/* Time Selection */}
+                    <div className="bg-zinc-900/50 rounded-xl p-4 border border-zinc-800/50 space-y-4">
+                        <div className="flex items-center justify-between text-sm font-medium text-zinc-400 uppercase tracking-wide">
+                            <span>Время проведения</span>
+                            <span className="text-zinc-500">{dayOfWeek && ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].includes(dayOfWeek) ?
+                                ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"][["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].indexOf(dayOfWeek)] : dayOfWeek}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="flex-1 space-y-2">
+                                <Label className="text-xs text-zinc-500">Начало</Label>
+                                <div className="flex items-center gap-1.5">
+                                    <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full border border-zinc-800" onClick={() => setStartTime(t => addMinutes(t, -15))}><Minus className="h-3 w-3" /></Button>
+                                    <Select value={startTime} onValueChange={setStartTime}>
+                                        <SelectTrigger className="h-9 bg-black border-zinc-800 font-mono text-center"><SelectValue /></SelectTrigger>
+                                        <SelectContent className="max-h-[200px] text-center">
+                                            {Array.from({ length: 29 }, (_, i) => {
+                                                const h = Math.floor(i / 2) + 8;
+                                                const m = (i % 2) * 30;
+                                                return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+                                            }).map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                    <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full border border-zinc-800" onClick={() => setStartTime(t => addMinutes(t, 15))}><Plus className="h-3 w-3" /></Button>
+                                </div>
+                            </div>
+                            <div className="w-4 h-[1px] bg-zinc-700 mt-6" />
+                            <div className="flex-1 space-y-2">
+                                <Label className="text-xs text-zinc-500">Конец</Label>
+                                <div className="flex items-center gap-1.5">
+                                    <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full border border-zinc-800" onClick={() => setEndTime(t => addMinutes(t, -15))}><Minus className="h-3 w-3" /></Button>
+                                    <Select value={endTime} onValueChange={setEndTime}>
+                                        <SelectTrigger className="h-9 bg-black border-zinc-800 font-mono text-center"><SelectValue /></SelectTrigger>
+                                        <SelectContent className="max-h-[200px] text-center">
+                                            {Array.from({ length: 29 }, (_, i) => {
+                                                const h = Math.floor(i / 2) + 8;
+                                                const m = (i % 2) * 30;
+                                                return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+                                            }).map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                    <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full border border-zinc-800" onClick={() => setEndTime(t => addMinutes(t, 15))}><Plus className="h-3 w-3" /></Button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-5">
                         <div className="space-y-2">
-                            <Label>Группа</Label>
+                            <Label className="text-zinc-400">Группа</Label>
                             <Select value={groupId} onValueChange={setGroupId}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
-                                    <SelectValue />
-                                </SelectTrigger>
+                                <SelectTrigger className="bg-zinc-900 border-zinc-800 h-10"><SelectValue placeholder="Выберите группу" /></SelectTrigger>
                                 <SelectContent>
-                                    {groups.map(g => (
-                                        <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
-                                    ))}
+                                    {groups.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label>Предмет</Label>
+                            <Label className="text-zinc-400">Предмет</Label>
                             <Select value={courseId} onValueChange={setCourseId}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
-                                    <SelectValue />
-                                </SelectTrigger>
+                                <SelectTrigger className="bg-zinc-900 border-zinc-800 h-10"><SelectValue placeholder="Выберите предмет" /></SelectTrigger>
                                 <SelectContent>
-                                    {courses.map(c => (
-                                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                                    ))}
+                                    {courses.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label>Преподаватель</Label>
+                            <Label className="text-zinc-400">Преподаватель</Label>
                             <Select value={teacherId} onValueChange={setTeacherId}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
-                                    <SelectValue />
-                                </SelectTrigger>
+                                <SelectTrigger className="bg-zinc-900 border-zinc-800 h-10"><SelectValue placeholder="Выберите преподавателя" /></SelectTrigger>
                                 <SelectContent>
-                                    {teachers.map(t => (
-                                        <SelectItem key={t.id} value={t.id}>{t.firstName || t.name} {t.lastName || ""}</SelectItem>
-                                    ))}
+                                    {teachers.map(t => <SelectItem key={t.id} value={t.id}>{t.firstName} {t.lastName}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
-
-                        <div className="space-y-2">
-                            <Label>День недели</Label>
-                            <Select value={dayOfWeek} onValueChange={(d) => setDayOfWeek(d as DayOfWeek)}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="MON">Понедельник</SelectItem>
-                                    <SelectItem value="TUE">Вторник</SelectItem>
-                                    <SelectItem value="WED">Среда</SelectItem>
-                                    <SelectItem value="THU">Четверг</SelectItem>
-                                    <SelectItem value="FRI">Пятница</SelectItem>
-                                    <SelectItem value="SAT">Суббота</SelectItem>
-                                    <SelectItem value="SUN">Воскресенье</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-
-                    {/* ROW 3: Time Controls */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>Начало</Label>
-                            <div className="flex items-center gap-1">
-                                <Button
-                                    size="icon" variant="outline" className="h-9 w-9 shrink-0 border-zinc-700 bg-zinc-900"
-                                    onClick={() => setStartTime(t => addMinutes(t, -15))}
-                                >
-                                    <Minus className="h-3 w-3" />
-                                </Button>
-                                <Select value={startTime} onValueChange={setStartTime}>
-                                    <SelectTrigger className="bg-zinc-950 border-zinc-800 text-center font-mono">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="max-h-[200px]">
-                                        {["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00"].map(t => (
-                                            <SelectItem key={t} value={t}>{t}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <Button
-                                    size="icon" variant="outline" className="h-9 w-9 shrink-0 border-zinc-700 bg-zinc-900"
-                                    onClick={() => setStartTime(t => addMinutes(t, 15))}
-                                >
-                                    <Plus className="h-3 w-3" />
-                                </Button>
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Конец</Label>
-                            <div className="flex items-center gap-1">
-                                <Button
-                                    size="icon" variant="outline" className="h-9 w-9 shrink-0 border-zinc-700 bg-zinc-900"
-                                    onClick={() => setEndTime(t => addMinutes(t, -15))}
-                                >
-                                    <Minus className="h-3 w-3" />
-                                </Button>
-                                <Select value={endTime} onValueChange={setEndTime}>
-                                    <SelectTrigger className="bg-zinc-950 border-zinc-800 text-center font-mono">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="max-h-[200px]">
-                                        {["08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00"].map(t => (
-                                            <SelectItem key={t} value={t}>{t}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <Button
-                                    size="icon" variant="outline" className="h-9 w-9 shrink-0 border-zinc-700 bg-zinc-900"
-                                    onClick={() => setEndTime(t => addMinutes(t, 15))}
-                                >
-                                    <Plus className="h-3 w-3" />
-                                </Button>
-                            </div>
-                        </div>
-
                         {modules.classrooms && (
                             <div className="space-y-2">
-                                <Label>Аудитория</Label>
+                                <Label className="text-zinc-400">Аудитория</Label>
                                 <Select value={room || "__none__"} onValueChange={setRoom}>
-                                    <SelectTrigger className="bg-zinc-950 border-zinc-800">
-                                        <SelectValue placeholder="Не выбрана" />
-                                    </SelectTrigger>
+                                    <SelectTrigger className="bg-zinc-900 border-zinc-800 h-10"><SelectValue placeholder="Аудитория" /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="__none__">Не выбрана</SelectItem>
+                                        <SelectItem value="__none__">Нет</SelectItem>
                                         {classrooms.map(cls => (
-                                            <SelectItem key={cls.id} value={cls.name}>
-                                                <div className="flex items-center gap-2">
-                                                    <span>{cls.name}</span>
-                                                    {cls.type === 'ONLINE' && (
-                                                        <span className="text-[10px] text-cyan-400">Онлайн</span>
-                                                    )}
-                                                </div>
-                                            </SelectItem>
+                                            <SelectItem key={cls.id} value={cls.name}>{cls.name}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
                             </div>
                         )}
                     </div>
-
-                    <div className="space-y-2 pt-2 border-t border-zinc-800">
-                        <div className="text-zinc-400 text-sm mb-2">Действия</div>
-                        <div className="flex gap-4">
-                            {status !== 'CANCELLED' ? (
-                                <Button
-                                    type="button"
-                                    variant="destructive"
-                                    className="w-full bg-red-900/30 hover:bg-red-900/50 text-red-500 border border-red-900"
-                                    onClick={() => setStatus('CANCELLED')}
-                                >
-                                    <XCircle className="mr-2 h-4 w-4" /> Отменить занятие
-                                </Button>
-                            ) : (
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="w-full border-zinc-700 text-zinc-300 hover:bg-zinc-800"
-                                    onClick={() => setStatus('PLANNED')}
-                                >
-                                    <Loader2 className="mr-2 h-4 w-4" /> Восстановить занятие
-                                </Button>
-                            )}
-                            {onDelete && (
-                                <Button
-                                    type="button"
-                                    variant="destructive"
-                                    className="bg-red-600 hover:bg-red-700 text-white"
-                                    onClick={() => onDelete(lesson.id)}
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            )}
-                        </div>
-                    </div>
                 </div>
 
-                <DialogFooter>
-                    <Button variant="ghost" onClick={() => onOpenChange(false)}>Отмена</Button>
-                    <Button onClick={handleSubmit} disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Сохранить
-                    </Button>
+                <DialogFooter className="px-6 py-4 bg-zinc-900/50 border-t border-zinc-800 flex items-center justify-between sm:justify-between w-full">
+                    <div className="flex items-center gap-2">
+                        {onDelete && (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                className="text-red-500 hover:text-red-400 hover:bg-red-950/30"
+                                onClick={() => onDelete(lesson.id)}
+                            >
+                                <Trash2 className="h-4 w-4 mr-2" /> Удалить
+                            </Button>
+                        )}
+                        {status === 'CANCELLED' ? (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                                onClick={() => setStatus('PLANNED')}
+                            >
+                                Восстановить обьявление
+                            </Button>
+                        ) : (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="text-zinc-500 hover:text-zinc-300"
+                                onClick={() => setStatus('CANCELLED')}
+                            >
+                                Отменить проведение
+                            </Button>
+                        )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <Button variant="ghost" onClick={() => onOpenChange(false)}>Зарыть</Button>
+                        <Button onClick={handleSubmit} disabled={loading} className="bg-violet-600 hover:bg-violet-700 text-white min-w-[100px]">
+                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Сохранить
+                        </Button>
+                    </div>
                 </DialogFooter>
             </DialogContent>
-        </Dialog >
+        </Dialog>
     );
 }

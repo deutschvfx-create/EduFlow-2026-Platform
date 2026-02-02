@@ -15,6 +15,7 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { DesktopWeekGrid } from "@/components/schedule/desktop-week-grid";
 import { useOrganization } from "@/hooks/use-organization";
 import { useRole } from "@/hooks/use-role";
+import { generateId } from "@/lib/utils";
 
 const DAYS: DayOfWeek[] = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
@@ -181,7 +182,8 @@ export default function SchedulePage() {
 
         try {
             const { scheduleRepo } = await import("@/lib/data/schedule.repo");
-            const newLesson: Omit<Lesson, 'id'> = {
+            const newLesson: Lesson = {
+                id: generateId(),
                 organizationId: currentOrganizationId,
                 status: 'PLANNED',
                 createdAt: new Date().toISOString(),
@@ -194,7 +196,7 @@ export default function SchedulePage() {
                 room: newLessonData.room
             };
 
-            await scheduleRepo.add(currentOrganizationId, newLesson as Lesson);
+            await scheduleRepo.add(currentOrganizationId, newLesson);
             console.log("Lesson created successfully");
         } catch (error: any) {
             console.error("Failed to add lesson:", error);

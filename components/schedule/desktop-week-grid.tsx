@@ -512,6 +512,7 @@ export function DesktopWeekGrid({
                                                 <motion.div
                                                     onClick={(e) => {
                                                         e.stopPropagation();
+                                                        if (ignoreClickRef.current) return;
                                                         onLessonClick(lesson);
                                                     }}
                                                     exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
@@ -521,8 +522,8 @@ export function DesktopWeekGrid({
                                                         width: (style as any).width,
                                                         left: (style as any).left,
                                                         zIndex: (style as any).zIndex,
-                                                        transition: 'all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1)',
-                                                        opacity: isBeingDragManipulated ? 0.4 : 1,
+                                                        transition: isBeingDragManipulated ? 'none' : 'all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                                                        opacity: isBeingDragManipulated ? 0.7 : 1, // Increased opacity for better visibility
                                                         touchAction: 'none',
                                                     }}
                                                     className={cn(
@@ -530,12 +531,13 @@ export function DesktopWeekGrid({
                                                         lesson.status === 'CANCELLED'
                                                             ? "bg-red-950/80 border-red-900/50 text-red-200"
                                                             : (style as any).colorClasses,
-                                                        isBeingDragManipulated && conflictError && "ring-2 ring-red-500 ring-offset-2 ring-offset-black"
+                                                        isBeingDragManipulated && conflictError && "ring-2 ring-red-500 ring-offset-2 ring-offset-black",
+                                                        isBeingDragManipulated && "shadow-2xl scale-[1.02]" // visual feedback
                                                     )}
                                                     onPointerDown={(e) => handleDragStart(e, lesson, 'move')}
                                                 >
                                                     <div
-                                                        className="absolute top-0 inset-x-0 h-2 cursor-ns-resize hover:bg-white/20 z-50 transition-colors"
+                                                        className="absolute top-0 inset-x-0 h-3 cursor-ns-resize hover:bg-white/20 z-50 transition-colors"
                                                         onPointerDown={(e) => { e.stopPropagation(); handleDragStart(e, lesson, 'resize-top'); }}
                                                     />
 
