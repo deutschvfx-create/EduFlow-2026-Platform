@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { doc, onSnapshot, setDoc, serverTimestamp, getDoc, updateDoc, collection, query, where } from "firebase/firestore";
+import { doc, onSnapshot, setDoc, serverTimestamp, getDoc, updateDoc, collection, query, where, deleteDoc } from "firebase/firestore";
 import { UserData } from "@/lib/services/firestore";
 import { useRouter, usePathname } from "next/navigation";
 import { PauseCircle, Timer } from "lucide-react";
@@ -100,12 +100,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const deviceId = localStorage.getItem('eduflow_device_id');
             if (deviceId) {
                 const sessionRef = doc(db, "users", user.uid, "sessions", deviceId);
-                await updateDoc(sessionRef, { status: 'paused', mirrored: false, lastUpdated: serverTimestamp() });
+                // Hard Kill: Delete the document and sign out immediately
+                await deleteDoc(sessionRef).catch(e => console.error("Kill Error:", e));
+                auth.signOut().then(() => window.location.href = '/login');
             }
         } else if (followingSessionId && user && db) {
             const sessionRef = doc(db, "users", user.uid, "sessions", followingSessionId);
+            const targetId = followingSessionId;
             setFollowingSessionId(null);
-            await updateDoc(sessionRef, { mirrored: false, lastUpdated: serverTimestamp() });
+            // Hard Kill: Delete the guest's session document
+            await deleteDoc(sessionRef).catch(e => console.error("Kill Error (Owner):", e));
         }
     };
 
