@@ -56,7 +56,7 @@ const sidebarItems = [
         items: [
             { label: "Предметы", href: "/app/courses", icon: BookOpen },
             { label: "Расписание", href: "/app/schedule", icon: Calendar },
-            { label: "Посещаемость", href: "/app/attendance", icon: CheckSquare },
+            { label: "Журнал", href: "/app/attendance", icon: CheckSquare },
             { label: "Оценки", href: "/app/grades", icon: Award },
         ]
     },

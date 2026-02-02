@@ -19,13 +19,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
+import { useModules } from "@/hooks/use-modules";
+
 interface FacultyCardProps {
     faculty: Faculty;
     onEdit: (faculty: Faculty) => void;
 }
 
 export function FacultyCard({ faculty, onEdit }: FacultyCardProps) {
+    const { modules } = useModules();
     const statusStyles = {
+        // ... (rest of statusStyles)
         ACTIVE: {
             border: "border-l-emerald-500",
             badge: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
@@ -89,24 +93,28 @@ export function FacultyCard({ faculty, onEdit }: FacultyCardProps) {
 
             {/* Metrics */}
             <div className="grid grid-cols-2 gap-3 mb-6">
-                <div className="flex items-center gap-2 bg-zinc-950/40 border border-zinc-800/50 rounded-xl p-2.5">
-                    <div className="h-8 w-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-                        <Layers className="h-4 w-4 text-indigo-400" />
+                {(modules as any).departments !== false && (
+                    <div className="flex items-center gap-2 bg-zinc-950/40 border border-zinc-800/50 rounded-xl p-2.5">
+                        <div className="h-8 w-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                            <Layers className="h-4 w-4 text-indigo-400" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Кафедры</p>
+                            <p className="text-sm font-black text-white">{faculty.departmentsCount || 0}</p>
+                        </div>
                     </div>
-                    <div>
-                        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Кафедры</p>
-                        <p className="text-sm font-black text-white">4</p>
+                )}
+                {(modules as any).groups !== false && (
+                    <div className="flex items-center gap-2 bg-zinc-950/40 border border-zinc-800/50 rounded-xl p-2.5">
+                        <div className="h-8 w-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                            <Users className="h-4 w-4 text-purple-400" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Группы</p>
+                            <p className="text-sm font-black text-white">{faculty.groupsCount || 0}</p>
+                        </div>
                     </div>
-                </div>
-                <div className="flex items-center gap-2 bg-zinc-950/40 border border-zinc-800/50 rounded-xl p-2.5">
-                    <div className="h-8 w-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                        <Users className="h-4 w-4 text-purple-400" />
-                    </div>
-                    <div>
-                        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Группы</p>
-                        <p className="text-sm font-black text-white">12</p>
-                    </div>
-                </div>
+                )}
             </div>
 
             {/* Bottom Row: Students & Status */}

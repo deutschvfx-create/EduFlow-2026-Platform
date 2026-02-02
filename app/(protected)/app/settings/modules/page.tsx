@@ -8,48 +8,24 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { updateModulesConfig, getModulesConfig } from "@/app/actions";
 import { Loader2, ArrowLeft } from "lucide-react";
+import { useModules } from "@/hooks/use-modules";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function ModulesSettingsPage() {
     const router = useRouter();
-    const [loading, setLoading] = useState(true);
+    const { modules, setAllModules, isLoaded } = useModules();
     const [saving, setSaving] = useState(false);
 
-    // Default Config
-    const [config, setConfig] = useState<any>({
-        teachers: true,
-        faculties: false,
-        departments: false,
-        groups: true,
-        courses: true,
-        schedule: false,
-        attendance: true,
-        grades: false,
-        announcements: false,
-        chat: false,
-        reports: false
-    });
-
-    useEffect(() => {
-        getModulesConfig().then((data) => {
-            if (data && Object.keys(data).length > 0) {
-                setConfig(data);
-            }
-            setLoading(false);
-        });
-    }, []);
-
     const handleToggle = async (key: string, checked: boolean) => {
-        const newConfig = { ...config, [key]: checked };
-        setConfig(newConfig);
+        const newConfig = { ...modules, [key as any]: checked };
         setSaving(true);
-        await updateModulesConfig(newConfig);
+        await setAllModules(newConfig);
         setSaving(false);
         router.refresh(); // Refresh layout to update sidebar
     };
 
-    if (loading) return <div className="text-zinc-500">Loading...</div>;
+    if (!isLoaded) return <div className="text-zinc-500">Loading...</div>;
 
     return (
         <div className="space-y-6 max-w-4xl">
@@ -89,7 +65,7 @@ export default function ModulesSettingsPage() {
                             </Label>
                             <Switch
                                 id="teachers"
-                                checked={config.teachers}
+                                checked={modules.teachers}
                                 onCheckedChange={(c) => handleToggle('teachers', c)}
                             />
                         </div>
@@ -105,15 +81,15 @@ export default function ModulesSettingsPage() {
                     <CardContent className="space-y-4">
                         <div className="flex items-center justify-between">
                             <Label htmlFor="faculties">Факультеты</Label>
-                            <Switch id="faculties" checked={config.faculties} onCheckedChange={(c) => handleToggle('faculties', c)} />
+                            <Switch id="faculties" checked={modules.faculties} onCheckedChange={(c) => handleToggle('faculties', c)} />
                         </div>
                         <div className="flex items-center justify-between">
                             <Label htmlFor="departments">Кафедры</Label>
-                            <Switch id="departments" checked={config.departments} onCheckedChange={(c) => handleToggle('departments', c)} />
+                            <Switch id="departments" checked={modules.departments} onCheckedChange={(c) => handleToggle('departments', c)} />
                         </div>
                         <div className="flex items-center justify-between">
                             <Label htmlFor="groups">Группы</Label>
-                            <Switch id="groups" checked={config.groups} onCheckedChange={(c) => handleToggle('groups', c)} />
+                            <Switch id="groups" checked={modules.groups} onCheckedChange={(c) => handleToggle('groups', c)} />
                         </div>
                     </CardContent>
                 </Card>
@@ -127,19 +103,19 @@ export default function ModulesSettingsPage() {
                     <CardContent className="space-y-4">
                         <div className="flex items-center justify-between">
                             <Label htmlFor="courses">Предметы</Label>
-                            <Switch id="courses" checked={config.courses} onCheckedChange={(c) => handleToggle('courses', c)} />
+                            <Switch id="courses" checked={modules.courses} onCheckedChange={(c) => handleToggle('courses', c)} />
                         </div>
                         <div className="flex items-center justify-between">
                             <Label htmlFor="schedule">Расписание</Label>
-                            <Switch id="schedule" checked={config.schedule} onCheckedChange={(c) => handleToggle('schedule', c)} />
+                            <Switch id="schedule" checked={modules.schedule} onCheckedChange={(c) => handleToggle('schedule', c)} />
                         </div>
                         <div className="flex items-center justify-between">
                             <Label htmlFor="attendance">Посещаемость</Label>
-                            <Switch id="attendance" checked={config.attendance} onCheckedChange={(c) => handleToggle('attendance', c)} />
+                            <Switch id="attendance" checked={modules.attendance} onCheckedChange={(c) => handleToggle('attendance', c)} />
                         </div>
                         <div className="flex items-center justify-between">
                             <Label htmlFor="grades">Оценки</Label>
-                            <Switch id="grades" checked={config.grades} onCheckedChange={(c) => handleToggle('grades', c)} />
+                            <Switch id="grades" checked={modules.grades} onCheckedChange={(c) => handleToggle('grades', c)} />
                         </div>
                     </CardContent>
                 </Card>
@@ -152,11 +128,11 @@ export default function ModulesSettingsPage() {
                     <CardContent className="space-y-4">
                         <div className="flex items-center justify-between">
                             <Label htmlFor="announcements">Объявления</Label>
-                            <Switch id="announcements" checked={config.announcements} onCheckedChange={(c) => handleToggle('announcements', c)} />
+                            <Switch id="announcements" checked={modules.announcements} onCheckedChange={(c) => handleToggle('announcements', c)} />
                         </div>
                         <div className="flex items-center justify-between">
                             <Label htmlFor="chat">Чаты</Label>
-                            <Switch id="chat" checked={config.chat} onCheckedChange={(c) => handleToggle('chat', c)} />
+                            <Switch id="chat" checked={modules.chat} onCheckedChange={(c) => handleToggle('chat', c)} />
                         </div>
                     </CardContent>
                 </Card>
@@ -169,7 +145,7 @@ export default function ModulesSettingsPage() {
                     <CardContent className="space-y-4">
                         <div className="flex items-center justify-between">
                             <Label htmlFor="reports">Отчёты</Label>
-                            <Switch id="reports" checked={config.reports} onCheckedChange={(c) => handleToggle('reports', c)} />
+                            <Switch id="reports" checked={modules.reports} onCheckedChange={(c) => handleToggle('reports', c)} />
                         </div>
                     </CardContent>
                 </Card>

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect } from 'react';
 import { Teacher } from '@/lib/types/teacher';
 import { Layers } from "lucide-react";
@@ -29,24 +30,48 @@ const toast = { success: (m: string) => alert(m), error: (m: string) => alert(m)
 // Ideally, I should just use `window.alert` for now or a local state in QuickActions to show a message floating.
 // Let's go with local state in QuickActions to show the toast, bubbling up success.
 
+import { useModules } from '@/hooks/use-modules';
+import { Faculty } from '@/lib/types/faculty';
+import { Department } from '@/lib/types/department';
+
 interface CreateGroupModalProps {
     onSuccess: () => void;
 }
 
 export function CreateGroupModal({ onSuccess }: CreateGroupModalProps) {
     const { currentOrganizationId } = useOrganization();
+    const { modules } = useModules();
     const [open, setOpen] = useState(false);
     const [name, setName] = useState('');
     const [teacher, setTeacher] = useState('');
+    const [facultyId, setFacultyId] = useState<string>('default');
+    const [departmentId, setDepartmentId] = useState<string>('default');
+
     const [teachers, setTeachers] = useState<Teacher[]>([]);
+    const [faculties, setFaculties] = useState<Faculty[]>([]);
+    const [departments, setDepartments] = useState<Department[]>([]);
 
     useEffect(() => {
         if (open && currentOrganizationId) {
             import("@/lib/data/teachers.repo").then(({ teachersRepo }) => {
                 teachersRepo.getAll(currentOrganizationId).then(setTeachers);
             });
+            if (modules.faculties) {
+                import("@/lib/data/faculties.repo").then(({ facultiesRepo }) => {
+                    facultiesRepo.getAll(currentOrganizationId).then(setFaculties);
+                });
+            }
+            if (modules.departments) {
+                import("@/lib/data/departments.repo").then(({ departmentsRepo }) => {
+                    departmentsRepo.getAll(currentOrganizationId).then(setDepartments);
+                });
+            }
         }
-    }, [open, currentOrganizationId]);
+    }, [open, currentOrganizationId, modules.faculties, modules.departments]);
+
+    const filteredDepartments = departmentId === 'default'
+        ? departments.filter(d => facultyId === 'default' || d.facultyId === facultyId)
+        : departments;
 
     const handleSubmit = async () => {
         if (!name || !currentOrganizationId) return;
@@ -61,18 +86,20 @@ export function CreateGroupModal({ onSuccess }: CreateGroupModalProps) {
                 studentsCount: 0,
                 status: 'ACTIVE',
                 code: name.substring(0, 3).toUpperCase() + '-' + Math.floor(Math.random() * 1000),
-                facultyId: 'default',
-                departmentId: 'default',
+                facultyId: modules.faculties ? facultyId : 'default',
+                departmentId: modules.departments ? departmentId : 'default',
                 paymentType: 'FREE',
                 level: 'A1',
                 maxStudents: 30,
                 teachersCount: teacher ? 1 : 0,
                 coursesCount: 0,
                 createdAt: new Date().toISOString()
-            });
+            } as any);
             setOpen(false);
             setName('');
             setTeacher('');
+            setFacultyId('default');
+            setDepartmentId('default');
             onSuccess();
         } catch (error) {
             console.error("Failed to create group:", error);
@@ -97,29 +124,66 @@ export function CreateGroupModal({ onSuccess }: CreateGroupModalProps) {
                         Создайте новую учебную группу и назначьте куратора.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="name">Название *</Label>
-                        <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="например, ИВТ-2026" className="bg-zinc-950 border-zinc-800" />
+                <ScrollArea className="max-h-[80vh]">
+                    <div className="grid gap-4 py-4 px-1">
+                        <div className="grid gap-2">
+                            <Label htmlFor="name">Название *</Label>
+                            <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="например, ИВТ-2026" className="bg-zinc-950 border-zinc-800" />
+                        </div>
+
+                        {modules.faculties && (
+                            <div className="grid gap-2">
+                                <Label htmlFor="faculty">Факультет</Label>
+                                <Select onValueChange={setFacultyId} value={facultyId}>
+                                    <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                        <SelectValue placeholder="Выберите факультет..." />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-300">
+                                        <SelectItem value="default">Не выбрано</SelectItem>
+                                        {faculties.map(f => (
+                                            <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
+                        {modules.departments && (
+                            <div className="grid gap-2">
+                                <Label htmlFor="department">Кафедра</Label>
+                                <Select onValueChange={setDepartmentId} value={departmentId}>
+                                    <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                        <SelectValue placeholder="Выберите кафедру..." />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-300">
+                                        <SelectItem value="default">Не выбрано</SelectItem>
+                                        {filteredDepartments.map(d => (
+                                            <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="teacher">Куратор</Label>
+                            <Select onValueChange={setTeacher} value={teacher}>
+                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                    <SelectValue placeholder="Выберите куратора..." />
+                                </SelectTrigger>
+                                <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-300">
+                                    {teachers.map(t => (
+                                        <SelectItem key={t.id} value={t.id}>{t.firstName} {t.lastName}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="notes">Заметки</Label>
+                            <Textarea id="notes" placeholder="Дополнительная информация..." className="bg-zinc-950 border-zinc-800" />
+                        </div>
                     </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="teacher">Куратор</Label>
-                        <Select onValueChange={setTeacher} value={teacher}>
-                            <SelectTrigger className="bg-zinc-950 border-zinc-800">
-                                <SelectValue placeholder="Выберите куратора..." />
-                            </SelectTrigger>
-                            <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-300">
-                                {teachers.map(t => (
-                                    <SelectItem key={t.id} value={t.id}>{t.firstName} {t.lastName}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="notes">Заметки</Label>
-                        <Textarea id="notes" placeholder="Дополнительная информация..." className="bg-zinc-950 border-zinc-800" />
-                    </div>
-                </div>
+                </ScrollArea>
                 <DialogFooter>
                     <Button variant="outline" onClick={() => setOpen(false)} className="border-zinc-700 hover:bg-zinc-800 hover:text-white">Отмена</Button>
                     <Button onClick={handleSubmit} disabled={!name} className="bg-indigo-600 hover:bg-indigo-700 text-white">Создать</Button>

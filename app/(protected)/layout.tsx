@@ -10,12 +10,16 @@ import { HelpAssistant } from "@/components/help/help-assistant";
 import { MobileLayout } from "@/components/layouts/mobile-layout";
 import { DesktopLayout } from "@/components/layouts/desktop-layout";
 import { OrganizationProvider } from "@/hooks/use-organization";
+import { useAuth } from "@/components/auth/auth-provider";
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
+    const { userData } = useAuth();
+
     // Fetch modules config on client side
     const { data: modulesConfig } = useQuery({
-        queryKey: ['modules-config'],
-        queryFn: () => getModulesConfig()
+        queryKey: ['modules-config', userData?.organizationId],
+        queryFn: () => getModulesConfig(userData?.organizationId || undefined),
+        enabled: !!userData?.organizationId
     });
 
     return (

@@ -21,15 +21,35 @@ const DEFAULT_CONFIG = {
     reports: true
 };
 
-export async function getModulesConfig() {
-    // Mock: always return default full config
+import { db } from "@/lib/firebase";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+
+export async function getModulesConfig(organizationId?: string) {
+    if (!organizationId || !db) return DEFAULT_CONFIG;
+    try {
+        const orgRef = doc(db, "organizations", organizationId);
+        const snap = await getDoc(orgRef);
+        if (snap.exists()) {
+            const data = snap.data();
+            return { ...DEFAULT_CONFIG, ...(data.modules || {}) };
+        }
+    } catch (e) {
+        console.error("Failed to fetch modules config:", e);
+    }
     return DEFAULT_CONFIG;
 }
 
-export async function updateModulesConfig(config: any) {
-    // Mock: do nothing
-    console.log("Mock update config:", config);
-    revalidatePath('/app');
+export async function updateModulesConfig(organizationId: string, config: any) {
+    if (!organizationId || !db) return;
+    try {
+        const orgRef = doc(db, "organizations", organizationId);
+        await updateDoc(orgRef, {
+            modules: config
+        });
+        revalidatePath('/app');
+    } catch (e) {
+        console.error("Failed to update modules config:", e);
+    }
 }
 
 const SECRET = process.env.JWT_SECRET || 'super-secret-key';

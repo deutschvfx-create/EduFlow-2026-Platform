@@ -14,15 +14,18 @@ import { Teacher } from "@/lib/types/teacher";
 import { Faculty } from "@/lib/types/faculty";
 import { generateId } from "@/lib/utils";
 
+import { useModules } from "@/hooks/use-modules";
+
 export function AddDepartmentModal() {
     const { currentOrganizationId } = useOrganization();
+    const { modules } = useModules();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
 
     // Form State
     const [name, setName] = useState("");
     const [code, setCode] = useState("");
-    const [facultyId, setFacultyId] = useState("");
+    const [facultyId, setFacultyId] = useState("default");
     const [description, setDescription] = useState("");
     const [headTeacherId, setHeadTeacherId] = useState("");
     const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -30,32 +33,36 @@ export function AddDepartmentModal() {
 
     useEffect(() => {
         if (open && currentOrganizationId) {
-            Promise.all([
-                import("@/lib/data/teachers.repo").then(m => m.teachersRepo.getAll(currentOrganizationId)),
-                import("@/lib/data/faculties.repo").then(m => m.facultiesRepo.getAll(currentOrganizationId))
-            ]).then(([t, f]) => {
+            const loadData = async () => {
+                const { teachersRepo } = await import("@/lib/data/teachers.repo");
+                const t = await teachersRepo.getAll(currentOrganizationId);
                 setTeachers(t);
-                setFaculties(f);
-            });
+
+                if (modules.faculties) {
+                    const { facultiesRepo } = await import("@/lib/data/faculties.repo");
+                    const f = await facultiesRepo.getAll(currentOrganizationId);
+                    setFaculties(f);
+                }
+            };
+            loadData();
         }
-    }, [open, currentOrganizationId]);
+    }, [open, currentOrganizationId, modules.faculties]);
 
     const handleNameChange = (val: string) => {
         setName(val);
-        // Auto-generate code if empty
         if (!code && val.length > 3) {
-            // Simplified transliteration or just upper case first letters could be better, but simple is fine for mock
             const generated = val.split(' ').map(w => w[0]).join('').toUpperCase() + "-" + Math.floor(Math.random() * 100);
             setCode(generated);
         }
     }
 
     const handleSubmit = async () => {
-        if (!name || !code || !facultyId) {
-            alert("Название, код и факультет обязательны");
+        if (!name || !code || (modules.faculties && facultyId === 'default')) {
+            alert("Заполните обязательные поля (Название, Код, Факультет)");
             return;
         }
 
+        setLoading(true);
         try {
             const { departmentsRepo } = await import("@/lib/data/departments.repo");
             await departmentsRepo.add(currentOrganizationId!, {
@@ -63,16 +70,17 @@ export function AddDepartmentModal() {
                 organizationId: currentOrganizationId!,
                 name,
                 code,
-                facultyId,
+                facultyIdByModule: modules.faculties ? facultyId : 'default',
+                facultyId: modules.faculties ? facultyId : 'default',
                 description,
-                headTeacherId,
+                headTeacherId: headTeacherId || undefined,
                 status: 'ACTIVE',
                 teachersCount: 0,
                 groupsCount: 0,
                 studentsCount: 0,
                 coursesCount: 0,
                 createdAt: new Date().toISOString()
-            });
+            } as any);
             setOpen(false);
             window.location.reload();
         } catch (error) {
@@ -81,13 +89,6 @@ export function AddDepartmentModal() {
         } finally {
             setLoading(false);
         }
-
-        // Reset form
-        setName("");
-        setCode("");
-        setDescription("");
-        setHeadTeacherId("");
-        setFacultyId("");
     };
 
     return (
@@ -105,19 +106,22 @@ export function AddDepartmentModal() {
                 </DialogHeader>
 
                 <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                        <Label>Факультет *</Label>
-                        <Select value={facultyId} onValueChange={setFacultyId}>
-                            <SelectTrigger className="bg-zinc-950 border-zinc-800">
-                                <SelectValue placeholder="Выберите факультет" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {faculties.map(f => (
-                                    <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
+                    {modules.faculties && (
+                        <div className="space-y-2">
+                            <Label>Факультет *</Label>
+                            <Select value={facultyId} onValueChange={setFacultyId}>
+                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                    <SelectValue placeholder="Выберите факультет" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="default">Не выбрано</SelectItem>
+                                    {faculties.map(f => (
+                                        <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -161,7 +165,7 @@ export function AddDepartmentModal() {
                             <SelectContent>
                                 {teachers.map(t => (
                                     <SelectItem key={t.id} value={t.id}>
-                                        {t.firstName} {t.lastName} ({t.specialization})
+                                        {t.firstName} {t.lastName} ({t.specialization || "Преподаватель"})
                                     </SelectItem>
                                 ))}
                             </SelectContent>

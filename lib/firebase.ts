@@ -16,16 +16,12 @@ let app: any = null;
 let auth: any = null;
 let db: any = null;
 
-if (typeof window !== 'undefined') {
-    try {
-        app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-        auth = getAuth(app);
-        db = getFirestore(app);
-    } catch (error) {
-        console.error("Firebase initialization failed:", error);
-        // Fallback or empty objects to prevent total crash
-        // Note: Services using these should handle null/uninitialized states
-    }
+try {
+    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+    auth = getAuth(app);
+    db = getFirestore(app);
+} catch (error) {
+    console.error("Firebase initialization failed:", error);
 }
 
 export { app, auth, db };
