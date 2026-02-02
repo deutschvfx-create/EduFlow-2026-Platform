@@ -16,6 +16,7 @@ interface AuthContextType {
     timeLeft?: number; // In milliseconds
     isSupportSession?: boolean;
     followingSessionId: string | null;
+    isMirrored: boolean;
     toggleFollowing: (sessionId: string | null) => void;
     stopMirroring: () => void;
 }
@@ -25,6 +26,7 @@ const AuthContext = createContext<AuthContextType>({
     userData: null,
     loading: true,
     followingSessionId: null,
+    isMirrored: false,
     toggleFollowing: () => { },
     stopMirroring: () => { }
 });
@@ -86,6 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [liveTimeLeft, setLiveTimeLeft] = useState<number | undefined>(undefined);
     const [isSupportSession, setIsSupportSession] = useState(false);
     const [followingSessionId, setFollowingSessionId] = useState<string | null>(null);
+    const [isMirrored, setIsMirrored] = useState(false);
 
     const toggleFollowing = (id: string | null) => {
         setFollowingSessionId(prev => prev === id ? null : id);
@@ -197,7 +200,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                             lastActive: serverTimestamp(),
                             isCurrent: true,
                             type: support ? 'support' : type,
-                            ...(support && expiresAt ? { expiresAt } : {})
+                            ...(support && expiresAt ? { expiresAt, mirrored: true } : {})
                         };
 
                         if (!sessionSnap.exists()) {
@@ -444,9 +447,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Handle Instant Kill
             if (data.mirrored === false) {
                 console.log("🛑 Mirroring externally stopped");
-                // The provider handles general block but we log it
+                setIsMirrored(false);
                 return;
             }
+
+            setIsMirrored(true);
 
             if (data.ownerCommand && data.ownerCommand.id !== lastOwnerCmdId) {
                 lastOwnerCmdId = data.ownerCommand.id;
@@ -521,8 +526,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (data.mirrored === false) {
                 console.log("🛑 Mirroring externally stopped by guest or system");
                 setFollowingSessionId(null);
+                setIsMirrored(false);
                 return;
             }
+
+            setIsMirrored(true);
 
             // 1. Sync Navigation
             if (data.rawPath && data.rawPath !== normalizedCurrentPath) {
@@ -648,18 +656,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, userData, loading, timeLeft: liveTimeLeft, isSupportSession, followingSessionId, toggleFollowing, stopMirroring }}>
-            {/* 🕒 FLOATING TIMER FOR GUEST */}
-            {liveTimeLeft !== undefined && liveTimeLeft > 0 && !isBlocked && (
-                <div className="fixed top-4 right-4 z-[9999] animate-in fade-in slide-in-from-top-4 duration-500">
-                    <div className="bg-amber-500 text-black px-4 py-2 rounded-2xl flex items-center gap-2 shadow-2xl font-bold border border-amber-400">
-                        <Timer className="w-4 h-4 animate-pulse" />
-                        <span className="text-xs uppercase tracking-tighter">Временный доступ:</span>
-                        <span className="font-mono text-sm">{formatTimeLeft(liveTimeLeft)}</span>
-                    </div>
-                </div>
-            )}
-
+        <AuthContext.Provider value={{ user, userData, loading, timeLeft: liveTimeLeft, isSupportSession, followingSessionId, isMirrored, toggleFollowing, stopMirroring }}>
             {isProtected && (!user || isBlocked) ? (
                 <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
                     {isBlocked ? (

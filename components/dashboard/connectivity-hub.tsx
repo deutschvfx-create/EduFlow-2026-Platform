@@ -11,8 +11,8 @@ import { useAuth } from '@/components/auth/auth-provider';
 
 export function ConnectivityHub() {
     const { isOnline, latency, lastSync, downlink } = useConnectivity();
-    const { user, isSupportSession, followingSessionId, stopMirroring } = useAuth();
-    const isLive = isSupportSession || !!followingSessionId;
+    const { user, isMirrored, timeLeft, stopMirroring } = useAuth();
+    const isLive = isMirrored;
     const [isHovered, setIsHovered] = useState(false);
 
     const getStatusColor = () => {
@@ -27,6 +27,13 @@ export function ConnectivityHub() {
         return `${latency} ms`;
     };
 
+    const formatTimeLeft = (ms: number) => {
+        const totalSec = Math.floor(ms / 1000);
+        const m = Math.floor(totalSec / 60);
+        const s = totalSec % 60;
+        return `${m}:${s < 10 ? '0' : ''}${s}`;
+    };
+
     return (
         <div
             className="fixed top-3 right-4 z-[100] flex flex-col items-end"
@@ -36,26 +43,33 @@ export function ConnectivityHub() {
             <motion.div
                 layout
                 className={`
-                    flex items-center gap-3 px-3 py-1 rounded-full 
+                    flex items-center gap-3 px-3 py-1.5 rounded-2xl 
                     bg-zinc-900/60 backdrop-blur-md border border-white/10
                     shadow-2xl cursor-default select-none
-                    ${isLive ? 'border-rose-500/30 bg-rose-950/20' : ''}
+                    ${isLive ? 'border-rose-500/40 bg-rose-950/30' : ''}
                 `}
             >
                 <div className="relative">
-                    <div className={`h-2 w-2 rounded-full ${getStatusColor()} animate-pulse`} />
-                    <div className={`absolute inset-0 h-2 w-2 rounded-full ${getStatusColor()} blur-sm opacity-50`} />
+                    <div className={`h-2.5 w-2.5 rounded-full ${getStatusColor()} animate-pulse`} />
+                    <div className={`absolute inset-0 h-2.5 w-2.5 rounded-full ${getStatusColor()} blur-sm opacity-50`} />
                 </div>
 
                 <div className="flex items-center gap-2 text-[10px] font-medium tracking-tight text-zinc-400">
                     {isLive ? (
-                        <span className="flex items-center gap-1.5 text-rose-400 font-bold uppercase tracking-widest animate-pulse">
-                            <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                        <div className="flex flex-col items-start leading-none">
+                            <span className="flex items-center gap-1.5 text-rose-400 font-bold uppercase tracking-widest animate-pulse mb-0.5">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                                </span>
+                                В эфире
                             </span>
-                            В эфире
-                        </span>
+                            {timeLeft !== undefined && timeLeft > 0 && (
+                                <span className="text-[8px] font-mono text-rose-400/60 ml-3.5">
+                                    До конца: {formatTimeLeft(timeLeft)}
+                                </span>
+                            )}
+                        </div>
                     ) : (
                         <span className="flex items-center gap-1">
                             {isOnline ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3 text-red-400" />}
@@ -79,10 +93,10 @@ export function ConnectivityHub() {
                                 e.stopPropagation();
                                 stopMirroring();
                             }}
-                            className="ml-1 p-0.5 hover:bg-rose-500/20 rounded-md text-rose-400 transition-colors"
+                            className="ml-1 p-1 hover:bg-rose-500/20 rounded-lg text-rose-400 transition-colors"
                             title="Остановить эфир"
                         >
-                            <X className="h-3.5 w-3.5" />
+                            <X className="h-4 w-4" />
                         </button>
                     )}
                 </div>
