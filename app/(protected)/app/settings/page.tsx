@@ -199,13 +199,19 @@ export default function SettingsPage() {
                 </div>
 
                 {isDisabled && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-xl backdrop-blur-[1px]">
-                        <span className="text-[9px] text-yellow-400 font-bold uppercase tracking-widest animate-pulse px-3 py-1 bg-zinc-950/90 rounded-lg border border-yellow-500/50 shadow-[0_0_15px_rgba(234,179,8,0.2)]">
-                            НУЖЕН: {missingReqs.map(r => {
-                                const names: any = { groups: 'ГРУППЫ', courses: 'ПРЕДМЕТЫ', schedule: 'РАСПИСАНИЕ', faculties: 'ФАКУЛЬТЕТЫ' };
-                                return names[r] || r.toUpperCase();
-                            }).join(', ')}
-                        </span>
+                    <div className="absolute inset-0 flex items-center justify-center rounded-xl overflow-hidden bg-zinc-950/20 backdrop-blur-[0.5px]">
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900/90 rounded-lg border border-zinc-800 shadow-2xl">
+                            <div className="relative flex h-1.5 w-1.5">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-yellow-500"></span>
+                            </div>
+                            <span className="text-[9px] text-zinc-100 font-bold uppercase tracking-widest">
+                                НУЖЕН: {missingReqs.map(r => {
+                                    const names: any = { groups: 'ГРУППЫ', courses: 'ПРЕДМЕТЫ', schedule: 'РАСПИСАНИЕ', faculties: 'ФАКУЛЬТЕТЫ' };
+                                    return names[r] || r.toUpperCase();
+                                }).join(', ')}
+                            </span>
+                        </div>
                     </div>
                 )}
 
