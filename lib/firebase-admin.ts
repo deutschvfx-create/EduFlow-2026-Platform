@@ -6,6 +6,8 @@ const formatPrivateKey = (key: string) => {
     return key.replace(/\\n/g, '\n').replace(/"/g, '').replace(/\\r/g, '');
 };
 
+let initError: any = null;
+
 function initFirebaseAdmin() {
     if (!admin.apps.length) {
         if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
@@ -20,6 +22,7 @@ function initFirebaseAdmin() {
                 console.log("🔥 Firebase Admin Initialized");
             } catch (error) {
                 console.error("❌ Firebase Admin Init Error:", error);
+                initError = error;
             }
         } else {
             // Log usage to help debug
@@ -34,6 +37,9 @@ function initFirebaseAdmin() {
 
 export function getAdminAuth() {
     initFirebaseAdmin();
+    if (initError) {
+        throw initError;
+    }
     return admin.apps.length ? admin.auth() : null;
 }
 
