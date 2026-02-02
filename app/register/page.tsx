@@ -30,7 +30,7 @@ function RegisterFlow() {
     const [password, setPassword] = useState("")
     const [firstName, setFirstName] = useState("")
     const [lastName, setLastName] = useState("")
-    const [role, setRole] = useState<UserRole>('owner')
+    const [role, setRole] = useState<UserRole>('OWNER')
     const [orgName, setOrgName] = useState("")
     const [orgType, setOrgType] = useState("")
 
@@ -105,7 +105,7 @@ function RegisterFlow() {
                     firstName,
                     lastName,
                     name: `${firstName} ${lastName}`,
-                    role: role === 'owner' ? 'owner' : role,
+                    role: role === 'OWNER' ? 'OWNER' : role,
                     createdAt: Date.now()
                 },
                 {
@@ -123,7 +123,7 @@ function RegisterFlow() {
                 firstName,
                 lastName,
                 name: `${firstName} ${lastName}`,
-                role: role === 'owner' ? 'owner' : role as any,
+                role: role === 'OWNER' ? 'OWNER' : role as any,
                 organizationId: orgId,
                 organizationType: orgType,
                 createdAt: Date.now()
@@ -254,9 +254,9 @@ function RegisterFlow() {
                                         <SelectValue placeholder="Выберите роль" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-zinc-900 border-zinc-800">
-                                        <SelectItem value="owner" className="text-white">Директор (Owner)</SelectItem>
-                                        <SelectItem value="teacher" className="text-white">Преподаватель</SelectItem>
-                                        <SelectItem value="student" className="text-white">Студент</SelectItem>
+                                        <SelectItem value="OWNER" className="text-white">Директор (Owner)</SelectItem>
+                                        <SelectItem value="TEACHER" className="text-white">Преподаватель</SelectItem>
+                                        <SelectItem value="STUDENT" className="text-white">Студент</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

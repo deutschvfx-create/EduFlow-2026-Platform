@@ -12,10 +12,11 @@ import { Button } from "@/components/ui/button";
 import { Teacher, TeacherPermissions } from "@/lib/types/teacher";
 import { ModuleGuard } from "@/components/system/module-guard";
 import { useOrganization } from "@/hooks/use-organization";
+import { motion, AnimatePresence } from "framer-motion";
 import { teachersRepo } from "@/lib/data/teachers.repo";
 // import { groupsRepo } from "@/lib/data/groups.repo";
 import { TeacherGrid } from "@/components/teachers/teacher-grid";
-import { LayoutGrid, List, ShieldCheck } from "lucide-react";
+import { LayoutGrid, List, ShieldCheck, AlertCircle, RefreshCcw } from "lucide-react";
 import { TeacherControlToolbar } from "@/components/teachers/teacher-control-toolbar";
 import { Badge } from "@/components/ui/badge";
 
@@ -41,6 +42,7 @@ export default function TeachersPage() {
     // Filter Logic
     const [teachers, setTeachers] = useState<Teacher[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const { currentOrganizationId } = useOrganization();
 
     // Roadmap Dialog State
@@ -67,9 +69,10 @@ export default function TeachersPage() {
                     const data = await teachersRepo.getAll(orgId);
                     console.log(`[TeachersPage] Loaded ${data.length} teachers`);
                     setTeachers(data);
-                } catch (err) {
+                    setError(null);
+                } catch (err: any) {
                     console.error("[TeachersPage] Failed to load teachers:", err);
-                    alert("Ошибка при загрузке преподавателей. Проверьте консоль.");
+                    setError(err.message || "Ошибка при загрузке преподавателей");
                 } finally {
                     setIsLoaded(true);
                 }
@@ -157,7 +160,7 @@ export default function TeachersPage() {
     const suspended = teachers.filter(s => s.status === 'SUSPENDED').length;
     const noGroups = teachers.filter(s => !s.groupIds || s.groupIds.length === 0).length;
 
-    if (!isLoaded) return <div className="p-8 text-zinc-500">Загрузка данных...</div>;
+    if (!isLoaded && !error) return <div className="p-8 text-zinc-500 font-bold uppercase tracking-widest animate-pulse">Загрузка данных...</div>;
 
     const handleEditPermissions = (teacher: Teacher) => {
         setSelectedTeacher(teacher);
@@ -218,6 +221,37 @@ export default function TeachersPage() {
             </Dialog>
 
             <div className="space-y-6">
+                <AnimatePresence>
+                    {error && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl p-6 shadow-2xl backdrop-blur-md flex gap-4"
+                        >
+                            <AlertCircle className="h-6 w-6 mt-1 flex-shrink-0" />
+                            <div className="flex-1">
+                                <h3 className="font-black uppercase tracking-tight text-lg leading-tight">Ошибка загрузки</h3>
+                                <p className="text-sm font-bold opacity-80 mt-1">
+                                    {error}. Проверьте соединение или права доступа.
+                                </p>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        setIsLoaded(false);
+                                        setError(null);
+                                        loadTeachers(currentOrganizationId!);
+                                    }}
+                                    className="mt-4 border-red-500/50 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-black uppercase tracking-widest text-[10px] h-10 rounded-xl px-6"
+                                >
+                                    <RefreshCcw className="mr-2 h-3 w-3" /> Попробовать снова
+                                </Button>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4" data-help-id="teachers-header">
                     <div className="hidden laptop:block">
                         <h1 className="text-3xl font-bold tracking-tight text-white mb-1">

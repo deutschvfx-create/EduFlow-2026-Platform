@@ -26,8 +26,8 @@ function LoginForm() {
         const roleParam = searchParams.get('role')
         const nameParam = searchParams.get('name')
 
-        if (roleParam === 'director' && !email) setEmail('director@eduflow.com')
-        if (roleParam === 'student' && !email) setEmail('student@eduflow.com')
+        if (roleParam === 'OWNER' && !email) setEmail('director@eduflow.com')
+        if (roleParam === 'STUDENT' && !email) setEmail('student@eduflow.com')
 
         if (nameParam) {
             // Optional: Show a toast or welcome message
@@ -55,7 +55,7 @@ function LoginForm() {
                 setStoredUser(data, token)
 
                 if (data.organizationId) {
-                    router.push(data.role === 'student' ? '/student' : '/app/dashboard')
+                    router.push(data.role === 'STUDENT' ? '/student' : '/app/dashboard')
                 } else {
                     router.push('/register')
                 }

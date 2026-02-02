@@ -2,7 +2,7 @@
 import { db } from "@/lib/firebase";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 
-export type UserRole = 'owner' | 'teacher' | 'student';
+export type UserRole = 'OWNER' | 'TEACHER' | 'STUDENT';
 
 export interface UserData {
     uid: string;
@@ -73,8 +73,8 @@ export const DashboardService = {
         try {
             const { collection, getCountFromServer, query, where } = await import("firebase/firestore");
 
-            const studentsQuery = query(collection(db, "users"), where("role", "==", "student"));
-            const teachersQuery = query(collection(db, "users"), where("role", "==", "teacher"));
+            const studentsQuery = query(collection(db, "users"), where("role", "==", "STUDENT"));
+            const teachersQuery = query(collection(db, "users"), where("role", "==", "TEACHER"));
 
             const [studentsSnap, teachersSnap] = await Promise.all([
                 getCountFromServer(studentsQuery),

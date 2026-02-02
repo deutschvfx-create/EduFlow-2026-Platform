@@ -6,10 +6,10 @@ import { StudentFilters } from "@/components/students/student-filters";
 import { StudentsTable } from "@/components/students/students-table";
 import { AddStudentModal } from "@/components/students/add-student-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserCheck, UserX, Clock, Search, TrendingUp, TrendingDown } from "lucide-react";
+import { Users, UserCheck, UserX, Clock, Search, TrendingUp, TrendingDown, AlertCircle, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModuleGuard } from "@/components/system/module-guard";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useOrganization } from "@/hooks/use-organization";
 
 export default function StudentsPage() {
@@ -20,6 +20,7 @@ export default function StudentsPage() {
     // Filter Logic
     const [students, setStudents] = useState<any[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const { currentOrganizationId } = useOrganization();
 
     useEffect(() => {
@@ -38,9 +39,10 @@ export default function StudentsPage() {
                     const data = await studentsRepo.getAll(orgId);
                     console.log(`[StudentsPage] Loaded ${data.length} students`);
                     setStudents(data);
-                } catch (err) {
+                    setError(null);
+                } catch (err: any) {
                     console.error("[StudentsPage] Failed to load students:", err);
-                    alert("Ошибка при загрузке студентов. Проверьте консоль.");
+                    setError(err.message || "Ошибка при загрузке студентов");
                 } finally {
                     setIsLoaded(true);
                 }
@@ -88,11 +90,42 @@ export default function StudentsPage() {
     const pending = students.filter(s => s.status === 'PENDING').length;
     const suspended = students.filter(s => s.status === 'SUSPENDED').length;
 
-    if (!isLoaded) return <div className="p-8 text-zinc-500">Загрузка данных...</div>;
+    if (!isLoaded && !error) return <div className="p-8 text-zinc-500 font-bold uppercase tracking-widest animate-pulse">Загрузка данных...</div>;
 
     return (
         <ModuleGuard module="students">
             <div className="space-y-4 laptop:space-y-6">
+                <AnimatePresence>
+                    {error && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl p-6 shadow-2xl backdrop-blur-md flex gap-4"
+                        >
+                            <AlertCircle className="h-6 w-6 mt-1 flex-shrink-0" />
+                            <div className="flex-1">
+                                <h3 className="font-black uppercase tracking-tight text-lg leading-tight">Ошибка загрузки</h3>
+                                <p className="text-sm font-bold opacity-80 mt-1">
+                                    {error}. Проверьте соединение или права доступа.
+                                </p>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        setIsLoaded(false);
+                                        setError(null);
+                                        loadStudents(currentOrganizationId!);
+                                    }}
+                                    className="mt-4 border-red-500/50 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-black uppercase tracking-widest text-[10px] h-10 rounded-xl px-6"
+                                >
+                                    <RefreshCcw className="mr-2 h-3 w-3" /> Попробовать снова
+                                </Button>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 laptop:gap-4" data-help-id="students-header">
                     <div className="hidden laptop:flex items-center gap-3 laptop:gap-4">
                         <div className="h-10 w-10 laptop:h-12 laptop:w-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
