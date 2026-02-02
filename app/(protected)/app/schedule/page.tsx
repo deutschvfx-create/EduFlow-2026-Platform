@@ -130,7 +130,7 @@ export default function SchedulePage() {
     useEffect(() => {
         if (!userData) return;
 
-        if (userData.role === 'TEACHER') {
+        if (userData.role === 'teacher') {
             setTeacherFilter(userData.uid);
         }
         // TODO: For students we need their groupId. 

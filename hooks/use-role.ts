@@ -10,9 +10,9 @@ export function useRole() {
 
     return {
         role,
-        isOwner: role === 'OWNER',
-        isTeacher: role === 'TEACHER',
-        isStudent: role === 'STUDENT',
+        isOwner: role === 'owner',
+        isTeacher: role === 'teacher',
+        isStudent: role === 'student',
         loading
     };
 }

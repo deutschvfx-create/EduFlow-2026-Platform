@@ -22,7 +22,7 @@ export const studentsRepo = {
             const collRef = collection(db, COLLECTION);
             let q = query(
                 collRef,
-                where("role", "==", "STUDENT"),
+                where("role", "==", "student"),
                 where("organizationId", "==", organizationId)
             );
 
@@ -68,7 +68,7 @@ export const studentsRepo = {
             ...student,
             id: ref.id,
             organizationId,
-            role: "STUDENT",
+            role: "student",
             createdAt: student.createdAt || new Date().toISOString()
         };
         await setDoc(ref, newStudent);

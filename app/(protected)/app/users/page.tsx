@@ -139,8 +139,8 @@ export default function UsersPage() {
                                         <TableCell className="text-zinc-400 text-sm">{u.email}</TableCell>
                                         <TableCell>
                                             <Badge
-                                                className={`capitalize border-none ${u.role === 'OWNER' ? 'bg-amber-500/10 text-amber-500' :
-                                                    u.role === 'TEACHER' ? 'bg-indigo-500/10 text-indigo-500' :
+                                                className={`capitalize border-none ${u.role === 'owner' ? 'bg-amber-500/10 text-amber-500' :
+                                                    u.role === 'teacher' ? 'bg-indigo-500/10 text-indigo-500' :
                                                         'bg-emerald-500/10 text-emerald-500'
                                                     }`}
                                             >
@@ -148,7 +148,7 @@ export default function UsersPage() {
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            {u.uid === user?.uid || u.role === 'OWNER' ? (
+                                            {u.uid === user?.uid || u.role === 'owner' ? (
                                                 <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Администратор</span>
                                             ) : (
                                                 <div className="flex justify-end gap-2">
@@ -161,8 +161,8 @@ export default function UsersPage() {
                                                             <SelectValue />
                                                         </SelectTrigger>
                                                         <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
-                                                            <SelectItem value="TEACHER">Преподаватель</SelectItem>
-                                                            <SelectItem value="STUDENT">Студент</SelectItem>
+                                                            <SelectItem value="teacher">Преподаватель</SelectItem>
+                                                            <SelectItem value="student">Студент</SelectItem>
                                                         </SelectContent>
                                                     </Select>
                                                 </div>

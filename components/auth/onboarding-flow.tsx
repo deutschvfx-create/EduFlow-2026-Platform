@@ -20,7 +20,7 @@ import { useRouter } from "next/navigation";
 import { safeSet } from "@/lib/storage";
 
 type Language = 'ru' | 'en' | 'de' | 'tj';
-type Role = 'STUDENT' | 'TEACHER' | 'PARENT' | 'OWNER';
+type Role = 'student' | 'teacher' | 'parent' | 'owner';
 
 interface OnboardingData {
     language: Language;
@@ -143,7 +143,7 @@ export function OnboardingFlow() {
             birthDate: data.birthDate,
             role: role,
             language: data.language,
-            organizationType: role === 'OWNER' ? 'university' : 'language_school'
+            organizationType: role === 'owner' ? 'university' : 'language_school'
         };
         safeSet('onboarding_data', onboardingData);
 
@@ -300,7 +300,7 @@ export function OnboardingFlow() {
                             <div className="grid gap-3">
                                 {[
                                     {
-                                        id: 'OWNER' as Role,
+                                        id: 'owner' as Role,
                                         label: t.role_director,
                                         desc: t.role_director_desc,
                                         icon: ShieldCheck,
@@ -308,7 +308,7 @@ export function OnboardingFlow() {
                                         bg: 'group-hover:bg-purple-500'
                                     },
                                     {
-                                        id: 'TEACHER' as Role,
+                                        id: 'teacher' as Role,
                                         label: t.role_teacher,
                                         desc: t.role_teacher_desc,
                                         icon: Briefcase,
@@ -316,7 +316,7 @@ export function OnboardingFlow() {
                                         bg: 'group-hover:bg-blue-500'
                                     },
                                     {
-                                        id: 'STUDENT' as Role,
+                                        id: 'student' as Role,
                                         label: t.role_student,
                                         desc: t.role_student_desc,
                                         icon: GraduationCap,
