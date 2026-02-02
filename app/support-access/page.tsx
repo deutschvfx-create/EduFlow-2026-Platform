@@ -22,6 +22,7 @@ function SupportAccessContent() {
 
         const login = async () => {
             try {
+                console.log("🚀 [SupportAccess] Starting login with token:", token?.substring(0, 10) + "...");
                 // Wait a bit for effect
                 await new Promise(r => setTimeout(r, 1000));
 

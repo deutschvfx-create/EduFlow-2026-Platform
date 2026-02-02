@@ -77,6 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [statusMessage, setStatusMessage] = useState<string | null>(null);
     const [sessionReady, setSessionReady] = useState(false);
     const [liveTimeLeft, setLiveTimeLeft] = useState<number | undefined>(undefined);
+    const [isSupportSession, setIsSupportSession] = useState(false);
     const router = useRouter();
     const pathname = usePathname();
 
@@ -133,11 +134,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         let sessionTimer: any = null;
 
         const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+            let support = false;
+
             // Clean up previous listeners
             if (unsubscribeSnapshot) unsubscribeSnapshot();
             if (unsubscribeSession) unsubscribeSession();
             if (sessionTimer) clearTimeout(sessionTimer);
             setLiveTimeLeft(undefined);
+            setIsSupportSession(false);
 
             setUser(firebaseUser);
 
@@ -150,21 +154,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                     try {
                         const idTokenResult = await firebaseUser.getIdTokenResult();
-                        const isSupport = idTokenResult.claims.supportAccess === true;
+                        support = idTokenResult.claims.supportAccess === true;
                         const expiresAt = idTokenResult.claims.expiresAt as number | undefined;
+
+                        setIsSupportSession(support);
+                        console.log("🔐 [Auth] User signed in:", firebaseUser.uid, "Support Access:", support);
 
                         // Check if session already exists
                         const sessionSnap = await getDoc(sessionRef);
 
                         const sessionData = {
                             id: deviceId,
-                            device: isSupport ? `Guest (${name})` : name,
+                            device: support ? `Guest (${name})` : name,
                             userAgent: navigator.userAgent,
                             lastActive: serverTimestamp(),
                             isCurrent: true,
-                            type: isSupport ? 'support' : type,
+                            type: support ? 'support' : type,
                             status: 'active',
-                            ...(isSupport && expiresAt ? { expiresAt } : {})
+                            ...(support && expiresAt ? { expiresAt } : {})
                         };
 
                         if (!sessionSnap.exists()) {
@@ -174,7 +181,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         }
 
                         // 🕒 TIMER LOGIC: If this is a support session, set auto-logout
-                        if (isSupport && expiresAt) {
+                        if (support && expiresAt) {
                             const timeLeft = expiresAt - Date.now();
                             if (timeLeft <= 0) {
                                 auth.signOut().then(() => window.location.href = '/login');
@@ -232,6 +239,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                                 if (data.organizationId) {
                                     const target = data.role === 'student' ? '/student' : '/app/dashboard';
                                     router.push(target);
+                                } else if (support) {
+                                    // 🛡️ SUPPORT FIX: If we are support and no doc orgId yet, 
+                                    // still try dashboard to avoid register loop
+                                    router.push('/app/dashboard');
                                 } else {
                                     if (window.location.pathname !== '/register') router.push('/register');
                                 }
@@ -278,6 +289,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         if (user && !loading) {
+            // 🛡️ SUPPORT FIX: Skip registration redirect for support sessions
+            if (isSupportSession) return;
+
             if (userData && !userData.organizationId && isProtected) {
                 router.push('/register');
             }
