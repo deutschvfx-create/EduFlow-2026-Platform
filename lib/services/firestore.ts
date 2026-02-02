@@ -13,6 +13,8 @@ export interface UserData {
     lastName?: string;
     birthDate?: string;
     photoURL?: string;
+    photoScale?: number;
+    photoPosition?: { x: number; y: number };
     organizationId?: string | null;
     organizationType?: string;
     createdAt: number;
