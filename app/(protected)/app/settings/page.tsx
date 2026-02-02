@@ -26,6 +26,7 @@ import {
 import { useState, useEffect } from "react";
 import { OrganizationProfileCard } from "@/components/settings/organization-profile-card";
 import { UserProfileCard } from "@/components/settings/user-profile-card";
+import { SecuritySettingsCard } from "@/components/settings/security-settings-card";
 
 export default function SettingsPage() {
     const { modules, toggleModule, setAllModules, resetModules, isLoaded } = useModules();
@@ -234,6 +235,9 @@ export default function SettingsPage() {
 
             {/* USER PROFILE CARD */}
             <UserProfileCard onSave={() => showToast("Личный профиль сохранён")} />
+
+            {/* SECURITY SETTINGS CARD */}
+            <SecuritySettingsCard onSave={() => showToast("Пароль успешно обновлён")} />
 
             {/* ORGANIZATION PROFILE CARD */}
             <OrganizationProfileCard onSave={() => showToast("Профиль организации сохранён")} />
