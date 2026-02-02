@@ -183,7 +183,7 @@ export default function SchedulePage() {
         try {
             const { scheduleRepo } = await import("@/lib/data/schedule.repo");
             const newLesson: Lesson = {
-                id: generateId(),
+                id: newLessonData.id || generateId(), // Use provided ID if available (for optimistic UI consistency)
                 organizationId: currentOrganizationId,
                 status: 'PLANNED',
                 createdAt: new Date().toISOString(),

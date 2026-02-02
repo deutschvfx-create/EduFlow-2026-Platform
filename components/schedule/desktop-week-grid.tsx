@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Lesson, DayOfWeek } from "@/lib/types/schedule";
-import { cn } from "@/lib/utils";
+import { cn, generateId } from "@/lib/utils";
 import { Clock, MapPin, Users, GraduationCap, X } from "lucide-react";
 import { format, startOfWeek, addDays, isSameDay } from "date-fns";
 import { ru } from "date-fns/locale";
@@ -147,8 +147,12 @@ export function DesktopWeekGrid({
     const handleQuickSave = () => {
         if (!formData.groupId || !formData.teacherId || !formData.courseId) return;
 
+        // Generate a real ID immediately so optimistic state matches server state
+        // This prevents the card from "flickering" or being replaced when server data arrives
+        const optimId = generateId();
+
         const newLesson: Lesson = {
-            id: `temp-${Date.now()}`,
+            id: optimId,
             groupId: formData.groupId,
             teacherId: formData.teacherId,
             courseId: formData.courseId,
