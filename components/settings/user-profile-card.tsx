@@ -33,8 +33,9 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { compressImage } from "@/lib/utils";
 import { UserData, UserService, OrganizationService } from "@/lib/services/firestore";
 import { Slider } from "@/components/ui/slider";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { updatePassword } from "firebase/auth";
+import { doc, onSnapshot } from "firebase/firestore";
 
 interface UserProfileCardProps {
     onSave?: () => void;
@@ -97,12 +98,20 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                 photoPosition: userData.photoPosition || { x: 0, y: 0 }
             });
 
-            // If owner and have orgId, fetch org data
-            if (userData.role === 'owner' && userData.organizationId) {
-                OrganizationService.getOrganization(userData.organizationId).then(data => {
-                    if (data) setOrgData(data);
+            // If owner and have orgId, subscribe to org data
+            let unsubscribeOrg: (() => void) | null = null;
+            if (userData.role === 'owner' && userData.organizationId && db) {
+                unsubscribeOrg = onSnapshot(doc(db, "organizations", userData.organizationId), (doc) => {
+                    if (doc.exists()) {
+                        setOrgData(doc.data());
+                    }
+                }, (error) => {
+                    console.error("Failed to subscribe to org data:", error);
                 });
             }
+            return () => {
+                if (unsubscribeOrg) unsubscribeOrg();
+            };
         }
     }, [userData]);
 
