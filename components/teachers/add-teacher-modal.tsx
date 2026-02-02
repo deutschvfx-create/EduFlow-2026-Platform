@@ -39,7 +39,7 @@ export function AddTeacherModal() {
 
         try {
             const { teachersRepo } = await import("@/lib/data/teachers.repo");
-            teachersRepo.add(currentOrganizationId!, {
+            await teachersRepo.add(currentOrganizationId!, {
                 id: generateId(),
                 organizationId: currentOrganizationId!,
                 firstName,
