@@ -96,9 +96,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const deviceId = localStorage.getItem('eduflow_device_id');
             if (deviceId) {
                 const sessionRef = doc(db, "users", user.uid, "sessions", deviceId);
-                await updateDoc(sessionRef, { status: 'paused', lastUpdated: serverTimestamp() });
+                await updateDoc(sessionRef, { status: 'paused', mirrored: false, lastUpdated: serverTimestamp() });
             }
-        } else {
+        } else if (followingSessionId && user && db) {
+            const sessionRef = doc(db, "users", user.uid, "sessions", followingSessionId);
+            await updateDoc(sessionRef, { mirrored: false, lastUpdated: serverTimestamp() });
             setFollowingSessionId(null);
         }
     };
@@ -332,9 +334,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const unsubscribe = onSnapshot(q, (snap) => {
             const activeSupportSession = snap.docs.find(doc => {
                 const data = doc.data();
-                // Consider session active if updated in the last 2 minutes
+                // Consider session active if updated in the last 2 minutes AND not explicitly stopped
                 const lastUpdated = data.lastUpdated?.toMillis() || 0;
-                return Date.now() - lastUpdated < 120000;
+                return (Date.now() - lastUpdated < 120000) && data.mirrored !== false;
             });
 
             if (activeSupportSession) {
@@ -343,7 +345,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     setFollowingSessionId(activeSupportSession.id);
                 }
             } else if (followingSessionId) {
-                // If the guest is gone, stop following
+                // If the guest is gone or stopped mirroring, stop following
                 setFollowingSessionId(null);
             }
         });
@@ -380,16 +382,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
 
         const readablePath = PATH_MAP[pathname] || pathname;
-
-        // 1. Sync Current Path & Raw URL (Normalized)
         const normalizedPath = pathname.replace(/\/$/, "");
+
+        // 1. Sync Current Path
         updateDoc(sessionRef, {
             currentPath: readablePath,
             rawPath: normalizedPath,
             lastUpdated: serverTimestamp()
         }).catch(e => console.error("Telemetry Path Error:", e));
 
-        // 2. Sync Actions (Guest to Owner)
+        // 2. Capture Guest Actions (Sync to Owner)
         const handleGlobalClick = (e: MouseEvent) => {
             if (isMirroringRef.current) return;
             const target = e.target as HTMLElement;
@@ -397,7 +399,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             if (element) {
                 const actionText = element.textContent?.trim().substring(0, 40) || (element as any).ariaLabel || (element as any).title || "Действие";
-
                 updateDoc(sessionRef, {
                     lastAction: `Гость нажал "${actionText}"`,
                     remoteCommand: {
@@ -412,46 +413,93 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
         };
 
-        window.addEventListener('click', handleGlobalClick, { capture: true });
+        const handleGlobalInput = (e: Event) => {
+            if (isMirroringRef.current) return;
+            const target = e.target as HTMLInputElement | HTMLTextAreaElement;
+            if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+                const label = target.placeholder || target.name || target.id || "Поле ввода";
+                updateDoc(sessionRef, {
+                    remoteCommand: {
+                        id: Math.random().toString(36).substr(2, 9),
+                        type: 'input',
+                        text: label,
+                        value: target.value,
+                        path: normalizedPath,
+                        timestamp: Date.now()
+                    },
+                    lastUpdated: serverTimestamp()
+                }).catch(e => console.error("Telemetry Input Error:", e));
+            }
+        };
 
-        // 3. Listen for Owner Commands (Owner to Guest)
-        let lastOwnerCommandId: string | null = null;
+        window.addEventListener('click', handleGlobalClick, { capture: true });
+        window.addEventListener('input', handleGlobalInput, { capture: true });
+
+        // 3. Listen for Owner Commands & Status
+        let lastOwnerCmdId: string | null = null;
         const unsubscribe = onSnapshot(sessionRef, (snap) => {
             const data = snap.data();
-            if (!data || !data.ownerCommand || data.ownerCommand.id === lastOwnerCommandId) return;
+            if (!data) return;
 
-            lastOwnerCommandId = data.ownerCommand.id;
-            console.log("👨‍🏫 Mirroring Owner Navigation to:", data.ownerCommand.path);
-            if (data.ownerCommand.path && data.ownerCommand.path !== normalizedPath) {
-                router.push(data.ownerCommand.path);
+            // Handle Instant Kill
+            if (data.mirrored === false) {
+                console.log("🛑 Mirroring externally stopped");
+                // The provider handles general block but we log it
+                return;
             }
 
-            if (data.ownerCommand.type === 'click') {
-                console.log("👨‍🏫 Mirroring Owner Click:", data.ownerCommand.text);
-                // Use the same robust findAndClick logic as owner side
-                let attempts = 0;
-                const interval = setInterval(() => {
-                    attempts++;
-                    const elements = Array.from(document.querySelectorAll('button, a, [role="button"], .cursor-pointer'));
-                    const target = elements.find(el => {
-                        const match = data.ownerCommand.text.toLowerCase();
-                        return el.textContent?.toLowerCase().includes(match) || (el as any).ariaLabel?.toLowerCase().includes(match);
-                    });
-                    if (target) {
+            if (data.ownerCommand && data.ownerCommand.id !== lastOwnerCmdId) {
+                lastOwnerCmdId = data.ownerCommand.id;
+
+                // Mirror Navigation
+                if (data.ownerCommand.path && data.ownerCommand.path !== normalizedPath) {
+                    router.push(data.ownerCommand.path);
+                }
+
+                // Mirror Clicks
+                if (data.ownerCommand.type === 'click') {
+                    let attempts = 0;
+                    const interval = setInterval(() => {
+                        attempts++;
+                        const elements = Array.from(document.querySelectorAll('button, a, [role="button"], .cursor-pointer'));
+                        const targetElement = elements.find(el => {
+                            const match = data.ownerCommand.text.toLowerCase();
+                            return el.textContent?.toLowerCase().includes(match) || (el as any).ariaLabel?.toLowerCase().includes(match);
+                        });
+                        if (targetElement) {
+                            isMirroringRef.current = true;
+                            (targetElement as HTMLElement).click();
+                            setTimeout(() => { isMirroringRef.current = false; }, 100);
+                            clearInterval(interval);
+                        } else if (attempts >= 10) clearInterval(interval);
+                    }, 400);
+                }
+
+                // Mirror Input
+                if (data.ownerCommand.type === 'input') {
+                    const inputs = Array.from(document.querySelectorAll('input, textarea')) as (HTMLInputElement | HTMLTextAreaElement)[];
+                    const targetInput = inputs.find(i =>
+                        i.placeholder.toLowerCase().includes(data.ownerCommand.text.toLowerCase()) ||
+                        i.name.toLowerCase().includes(data.ownerCommand.text.toLowerCase()) ||
+                        i.id.toLowerCase().includes(data.ownerCommand.text.toLowerCase())
+                    );
+                    if (targetInput) {
                         isMirroringRef.current = true;
-                        (target as HTMLElement).click();
+                        targetInput.value = data.ownerCommand.value;
+                        targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        targetInput.dispatchEvent(new Event('change', { bubbles: true }));
                         setTimeout(() => { isMirroringRef.current = false; }, 100);
-                        clearInterval(interval);
-                    } else if (attempts >= 10) clearInterval(interval);
-                }, 400);
+                    }
+                }
             }
         });
 
         return () => {
             window.removeEventListener('click', handleGlobalClick, { capture: true });
+            window.removeEventListener('input', handleGlobalInput, { capture: true });
             unsubscribe();
         };
-    }, [pathname, isSupportSession, user, sessionReady]);
+    }, [pathname, isSupportSession, user, sessionReady, router]);
 
     // 🔄 OWNER MIRRORING (FOLLOW MODE)
     const lastCommandIdRef = useRef<string | null>(null);
@@ -469,53 +517,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             const data = snap.data();
 
+            // Handle Instant Kill
+            if (data.mirrored === false) {
+                console.log("🛑 Mirroring externally stopped by guest or system");
+                setFollowingSessionId(null);
+                return;
+            }
+
             // 1. Sync Navigation
             if (data.rawPath && data.rawPath !== normalizedCurrentPath) {
                 console.log("🚀 Mirroring Navigation to:", data.rawPath);
                 router.push(data.rawPath);
             }
 
-            // 2. Sync Click Actions
+            // 2. Mirror Guest Actions (Clicks & Input)
             if (data.remoteCommand && data.remoteCommand.id !== lastCommandIdRef.current) {
                 lastCommandIdRef.current = data.remoteCommand.id;
 
-                console.log("🔍 Guest Clicked:", data.remoteCommand.text);
+                if (data.remoteCommand.type === 'click') {
+                    console.log("🔍 Guest Clicked:", data.remoteCommand.text);
+                    let attempts = 0;
+                    const interval = setInterval(() => {
+                        attempts++;
+                        const findAndClick = () => {
+                            const selectors = 'button, a, [role="button"], [role="link"], .cursor-pointer';
+                            const elements = Array.from(document.querySelectorAll(selectors));
+                            const target = elements.find(el => {
+                                const match = data.remoteCommand.text.toLowerCase();
+                                return el.textContent?.toLowerCase().includes(match) || (el as any).ariaLabel?.toLowerCase().includes(match) || (el as any).title?.toLowerCase().includes(match);
+                            });
 
-                // Retry logic: try finding the element for up to 3 seconds
-                let attempts = 0;
-                const maxAttempts = 10;
-                const interval = setInterval(() => {
-                    attempts++;
-                    const findAndClick = () => {
-                        const selectors = 'button, a, [role="button"], [role="link"], .cursor-pointer';
-                        const elements = Array.from(document.querySelectorAll(selectors));
+                            if (target) {
+                                isMirroringRef.current = true;
+                                (target as HTMLElement).click();
+                                setTimeout(() => { isMirroringRef.current = false; }, 100);
+                                clearInterval(interval);
+                                return true;
+                            }
+                            return false;
+                        };
+                        if (findAndClick() || attempts >= 10) clearInterval(interval);
+                    }, 400);
+                }
 
-                        const target = elements.find(el => {
-                            const text = el.textContent?.trim() || "";
-                            const aria = (el as any).ariaLabel || "";
-                            const title = (el as any).title || "";
-
-                            const match = data.remoteCommand.text.toLowerCase();
-                            return text.toLowerCase().includes(match) ||
-                                aria.toLowerCase().includes(match) ||
-                                title.toLowerCase().includes(match);
-                        });
-
-                        if (target) {
-                            console.log("🎯 Mirroring Click ON:", data.remoteCommand.text);
-                            isMirroringRef.current = true;
-                            (target as HTMLElement).click();
-                            setTimeout(() => { isMirroringRef.current = false; }, 100);
-                            clearInterval(interval);
-                            return true;
-                        }
-                        return false;
-                    };
-
-                    if (findAndClick() || attempts >= maxAttempts) {
-                        clearInterval(interval);
+                if (data.remoteCommand.type === 'input') {
+                    console.log("🔍 Guest Input:", data.remoteCommand.text);
+                    const inputs = Array.from(document.querySelectorAll('input, textarea')) as (HTMLInputElement | HTMLTextAreaElement)[];
+                    const targetInput = inputs.find(i =>
+                        i.placeholder.toLowerCase().includes(data.remoteCommand.text.toLowerCase()) ||
+                        i.name.toLowerCase().includes(data.remoteCommand.text.toLowerCase()) ||
+                        i.id.toLowerCase().includes(data.remoteCommand.text.toLowerCase())
+                    );
+                    if (targetInput) {
+                        isMirroringRef.current = true;
+                        targetInput.value = data.remoteCommand.value;
+                        targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        targetInput.dispatchEvent(new Event('change', { bubbles: true }));
+                        setTimeout(() => { isMirroringRef.current = false; }, 100);
                     }
-                }, 400);
+                }
             }
         });
 
@@ -539,13 +599,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
         };
 
+        const handleOwnerInput = (e: Event) => {
+            if (isMirroringRef.current) return;
+            const target = e.target as HTMLInputElement | HTMLTextAreaElement;
+            if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+                const label = target.placeholder || target.name || target.id || "Поле ввода";
+                updateDoc(sessionRef, {
+                    ownerCommand: {
+                        id: Math.random().toString(36).substr(2, 9),
+                        type: 'input',
+                        text: label,
+                        value: target.value,
+                        path: normalizedCurrentPath,
+                        timestamp: Date.now()
+                    },
+                    lastUpdated: serverTimestamp()
+                }).catch(e => console.error("Owner Input Error:", e));
+            }
+        };
+
         window.addEventListener('click', handleOwnerClick, { capture: true });
+        window.addEventListener('input', handleOwnerInput, { capture: true });
 
         return () => {
             unsubscribe();
             window.removeEventListener('click', handleOwnerClick, { capture: true });
+            window.removeEventListener('input', handleOwnerInput, { capture: true });
         };
-    }, [followingSessionId, pathname, user, router, isSupportSession]);
+    }, [followingSessionId, pathname, user, router, isSupportSession, db]);
 
     // UI RENDERING
     const isProtected = pathname.startsWith('/student') || pathname.startsWith('/app') || pathname.startsWith('/teacher');
