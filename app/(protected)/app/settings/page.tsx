@@ -150,7 +150,7 @@ export default function SettingsPage() {
                 {Icon && <Icon className="h-4 w-4 text-zinc-500" />}
                 <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">{title}</h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 xs:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-2">
                 {children}
             </div>
         </div>
@@ -165,11 +165,7 @@ export default function SettingsPage() {
         label: string,
         icon: any
     }) => {
-        const requiredBy = requirements[mKey];
-        const isDependedOn = !!dependencies[mKey]?.some(k => modules[k]);
         const isActive = modules[mKey];
-
-        // Check if this module is disabled because its requirements aren't met
         const reqs = requirements[mKey] || [];
         const missingReqs = reqs.filter(r => !modules[r]);
         const isDisabled = missingReqs.length > 0;
@@ -177,49 +173,46 @@ export default function SettingsPage() {
         return (
             <div
                 className={`
-                    relative group transition-all duration-300 rounded-2xl border p-4 cursor-pointer
+                    relative group transition-all duration-300 rounded-xl border p-2 cursor-pointer
+                    flex flex-col items-center justify-center gap-2 text-center aspect-square sm:aspect-auto sm:h-24
                     ${isActive
-                        ? 'bg-zinc-900/40 border-indigo-500/30 shadow-lg shadow-indigo-500/5'
-                        : 'bg-zinc-950/20 border-zinc-900 hover:border-zinc-800'}
-                    ${isDisabled ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}
+                        ? 'bg-indigo-500/10 border-indigo-500/30'
+                        : 'bg-zinc-900/40 border-zinc-800/50 hover:border-zinc-700'}
+                    ${isDisabled ? 'opacity-30 grayscale pointer-events-none' : 'opacity-100'}
                 `}
                 onClick={() => handleToggle(mKey)}
             >
-                <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 overflow-hidden">
-                        <div className={`
-                            h-10 w-10 rounded-xl flex items-center justify-center border transition-all duration-300
-                            ${isActive
-                                ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-400'
-                                : 'bg-zinc-900 border-zinc-800 text-zinc-500 group-hover:text-zinc-300'}
-                        `}>
-                            <Icon className="h-5 w-5" />
+                <div className={`
+                    h-8 w-8 rounded-lg flex items-center justify-center border transition-all duration-300
+                    ${isActive
+                        ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30'
+                        : 'bg-zinc-950 border-zinc-800 text-zinc-500 group-hover:text-zinc-300'}
+                `}>
+                    <Icon className="h-4 w-4" />
+                </div>
+
+                <div className="flex flex-col min-w-0 px-1">
+                    <span className={`text-[11px] font-bold leading-tight transition-colors ${isActive ? 'text-white' : 'text-zinc-500 group-hover:text-zinc-400'}`}>
+                        {label}
+                    </span>
+                    {missingReqs.length > 0 && (
+                        <div className="flex justify-center mt-1">
+                            <div className="w-1 h-1 rounded-full bg-amber-500 animate-pulse" />
                         </div>
-                        <div className="flex flex-col min-w-0">
-                            <span className={`text-sm font-bold transition-colors ${isActive ? 'text-white' : 'text-zinc-400'}`}>
-                                {label}
-                            </span>
-                            {missingReqs.length > 0 && (
-                                <span className="text-[9px] text-amber-500 font-bold uppercase tracking-tighter mt-0.5">
-                                    Нужен: {missingReqs.map(r => {
-                                        const names: any = { groups: 'Группы', courses: 'Предметы', schedule: 'Расписание', faculties: 'Факультеты' };
-                                        return names[r] || r;
-                                    }).join(', ')}
-                                </span>
-                            )}
-                        </div>
-                    </div>
+                    )}
+                </div>
+
+                <div className="absolute top-1 right-1">
                     <Switch
                         checked={isActive}
                         onCheckedChange={() => handleToggle(mKey)}
-                        className="data-[state=checked]:bg-indigo-500"
+                        className="scale-[0.6] data-[state=checked]:bg-indigo-500"
                     />
                 </div>
 
                 {isActive && dependencies[mKey] && (
-                    <div className="absolute -bottom-1 -right-1 h-3 w-3">
-                        <div className="absolute inset-0 bg-indigo-500/20 rounded-full animate-ping" />
-                        <div className="absolute inset-1 bg-indigo-500 rounded-full" />
+                    <div className="absolute top-1 left-1">
+                        <div className="h-1.5 w-1.5 bg-indigo-500 rounded-full shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
                     </div>
                 )}
             </div>
@@ -244,25 +237,22 @@ export default function SettingsPage() {
         }, []);
 
         return (
-            <div className="bg-zinc-950/50 border border-zinc-900 rounded-3xl p-8 space-y-8 mt-12">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div className="flex items-center gap-4">
-                        <div className="h-14 w-14 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
-                            <RotateCcw className="h-7 w-7 text-amber-500" />
+            <div className="bg-zinc-950/50 border border-zinc-900 rounded-2xl p-4 sm:p-6 space-y-6 mt-8">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                            <RotateCcw className="h-5 w-5 text-amber-500" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-black text-white tracking-tight italic">DATA CENTER</h2>
-                            <p className="text-xs text-zinc-500 font-medium uppercase tracking-widest mt-1">
-                                Управление локальным хранилищем и миграция
-                            </p>
+                            <h2 className="text-sm font-black text-white tracking-widest italic uppercase">DATA CENTER</h2>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-4">
+                    <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
                         {Object.entries(stats).map(([key, count]) => (
                             <div key={key} className="flex flex-col items-center">
-                                <span className="text-lg font-black text-white">{count}</span>
-                                <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-tighter">
+                                <span className="text-sm font-black text-white">{count}</span>
+                                <span className="text-[8px] text-zinc-600 font-bold uppercase tracking-tighter">
                                     {key === 'students' && 'Студ.'}
                                     {key === 'teachers' && 'Преп.'}
                                     {key === 'groups' && 'Группы'}
@@ -274,10 +264,10 @@ export default function SettingsPage() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-zinc-900/50 pt-8">
+                <div className="grid grid-cols-3 gap-2 border-t border-zinc-900/50 pt-6">
                     <Button
                         variant="ghost"
-                        className="h-16 rounded-2xl bg-zinc-900/50 hover:bg-zinc-800 border-zinc-800 text-zinc-300 font-bold group"
+                        className="h-12 rounded-xl bg-zinc-900/30 hover:bg-zinc-800/50 border border-zinc-900 text-zinc-400 font-bold group"
                         onClick={() => {
                             const data = {
                                 students: localStorage.getItem('eduflow.students'),
@@ -296,20 +286,20 @@ export default function SettingsPage() {
                             showToast("Резервная копия скачана");
                         }}
                     >
-                        <div className="flex flex-col items-center gap-1">
-                            <Upload className="h-5 w-5 text-indigo-400 group-hover:scale-110 transition-transform" />
-                            <span className="text-xs uppercase tracking-widest">Экспорт JSON</span>
+                        <div className="flex flex-col items-center">
+                            <Upload className="h-3.5 w-3.5 text-indigo-400 mb-0.5" />
+                            <span className="text-[9px] uppercase tracking-wider">Экспорт</span>
                         </div>
                     </Button>
 
                     <div className="relative group">
                         <Button
                             variant="ghost"
-                            className="h-16 w-full rounded-2xl bg-zinc-900/50 hover:bg-zinc-800 border-zinc-800 text-zinc-300 font-bold"
+                            className="h-12 w-full rounded-xl bg-zinc-900/30 hover:bg-zinc-800/50 border border-zinc-900 text-zinc-400 font-bold"
                         >
-                            <div className="flex flex-col items-center gap-1">
-                                <RotateCcw className="h-5 w-5 text-emerald-400 group-hover:rotate-180 transition-transform duration-500" />
-                                <span className="text-xs uppercase tracking-widest">Импорт JSON</span>
+                            <div className="flex flex-col items-center">
+                                <RotateCcw className="h-3.5 w-3.5 text-emerald-400 mb-0.5" />
+                                <span className="text-[9px] uppercase tracking-wider">Импорт</span>
                             </div>
                         </Button>
                         <input
@@ -342,7 +332,7 @@ export default function SettingsPage() {
 
                     <Button
                         variant="ghost"
-                        className="h-16 rounded-2xl bg-red-500/5 hover:bg-red-500/10 border-red-500/20 text-red-400 font-bold group"
+                        className="h-12 rounded-xl bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 text-red-500/60 hover:text-red-400 font-bold"
                         onClick={() => {
                             if (confirm("ВНИМАНИЕ: Это полностью очистит локальную базу данных. Продолжить?")) {
                                 const keys = ['eduflow.students', 'eduflow.teachers', 'eduflow.groups', 'eduflow.courses', 'eduflow.announcements', 'eduflow-modules-config'];
@@ -352,9 +342,9 @@ export default function SettingsPage() {
                             }
                         }}
                     >
-                        <div className="flex flex-col items-center gap-1">
-                            <Zap className="h-5 w-5 text-red-500 group-hover:scale-125 transition-transform" />
-                            <span className="text-xs uppercase tracking-widest">Очистить базу</span>
+                        <div className="flex flex-col items-center">
+                            <Zap className="h-3.5 w-3.5 mb-0.5" />
+                            <span className="text-[9px] uppercase tracking-wider">Сброс</span>
                         </div>
                     </Button>
                 </div>
@@ -363,7 +353,7 @@ export default function SettingsPage() {
     };
 
     return (
-        <div className="space-y-12 max-w-5xl mx-auto pb-20 px-4">
+        <div className="space-y-8 max-w-6xl mx-auto pb-20 px-4">
             {/* Custom Toast */}
             <AnimatePresence>
                 {toastMsg && (
@@ -373,7 +363,7 @@ export default function SettingsPage() {
                         exit={{ opacity: 0, scale: 0.9 }}
                         className="fixed bottom-8 right-8 z-[100]"
                     >
-                        <div className="bg-zinc-900 border border-zinc-800 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4">
+                        <div className="bg-zinc-900 border border-zinc-800 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-4">
                             <div className={`h-2 w-2 rounded-full ${toastMsg.type === 'success' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]'}`} />
                             <span className="font-bold text-sm tracking-tight">{toastMsg.text}</span>
                         </div>
@@ -385,56 +375,57 @@ export default function SettingsPage() {
             <UserProfileCard onSave={() => showToast("Профиль обновлен")} />
 
             {/* PRESETS PANEL */}
-            <div className="bg-zinc-950/50 border border-zinc-900 rounded-3xl p-8 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-[100px] -mr-32 -mt-32" />
+            <div className="bg-zinc-950/50 border border-zinc-900 rounded-2xl p-4 sm:p-6 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/5 rounded-full blur-[80px] -mr-24 -mt-24" />
 
-                <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-                    <div className="flex items-center gap-5">
-                        <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-indigo-500/20">
-                            <Zap className="h-8 w-8 text-white" />
+                <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                    <div className="flex items-center gap-4">
+                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-xl shadow-indigo-500/20">
+                            <Zap className="h-5 w-5 text-white" />
                         </div>
                         <div>
-                            <div className="flex items-center gap-3">
-                                <h2 className="text-xl font-black text-white tracking-tight">ПРЕСЕТЫ КОНФИГУРАЦИИ</h2>
-                                <span className="bg-indigo-500/20 text-indigo-400 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">v2.0</span>
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-sm font-black text-white tracking-widest uppercase italic">PRESETS</h2>
+                                <span className="bg-indigo-500/20 text-indigo-400 text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-widest">v2.0</span>
                             </div>
-                            <p className="text-sm text-zinc-500 mt-1 italic">Быстрая настройка под ваш тип обучения</p>
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-3">
+                    <div className="flex flex-wrap gap-2">
                         <Button
                             onClick={() => applyPreset('UNIVERSITY')}
-                            className="bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 h-14 px-8 rounded-2xl font-black italic tracking-tighter shadow-xl transition-all hover:scale-105 active:scale-95"
+                            size="sm"
+                            className="bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 h-10 px-4 rounded-xl font-bold text-[10px] tracking-widest uppercase transition-all"
                         >
                             УНИВЕРСИТЕТ
                         </Button>
                         <Button
                             onClick={() => applyPreset('SCHOOL')}
-                            className="bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 h-14 px-8 rounded-2xl font-black italic tracking-tighter shadow-xl transition-all hover:scale-105 active:scale-95"
+                            size="sm"
+                            className="bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 h-10 px-4 rounded-xl font-bold text-[10px] tracking-widest uppercase transition-all"
                         >
                             ЯЗЫКОВАЯ ШКОЛА
                         </Button>
                         <Button
                             variant="ghost"
                             onClick={handleReset}
-                            className="text-zinc-500 hover:text-white hover:bg-zinc-900 h-14 rounded-2xl font-bold gap-2"
+                            size="sm"
+                            className="text-zinc-500 hover:text-white h-10 rounded-xl font-bold text-[10px] tracking-widest uppercase"
                         >
-                            <RotateCcw className="h-4 w-4" />
-                            СБРОСИТЬ
+                            СБРОС
                         </Button>
                     </div>
                 </div>
             </div>
 
             {/* MODULES SECTIONS */}
-            <div className="space-y-12">
-                <Section title="Персонал и Студенты" icon={Users}>
+            <div className="space-y-8">
+                <Section title="Команда и Студенты" icon={Users}>
                     <ModuleCard mKey="students" label="Студенты" icon={Users} />
                     <ModuleCard mKey="teachers" label="Преподаватели" icon={GraduationCap} />
                 </Section>
 
-                <Section title="Инфраструктура модуля" icon={Building2}>
+                <Section title="Инфраструктура" icon={Building2}>
                     <ModuleCard mKey="faculties" label="Факультеты" icon={Building2} />
                     <ModuleCard mKey="departments" label="Кафедры" icon={DoorOpen} />
                     <ModuleCard mKey="classrooms" label="Аудитории" icon={MapPin} />
@@ -444,11 +435,11 @@ export default function SettingsPage() {
                 <Section title="Процесс обучения" icon={BookOpen}>
                     <ModuleCard mKey="courses" label="Предметы" icon={BookOpen} />
                     <ModuleCard mKey="schedule" label="Расписание" icon={Calendar} />
-                    <ModuleCard mKey="attendance" label="Посещаемость" icon={CheckSquare} />
+                    <ModuleCard mKey="attendance" label="Журнал" icon={CheckSquare} />
                     <ModuleCard mKey="grades" label="Оценки" icon={Award} />
                 </Section>
 
-                <Section title="Внутренняя связь" icon={MessageSquare}>
+                <Section title="Коммуникация" icon={MessageSquare}>
                     <ModuleCard mKey="announcements" label="Объявления" icon={Megaphone} />
                     <ModuleCard mKey="chat" label="Чаты" icon={MessageSquare} />
                     <ModuleCard mKey="reports" label="Аналитика" icon={BarChart3} />
