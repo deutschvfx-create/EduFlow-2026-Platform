@@ -103,7 +103,7 @@ export class SyncManager {
 
         // Batch Insert Students
         if (students.length > 0) {
-            await sql.execute("DELETE FROM students WHERE organizationId = ? AND is_dirty = 0", [organizationId]); // Simple sync strategy: replace clean records
+            await sql.run("DELETE FROM students WHERE organizationId = ? AND is_dirty = 0", [organizationId]); // Simple sync strategy: replace clean records
             for (const s of students) {
                 await sql.run(
                     `INSERT OR REPLACE INTO students (id, organizationId, firstName, lastName, email, status, data, updated_at, is_dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)`,
@@ -114,7 +114,7 @@ export class SyncManager {
 
         // Batch Insert Teachers
         if (teachers.length > 0) {
-            await sql.execute("DELETE FROM teachers WHERE organizationId = ? AND is_dirty = 0", [organizationId]);
+            await sql.run("DELETE FROM teachers WHERE organizationId = ? AND is_dirty = 0", [organizationId]);
             for (const t of teachers) {
                 await sql.run(
                     `INSERT OR REPLACE INTO teachers (id, organizationId, firstName, lastName, email, status, data, updated_at, is_dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)`,
@@ -129,7 +129,7 @@ export class SyncManager {
         const sql = await dbService.getDb();
 
         if (!snapshot.empty) {
-            await sql.execute("DELETE FROM groups WHERE organizationId = ? AND is_dirty = 0", [organizationId]);
+            await sql.run("DELETE FROM groups WHERE organizationId = ? AND is_dirty = 0", [organizationId]);
 
             for (const doc of snapshot.docs) {
                 const data = doc.data();

@@ -50,7 +50,7 @@ export default function GradesPage() {
             ]);
 
             const [g, c, s] = await Promise.all([
-                grpM.groupsRepo.getAll(currentOrganizationId, isTeacher ? { groupIds: (userData as any)?.groupIds } : {}),
+                grpM.groupsRepo.getAll(currentOrganizationId),
                 couM.coursesRepo.getAll(currentOrganizationId),
                 stuM.studentsRepo.getAll(currentOrganizationId, isTeacher ? { groupIds: (userData as any)?.groupIds } : {})
             ]);

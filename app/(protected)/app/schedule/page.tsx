@@ -97,10 +97,7 @@ export default function SchedulePage() {
                         },
                         isTeacher ? { teacherId: userData?.uid } : {}
                     ),
-                    grpM.groupsRepo.getAll(
-                        currentOrganizationId,
-                        isTeacher ? { groupIds: (userData as any)?.groupIds } : {}
-                    ),
+                    grpM.groupsRepo.getAll(currentOrganizationId),
                     teaM.teachersRepo.getAll(currentOrganizationId),
                     couM.coursesRepo.getAll(currentOrganizationId)
                 ]);

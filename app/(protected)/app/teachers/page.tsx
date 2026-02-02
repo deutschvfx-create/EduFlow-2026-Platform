@@ -108,7 +108,7 @@ export default function TeachersPage() {
         if (action === 'delete') {
             if (!confirm(`Удалить ${selectedIds.length} преподавателей?`)) return;
             for (const id of selectedIds) {
-                await teachersRepo.delete(id);
+                await teachersRepo.delete(currentOrganizationId!, id);
             }
         } else if (action === 'suspend') {
             for (const id of selectedIds) {

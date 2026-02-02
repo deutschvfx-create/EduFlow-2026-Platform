@@ -16,14 +16,19 @@ import {
 const COLLECTION = "groups";
 
 export const groupsRepo = {
-    getAll: async (organizationId: string): Promise<Group[]> => {
+    getAll: async (organizationId: string, options?: { groupIds?: string[] }): Promise<Group[]> => {
         if (!organizationId) throw new Error("organizationId is required");
         try {
             const collRef = collection(db, COLLECTION);
-            const q = query(
+            let q = query(
                 collRef,
                 where("organizationId", "==", organizationId)
             );
+
+            if (options?.groupIds && options.groupIds.length > 0) {
+                // Firestore 'in' operator limit is 30
+                q = query(q, where("__name__", "in", options.groupIds.slice(0, 30)));
+            }
 
             const snapshot = await getDocs(q);
 
