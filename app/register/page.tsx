@@ -19,7 +19,7 @@ type Step = 'language' | 'auth' | 'info' | 'org' | 'success';
 
 function RegisterFlow() {
     const router = useRouter()
-    const { user, userData } = useAuth()
+    const { user, userData, isSupportSession, loading: authLoading } = useAuth()
     const [step, setStep] = useState<Step>('language')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -43,7 +43,13 @@ function RegisterFlow() {
 
     // If already logged in but no orgId, move to info/org step
     useEffect(() => {
-        if (user && !loading) {
+        if (user && !authLoading) {
+            // 🛡️ SUPPORT FIX: If this is a support session, always redirect to dashboard
+            if (isSupportSession) {
+                router.push('/app/dashboard');
+                return;
+            }
+
             if (userData && !userData.organizationId) {
                 if (!userData.firstName) setStep('info');
                 else setStep('org');
@@ -52,7 +58,7 @@ function RegisterFlow() {
                 router.push('/app/dashboard');
             }
         }
-    }, [user, userData, loading, router])
+    }, [user, userData, authLoading, isSupportSession, router])
 
     const saveLang = (l: string) => {
         setLang(l)

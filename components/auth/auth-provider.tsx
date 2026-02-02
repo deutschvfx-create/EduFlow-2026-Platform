@@ -14,6 +14,7 @@ interface AuthContextType {
     userData: UserData | null;
     loading: boolean;
     timeLeft?: number; // In milliseconds
+    isSupportSession?: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -170,12 +171,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                             lastActive: serverTimestamp(),
                             isCurrent: true,
                             type: support ? 'support' : type,
-                            status: 'active',
                             ...(support && expiresAt ? { expiresAt } : {})
                         };
 
                         if (!sessionSnap.exists()) {
-                            await setDoc(sessionRef, sessionData);
+                            await setDoc(sessionRef, { ...sessionData, status: 'active' });
                         } else {
                             await updateDoc(sessionRef, sessionData);
                         }
@@ -318,7 +318,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, userData, loading, timeLeft: liveTimeLeft }}>
+        <AuthContext.Provider value={{ user, userData, loading, timeLeft: liveTimeLeft, isSupportSession }}>
             {/* 🕒 FLOATING TIMER FOR GUEST */}
             {liveTimeLeft !== undefined && liveTimeLeft > 0 && !isBlocked && (
                 <div className="fixed top-4 right-4 z-[9999] animate-in fade-in slide-in-from-top-4 duration-500">
