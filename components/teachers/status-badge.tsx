@@ -9,6 +9,9 @@ const statusConfig: Record<TeacherStatus, { label: string; variant: "default" | 
 };
 
 const roleConfig: Record<TeacherRole, { label: string; className: string }> = {
+    admin: { label: "Админ", className: "bg-red-500/10 text-red-400 border-red-500/20" },
+    curator: { label: "Куратор", className: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
+    teacher: { label: "Учитель", className: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
     ADMIN: { label: "Админ", className: "bg-red-500/10 text-red-400 border-red-500/20" },
     CURATOR: { label: "Куратор", className: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
     TEACHER: { label: "Учитель", className: "bg-blue-500/10 text-blue-400 border-blue-500/20" }

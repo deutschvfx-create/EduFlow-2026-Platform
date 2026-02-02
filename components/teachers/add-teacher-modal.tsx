@@ -24,7 +24,7 @@ export function AddTeacherModal() {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [specialization, setSpecialization] = useState("");
-    const [role, setRole] = useState<TeacherRole>("TEACHER");
+    const [role, setRole] = useState<TeacherRole>("teacher");
 
     // Invite State
     const [inviteCode, setInviteCode] = useState("");
@@ -51,13 +51,13 @@ export function AddTeacherModal() {
                 email: `${firstName.toLowerCase()}@eduflow.com`,
                 createdAt: new Date().toISOString(),
                 permissions: {
-                    canCreateGroups: role === 'ADMIN',
+                    canCreateGroups: role === 'admin',
                     canManageStudents: true,
                     canMarkAttendance: true,
                     canGradeStudents: true,
-                    canSendAnnouncements: role === 'ADMIN',
+                    canSendAnnouncements: role === 'admin',
                     canUseChat: true,
-                    canInviteStudents: role === 'ADMIN'
+                    canInviteStudents: role === 'admin'
                 }
             });
 
@@ -144,9 +144,9 @@ export function AddTeacherModal() {
                                     <SelectValue placeholder="Выберите роль" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="TEACHER">Учитель</SelectItem>
-                                    <SelectItem value="CURATOR">Куратор</SelectItem>
-                                    <SelectItem value="ADMIN">Администратор</SelectItem>
+                                    <SelectItem value="teacher">Учитель</SelectItem>
+                                    <SelectItem value="curator">Куратор</SelectItem>
+                                    <SelectItem value="admin">Администратор</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

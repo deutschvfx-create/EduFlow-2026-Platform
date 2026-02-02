@@ -1,6 +1,6 @@
 export type TeacherStatus = "INVITED" | "ACTIVE" | "SUSPENDED" | "ARCHIVED";
 
-export type TeacherRole = "TEACHER" | "CURATOR" | "ADMIN";
+export type TeacherRole = "teacher" | "curator" | "admin" | "TEACHER" | "ADMIN" | "CURATOR";
 
 export type TeacherPermissions = {
     canCreateGroups: boolean;

@@ -32,7 +32,7 @@ export function CreateTeacherModal({ onSuccess }: CreateTeacherModalProps) {
                 firstName,
                 lastName,
                 email: `${firstName.toLowerCase()}.${lastName.toLowerCase() || 'teacher'}@eduflow.com`,
-                role: 'TEACHER',
+                role: 'teacher',
                 status: 'ACTIVE',
                 groupIds: [],
                 createdAt: new Date().toISOString(),
