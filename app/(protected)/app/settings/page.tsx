@@ -145,12 +145,12 @@ export default function SettingsPage() {
     };
 
     const Section = ({ title, children, icon: Icon }: { title: string, children: React.ReactNode, icon?: any }) => (
-        <div className="space-y-4">
+        <div className="space-y-3">
             <div className="flex items-center gap-2 px-1">
-                {Icon && <Icon className="h-4 w-4 text-zinc-500" />}
+                {Icon && <Icon className="h-3 w-3 text-zinc-500" />}
                 <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">{title}</h3>
             </div>
-            <div className="grid grid-cols-2 xs:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                 {children}
             </div>
         </div>
@@ -173,48 +173,46 @@ export default function SettingsPage() {
         return (
             <div
                 className={`
-                    relative group transition-all duration-300 rounded-xl border p-2 cursor-pointer
-                    flex flex-col items-center justify-center gap-2 text-center aspect-square sm:aspect-auto sm:h-24
+                    relative group transition-all duration-300 rounded-xl border p-3 cursor-pointer
+                    flex items-center justify-between gap-4 h-14
                     ${isActive
-                        ? 'bg-indigo-500/10 border-indigo-500/30'
-                        : 'bg-zinc-900/40 border-zinc-800/50 hover:border-zinc-700'}
+                        ? 'bg-zinc-900/60 border-indigo-500/40 shadow-lg shadow-indigo-500/5'
+                        : 'bg-zinc-950/40 border-zinc-900 hover:border-zinc-800'}
                     ${isDisabled ? 'opacity-30 grayscale pointer-events-none' : 'opacity-100'}
                 `}
                 onClick={() => handleToggle(mKey)}
             >
-                <div className={`
-                    h-8 w-8 rounded-lg flex items-center justify-center border transition-all duration-300
-                    ${isActive
-                        ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30'
-                        : 'bg-zinc-950 border-zinc-800 text-zinc-500 group-hover:text-zinc-300'}
-                `}>
-                    <Icon className="h-4 w-4" />
+                <div className="flex items-center gap-3 overflow-hidden">
+                    <div className={`
+                        h-9 w-9 rounded-lg flex items-center justify-center border transition-all duration-300
+                        ${isActive
+                            ? 'bg-indigo-500 text-white border-indigo-400'
+                            : 'bg-zinc-900 border-zinc-800 text-zinc-500 group-hover:text-zinc-300'}
+                    `}>
+                        <Icon className="h-4.5 w-4.5" />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                        <span className={`text-[13px] font-bold transition-colors truncate ${isActive ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`}>
+                            {label}
+                        </span>
+                        {missingReqs.length > 0 && (
+                            <span className="text-[8px] text-amber-500 font-bold uppercase tracking-tighter">
+                                Нужен {missingReqs[0] === 'groups' ? 'Группы' : missingReqs[0]}
+                            </span>
+                        )}
+                    </div>
                 </div>
 
-                <div className="flex flex-col min-w-0 px-1">
-                    <span className={`text-[11px] font-bold leading-tight transition-colors ${isActive ? 'text-white' : 'text-zinc-500 group-hover:text-zinc-400'}`}>
-                        {label}
-                    </span>
-                    {missingReqs.length > 0 && (
-                        <div className="flex justify-center mt-1">
-                            <div className="w-1 h-1 rounded-full bg-amber-500 animate-pulse" />
-                        </div>
+                <div className="flex items-center gap-2">
+                    {isActive && dependencies[mKey] && (
+                        <div className="h-1.5 w-1.5 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
                     )}
-                </div>
-
-                <div className="absolute top-1 right-1">
                     <Switch
                         checked={isActive}
                         onCheckedChange={() => handleToggle(mKey)}
-                        className="scale-[0.6] data-[state=checked]:bg-indigo-500"
+                        className="scale-75 data-[state=checked]:bg-indigo-500"
                     />
                 </div>
-
-                {isActive && dependencies[mKey] && (
-                    <div className="absolute top-1 left-1">
-                        <div className="h-1.5 w-1.5 bg-indigo-500 rounded-full shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
-                    </div>
-                )}
             </div>
         );
     };
@@ -237,21 +235,25 @@ export default function SettingsPage() {
         }, []);
 
         return (
-            <div className="bg-zinc-950/50 border border-zinc-900 rounded-2xl p-4 sm:p-6 space-y-6 mt-8">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 w-full sm:w-auto">
-                        <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
-                            <RotateCcw className="h-5 w-5 text-amber-500" />
+            <div className="bg-zinc-950/50 border border-zinc-900 rounded-2xl p-6 space-y-6 mt-12">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-4 border-b border-zinc-900/50">
+                    <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                            <RotateCcw className="h-6 w-6 text-amber-500" />
                         </div>
                         <div>
-                            <h2 className="text-sm font-black text-white tracking-widest italic uppercase">DATA CENTER</h2>
+                            <h2 className="text-lg font-black text-white tracking-widest italic uppercase flex items-center gap-2">
+                                DATA CENTER
+                                <span className="h-1.5 w-1.5 bg-amber-500 rounded-full animate-pulse" />
+                            </h2>
+                            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-0.5">Локальная БД и хранилище</p>
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+                    <div className="grid grid-cols-5 gap-6">
                         {Object.entries(stats).map(([key, count]) => (
                             <div key={key} className="flex flex-col items-center">
-                                <span className="text-sm font-black text-white">{count}</span>
+                                <span className="text-base font-black text-white">{count}</span>
                                 <span className="text-[8px] text-zinc-600 font-bold uppercase tracking-tighter">
                                     {key === 'students' && 'Студ.'}
                                     {key === 'teachers' && 'Преп.'}
@@ -264,10 +266,10 @@ export default function SettingsPage() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 border-t border-zinc-900/50 pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <Button
                         variant="ghost"
-                        className="h-12 rounded-xl bg-zinc-900/30 hover:bg-zinc-800/50 border border-zinc-900 text-zinc-400 font-bold group"
+                        className="h-14 rounded-xl bg-zinc-900/40 hover:bg-zinc-800/60 border border-zinc-800 text-zinc-400 font-bold group"
                         onClick={() => {
                             const data = {
                                 students: localStorage.getItem('eduflow.students'),
@@ -286,20 +288,20 @@ export default function SettingsPage() {
                             showToast("Резервная копия скачана");
                         }}
                     >
-                        <div className="flex flex-col items-center">
-                            <Upload className="h-3.5 w-3.5 text-indigo-400 mb-0.5" />
-                            <span className="text-[9px] uppercase tracking-wider">Экспорт</span>
+                        <div className="flex items-center gap-3">
+                            <Upload className="h-4 w-4 text-indigo-400" />
+                            <span className="text-xs uppercase tracking-widest font-black">Экспорт JSON</span>
                         </div>
                     </Button>
 
                     <div className="relative group">
                         <Button
                             variant="ghost"
-                            className="h-12 w-full rounded-xl bg-zinc-900/30 hover:bg-zinc-800/50 border border-zinc-900 text-zinc-400 font-bold"
+                            className="h-14 w-full rounded-xl bg-zinc-900/40 hover:bg-zinc-800/60 border border-zinc-800 text-zinc-400 font-bold"
                         >
-                            <div className="flex flex-col items-center">
-                                <RotateCcw className="h-3.5 w-3.5 text-emerald-400 mb-0.5" />
-                                <span className="text-[9px] uppercase tracking-wider">Импорт</span>
+                            <div className="flex items-center gap-3">
+                                <RotateCcw className="h-4 w-4 text-emerald-400" />
+                                <span className="text-xs uppercase tracking-widest font-black">Импорт JSON</span>
                             </div>
                         </Button>
                         <input
@@ -332,7 +334,7 @@ export default function SettingsPage() {
 
                     <Button
                         variant="ghost"
-                        className="h-12 rounded-xl bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 text-red-500/60 hover:text-red-400 font-bold"
+                        className="h-14 rounded-xl bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 text-red-500/70 hover:text-red-400 font-bold"
                         onClick={() => {
                             if (confirm("ВНИМАНИЕ: Это полностью очистит локальную базу данных. Продолжить?")) {
                                 const keys = ['eduflow.students', 'eduflow.teachers', 'eduflow.groups', 'eduflow.courses', 'eduflow.announcements', 'eduflow-modules-config'];
@@ -342,9 +344,9 @@ export default function SettingsPage() {
                             }
                         }}
                     >
-                        <div className="flex flex-col items-center">
-                            <Zap className="h-3.5 w-3.5 mb-0.5" />
-                            <span className="text-[9px] uppercase tracking-wider">Сброс</span>
+                        <div className="flex items-center gap-3">
+                            <Zap className="h-4 w-4" />
+                            <span className="text-xs uppercase tracking-widest font-black">СБРОС ДАННЫХ</span>
                         </div>
                     </Button>
                 </div>
@@ -353,7 +355,7 @@ export default function SettingsPage() {
     };
 
     return (
-        <div className="space-y-8 max-w-6xl mx-auto pb-20 px-4">
+        <div className="space-y-10 max-w-5xl mx-auto pb-20 px-4">
             {/* Custom Toast */}
             <AnimatePresence>
                 {toastMsg && (
@@ -375,42 +377,39 @@ export default function SettingsPage() {
             <UserProfileCard onSave={() => showToast("Профиль обновлен")} />
 
             {/* PRESETS PANEL */}
-            <div className="bg-zinc-950/50 border border-zinc-900 rounded-2xl p-4 sm:p-6 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/5 rounded-full blur-[80px] -mr-24 -mt-24" />
+            <div className="bg-zinc-950/50 border border-zinc-900 rounded-2xl p-6 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-[100px] -mr-32 -mt-32" />
 
-                <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                    <div className="flex items-center gap-4">
-                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-xl shadow-indigo-500/20">
-                            <Zap className="h-5 w-5 text-white" />
+                <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-8">
+                    <div className="flex items-center gap-5">
+                        <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-xl shadow-indigo-500/20">
+                            <Zap className="h-6 w-6 text-white" />
                         </div>
                         <div>
-                            <div className="flex items-center gap-2">
-                                <h2 className="text-sm font-black text-white tracking-widest uppercase italic">PRESETS</h2>
-                                <span className="bg-indigo-500/20 text-indigo-400 text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-widest">v2.0</span>
+                            <div className="flex items-center gap-3">
+                                <h2 className="text-lg font-black text-white tracking-widest uppercase italic">PRESETS</h2>
+                                <span className="bg-indigo-500/20 text-indigo-400 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">v2.0</span>
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-3">
                         <Button
                             onClick={() => applyPreset('UNIVERSITY')}
-                            size="sm"
-                            className="bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 h-10 px-4 rounded-xl font-bold text-[10px] tracking-widest uppercase transition-all"
+                            className="bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 h-12 px-6 rounded-xl font-bold text-xs tracking-widest uppercase shadow-xl transition-all"
                         >
                             УНИВЕРСИТЕТ
                         </Button>
                         <Button
                             onClick={() => applyPreset('SCHOOL')}
-                            size="sm"
-                            className="bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 h-10 px-4 rounded-xl font-bold text-[10px] tracking-widest uppercase transition-all"
+                            className="bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 h-12 px-6 rounded-xl font-bold text-xs tracking-widest uppercase shadow-xl transition-all"
                         >
                             ЯЗЫКОВАЯ ШКОЛА
                         </Button>
                         <Button
                             variant="ghost"
                             onClick={handleReset}
-                            size="sm"
-                            className="text-zinc-500 hover:text-white h-10 rounded-xl font-bold text-[10px] tracking-widest uppercase"
+                            className="text-zinc-500 hover:text-white h-12 rounded-xl font-bold text-xs tracking-widest"
                         >
                             СБРОС
                         </Button>
@@ -419,7 +418,7 @@ export default function SettingsPage() {
             </div>
 
             {/* MODULES SECTIONS */}
-            <div className="space-y-8">
+            <div className="space-y-10">
                 <Section title="Команда и Студенты" icon={Users}>
                     <ModuleCard mKey="students" label="Студенты" icon={Users} />
                     <ModuleCard mKey="teachers" label="Преподаватели" icon={GraduationCap} />
