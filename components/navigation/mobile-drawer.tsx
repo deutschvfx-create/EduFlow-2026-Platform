@@ -34,6 +34,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRole } from "@/hooks/use-role";
+import { useModules } from "@/hooks/use-modules";
 
 const allMenuItems = [
     { label: "Дашборд", href: "/app/dashboard", icon: LayoutDashboard, category: "quick" },
@@ -72,9 +73,26 @@ export function MobileDrawer({ trigger, open: controlledOpen, onOpenChange }: Mo
     const pathname = usePathname();
     const { userData } = useAuth();
     const { role, isOwner, isTeacher, isStudent } = useRole();
+    const { modules } = useModules();
 
     const allowedMenuItems = useMemo(() => {
         return allMenuItems.filter(item => {
+            // 1. Check Module Status
+            if (modules) {
+                if (item.href.includes('teachers') && !modules.teachers) return false;
+                if (item.href.includes('faculties') && !modules.faculties) return false;
+                if (item.href.includes('departments') && !modules.departments) return false;
+                if (item.href.includes('groups') && !modules.groups) return false;
+                if (item.href.includes('courses') && !modules.courses) return false;
+                if (item.href.includes('schedule') && !modules.schedule) return false;
+                if (item.href.includes('attendance') && !modules.attendance) return false;
+                if (item.href.includes('grades') && !modules.grades) return false;
+                if (item.href.includes('announcements') && !modules.announcements) return false;
+                if (item.href.includes('chat') && !modules.chat) return false;
+                if (item.href.includes('reports') && !modules.reports) return false;
+                if (item.href.includes('students') && !modules.students) return false;
+            }
+
             if (isOwner) return true; // Owners see everything
 
             // Teacher restrictions
@@ -97,7 +115,7 @@ export function MobileDrawer({ trigger, open: controlledOpen, onOpenChange }: Mo
 
             return false;
         });
-    }, [isOwner, isTeacher, isStudent]);
+    }, [isOwner, isTeacher, isStudent, modules]);
 
     const filteredItems = useMemo(() => {
         if (!searchQuery) return allowedMenuItems;
