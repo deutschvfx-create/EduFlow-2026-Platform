@@ -11,11 +11,14 @@ import { Button } from "@/components/ui/button";
 import { ModuleGuard } from "@/components/system/module-guard";
 import { motion, AnimatePresence } from "framer-motion";
 import { useOrganization } from "@/hooks/use-organization";
+import { StudentCards } from "@/components/students/student-cards";
+import { LayoutGrid, List } from "lucide-react";
 
 export default function StudentsPage() {
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [groupFilter, setGroupFilter] = useState("all");
+    const [viewMode, setViewMode] = useState<"table" | "cards">("table");
 
     // Filter Logic
     const [students, setStudents] = useState<any[]>([]);
@@ -24,12 +27,20 @@ export default function StudentsPage() {
     const { currentOrganizationId } = useOrganization();
 
     useEffect(() => {
+        const savedView = localStorage.getItem("students-view-preference") as "table" | "cards";
+        if (savedView) setViewMode(savedView);
+
         if (!currentOrganizationId) {
             setIsLoaded(false);
             return;
         }
         loadStudents(currentOrganizationId);
     }, [currentOrganizationId]);
+
+    const toggleView = (mode: "table" | "cards") => {
+        setViewMode(mode);
+        localStorage.setItem("students-view-preference", mode);
+    };
 
     const loadStudents = (orgId: string) => {
         console.log(`[StudentsPage] Loading students for org: ${orgId}`);
@@ -137,6 +148,26 @@ export default function StudentsPage() {
                         </div>
                     </div>
                     <div className="flex gap-2">
+                        <div className="bg-zinc-900 p-0.5 rounded-lg border border-zinc-800 flex items-center mr-2">
+                            <Button
+                                variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+                                size="sm"
+                                className={`h-8 px-2 ${viewMode === 'table' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                onClick={() => toggleView('table')}
+                            >
+                                <List className="h-4 w-4 mr-1" />
+                                Таблица
+                            </Button>
+                            <Button
+                                variant={viewMode === 'cards' ? 'secondary' : 'ghost'}
+                                size="sm"
+                                className={`h-8 px-2 ${viewMode === 'cards' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                onClick={() => toggleView('cards')}
+                            >
+                                <LayoutGrid className="h-4 w-4 mr-1" />
+                                Карточки
+                            </Button>
+                        </div>
                         <Button variant="outline" className="hidden laptop:flex gap-2 border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl" data-help-id="students-qr-btn" accessibilityId="qr-scanner-trigger">
                             <Search className="h-4 w-4" /> Сканировать QR
                         </Button>
@@ -195,10 +226,17 @@ export default function StudentsPage() {
                     </div>
 
                     <div className="p-1">
-                        <StudentsTable
-                            students={filteredStudents}
-                            onAction={handleAction}
-                        />
+                        {viewMode === 'table' ? (
+                            <StudentsTable
+                                students={filteredStudents}
+                                onAction={handleAction}
+                            />
+                        ) : (
+                            <StudentCards
+                                students={filteredStudents}
+                                onAction={handleAction}
+                            />
+                        )}
                     </div>
                 </div>
             </div>
