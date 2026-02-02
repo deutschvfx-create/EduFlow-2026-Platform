@@ -86,6 +86,7 @@ export function AccessManager() {
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
+            console.log("📱 Sessions Snapshot received. Count:", snapshot.size);
             const sessionsData = snapshot.docs.map(doc => {
                 const data = doc.data();
                 // Check if this is the current device by comparing with localStorage

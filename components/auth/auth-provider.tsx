@@ -26,10 +26,43 @@ const getDeviceId = () => {
     if (typeof window === 'undefined') return 'unknown';
     let id = localStorage.getItem('eduflow_device_id');
     if (!id) {
-        id = crypto.randomUUID();
+        try {
+            id = window.crypto?.randomUUID() || Math.random().toString(36).substring(2) + Date.now().toString(36);
+        } catch (e) {
+            id = Math.random().toString(36).substring(2) + Date.now().toString(36);
+        }
         localStorage.setItem('eduflow_device_id', id);
     }
     return id;
+};
+
+// Helper to detect device type and name
+const getDeviceInfo = () => {
+    if (typeof window === 'undefined') return { type: 'desktop', name: 'Server' };
+    const ua = navigator.userAgent;
+    let type: 'desktop' | 'mobile' = 'desktop';
+    let name = 'Unknown Device';
+
+    if (/mobile/i.test(ua)) {
+        type = 'mobile';
+        if (/iPhone/i.test(ua)) name = 'iPhone';
+        else if (/iPad/i.test(ua)) name = 'iPad';
+        else if (/Android/i.test(ua)) name = 'Android Phone';
+        else name = 'Mobile Device';
+    } else {
+        if (/Macintosh/i.test(ua)) name = 'MacBook / iMac';
+        else if (/Windows/i.test(ua)) name = 'Windows PC';
+        else if (/Linux/i.test(ua)) name = 'Linux PC';
+        else name = 'Desktop';
+    }
+
+    // Add browser name
+    if (/Chrome/i.test(ua)) name += ' (Chrome)';
+    else if (/Safari/i.test(ua)) name += ' (Safari)';
+    else if (/Firefox/i.test(ua)) name += ' (Firefox)';
+    else if (/Edg/i.test(ua)) name += ' (Edge)';
+
+    return { type, name };
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -41,6 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         let unsubscribeSnapshot: (() => void) | null = null;
+        let unsubscribeSession: (() => void) | null = null;
 
         const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
             setUser(firebaseUser);
@@ -50,23 +84,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 if (db) {
                     const deviceId = getDeviceId();
                     const sessionRef = doc(db, "users", firebaseUser.uid, "sessions", deviceId);
-
-                    // Detect device type roughly
-                    const ua = navigator.userAgent;
-                    let deviceType = 'desktop';
-                    if (/mobile/i.test(ua)) deviceType = 'mobile';
+                    const { type, name } = getDeviceInfo();
 
                     try {
                         await setDoc(sessionRef, {
                             id: deviceId,
-                            device: ua,
+                            device: name,
+                            userAgent: navigator.userAgent,
                             lastActive: serverTimestamp(),
                             isCurrent: true,
-                            type: deviceType,
+                            type: type,
                             status: 'active'
                         }, { merge: true });
+
+                        // MONITOR THIS SESSION (for remote logout)
+                        unsubscribeSession = onSnapshot(sessionRef, (doc) => {
+                            if (!doc.exists() || doc.data()?.status === 'blocked') {
+                                console.log("🚨 Session revoked or blocked. Logging out...");
+                                auth.signOut();
+                                router.push('/login');
+                            }
+                        });
                     } catch (e) {
-                        console.error("Failed to register session", e);
+                        console.error("❌ Failed to register/monitor session:", e);
                     }
                 }
 
@@ -77,7 +117,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                             const data = doc.data() as UserData;
                             setUserData(data);
 
-                            // Basic Route Protection
                             if (window.location.pathname === '/login' || window.location.pathname === '/register') {
                                 if (data.organizationId) {
                                     const target = data.role === 'student' ? '/student' : '/app/dashboard';
@@ -103,15 +142,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     unsubscribeSnapshot();
                     unsubscribeSnapshot = null;
                 }
+                if (unsubscribeSession) {
+                    unsubscribeSession();
+                    unsubscribeSession = null;
+                }
                 setLoading(false);
             }
         });
 
         return () => {
             unsubscribeAuth();
-            if (unsubscribeSnapshot) {
-                unsubscribeSnapshot();
-            }
+            if (unsubscribeSnapshot) unsubscribeSnapshot();
+            if (unsubscribeSession) unsubscribeSession();
         };
     }, [router]);
 
