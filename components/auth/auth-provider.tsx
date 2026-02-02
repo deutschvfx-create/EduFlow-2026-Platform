@@ -199,13 +199,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     <p className="text-neutral-400 max-w-xs text-sm mb-8">
                         Ваша сессия была временно заблокирована администратором. Доступ восстановится автоматически, когда ограничение будет снято.
                     </p>
-                    <Button
-                        variant="ghost"
-                        onClick={() => auth.signOut()}
-                        className="text-neutral-500 hover:text-white"
-                    >
-                        Выйти из аккаунта
-                    </Button>
+                    <div className="flex gap-4">
+                        <Button
+                            variant="default"
+                            onClick={() => window.location.reload()}
+                            className="bg-indigo-600 hover:bg-indigo-500"
+                        >
+                            Проверить статус
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            onClick={() => auth.signOut()}
+                            className="text-neutral-500 hover:text-white"
+                        >
+                            Выйти
+                        </Button>
+                    </div>
                 </div>
             ) : children}
         </AuthContext.Provider>
