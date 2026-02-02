@@ -141,7 +141,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         // MONITOR THIS SESSION 
                         unsubscribeSession = onSnapshot(sessionRef, (docSnap) => {
                             if (!docSnap.exists()) {
-                                auth.signOut();
+                                // 🚨 SECURITY CRITICAL: If session is deleted, force immediate hard exit
+                                auth.signOut().then(() => {
+                                    window.location.href = '/login';
+                                });
                                 return;
                             }
 
@@ -218,6 +221,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [user, userData, loading, sessionReady, pathname, router]);
 
     // UI RENDERING
+    const isProtected = pathname.startsWith('/student') || pathname.startsWith('/app') || pathname.startsWith('/teacher');
+
     if (loading || (user && !sessionReady)) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
@@ -226,9 +231,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
     }
 
-    return (
-        <AuthContext.Provider value={{ user, userData, loading }}>
-            {isBlocked ? (
+    // 🚨 SECURITY: If on protected route but no user or blocked, do NOT show children
+    if (isProtected && (!user || isBlocked)) {
+        if (isBlocked) {
+            return (
                 <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
                     <div className="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mb-6">
                         <PauseCircle className="w-8 h-8" />
@@ -257,7 +263,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         </Button>
                     </div>
                 </div>
-            ) : children}
+            );
+        }
+        return (
+            <div className="min-h-screen bg-black flex items-center justify-center">
+                <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
+
+    return (
+        <AuthContext.Provider value={{ user, userData, loading }}>
+            {children}
         </AuthContext.Provider>
     );
 }
