@@ -196,14 +196,14 @@ export default function SettingsPage() {
                             {label}
                         </span>
                         {isDisabled && (
-                            <div className="flex items-center gap-1.5 mt-0.5">
+                            <div className="flex items-center gap-1.5 mt-1">
                                 <div className="relative flex h-1.5 w-1.5 shrink-0">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
                                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-yellow-500"></span>
                                 </div>
-                                <span className="text-[9px] text-zinc-400 font-medium truncate">
+                                <span className="text-[10px] text-zinc-400 font-medium truncate">
                                     <span className="hidden sm:inline">Требует: </span>
-                                    <span className="text-zinc-200 font-bold uppercase tracking-wider">
+                                    <span className="text-zinc-300 font-medium uppercase tracking-wider">
                                         {missingReqs.map(r => {
                                             const names: any = { groups: 'ГРУППЫ', courses: 'ПРЕДМЕТЫ', schedule: 'РАСПИСАНИЕ', faculties: 'ФАКУЛЬТЕТЫ' };
                                             return names[r] || r.toUpperCase();
