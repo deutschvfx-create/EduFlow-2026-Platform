@@ -23,6 +23,7 @@ import { Group } from "@/lib/types/group";
 import { GroupStatusBadge, GroupLevelBadge, GroupPaymentBadge } from "./status-badge";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { useModules } from "@/hooks/use-modules";
 
 interface GroupsTableProps {
     groups: Group[];
@@ -31,6 +32,7 @@ interface GroupsTableProps {
 
 export function GroupsTable({ groups, onEdit }: GroupsTableProps) {
     const router = useRouter();
+    const { modules } = useModules();
 
     const handleAction = (action: string, id: string) => {
         if (action === 'archive') {
@@ -57,7 +59,7 @@ export function GroupsTable({ groups, onEdit }: GroupsTableProps) {
                             <Checkbox className="border-zinc-700 data-[state=checked]:bg-indigo-600" />
                         </TableHead>
                         <TableHead>Название / Код</TableHead>
-                        <TableHead>Факультет / Кафедра</TableHead>
+                        {(modules.faculties || modules.departments) && <TableHead>Факультет / Кафедра</TableHead>}
                         <TableHead>Статус</TableHead>
                         <TableHead>Уровень</TableHead>
                         <TableHead>Студенты</TableHead>
@@ -82,14 +84,20 @@ export function GroupsTable({ groups, onEdit }: GroupsTableProps) {
                                     <span className="text-zinc-500 text-xs font-mono">{group.code}</span>
                                 </div>
                             </TableCell>
-                            <TableCell>
-                                <div className="flex flex-col gap-1">
-                                    <Badge variant="secondary" className="bg-zinc-800 text-zinc-300 w-fit text-[10px]">
-                                        ID: {group.facultyId}
-                                    </Badge>
-                                    <span className="text-zinc-500 text-xs text-[10px]">ID: {group.departmentId}</span>
-                                </div>
-                            </TableCell>
+                            {(modules.faculties || modules.departments) && (
+                                <TableCell>
+                                    <div className="flex flex-col gap-1">
+                                        {modules.faculties && (
+                                            <Badge variant="secondary" className="bg-zinc-800 text-zinc-300 w-fit text-[10px]">
+                                                ID: {group.facultyId}
+                                            </Badge>
+                                        )}
+                                        {modules.departments && (
+                                            <span className="text-zinc-500 text-xs text-[10px]">ID: {group.departmentId}</span>
+                                        )}
+                                    </div>
+                                </TableCell>
+                            )}
                             <TableCell>
                                 <GroupStatusBadge status={group.status} />
                             </TableCell>

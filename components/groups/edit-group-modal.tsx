@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useOrganization } from "@/hooks/use-organization";
+import { useModules } from "@/hooks/use-modules";
 import { Teacher } from "@/lib/types/teacher";
 import { Faculty } from "@/lib/types/faculty";
 import { Department } from "@/lib/types/department";
@@ -22,6 +23,7 @@ interface EditGroupModalProps {
 
 export function EditGroupModal({ group, open, onOpenChange, onSave }: EditGroupModalProps) {
     const { currentOrganizationId } = useOrganization();
+    const { modules } = useModules();
     const [loading, setLoading] = useState(false);
 
     // Form State
@@ -76,7 +78,10 @@ export function EditGroupModal({ group, open, onOpenChange, onSave }: EditGroupM
 
     const handleSubmit = async () => {
         if (!group) return;
-        if (!name || !code || !facultyId || !departmentId) {
+        const isFacultyRequired = modules.faculties;
+        const isDepartmentRequired = modules.departments;
+
+        if (!name || !code || (isFacultyRequired && !facultyId) || (isDepartmentRequired && !departmentId)) {
             alert("Заполните обязательные поля");
             return;
         }
@@ -113,32 +118,36 @@ export function EditGroupModal({ group, open, onOpenChange, onSave }: EditGroupM
 
                 <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>Факультет *</Label>
-                            <Select value={facultyId} onValueChange={handleFacultyChange}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
-                                    <SelectValue placeholder="Выберите факультет" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {faculties.map(f => (
-                                        <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Кафедра *</Label>
-                            <Select value={departmentId} onValueChange={setDepartmentId} disabled={!facultyId}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
-                                    <SelectValue placeholder={!facultyId ? "Сначала выберите факультет" : "Выберите кафедру"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {departments.map(d => (
-                                        <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                        {modules.faculties && (
+                            <div className="space-y-2">
+                                <Label>Факультет *</Label>
+                                <Select value={facultyId} onValueChange={handleFacultyChange}>
+                                    <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                        <SelectValue placeholder="Выберите факультет" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {faculties.map(f => (
+                                            <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+                        {modules.departments && (
+                            <div className="space-y-2">
+                                <Label>Кафедра *</Label>
+                                <Select value={departmentId} onValueChange={setDepartmentId} disabled={!facultyId && modules.faculties}>
+                                    <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                        <SelectValue placeholder={(!facultyId && modules.faculties) ? "Сначала выберите факультет" : "Выберите кафедру"} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {departments.map(d => (
+                                            <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">

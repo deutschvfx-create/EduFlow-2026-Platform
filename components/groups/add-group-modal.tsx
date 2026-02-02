@@ -10,12 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useEffect } from "react";
 import { generateId } from "@/lib/utils";
 import { useOrganization } from "@/hooks/use-organization";
+import { useModules } from "@/hooks/use-modules";
 import { Faculty } from "@/lib/types/faculty";
 import { Department } from "@/lib/types/department";
 import { Teacher } from "@/lib/types/teacher";
 
 export function AddGroupModal() {
     const { currentOrganizationId } = useOrganization();
+    const { modules } = useModules();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -80,8 +82,11 @@ export function AddGroupModal() {
     }
 
     const handleSubmit = async () => {
-        if (!name || !code || !facultyId || !departmentId) {
-            alert("Заполните обязательные поля: Название, Код, Факультет, Кафедра");
+        const isFacultyRequired = modules.faculties;
+        const isDepartmentRequired = modules.departments;
+
+        if (!name || !code || (isFacultyRequired && !facultyId) || (isDepartmentRequired && !departmentId)) {
+            alert(`Заполните обязательные поля: Название, Код${isFacultyRequired ? ', Факультет' : ''}${isDepartmentRequired ? ', Кафедра' : ''}`);
             return;
         }
 
@@ -89,13 +94,13 @@ export function AddGroupModal() {
 
         try {
             const { groupsRepo } = await import("@/lib/data/groups.repo");
-            groupsRepo.add(currentOrganizationId!, {
+            await groupsRepo.add(currentOrganizationId!, {
                 id: generateId(),
                 organizationId: currentOrganizationId!,
                 name,
                 code,
-                facultyId,
-                departmentId,
+                facultyId: modules.faculties ? facultyId : "none",
+                departmentId: modules.departments ? departmentId : "none",
                 level,
                 paymentType,
                 curatorTeacherId: curatorId || undefined,
@@ -147,32 +152,36 @@ export function AddGroupModal() {
 
                 <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>Факультет *</Label>
-                            <Select value={facultyId} onValueChange={handleFacultyChange}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
-                                    <SelectValue placeholder="Выберите факультет" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {faculties.map(f => (
-                                        <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Кафедра *</Label>
-                            <Select value={departmentId} onValueChange={setDepartmentId} disabled={!facultyId}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
-                                    <SelectValue placeholder={!facultyId ? "Сначала выберите факультет" : "Выберите кафедру"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {filteredDepartments.map(d => (
-                                        <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                        {modules.faculties && (
+                            <div className="space-y-2">
+                                <Label>Факультет *</Label>
+                                <Select value={facultyId} onValueChange={handleFacultyChange}>
+                                    <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                        <SelectValue placeholder="Выберите факультет" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {faculties.map(f => (
+                                            <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+                        {modules.departments && (
+                            <div className="space-y-2">
+                                <Label>Кафедра *</Label>
+                                <Select value={departmentId} onValueChange={setDepartmentId} disabled={!facultyId && modules.faculties}>
+                                    <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                        <SelectValue placeholder={(!facultyId && modules.faculties) ? "Сначала выберите факультет" : "Выберите кафедру"} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {filteredDepartments.map(d => (
+                                            <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
