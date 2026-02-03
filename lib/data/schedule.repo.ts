@@ -7,7 +7,7 @@ import {
     query,
     where,
     onSnapshot,
-    addDoc,
+    setDoc,
     updateDoc,
     deleteDoc,
     doc,
@@ -123,9 +123,9 @@ export const scheduleRepo = {
         if (typeof window !== 'undefined' && firestoreDb) {
             try {
                 const lessonsRef = collection(firestoreDb, COLLECTION_NAME);
-                const docRef = await addDoc(lessonsRef, { ...lesson, id: undefined });
-                const newLesson = { ...lesson, id: docRef.id };
-                await indexedDb.add('schedule', newLesson);
+                const docRef = doc(lessonsRef, lesson.id);
+                await setDoc(docRef, { ...lesson });
+                await indexedDb.add('schedule', lesson);
                 return;
             } catch (error) {
                 console.error("Firestore add error:", error);

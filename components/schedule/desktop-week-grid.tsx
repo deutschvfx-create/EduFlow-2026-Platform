@@ -107,8 +107,10 @@ export function DesktopWeekGrid({
         // If we get an update from server (propsLessons changed), we generally want to sync.
         // But if we just dragged locally (within last 2s), we might want to keep local state to prevent jumping
         // UNLESS the prop update is actually the result of our save (containing the new data).
-        // For now, simpler logic: Always sync from props unless we are actively dragging.
-        if (!isDragging) {
+        // For now, simpler logic: Always sync from props unless we are actively dragging 
+        // OR we just did a local update in the last 2 seconds.
+        const now = Date.now();
+        if (!isDragging && (now - lastUpdateRef.current > 2000)) {
             setLocalLessons(propsLessons);
         }
     }, [propsLessons, isDragging]);
@@ -118,6 +120,7 @@ export function DesktopWeekGrid({
     const [liveTimeRange, setLiveTimeRange] = useState<{ start: string, end: string } | null>(null);
     const [conflictError, setConflictError] = useState<string | null>(null);
     const ignoreClickRef = useRef(false);
+    const gridRef = useRef<HTMLDivElement>(null);
 
     const [initialGrab, setInitialGrab] = useState<{
         x: number,
@@ -270,11 +273,23 @@ export function DesktopWeekGrid({
         }
 
         if (!isDragging) return;
-        setDragDelta({ x: 0, y: deltaY });
 
-        // Throttle updates slightly to improve performance using requestAnimationFrame
+        // Update drag visuals smoothly
+        setDragDelta({ x: deltaX, y: deltaY });
+
         requestAnimationFrame(() => {
-            const deltaMin = Math.round(deltaY / 5) * 5;
+            if (!gridRef.current) return;
+            const rect = gridRef.current.getBoundingClientRect();
+            const colWidth = rect.width / 7;
+            const relativeX = e.clientX - rect.left;
+            const targetDayIdx = Math.max(0, Math.min(6, Math.floor(relativeX / colWidth)));
+            const targetDay = DAYS[targetDayIdx];
+
+            if (dragType === 'move' && targetDay !== liveDay) {
+                setLiveDay(targetDay);
+            }
+
+            const deltaMin = Math.round(deltaY / 5) * 5; // Use Y delta for time
             let newStartMin = initialGrab.startMin;
             let newDuration = initialGrab.durationMin;
 
@@ -290,11 +305,10 @@ export function DesktopWeekGrid({
             const newStart = minutesToTime(newStartMin);
             const newEnd = minutesToTime(newStartMin + newDuration);
 
-            // Only update state if values changed to avoid re-renders
             if (liveTimeRange && (liveTimeRange.start !== newStart || liveTimeRange.end !== newEnd)) {
                 setLiveTimeRange({ start: newStart, end: newEnd });
 
-                const activeDay = initialGrab.lesson.dayOfWeek;
+                const activeDay = dragType === 'move' ? targetDay : initialGrab.lesson.dayOfWeek;
                 const conflict = checkConflict(activeLessonId, activeDay, newStart, newEnd, initialGrab.lesson.teacherId);
                 const conflictStr = conflict ? "Conflict" : null;
                 if (conflictStr !== conflictError) {
@@ -307,25 +321,28 @@ export function DesktopWeekGrid({
     };
 
     const handlePointerUp = (e: React.PointerEvent) => {
-        if (isDragging && activeLessonId && initialGrab && liveTimeRange && liveDay) {
+        if (activeLessonId && initialGrab && liveTimeRange && liveDay) {
             (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-            const conflict = checkConflict(activeLessonId, liveDay, liveTimeRange.start, liveTimeRange.end, initialGrab.lesson.teacherId);
 
-            if (!conflict) {
-                const updatedLesson = {
-                    ...initialGrab.lesson,
-                    dayOfWeek: liveDay,
-                    startTime: liveTimeRange.start,
-                    endTime: liveTimeRange.end
-                };
-                lastUpdateRef.current = Date.now();
-                setLocalLessons(prev => prev.map(l => l.id === activeLessonId ? updatedLesson : l));
-                setPulsingLessonId(activeLessonId);
-                if (onLessonUpdate) onLessonUpdate(activeLessonId, {
-                    dayOfWeek: liveDay,
-                    startTime: liveTimeRange.start,
-                    endTime: liveTimeRange.end
-                });
+            if (isDragging) {
+                const conflict = checkConflict(activeLessonId, liveDay, liveTimeRange.start, liveTimeRange.end, initialGrab.lesson.teacherId);
+
+                if (!conflict) {
+                    const updatedLesson = {
+                        ...initialGrab.lesson,
+                        dayOfWeek: liveDay,
+                        startTime: liveTimeRange.start,
+                        endTime: liveTimeRange.end
+                    };
+                    lastUpdateRef.current = Date.now();
+                    setLocalLessons(prev => prev.map(l => l.id === activeLessonId ? updatedLesson : l));
+                    setPulsingLessonId(activeLessonId);
+                    if (onLessonUpdate) onLessonUpdate(activeLessonId, {
+                        dayOfWeek: liveDay,
+                        startTime: liveTimeRange.start,
+                        endTime: liveTimeRange.end
+                    });
+                }
             }
         }
         setIsDragging(false);
@@ -339,10 +356,12 @@ export function DesktopWeekGrid({
 
     const getLayoutStyles = (lesson: Lesson, dayLessons: Lesson[]) => {
         const isBeingManipulated = lesson.id === activeLessonId;
+        const isResizing = isBeingManipulated && (dragType === 'resize-top' || dragType === 'resize-bottom');
+
         let startTime = lesson.startTime;
         let endTime = lesson.endTime;
 
-        if (isBeingManipulated && (dragType === 'resize-top' || dragType === 'resize-bottom') && liveTimeRange) {
+        if (isResizing && liveTimeRange) {
             startTime = liveTimeRange.start;
             endTime = liveTimeRange.end;
         }
@@ -413,7 +432,7 @@ export function DesktopWeekGrid({
                     ))}
                 </div>
 
-                <div id="grid-columns-container" className="flex-1 grid grid-cols-7 divide-x divide-zinc-800 relative bg-zinc-950/80">
+                <div ref={gridRef} id="grid-columns-container" className="flex-1 grid grid-cols-7 divide-x divide-zinc-800 relative bg-zinc-950/80">
                     <div className="absolute inset-0 z-0 flex flex-col pointer-events-none">
                         {HOURS.map(hour => (
                             <div key={hour} className="h-[60px] border-b border-zinc-800/20 w-full" />
@@ -421,16 +440,12 @@ export function DesktopWeekGrid({
                     </div>
 
                     {DAYS.map((day, colIndex) => {
-                        const dayLessons = localLessons.filter(l => {
-                            const isBeingManipulated = l.id === activeLessonId;
-                            if (isBeingManipulated) {
-                                return liveDay === day;
-                            }
-                            return l.dayOfWeek === day;
-                        });
+                        const dayLessons = localLessons.filter(l => l.dayOfWeek === day);
+
+                        const isActiveDay = isDragging && initialGrab?.lesson.dayOfWeek === day;
 
                         return (
-                            <div key={day} className="relative z-10 h-[900px] group">
+                            <div key={day} className={cn("relative h-[900px] group", isActiveDay ? "z-50" : "z-10")}>
                                 <div className="absolute inset-0 z-0 flex flex-col">
                                     {HOURS.map(hour => (
                                         <Popover
@@ -526,6 +541,11 @@ export function DesktopWeekGrid({
                                         const style = getLayoutStyles(lesson, dayLessons);
                                         const isBeingDragManipulated = isDragging && lesson.id === activeLessonId;
 
+                                        // Use pixel transforms during drag for maximum smoothness
+                                        const dragTransform = isBeingDragManipulated && dragType === 'move'
+                                            ? `translate3d(${dragDelta.x}px, ${dragDelta.y}px, 0)`
+                                            : undefined;
+
                                         return (
                                             <div key={lesson.id}>
                                                 <motion.div
@@ -541,8 +561,9 @@ export function DesktopWeekGrid({
                                                         width: (style as any).width,
                                                         left: (style as any).left,
                                                         zIndex: (style as any).zIndex,
+                                                        transform: dragTransform,
                                                         transition: isBeingDragManipulated ? 'none' : 'all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1)',
-                                                        opacity: isBeingDragManipulated ? 0.7 : 1, // Increased opacity for better visibility
+                                                        opacity: isBeingDragManipulated ? 0.7 : 1,
                                                         touchAction: 'none',
                                                     }}
                                                     className={cn(
