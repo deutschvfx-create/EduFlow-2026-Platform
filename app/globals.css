@@ -153,20 +153,54 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  :root {
+    --touch-target-min: 48px;
+    --touch-padding: 12px;
+  }
+
   body {
     @apply bg-background text-foreground;
     overscroll-behavior-y: none;
     height: 100dvh;
     width: 100vw;
     overflow: hidden;
+    font-family: var(--font-sans);
+  }
+
+  /* Tablet-Native Scaling */
+  @media (pointer: coarse) {
+    html {
+      font-size: 110%;
+      /* +10% scaling for 8-13" screens */
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+      min-height: var(--touch-target-min);
+      font-size: 16px !important;
+      /* Prevent auto-zoom on iOS */
+    }
+
+    /* Hide scrollbars on touch for cleaner native look */
+    ::-webkit-scrollbar {
+      display: none;
+    }
+
+    * {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
   }
 
   /* Global Touch Feedback DNA */
   button:active,
   a:active,
   [role="button"]:active {
-    transform: scale(0.97);
-    transition: transform 0.1s ease-out;
+    transform: scale(0.96);
+    opacity: 0.8;
+    transition: transform 0.08s ease-out, opacity 0.08s ease-out;
   }
 }
 

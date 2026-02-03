@@ -61,7 +61,7 @@ export function MobileNavBar({ onOpenMenu }: MobileNavBarProps) {
                         window.dispatchEvent(new CustomEvent('open-help'));
                     }
                 }}
-                className={`relative flex flex-col items-center justify-center min-w-[56px] py-1.5 px-2 rounded-xl transition-all active:scale-90 active:bg-white/5 cursor-pointer ${(item.isDrawer || item.isHelp) ? 'text-zinc-500' : ''}`}
+                className={`relative flex flex-col items-center justify-center min-w-[64px] tablet:min-w-[80px] py-2 tablet:py-3 px-3 rounded-2xl transition-all active:scale-90 active:bg-white/5 cursor-pointer ${(item.isDrawer || item.isHelp) ? 'text-zinc-500' : ''}`}
             >
                 {/* Active indicator */}
                 {isActive && (
@@ -75,7 +75,7 @@ export function MobileNavBar({ onOpenMenu }: MobileNavBarProps) {
                 {/* Icon */}
                 <div className="relative">
                     <Icon
-                        className={`h-5 w-5 transition-colors ${isActive
+                        className={`h-5 w-5 tablet:h-6 tablet:w-6 transition-colors ${isActive
                             ? 'text-indigo-400'
                             : 'text-zinc-500'
                             }`}
@@ -86,14 +86,14 @@ export function MobileNavBar({ onOpenMenu }: MobileNavBarProps) {
                         <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
-                            className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-indigo-500 rounded-full"
+                            className="absolute -top-1 -right-1 w-1.5 h-1.5 tablet:w-2 tablet:h-2 bg-indigo-500 rounded-full"
                         />
                     )}
                 </div>
 
                 {/* Label */}
                 <span
-                    className={`text-[10px] font-medium mt-1 transition-colors ${isActive
+                    className={`text-[10px] tablet:text-xs font-bold mt-1 transition-colors ${isActive
                         ? 'text-indigo-400'
                         : 'text-zinc-500'
                         }`}

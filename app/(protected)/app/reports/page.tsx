@@ -256,18 +256,18 @@ export default function ReportsPage() {
                 </div>
 
                 {/* Main Intelligence Grid */}
-                <div className="grid grid-cols-1 laptop:grid-cols-12 gap-8">
+                <div className="grid grid-cols-1 tablet:grid-cols-12 gap-6 laptop:gap-8">
                     {/* Left Column: Visualizer & Matrix */}
-                    <div className="laptop:col-span-5 space-y-8 order-2 laptop:order-1">
-                        <div className="h-[300px] laptop:h-[400px]">
+                    <div className="tablet:col-span-6 laptop:col-span-5 space-y-6 laptop:space-y-8 order-2 tablet:order-1">
+                        <div className="h-[300px] tablet:h-[350px] laptop:h-[400px]">
                             <DataFlowVisualizer activePulse={activePulse} />
                         </div>
                         <IntelligenceMatrix data={matrixData} />
                     </div>
 
                     {/* Right Column: KPIs & Ledger */}
-                    <div className="laptop:col-span-7 flex flex-col gap-8 order-1 laptop:order-2">
-                        <div className="grid grid-cols-1 tablet:grid-cols-2 laptop:grid-cols-2 gap-4">
+                    <div className="tablet:col-span-6 laptop:col-span-7 flex flex-col gap-6 laptop:gap-8 order-1 tablet:order-2">
+                        <div className="grid grid-cols-1 tablet:grid-cols-2 gap-4">
                             {[
                                 { label: "Студенты", val: totalStudentsCount, icon: Users, color: "indigo", sub: "Активно: " + activeStudentsCount },
                                 { label: "Посещаемость", val: avgAttendance + "%", icon: CalendarDays, color: "violet", sub: "Глобальный тренд" },
@@ -314,8 +314,8 @@ export default function ReportsPage() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 laptop:grid-cols-12 gap-8 items-start">
-                    <div className="laptop:col-span-3">
+                <div className="grid grid-cols-1 tablet:grid-cols-12 gap-8 items-start">
+                    <div className="tablet:col-span-4 laptop:col-span-3">
                         <ReportsFilters
                             groups={groups}
                             courses={courses}
@@ -330,8 +330,8 @@ export default function ReportsPage() {
                             onDateRangeChange={setDateRange}
                         />
                     </div>
-                    <div className="laptop:col-span-9 space-y-8">
-                        <div className="grid grid-cols-1 tablet:grid-cols-2 gap-8">
+                    <div className="tablet:col-span-8 laptop:col-span-9 space-y-8">
+                        <div className="grid grid-cols-1 laptop:grid-cols-2 gap-8">
                             <AttendanceReportTable data={attendanceReportData} />
                             <GradesReportTable data={gradesReportData} />
                         </div>

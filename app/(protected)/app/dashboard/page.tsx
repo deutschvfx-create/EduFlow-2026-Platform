@@ -58,7 +58,7 @@ export default function DashboardPage() {
                     </p>
                 </div>
 
-                <div className="hidden laptop:flex flex-1 max-w-md relative group" data-help-id="dashboard-search">
+                <div className="hidden tablet:flex flex-1 max-w-sm laptop:max-w-md relative group" data-help-id="dashboard-search">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-600 group-focus-within:text-indigo-400 transition-colors" />
                     <Input
                         placeholder="Быстрый поиск по школе..."
@@ -104,9 +104,9 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 laptop:grid-cols-12 gap-4 laptop:gap-8">
+            <div className="grid grid-cols-1 tablet:grid-cols-12 gap-6 laptop:gap-8">
                 {/* Left Area (70%) */}
-                <div className="laptop:col-span-8 space-y-4 laptop:space-y-8">
+                <div className="tablet:col-span-8 space-y-6 laptop:space-y-8">
                     {/* Stats Grid - 2 columns on mobile, 3 on tablet, 4 on laptop+ */}
                     <div className="grid grid-cols-2 tablet:grid-cols-3 laptop:grid-cols-4 gap-3 laptop:gap-4" data-help-id="dashboard-stats">
                         <KPICard
@@ -190,7 +190,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Right Area (30%) - Fixed or Scrollable sidebar feel */}
-                <div className="laptop:col-span-4 space-y-8">
+                <div className="tablet:col-span-4 space-y-8">
                     <Card className="bg-zinc-900/60 border-zinc-800/50 rounded-2xl p-6 shadow-xl ring-1 ring-white/5">
                         <TodaySchedule />
                     </Card>
