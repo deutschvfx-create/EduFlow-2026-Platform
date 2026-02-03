@@ -15,9 +15,11 @@ import { AttendanceReportTable } from "@/components/reports/attendance-report-ta
 import { GradesReportTable } from "@/components/reports/grades-report-table";
 import { TeacherLoadTable } from "@/components/reports/teacher-load-table";
 import { DataFlowVisualizer } from "@/components/reports/data-flow-visualizer";
+import { IntelligenceMatrix } from "@/components/reports/intelligence-matrix";
+import { LiveLedger, LedgerEvent } from "@/components/reports/live-ledger";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserCheck, BarChart, TrendingUp, CalendarDays, Activity, Globe, Database } from "lucide-react";
+import { Users, UserCheck, BarChart, TrendingUp, CalendarDays, Activity, Globe, Database, Zap } from "lucide-react";
 import { ModuleGuard } from "@/components/system/module-guard";
 import { db } from "@/lib/firebase";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
@@ -167,6 +169,52 @@ export default function ReportsPage() {
         });
     }, [teacherId, teachers, courses, schedule]);
 
+    // Derived Intelligence Matrix Data
+    const matrixData = useMemo(() => {
+        return attendanceReportData.map(att => {
+            const gradeInfo = gradesReportData.find(g => g.student.id === att.student.id);
+            return {
+                id: att.student.id,
+                student: att.student,
+                attendance: att.presentPercentage,
+                grade: gradeInfo?.averageScore || 0
+            };
+        });
+    }, [attendanceReportData, gradesReportData]);
+
+    // Derived Ledger Events
+    const ledgerEvents = useMemo(() => {
+        const events: LedgerEvent[] = [];
+
+        attendance.slice(-10).forEach(record => {
+            const student = students.find(s => s.id === record.studentId);
+            if (!student) return;
+            events.push({
+                id: 'att-' + record.id,
+                type: 'attendance',
+                timestamp: new Date(record.date || Date.now()),
+                title: 'Attendance Mark',
+                description: `${student.lastName} marked as ${record.status}`,
+                status: record.status === 'PRESENT' ? 'success' : record.status === 'ABSENT' ? 'danger' : 'warning'
+            });
+        });
+
+        grades.slice(-10).forEach(record => {
+            const student = students.find(s => s.id === record.studentId);
+            if (!student) return;
+            events.push({
+                id: 'grd-' + record.id,
+                type: 'grade',
+                timestamp: new Date(record.date || Date.now()),
+                title: 'New Grade Entry',
+                description: `${student.lastName} received ${record.score}%`,
+                status: (record.score || 0) > 70 ? 'success' : (record.score || 0) < 50 ? 'danger' : 'warning'
+            });
+        });
+
+        return events.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 15);
+    }, [attendance, grades, students]);
+
 
     const totalStudentsCount = students.length;
     const activeStudentsCount = students.filter(s => s.status === 'ACTIVE').length;
@@ -207,62 +255,67 @@ export default function ReportsPage() {
                     </div>
                 </div>
 
-                {/* Node visualizer & Compact KPI */}
+                {/* Main Intelligence Grid */}
                 <div className="grid grid-cols-1 laptop:grid-cols-12 gap-8">
-                    <div className="laptop:col-span-5 h-[400px]">
-                        <DataFlowVisualizer activePulse={activePulse} />
+                    {/* Left Column: Visualizer & Matrix */}
+                    <div className="laptop:col-span-5 space-y-8">
+                        <div className="h-[400px]">
+                            <DataFlowVisualizer activePulse={activePulse} />
+                        </div>
+                        <IntelligenceMatrix data={matrixData} />
                     </div>
 
-                    <div className="laptop:col-span-7 grid grid-cols-2 laptop:grid-cols-2 gap-4">
-                        {[
-                            { label: "Студенты", val: totalStudentsCount, icon: Users, color: "indigo", sub: "Активны: " + activeStudentsCount },
-                            { label: "Посещаемость", val: avgAttendance + "%", icon: CalendarDays, color: "violet", sub: activePulse === 'logistics' ? "Updating..." : "Стабильно" },
-                            { label: "Успеваемость", val: avgGrade, icon: TrendingUp, color: "emerald", sub: "Средний балл" },
-                            { label: "Данные", val: attendance.length + grades.length, icon: Database, color: "rose", sub: "Записей в БД" }
-                        ].map((kpi, idx) => (
-                            <Card key={idx} className={cn(
-                                "bg-zinc-900/10 border-white/5 backdrop-blur-2xl relative overflow-hidden group hover:border-white/10 transition-all duration-700 h-[190px] rounded-[2rem]",
-                                activePulse === (kpi.color === 'indigo' ? 'identity' : kpi.color === 'violet' ? 'logistics' : kpi.color === 'emerald' ? 'results' : 'content') && "ring-2 ring-indigo-500/50 scale-[1.02] shadow-[0_0_40px_rgba(99,102,241,0.2)]"
-                            )}>
-                                <div className={cn(
-                                    "absolute top-0 right-0 w-64 h-64 blur-[120px] -mr-32 -mt-32 opacity-10 pointer-events-none transition-opacity duration-1000 group-hover:opacity-30",
-                                    kpi.color === 'indigo' ? "bg-indigo-500" :
-                                        kpi.color === 'violet' ? "bg-violet-500" :
-                                            kpi.color === 'emerald' ? "bg-emerald-500" : "bg-rose-500"
-                                )} />
-                                <CardHeader className="p-6 pb-0">
-                                    <div className="flex items-center justify-between">
-                                        <div className={cn("p-3 rounded-2xl border border-white/5 bg-white/[0.03] group-hover:bg-white/[0.06] transition-colors shadow-inner",
-                                            kpi.color === 'indigo' ? "text-indigo-400" :
-                                                kpi.color === 'violet' ? "text-violet-400" :
-                                                    kpi.color === 'emerald' ? "text-emerald-400" : "text-rose-400"
-                                        )}>
-                                            <kpi.icon className="h-5 w-5" />
-                                        </div>
-                                        <div className="flex flex-col items-end opacity-20 group-hover:opacity-50 transition-opacity">
-                                            <div className="h-1 w-12 rounded-full bg-white/10 overflow-hidden">
-                                                <div className={cn("h-full w-2/3 rounded-full",
-                                                    kpi.color === 'indigo' ? "bg-indigo-500" : "bg-zinc-700"
-                                                )} />
+                    {/* Right Column: KPIs & Ledger */}
+                    <div className="laptop:col-span-7 flex flex-col gap-8">
+                        <div className="grid grid-cols-1 tablet:grid-cols-2 laptop:grid-cols-2 gap-4">
+                            {[
+                                { label: "Студенты", val: totalStudentsCount, icon: Users, color: "indigo", sub: "Активно: " + activeStudentsCount },
+                                { label: "Посещаемость", val: avgAttendance + "%", icon: CalendarDays, color: "violet", sub: "Глобальный тренд" },
+                                { label: "Успеваемость", val: avgGrade, icon: TrendingUp, color: "emerald", sub: "Средний балл" },
+                                { label: "Телеметрия", val: attendance.length + grades.length, icon: Database, color: "rose", sub: "Записей в БД" }
+                            ].map((kpi, idx) => (
+                                <Card key={idx} className={cn(
+                                    "bg-zinc-900/10 border-white/5 backdrop-blur-3xl relative overflow-hidden group hover:border-white/10 transition-all duration-700 h-[190px] rounded-[2.5rem]",
+                                    activePulse === (kpi.color === 'indigo' ? 'identity' : kpi.color === 'violet' ? 'logistics' : kpi.color === 'emerald' ? 'results' : 'content') && "ring-2 ring-indigo-500/50 scale-[1.02] shadow-[0_0_50px_rgba(99,102,241,0.1)]"
+                                )}>
+                                    <div className={cn(
+                                        "absolute top-0 right-0 w-64 h-64 blur-[120px] -mr-32 -mt-32 opacity-10 pointer-events-none transition-opacity duration-1000 group-hover:opacity-30",
+                                        kpi.color === 'indigo' ? "bg-indigo-500" :
+                                            kpi.color === 'violet' ? "bg-violet-500" :
+                                                kpi.color === 'emerald' ? "bg-emerald-500" : "bg-rose-500"
+                                    )} />
+                                    <CardHeader className="p-8 pb-0">
+                                        <div className="flex items-center justify-between">
+                                            <div className={cn("p-3 rounded-2xl border border-white/5 bg-white/[0.03] shadow-inner",
+                                                kpi.color === 'indigo' ? "text-indigo-400" :
+                                                    kpi.color === 'violet' ? "text-violet-400" :
+                                                        kpi.color === 'emerald' ? "text-emerald-400" : "text-rose-400"
+                                            )}>
+                                                <kpi.icon className="h-5 w-5" />
+                                            </div>
+                                            {/* Sparkline Visual */}
+                                            <div className="flex items-end gap-[2px] h-4 opacity-20 group-hover:opacity-50 transition-opacity">
+                                                {Array.from({ length: 12 }).map((_, i) => (
+                                                    <div key={i} className="w-[3px] bg-white rounded-full" style={{ height: `${20 + Math.random() * 80}%` }} />
+                                                ))}
                                             </div>
                                         </div>
-                                    </div>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 mt-8 mb-1">{kpi.label}</p>
-                                </CardHeader>
-                                <CardContent className="p-6 pt-1">
-                                    <div className="text-4xl font-black text-white tracking-tighter group-hover:translate-x-1 transition-transform duration-500">{kpi.val}</div>
-                                    <p className="text-[10px] font-bold text-zinc-600 mt-3 uppercase tracking-widest flex items-center gap-2">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-500/30 animate-pulse" />
-                                        {kpi.sub}
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        ))}
+                                    </CardHeader>
+                                    <CardContent className="p-8 pt-2">
+                                        <div className="text-4xl font-black text-white tracking-tighter group-hover:translate-x-1 transition-transform duration-500">{kpi.val}</div>
+                                        <div className="flex items-center gap-2 mt-2">
+                                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 leading-none">{kpi.label}</span>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                        <LiveLedger events={ledgerEvents} />
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 laptop:grid-cols-12 gap-8 items-start">
-                    <div className="laptop:col-span-4">
+                    <div className="laptop:col-span-3">
                         <ReportsFilters
                             groups={groups}
                             courses={courses}
@@ -277,11 +330,12 @@ export default function ReportsPage() {
                             onDateRangeChange={setDateRange}
                         />
                     </div>
-                    <div className="laptop:col-span-4">
-                        <AttendanceReportTable data={attendanceReportData} />
-                    </div>
-                    <div className="laptop:col-span-4">
-                        <GradesReportTable data={gradesReportData} />
+                    <div className="laptop:col-span-9 space-y-8">
+                        <div className="grid grid-cols-1 tablet:grid-cols-2 gap-8">
+                            <AttendanceReportTable data={attendanceReportData} />
+                            <GradesReportTable data={gradesReportData} />
+                        </div>
+                        <TeacherLoadTable data={teacherLoadData} />
                     </div>
                 </div>
 
