@@ -202,11 +202,12 @@ export function IOSStyleTimePicker({
                     <div
                         key={h}
                         className={cn(
-                            "h-10 flex items-center justify-center text-sm transition-all duration-150 preserve-3d py-0 scroll-snap-align-center",
-                            selectedHour === h ? "text-white font-bold text-lg scale-110" : "text-zinc-600 grayscale opacity-40 scale-90"
+                            "h-10 flex items-center justify-center text-sm transition-[color,font-weight,transform,opacity] duration-240 preserve-3d py-0 scroll-snap-align-center",
+                            selectedHour === h ? "text-white font-black text-xl" : "text-zinc-600 grayscale opacity-30"
                         )}
                         style={{
-                            transform: `rotateX(calc((${i} * 40px - var(--scroll-top, ${hours.indexOf(selectedHour) * 40}px)) * -0.9deg)) translateZ(20px)`,
+                            transform: `rotateX(calc(${i * 40}deg - (var(--scroll-top, ${hours.indexOf(selectedHour) * 40}px) * 1deg))) translateZ(95px)`,
+                            backfaceVisibility: 'hidden'
                         }}
                     >
                         {h.toString().padStart(2, '0')}
@@ -215,7 +216,7 @@ export function IOSStyleTimePicker({
                 <div className="h-[60px] pointer-events-none" />
             </div>
 
-            <div className="flex items-center justify-center text-zinc-600 font-bold bg-zinc-900/50 z-20 pb-0.5 px-0.5">:</div>
+            <div className="flex items-center justify-center text-zinc-500 font-bold bg-zinc-900/50 z-20 pb-0.5 px-1">:</div>
 
             {/* Minutes */}
             <div
@@ -224,18 +225,19 @@ export function IOSStyleTimePicker({
                 onMouseDown={(e) => startDrag(e.clientY, minuteRef)}
                 onTouchStart={(e) => startDrag(e.touches[0].clientY, minuteRef)}
                 onScroll={handleScroll}
-                style={{ perspective: '500px', scrollSnapType: 'y mandatory' }}
+                style={{ perspective: '1000px', scrollSnapType: 'y mandatory' }}
             >
                 <div className="h-[60px] pointer-events-none" />
                 {minutes.map((m, i) => (
                     <div
                         key={m}
                         className={cn(
-                            "h-10 flex items-center justify-center text-sm transition-all duration-150 preserve-3d py-0 scroll-snap-align-center",
-                            selectedMinute === m ? "text-white font-bold text-lg scale-110" : "text-zinc-600 grayscale opacity-40 scale-90"
+                            "h-10 flex items-center justify-center text-sm transition-[color,font-weight,transform,opacity] duration-240 preserve-3d py-0 scroll-snap-align-center",
+                            selectedMinute === m ? "text-white font-black text-xl" : "text-zinc-600 grayscale opacity-30"
                         )}
                         style={{
-                            transform: `rotateX(calc((${i} * 40px - var(--scroll-top, ${minutes.indexOf(selectedMinute) * 40}px)) * -0.9deg)) translateZ(20px)`,
+                            transform: `rotateX(calc(${i * 40}deg - (var(--scroll-top, ${minutes.indexOf(selectedMinute) * 40}px) * 1deg))) translateZ(95px)`,
+                            backfaceVisibility: 'hidden'
                         }}
                     >
                         {m.toString().padStart(2, '0')}

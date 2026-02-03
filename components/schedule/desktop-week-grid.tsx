@@ -260,31 +260,60 @@ export function DesktopWeekGrid({
         });
     };
 
+    const [isSettling, setIsSettling] = useState(false);
+
     const handlePointerUp = (e: React.PointerEvent) => {
-        if (activeLessonId && initialGrab && liveTimeRange && liveDay) {
-            (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+        if (!activeLessonId || !initialGrab) {
+            setIsDragging(false);
+            setDragType(null);
+            setActiveLessonId(null);
+            return;
+        }
 
-            if (isDragging) {
-                const conflict = checkConflict(activeLessonId, liveDay, liveTimeRange.start, liveTimeRange.end, initialGrab.lesson.teacherId);
+        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
 
-                if (!conflict) {
-                    const updatedLesson = {
-                        ...initialGrab.lesson,
-                        dayOfWeek: liveDay,
-                        startTime: liveTimeRange.start,
-                        endTime: liveTimeRange.end
-                    };
-                    lastUpdateRef.current = Date.now();
-                    setLocalLessons(prev => prev.map(l => l.id === activeLessonId ? updatedLesson : l));
-                    setPulsingLessonId(activeLessonId);
-                    if (onLessonUpdate) onLessonUpdate(activeLessonId, {
+        if (isDragging && liveTimeRange && liveDay) {
+            const conflict = checkConflict(activeLessonId, liveDay, liveTimeRange.start, liveTimeRange.end, initialGrab.lesson.teacherId);
+
+            if (!conflict) {
+                const updatedLesson = {
+                    ...initialGrab.lesson,
+                    dayOfWeek: liveDay,
+                    startTime: liveTimeRange.start,
+                    endTime: liveTimeRange.end
+                };
+
+                // CRITICAL: Update local state immediately to B position
+                lastUpdateRef.current = Date.now();
+                setLocalLessons(prev => prev.map(l => l.id === activeLessonId ? updatedLesson : l));
+                setPulsingLessonId(activeLessonId);
+
+                // Notify parent
+                if (onLessonUpdate) {
+                    onLessonUpdate(activeLessonId, {
                         dayOfWeek: liveDay,
                         startTime: liveTimeRange.start,
                         endTime: liveTimeRange.end
                     });
                 }
+
+                // Briefly enter "settle" mode to prevent flicker
+                setIsSettling(true);
+                setTimeout(() => {
+                    setIsSettling(false);
+                    setIsDragging(false);
+                    setDragType(null);
+                    setActiveLessonId(null);
+                    setDragDelta({ x: 0, y: 0 });
+                    setLiveDay(null);
+                    setLiveTimeRange(null);
+                    setConflictError(null);
+                }, 150); // Short lock to bridge the handoff
+                return;
             }
         }
+
+        // Cleanup if no move or conflict
         setIsDragging(false);
         setDragType(null);
         setActiveLessonId(null);
@@ -296,12 +325,15 @@ export function DesktopWeekGrid({
 
     const getLayoutStyles = (lesson: Lesson, dayLessons: Lesson[]) => {
         const isBeingManipulated = lesson.id === activeLessonId;
-        const isResizing = isBeingManipulated && (dragType === 'resize-top' || dragType === 'resize-bottom');
+        const isCurrentlyDragged = isBeingManipulated && isDragging;
+        const isResizing = isCurrentlyDragged && (dragType === 'resize-top' || dragType === 'resize-bottom');
+        const isSettlingThis = isBeingManipulated && isSettling;
 
         let startTime = lesson.startTime;
         let endTime = lesson.endTime;
 
-        if (isResizing && liveTimeRange) {
+        // While resizing OR in the brief settling gap, use the live data for layout positioning
+        if ((isResizing || isSettlingThis) && liveTimeRange) {
             startTime = liveTimeRange.start;
             endTime = liveTimeRange.end;
         }
@@ -312,7 +344,13 @@ export function DesktopWeekGrid({
         const topPercent = (startMinutesFrom8 / (15 * 60)) * 100;
         const heightPercent = (durationMinutes / (15 * 60)) * 100;
 
-        const overlaps = dayLessons.filter(l => l.id !== lesson.id && l.status !== 'CANCELLED' && l.startTime < lesson.endTime && l.endTime > lesson.startTime);
+        // Use the actual startTime/endTime for overlap calculations to avoid "jumping" neighbors
+        const overlaps = dayLessons.filter(l =>
+            l.id !== lesson.id &&
+            l.status !== 'CANCELLED' &&
+            l.startTime < endTime &&
+            l.endTime > startTime
+        );
         let width = "calc(100% - 4px)";
         let left = "2px";
 
@@ -332,7 +370,7 @@ export function DesktopWeekGrid({
             width,
             left,
             colorClasses: cn(color.bg, color.border, color.text),
-            zIndex: isBeingManipulated ? 100 : undefined,
+            zIndex: isBeingManipulated ? 100 : 10,
         };
     };
 
@@ -400,6 +438,7 @@ export function DesktopWeekGrid({
                                         {dayLessons.map(lesson => {
                                             const style = getLayoutStyles(lesson, dayLessons);
                                             const isBeingDragManipulated = activeLessonId === lesson.id && (dragType === 'move');
+                                            const isSettlingThis = activeLessonId === lesson.id && isSettling;
 
                                             // Use pixel transforms during drag for maximum smoothness
                                             const dragTransform = isBeingDragManipulated && dragType === 'move'
@@ -426,8 +465,8 @@ export function DesktopWeekGrid({
                                                             left: (style as any).left,
                                                             zIndex: (style as any).zIndex,
                                                             transform: dragTransform,
-                                                            transition: isBeingDragManipulated ? 'none' : 'all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1)',
-                                                            opacity: (isDragging && lesson.id !== activeLessonId) ? 0.4 : (isBeingDragManipulated ? 0.9 : 1),
+                                                            transition: (isBeingDragManipulated || isSettlingThis) ? 'none' : 'all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                                                            opacity: (isDragging && lesson.id !== activeLessonId) ? 0.4 : ((isBeingDragManipulated || isSettlingThis) ? 0.9 : 1),
                                                             touchAction: 'none',
                                                         }}
                                                         className={cn(
