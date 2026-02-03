@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 // import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -23,18 +24,19 @@ const addMinutes = (time: string, minutes: number) => {
     return date.toTimeString().slice(0, 5);
 };
 
-interface EditLessonModalProps {
+interface LessonModalProps {
     lesson: Lesson | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onSave: (id: string, updates: Partial<Lesson>) => void;
+    onSave: (data: any) => void;
     onDelete?: (id: string) => void;
     groups?: any[];
     teachers?: any[];
     courses?: any[];
+    initialData?: Partial<Lesson>;
 }
 
-export function EditLessonModal({
+export function LessonModal({
     lesson,
     open,
     onOpenChange,
@@ -42,8 +44,9 @@ export function EditLessonModal({
     onDelete,
     groups = [],
     teachers = [],
-    courses = []
-}: EditLessonModalProps) {
+    courses = [],
+    initialData
+}: LessonModalProps) {
     const [loading, setLoading] = useState(false);
     const { modules } = useModules();
     const { currentOrganizationId } = useOrganization();
@@ -53,22 +56,43 @@ export function EditLessonModal({
     const [groupId, setGroupId] = useState("");
     const [courseId, setCourseId] = useState("");
     const [teacherId, setTeacherId] = useState("");
-    const [dayOfWeek, setDayOfWeek] = useState<DayOfWeek | "">("");
-    const [startTime, setStartTime] = useState("");
-    const [endTime, setEndTime] = useState("");
+    const [dayOfWeek, setDayOfWeek] = useState<DayOfWeek>("MON");
+    const [startTime, setStartTime] = useState("09:00");
+    const [endTime, setEndTime] = useState("10:30");
     const [room, setRoom] = useState("");
     const [status, setStatus] = useState<LessonStatus>("PLANNED");
 
     useEffect(() => {
-        if (lesson) {
-            setGroupId(lesson.groupId);
-            setCourseId(lesson.courseId);
-            setTeacherId(lesson.teacherId);
-            setDayOfWeek(lesson.dayOfWeek);
-            setStartTime(lesson.startTime);
-            setEndTime(lesson.endTime);
-            setRoom(lesson.room || "");
-            setStatus(lesson.status);
+        if (open) {
+            if (lesson) {
+                setGroupId(lesson.groupId);
+                setCourseId(lesson.courseId);
+                setTeacherId(lesson.teacherId);
+                setDayOfWeek(lesson.dayOfWeek);
+                setStartTime(lesson.startTime);
+                setEndTime(lesson.endTime);
+                setRoom(lesson.room || "");
+                setStatus(lesson.status);
+            } else if (initialData) {
+                setGroupId(initialData.groupId || "");
+                setCourseId(initialData.courseId || "");
+                setTeacherId(initialData.teacherId || "");
+                setDayOfWeek(initialData.dayOfWeek || "MON");
+                setStartTime(initialData.startTime || "09:00");
+                setEndTime(initialData.endTime || "10:30");
+                setRoom(initialData.room || "");
+                setStatus("PLANNED");
+            } else {
+                // Reset for clean create
+                setGroupId("");
+                setCourseId("");
+                setTeacherId("");
+                setDayOfWeek("MON");
+                setStartTime("09:00");
+                setEndTime("10:30");
+                setRoom("");
+                setStatus("PLANNED");
+            }
         }
 
         if (open && currentOrganizationId && modules.classrooms) {
@@ -77,15 +101,15 @@ export function EditLessonModal({
                 setClassrooms(data);
             });
         }
-    }, [lesson, open, currentOrganizationId, modules.classrooms]);
+    }, [lesson, open, initialData, currentOrganizationId, modules.classrooms]);
 
     const handleSubmit = async () => {
-        if (!lesson) return;
         setLoading(true);
-        // Simulate minor UX delay
-        await new Promise(r => setTimeout(r, 600));
+        // Simulate minor UX delay for premium feel
+        await new Promise(r => setTimeout(r, 400));
 
-        onSave(lesson.id, {
+        const data = {
+            id: lesson?.id, // Unified: if id exists, it's an update
             groupId,
             courseId,
             teacherId,
@@ -94,24 +118,26 @@ export function EditLessonModal({
             endTime,
             room: room === "__none__" ? "" : room,
             status,
-        });
+        };
 
+        onSave(data);
         setLoading(false);
         onOpenChange(false);
     };
 
-    if (!lesson) return null;
+    const isEdit = !!lesson;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="w-80 bg-zinc-900 border-zinc-800 p-0 shadow-2xl shadow-black/80 gap-0">
+            <DialogContent className="w-80 bg-zinc-900 border-zinc-800 p-0 shadow-2xl shadow-black/80 gap-0 border-white/5 outline-none overflow-hidden">
                 <div className="p-3 border-b border-zinc-800 text-sm font-semibold text-white flex justify-between items-center bg-zinc-900/50">
                     <span className="flex items-center gap-2">
-                        Редактирование
-                        {status === 'CANCELLED' && <span className="text-[10px] bg-red-900/50 text-red-200 px-1.5 py-0.5 rounded">Отменен</span>}
+                        {isEdit ? "Редактирование" : "Новое занятие"}
+                        {isEdit && status === 'CANCELLED' && (
+                            <span className="text-[10px] bg-red-900/50 text-red-200 px-1.5 py-0.5 rounded border border-red-500/20">Отменен</span>
+                        )}
                     </span>
-                    {/* Close button handled by Dialog primitive usually, but we can add explicit close or simple X */}
-                    <Button size="icon" variant="ghost" className="h-6 w-6 text-zinc-400 hover:text-white" onClick={() => onOpenChange(false)}>
+                    <Button size="icon" variant="ghost" className="h-6 w-6 text-zinc-400 hover:text-white hover:bg-white/5" onClick={() => onOpenChange(false)}>
                         <XCircle className="h-4 w-4" />
                     </Button>
                 </div>
@@ -119,7 +145,7 @@ export function EditLessonModal({
                 <div className="p-4 space-y-3">
                     <div className="flex gap-3">
                         <div className="flex-1 space-y-1.5 flex flex-col items-center">
-                            <Label className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Начало</Label>
+                            <Label className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Начало</Label>
                             <IOSStyleTimePicker
                                 value={startTime}
                                 onChange={setStartTime}
@@ -128,7 +154,7 @@ export function EditLessonModal({
                             />
                         </div>
                         <div className="flex-1 space-y-1.5 flex flex-col items-center">
-                            <Label className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Конец</Label>
+                            <Label className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Конец</Label>
                             <IOSStyleTimePicker
                                 value={endTime}
                                 onChange={setEndTime}
@@ -139,43 +165,73 @@ export function EditLessonModal({
                     </div>
 
                     <div className="space-y-1">
-                        <Label className="text-xs text-zinc-400">Предмет</Label>
+                        <Label className="text-[10px] text-zinc-500 uppercase font-bold px-0.5">Предмет</Label>
                         <Select value={courseId} onValueChange={setCourseId}>
-                            <SelectTrigger className="h-8 text-xs bg-zinc-950 border-zinc-800"><SelectValue placeholder="Предмет" /></SelectTrigger>
-                            <SelectContent>
+                            <SelectTrigger className="h-9 text-xs bg-zinc-950 border-zinc-800 focus:ring-1 focus:ring-indigo-500 transition-all">
+                                <SelectValue placeholder="Выберите предмет" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-zinc-900 border-zinc-800">
                                 {courses.map(c => <SelectItem key={c.id} value={c.id} className="text-xs">{c.name}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
-                            <Label className="text-xs text-zinc-400">Группа</Label>
+                            <Label className="text-[10px] text-zinc-500 uppercase font-bold px-0.5">Группа</Label>
                             <Select value={groupId} onValueChange={setGroupId}>
-                                <SelectTrigger className="h-8 text-xs bg-zinc-950 border-zinc-800"><SelectValue placeholder="Группа" /></SelectTrigger>
-                                <SelectContent>
+                                <SelectTrigger className="h-9 text-xs bg-zinc-950 border-zinc-800 focus:ring-1 focus:ring-indigo-500 transition-all">
+                                    <SelectValue placeholder="Группа" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-zinc-900 border-zinc-800">
                                     {groups.map(g => <SelectItem key={g.id} value={g.id} className="text-xs">{g.name}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
                         <div className="space-y-1">
-                            <Label className="text-xs text-zinc-400">Учитель</Label>
-                            <Select value={teacherId} onValueChange={setTeacherId}>
-                                <SelectTrigger className="h-8 text-xs bg-zinc-950 border-zinc-800"><SelectValue placeholder="Учитель" /></SelectTrigger>
-                                <SelectContent>
-                                    {teachers.map(t => <SelectItem key={t.id} value={t.id} className="text-xs">{t.firstName} {t.lastName}</SelectItem>)}
+                            <Label className="text-[10px] text-zinc-500 uppercase font-bold px-0.5">День</Label>
+                            <Select value={dayOfWeek} onValueChange={(v) => setDayOfWeek(v as DayOfWeek)}>
+                                <SelectTrigger className="h-9 text-xs bg-zinc-950 border-zinc-800">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-zinc-900 border-zinc-800">
+                                    <SelectItem value="MON" className="text-xs">Пнд</SelectItem>
+                                    <SelectItem value="TUE" className="text-xs">Втр</SelectItem>
+                                    <SelectItem value="WED" className="text-xs">Срд</SelectItem>
+                                    <SelectItem value="THU" className="text-xs">Чтв</SelectItem>
+                                    <SelectItem value="FRI" className="text-xs">Птн</SelectItem>
+                                    <SelectItem value="SAT" className="text-xs">Сбт</SelectItem>
+                                    <SelectItem value="SUN" className="text-xs">Вск</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                     </div>
 
+                    <div className="space-y-1">
+                        <Label className="text-[10px] text-zinc-500 uppercase font-bold px-0.5">Преподаватель</Label>
+                        <Select value={teacherId} onValueChange={setTeacherId}>
+                            <SelectTrigger className="h-9 text-xs bg-zinc-950 border-zinc-800 focus:ring-1 focus:ring-indigo-500 transition-all">
+                                <SelectValue placeholder="Выберите учителя" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-zinc-900 border-zinc-800">
+                                {teachers.map(t => (
+                                    <SelectItem key={t.id} value={t.id} className="text-xs">
+                                        {t.lastName} {t.firstName?.charAt(0)}.
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                     {modules.classrooms && (
                         <div className="space-y-1">
-                            <Label className="text-xs text-zinc-400">Аудитория</Label>
+                            <Label className="text-[10px] text-zinc-500 uppercase font-bold px-0.5">Аудитория</Label>
                             <Select value={room || "__none__"} onValueChange={setRoom}>
-                                <SelectTrigger className="h-8 text-xs bg-zinc-950 border-zinc-800"><SelectValue placeholder="Аудитория" /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="__none__" className="text-xs">Нет</SelectItem>
+                                <SelectTrigger className="h-9 text-xs bg-zinc-950 border-zinc-800 focus:ring-1 focus:ring-indigo-500 transition-all">
+                                    <SelectValue placeholder="Аудитория" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-zinc-900 border-zinc-800">
+                                    <SelectItem value="__none__" className="text-xs">Не выбрана</SelectItem>
                                     {classrooms.map(cls => (
                                         <SelectItem key={cls.id} value={cls.name} className="text-xs">{cls.name}</SelectItem>
                                     ))}
@@ -184,46 +240,45 @@ export function EditLessonModal({
                         </div>
                     )}
 
-                    <div className="pt-2 flex gap-2">
-                        <Button onClick={handleSubmit} disabled={loading} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white h-8 text-xs">
+                    <div className="pt-3 flex gap-2">
+                        <Button
+                            onClick={handleSubmit}
+                            disabled={loading || !courseId || !groupId || !teacherId}
+                            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white h-9 text-xs font-semibold shadow-lg shadow-indigo-950/40 border border-white/5 active:scale-[0.98] transition-all"
+                        >
                             {loading && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
-                            Сохранить
+                            {isEdit ? "Сохранить" : "Создать занятие"}
                         </Button>
 
-                        {status !== 'CANCELLED' ? (
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-zinc-500 hover:text-red-400 hover:bg-red-950/20"
-                                onClick={() => setStatus('CANCELLED')}
-                                title="Отменить проведение"
-                            >
-                                <XCircle className="h-4 w-4" />
-                            </Button>
-                        ) : (
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-zinc-500 hover:text-emerald-400 hover:bg-emerald-950/20"
-                                onClick={() => setStatus('PLANNED')}
-                                title="Восстановить"
-                            >
-                                <Loader2 className="h-4 w-4" />
-                            </Button>
-                        )}
+                        {isEdit && (
+                            <div className="flex gap-1.5">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className={cn(
+                                        "h-9 w-9 border border-zinc-800",
+                                        status === 'CANCELLED'
+                                            ? "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/30"
+                                            : "text-zinc-500 hover:text-red-400 hover:bg-red-950/30"
+                                    )}
+                                    onClick={() => setStatus(status === 'CANCELLED' ? 'PLANNED' : 'CANCELLED')}
+                                >
+                                    {status === 'CANCELLED' ? <Loader2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                                </Button>
 
-                        {onDelete && (
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-zinc-600 hover:text-red-500 hover:bg-red-950/20"
-                                onClick={() => onDelete(lesson.id)}
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
+                                {onDelete && (
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-9 w-9 text-zinc-600 hover:text-red-500 hover:bg-red-950/30 border border-zinc-800"
+                                        onClick={() => onDelete(lesson.id)}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                )}
+                            </div>
                         )}
                     </div>
                 </div>

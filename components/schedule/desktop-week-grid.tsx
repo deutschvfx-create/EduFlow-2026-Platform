@@ -135,78 +135,18 @@ export function DesktopWeekGrid({
         if (isDragging) return;
         const time = `${hour.toString().padStart(2, '0')}:00`;
         const endTime = `${(hour + 1).toString().padStart(2, '0')}:30`;
-        setSelectedSlot({ day, time });
-        setFormData({
-            groupId: "",
-            courseId: "",
-            teacherId: "",
-            room: "",
-            startTime: time,
-            endTime: endTime
-        });
-        setEditorOpen(true);
-    };
 
-    const handleQuickSave = () => {
-        if (!formData.groupId || !formData.teacherId || !formData.courseId) return;
-
-        // Generate a real ID immediately so optimistic state matches server state
-        // This prevents the card from "flickering" or being replaced when server data arrives
-        const optimId = generateId();
-
-        const newLesson: Lesson = {
-            id: optimId,
-            groupId: formData.groupId,
-            teacherId: formData.teacherId,
-            courseId: formData.courseId,
-            dayOfWeek: selectedSlot?.day || 'MON',
-            startTime: formData.startTime,
-            endTime: formData.endTime,
-            room: "",
-            status: 'PLANNED',
-            createdAt: new Date().toISOString()
-        } as Lesson;
-
-        lastUpdateRef.current = Date.now();
-        setLocalLessons(prev => [...prev, newLesson]);
-        setPulsingLessonId(newLesson.id);
-        if (onLessonAdd) onLessonAdd(newLesson);
-        setEditorOpen(false);
-    };
-
-    const handleEditSave = () => {
-        if (!editingLessonId) return;
-        const updatedLesson: Lesson = {
-            ...localLessons.find(l => l.id === editingLessonId)!,
-            groupId: editFormData.groupId,
-            teacherId: editFormData.teacherId,
-            courseId: editFormData.courseId,
-            dayOfWeek: editFormData.dayOfWeek,
-            startTime: editFormData.startTime,
-            endTime: editFormData.endTime,
-            room: editFormData.room
-        };
-
-        lastUpdateRef.current = Date.now();
-        if (onLessonUpdate) onLessonUpdate(editingLessonId, {
-            groupId: editFormData.groupId,
-            teacherId: editFormData.teacherId,
-            courseId: editFormData.courseId,
-            dayOfWeek: editFormData.dayOfWeek,
-            startTime: editFormData.startTime,
-            endTime: editFormData.endTime,
-            room: editFormData.room
-        });
-        setEditingLessonId(null);
-    };
-
-    const handleDelete = () => {
-        if (!editingLessonId) return;
-        const idToDelete = editingLessonId;
-        setLocalLessons(prev => prev.filter(l => l.id !== idToDelete));
-        if (onLessonDelete) onLessonDelete(idToDelete);
-        setIsDeleteDialogOpen(false);
-        setEditingLessonId(null);
+        if (onLessonAdd) {
+            onLessonAdd({
+                dayOfWeek: day,
+                startTime: time,
+                endTime: endTime,
+                groupId: "",
+                courseId: "",
+                teacherId: "",
+                room: ""
+            });
+        }
     };
 
     const timeToMinutes = (time: string) => {
@@ -439,189 +379,128 @@ export function DesktopWeekGrid({
                         ))}
                     </div>
 
-                    {DAYS.map((day, colIndex) => {
+                    {DAYS.map((day) => {
                         const dayLessons = localLessons.filter(l => l.dayOfWeek === day);
-
                         const isActiveDay = isDragging && initialGrab?.lesson.dayOfWeek === day;
 
                         return (
-                            <div key={day} className={cn("relative h-[900px] group", isActiveDay ? "z-50" : "z-10")}>
-                                <div className="absolute inset-0 z-0 flex flex-col">
+                            <div key={day} className={cn("relative h-[900px] border-zinc-800/40 border-r last:border-r-0 group", isActiveDay ? "z-50" : "z-10")}>
+                                <div className="absolute inset-0 z-0">
                                     {HOURS.map(hour => (
-                                        <Popover
+                                        <div
                                             key={hour}
-                                            open={editorOpen && selectedSlot?.day === day && selectedSlot?.time === `${hour.toString().padStart(2, '0')}:00`}
-                                            onOpenChange={(op) => !op && setEditorOpen(false)}
-                                        >
-                                            <PopoverTrigger asChild>
-                                                <div
-                                                    className="h-[60px] w-full hover:bg-white/[0.02] active:bg-violet-500/10 transition-colors cursor-cell border-b border-transparent hover:border-zinc-800/50"
-                                                    onClick={() => handleSlotClick(day, hour)}
-                                                />
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-80 bg-zinc-900 border-zinc-800 p-0 shadow-2xl shadow-black/80">
-                                                <div className="p-3 border-b border-zinc-800 text-sm font-semibold text-white flex justify-between items-center">
-                                                    <span>Новый урок</span>
-                                                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditorOpen(false)}>
-                                                        <X className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                                <div className="p-4 space-y-3">
-                                                    <div className="grid grid-cols-2 gap-3">
-                                                        <div className="space-y-1.5 flex flex-col items-center">
-                                                            <Label className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Начало</Label>
-                                                            <IOSStyleTimePicker
-                                                                value={formData.startTime}
-                                                                onChange={(v) => setFormData(prev => ({ ...prev, startTime: v }))}
-                                                                className="w-full h-24 border-zinc-800/50 bg-black/40"
-                                                                minuteStep={5}
-                                                            />
-                                                        </div>
-                                                        <div className="space-y-1.5 flex flex-col items-center">
-                                                            <Label className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Конец</Label>
-                                                            <IOSStyleTimePicker
-                                                                value={formData.endTime}
-                                                                onChange={(v) => setFormData(prev => ({ ...prev, endTime: v }))}
-                                                                className="w-full h-24 border-zinc-800/50 bg-black/40"
-                                                                minuteStep={5}
-                                                            />
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="space-y-1">
-                                                        <Label className="text-xs text-zinc-400">Предмет</Label>
-                                                        <Select onValueChange={(v) => setFormData({ ...formData, courseId: v })}>
-                                                            <SelectTrigger className="h-8 text-xs bg-zinc-950 border-zinc-800"><SelectValue placeholder="Предмет" /></SelectTrigger>
-                                                            <SelectContent>
-                                                                {courses.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-2">
-                                                        <div className="space-y-1">
-                                                            <Label className="text-xs text-zinc-400">Группа</Label>
-                                                            <Select onValueChange={(v) => setFormData({ ...formData, groupId: v })}>
-                                                                <SelectTrigger className="h-8 text-xs bg-zinc-950 border-zinc-800"><SelectValue placeholder="Группа" /></SelectTrigger>
-                                                                <SelectContent>
-                                                                    {groups.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                            <Label className="text-xs text-zinc-400">Учитель</Label>
-                                                            <Select onValueChange={(v) => setFormData({ ...formData, teacherId: v })}>
-                                                                <SelectTrigger className="h-8 text-xs bg-zinc-950 border-zinc-800"><SelectValue placeholder="Учитель" /></SelectTrigger>
-                                                                <SelectContent>
-                                                                    {teachers.map(t => <SelectItem key={t.id} value={t.id}>{t.firstName} {t.lastName}</SelectItem>)}
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </div>
-                                                    </div>
-                                                    <Button size="sm" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white h-8 text-xs" onClick={handleQuickSave}>
-                                                        Создать урок
-                                                    </Button>
-                                                </div>
-                                            </PopoverContent>
-                                        </Popover>
+                                            className="h-[60px] w-full border-b border-zinc-800/20 hover:bg-white/[0.02] active:bg-violet-500/10 transition-colors cursor-cell"
+                                            onClick={() => handleSlotClick(day, hour)}
+                                        />
                                     ))}
                                 </div>
 
-                                {isDragging && activeLessonId && liveDay === day && dragType === 'move' && !conflictError && liveTimeRange && (
-                                    <div
-                                        className="absolute w-[calc(100%-4px)] left-[2px] border-2 border-dashed border-zinc-500/50 rounded bg-white/[0.03] z-20 pointer-events-none transition-all duration-150"
-                                        style={{
-                                            top: `${(timeToMinutes(liveTimeRange.start) / (15 * 60)) * 100}%`,
-                                            height: `${((timeToMinutes(liveTimeRange.end) - timeToMinutes(liveTimeRange.start)) / (15 * 60)) * 100}%`
-                                        }}
-                                    />
-                                )}
+                                <div className="absolute inset-0 pointer-events-none z-10 h-full">
+                                    <AnimatePresence>
+                                        {dayLessons.map(lesson => {
+                                            const style = getLayoutStyles(lesson, dayLessons);
+                                            const isBeingDragManipulated = activeLessonId === lesson.id && (dragType === 'move');
 
-                                <AnimatePresence>
-                                    {dayLessons.map(lesson => {
-                                        const style = getLayoutStyles(lesson, dayLessons);
-                                        const isBeingDragManipulated = isDragging && lesson.id === activeLessonId;
+                                            // Use pixel transforms during drag for maximum smoothness
+                                            const dragTransform = isBeingDragManipulated && dragType === 'move'
+                                                ? `translate3d(${dragDelta.x}px, ${dragDelta.y}px, 0)`
+                                                : undefined;
 
-                                        // Use pixel transforms during drag for maximum smoothness
-                                        const dragTransform = isBeingDragManipulated && dragType === 'move'
-                                            ? `translate3d(${dragDelta.x}px, ${dragDelta.y}px, 0)`
-                                            : undefined;
+                                            const teacher = teachers.find(t => t.id === lesson.teacherId);
+                                            const group = groups.find(g => g.id === lesson.groupId);
+                                            const course = courses.find(c => c.id === lesson.courseId);
 
-                                        return (
-                                            <div key={lesson.id}>
-                                                <motion.div
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (ignoreClickRef.current) return;
-                                                        onLessonClick(lesson);
-                                                    }}
-                                                    exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-                                                    style={{
-                                                        top: (style as any).top,
-                                                        height: (style as any).height,
-                                                        width: (style as any).width,
-                                                        left: (style as any).left,
-                                                        zIndex: (style as any).zIndex,
-                                                        transform: dragTransform,
-                                                        transition: isBeingDragManipulated ? 'none' : 'all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1)',
-                                                        opacity: isBeingDragManipulated ? 0.7 : 1,
-                                                        touchAction: 'none',
-                                                    }}
-                                                    className={cn(
-                                                        "absolute rounded border shadow-sm hover:shadow-lg flex flex-col overflow-hidden group/card animate-in fade-in zoom-in-95 cursor-grab active:cursor-grabbing",
-                                                        lesson.status === 'CANCELLED'
-                                                            ? "bg-red-950/80 border-red-900/50 text-red-200"
-                                                            : (style as any).colorClasses,
-                                                        isBeingDragManipulated && conflictError && "ring-2 ring-red-500 ring-offset-2 ring-offset-black",
-                                                        isBeingDragManipulated && "shadow-2xl scale-[1.02]" // visual feedback
-                                                    )}
-                                                    onPointerDown={(e) => handleDragStart(e, lesson, 'move')}
-                                                >
-                                                    <div
-                                                        className="absolute top-0 inset-x-0 h-3 cursor-ns-resize hover:bg-white/20 z-50 transition-colors"
-                                                        onPointerDown={(e) => { e.stopPropagation(); handleDragStart(e, lesson, 'resize-top'); }}
-                                                    />
-
-                                                    <div className="p-2 flex flex-col h-full relative z-10 pointer-events-none">
-                                                        <div className="flex flex-col mb-2">
-                                                            <span className="font-bold text-[11px] leading-tight truncate text-white">
-                                                                {courses.find(c => c.id === lesson.courseId)?.name || lesson.courseId}
-                                                            </span>
-                                                            <span className="text-[10px] font-medium text-white/80 flex items-center gap-1 mt-0.5">
-                                                                <Clock className="h-3 w-3 shrink-0" />
-                                                                {isDragging && lesson.id === activeLessonId && liveTimeRange
-                                                                    ? `${liveTimeRange.start} - ${liveTimeRange.end}`
-                                                                    : `${lesson.startTime} - ${lesson.endTime}`
-                                                                }
-                                                            </span>
+                                            return (
+                                                <div key={lesson.id}>
+                                                    <motion.div
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (ignoreClickRef.current) return;
+                                                            onLessonClick(lesson);
+                                                        }}
+                                                        exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
+                                                        style={{
+                                                            top: (style as any).top,
+                                                            height: (style as any).height,
+                                                            width: (style as any).width,
+                                                            left: (style as any).left,
+                                                            zIndex: (style as any).zIndex,
+                                                            transform: dragTransform,
+                                                            transition: isBeingDragManipulated ? 'none' : 'all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                                                            opacity: (isDragging && lesson.id !== activeLessonId) ? 0.4 : (isBeingDragManipulated ? 0.9 : 1),
+                                                            touchAction: 'none',
+                                                        }}
+                                                        className={cn(
+                                                            "absolute rounded-lg border shadow-sm hover:shadow-xl flex flex-col overflow-hidden group/card animate-in fade-in zoom-in-95 cursor-grab active:cursor-grabbing pointer-events-auto",
+                                                            lesson.status === 'CANCELLED'
+                                                                ? "bg-red-950/80 border-red-900/50 text-red-200"
+                                                                : (style as any).colorClasses,
+                                                            isBeingDragManipulated && conflictError && "ring-2 ring-red-500 ring-offset-2 ring-offset-black",
+                                                            isBeingDragManipulated && "shadow-2xl scale-[1.03]"
+                                                        )}
+                                                        onPointerDown={(e) => handleDragStart(e, lesson, 'move')}
+                                                    >
+                                                        {/* Top Resize Handle */}
+                                                        <div
+                                                            className="absolute top-0 inset-x-0 h-4 cursor-ns-resize hover:bg-white/10 z-50 rounded-t-lg transition-colors flex items-center justify-center group-hover/card:opacity-100 opacity-0"
+                                                            onPointerDown={(e) => { e.stopPropagation(); handleDragStart(e, lesson, 'resize-top'); }}
+                                                        >
+                                                            <div className="w-8 h-1 bg-white/40 rounded-full" />
                                                         </div>
 
-                                                        <div className="flex flex-col gap-1.5 overflow-hidden">
-                                                            <div className="flex items-center gap-1.5 text-[9px] text-white/90 truncate">
-                                                                <Users className="h-3 w-3 shrink-0 opacity-70" />
-                                                                <span className="truncate">Гр: {groups.find(g => g.id === lesson.groupId)?.name || lesson.groupId}</span>
+                                                        <div className="p-2.5 flex flex-col h-full relative z-10 pointer-events-none">
+                                                            <div className="flex flex-col mb-2">
+                                                                <span className="font-black text-[11px] leading-tight tracking-tight uppercase text-white drop-shadow-sm truncate">
+                                                                    {course?.name || lesson.courseId}
+                                                                </span>
+                                                                <span className="text-[10px] font-bold text-white/90 flex items-center gap-1.5 mt-1 bg-black/20 self-start px-1.5 py-0.5 rounded-full">
+                                                                    <Clock className="h-3 w-3 shrink-0 opacity-80" />
+                                                                    {isDragging && lesson.id === activeLessonId && liveTimeRange
+                                                                        ? `${liveTimeRange.start} — ${liveTimeRange.end}`
+                                                                        : `${lesson.startTime} — ${lesson.endTime}`
+                                                                    }
+                                                                </span>
                                                             </div>
-                                                            <div className="flex items-center gap-1.5 text-[9px] text-white/90 truncate">
-                                                                <GraduationCap className="h-3 w-3 shrink-0 opacity-70" />
-                                                                <span className="truncate">Пр: {teachers.find(t => t.id === lesson.teacherId)?.lastName || lesson.teacherId}</span>
-                                                            </div>
-                                                            {lesson.room && modules.classrooms && (
-                                                                <div className="flex items-center gap-1.5 text-[9px] text-white/90 truncate">
-                                                                    <MapPin className="h-3 w-3 shrink-0 opacity-70" />
-                                                                    <span className="truncate">{lesson.room} ауд.</span>
+
+                                                            <div className="mt-auto space-y-1.5 overflow-hidden">
+                                                                <div className="flex items-center gap-1.5 text-[10px] font-medium text-white/95 truncate">
+                                                                    <div className="h-4 w-4 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                                                                        <Users className="h-2.5 w-2.5" />
+                                                                    </div>
+                                                                    <span className="truncate">{group?.name || lesson.groupId}</span>
                                                                 </div>
-                                                            )}
+                                                                <div className="flex items-center gap-1.5 text-[10px] font-medium text-white/95 truncate">
+                                                                    <div className="h-4 w-4 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                                                                        <GraduationCap className="h-2.5 w-2.5" />
+                                                                    </div>
+                                                                    <span className="truncate">
+                                                                        {teacher ? `${teacher.lastName} ${teacher.firstName?.charAt(0)}.` : lesson.teacherId}
+                                                                    </span>
+                                                                </div>
+                                                                {lesson.room && (
+                                                                    <div className="flex items-center gap-1.5 text-[10px] font-medium text-white/95 truncate">
+                                                                        <div className="h-4 w-4 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                                                                            <MapPin className="h-2.5 w-2.5" />
+                                                                        </div>
+                                                                        <span className="truncate">{lesson.room} ауд.</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                    </div>
 
-                                                    <div
-                                                        className="absolute bottom-0 inset-x-0 h-2 cursor-ns-resize hover:bg-white/20 z-50 transition-colors"
-                                                        onPointerDown={(e) => { e.stopPropagation(); handleDragStart(e, lesson, 'resize-bottom'); }}
-                                                    />
-                                                </motion.div>
-                                            </div>
-                                        );
-                                    })}
-                                </AnimatePresence>
+                                                        {/* Bottom Resize Handle */}
+                                                        <div
+                                                            className="absolute bottom-0 inset-x-0 h-4 cursor-ns-resize hover:bg-white/10 z-50 rounded-b-lg transition-colors flex items-center justify-center group-hover/card:opacity-100 opacity-0"
+                                                            onPointerDown={(e) => { e.stopPropagation(); handleDragStart(e, lesson, 'resize-bottom'); }}
+                                                        >
+                                                            <div className="w-8 h-1 bg-white/40 rounded-full" />
+                                                        </div>
+                                                    </motion.div>
+                                                </div>
+                                            );
+                                        })}
+                                    </AnimatePresence>
+                                </div>
                             </div>
                         );
                     })}

@@ -36,7 +36,7 @@ export function IOSStyleTimePicker({
     const lastY = React.useRef(0);
     const velocity = React.useRef(0);
     const lastTimestamp = React.useRef(0);
-    const animationFrame = React.useRef<number>(null);
+    const animationFrame = React.useRef<number | null>(null);
 
     // Initial and External Sync
     React.useEffect(() => {
@@ -47,12 +47,18 @@ export function IOSStyleTimePicker({
             if (!isNaN(h) && hourRef.current) {
                 setSelectedHour(h);
                 const hIndex = hours.indexOf(h);
-                if (hIndex !== -1) hourRef.current.scrollTop = hIndex * 40;
+                if (hIndex !== -1) {
+                    hourRef.current.scrollTop = hIndex * 40;
+                    hourRef.current.style.setProperty('--scroll-top', `${hIndex * 40}px`);
+                }
             }
             if (!isNaN(m) && minuteRef.current) {
                 setSelectedMinute(m);
                 const mIndex = minutes.indexOf(m);
-                if (mIndex !== -1) minuteRef.current.scrollTop = mIndex * 40;
+                if (mIndex !== -1) {
+                    minuteRef.current.scrollTop = mIndex * 40;
+                    minuteRef.current.style.setProperty('--scroll-top', `${mIndex * 40}px`);
+                }
             }
         }, 50);
         return () => clearTimeout(timer);
@@ -67,11 +73,11 @@ export function IOSStyleTimePicker({
 
     const startInertia = (ref: HTMLDivElement, type: 'hour' | 'minute') => {
         let currentVelocity = velocity.current;
-        const friction = 0.95;
+        const friction = 0.96;
         const itemHeight = 40;
 
         const step = () => {
-            if (Math.abs(currentVelocity) < 0.1) {
+            if (Math.abs(currentVelocity) < 0.2) {
                 // Snap to nearest
                 const targetScrollTop = Math.round(ref.scrollTop / itemHeight) * itemHeight;
                 ref.scrollTo({ top: targetScrollTop, behavior: 'smooth' });
@@ -92,6 +98,7 @@ export function IOSStyleTimePicker({
             }
 
             ref.scrollTop -= currentVelocity;
+            ref.style.setProperty('--scroll-top', `${ref.scrollTop}px`);
             currentVelocity *= friction;
             animationFrame.current = requestAnimationFrame(step);
         };
@@ -106,15 +113,22 @@ export function IOSStyleTimePicker({
             const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
             const now = performance.now();
             const dt = now - lastTimestamp.current;
-            if (dt > 0) {
-                velocity.current = (clientY - lastY.current) * (16 / dt); // Normalize to 60fps
+
+            if (dt > 1) { // Avoid division by zero and micro-stutters
+                const instantVelocity = (lastY.current - clientY);
+                velocity.current = velocity.current * 0.7 + instantVelocity * 0.3; // Low-pass filter for smoothness
             }
 
             const deltaY = clientY - startY.current;
-            activeRef.current.current.scrollTop = startScrollTop.current - deltaY;
+            const nextScrollTop = startScrollTop.current - deltaY;
+
+            const ref = activeRef.current.current;
+            ref.scrollTop = nextScrollTop;
+            ref.style.setProperty('--scroll-top', `${nextScrollTop}px`);
 
             lastY.current = clientY;
             lastTimestamp.current = now;
+
             if (e.cancelable) e.preventDefault();
         };
 
@@ -161,16 +175,17 @@ export function IOSStyleTimePicker({
     };
 
     const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-        // Only for visual 3D update
-        e.currentTarget.style.setProperty('--scroll-top', `${e.currentTarget.scrollTop}px`);
+        if (!isDragging.current) {
+            e.currentTarget.style.setProperty('--scroll-top', `${e.currentTarget.scrollTop}px`);
+        }
     };
 
     return (
-        <div className={cn("flex bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl w-48 h-40 select-none relative group", className)}>
-            <div className="absolute inset-0 pointer-events-none z-10">
-                <div className="absolute top-0 left-0 right-0 h-10 bg-gradient-to-b from-zinc-950 to-transparent opacity-80" />
-                <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-zinc-950 to-transparent opacity-80" />
-                <div className="absolute top-1/2 left-0 right-0 h-10 -mt-5 bg-white/5 border-y border-white/10" />
+        <div className={cn("flex bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl w-48 h-40 select-none relative group touch-none", className)}>
+            <div className="absolute inset-x-0 top-[60px] h-10 border-y border-white/10 bg-white/5 pointer-events-none z-20" />
+            <div className="absolute inset-0 pointer-events-none z-30">
+                <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-zinc-950 via-zinc-950/80 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-transparent" />
             </div>
 
             {/* Hours */}
@@ -180,24 +195,24 @@ export function IOSStyleTimePicker({
                 onMouseDown={(e) => startDrag(e.clientY, hourRef)}
                 onTouchStart={(e) => startDrag(e.touches[0].clientY, hourRef)}
                 onScroll={handleScroll}
-                style={{ perspective: '500px' }}
+                style={{ perspective: '500px', scrollSnapType: 'y mandatory' }}
             >
-                <div className="h-[calc(50%-20px)] pointer-events-none" />
+                <div className="h-[60px] pointer-events-none" />
                 {hours.map((h, i) => (
                     <div
                         key={h}
                         className={cn(
-                            "h-10 flex items-center justify-center text-sm transition-colors duration-200 preserve-3d py-0",
-                            selectedHour === h ? "text-white font-bold text-lg scale-110" : "text-zinc-600 grayscale opacity-40"
+                            "h-10 flex items-center justify-center text-sm transition-all duration-150 preserve-3d py-0 scroll-snap-align-center",
+                            selectedHour === h ? "text-white font-bold text-lg scale-110" : "text-zinc-600 grayscale opacity-40 scale-90"
                         )}
                         style={{
-                            transform: `rotateX(calc((${i} * 40px - var(--scroll-top, ${hours.indexOf(selectedHour) * 40}px)) * -0.8deg)) translateZ(10px)`,
+                            transform: `rotateX(calc((${i} * 40px - var(--scroll-top, ${hours.indexOf(selectedHour) * 40}px)) * -0.9deg)) translateZ(20px)`,
                         }}
                     >
                         {h.toString().padStart(2, '0')}
                     </div>
                 ))}
-                <div className="h-[calc(50%-20px)] pointer-events-none" />
+                <div className="h-[60px] pointer-events-none" />
             </div>
 
             <div className="flex items-center justify-center text-zinc-600 font-bold bg-zinc-900/50 z-20 pb-0.5 px-0.5">:</div>
@@ -209,24 +224,24 @@ export function IOSStyleTimePicker({
                 onMouseDown={(e) => startDrag(e.clientY, minuteRef)}
                 onTouchStart={(e) => startDrag(e.touches[0].clientY, minuteRef)}
                 onScroll={handleScroll}
-                style={{ perspective: '500px' }}
+                style={{ perspective: '500px', scrollSnapType: 'y mandatory' }}
             >
-                <div className="h-[calc(50%-20px)] pointer-events-none" />
+                <div className="h-[60px] pointer-events-none" />
                 {minutes.map((m, i) => (
                     <div
                         key={m}
                         className={cn(
-                            "h-10 flex items-center justify-center text-sm transition-colors duration-200 preserve-3d py-0",
-                            selectedMinute === m ? "text-white font-bold text-lg scale-110" : "text-zinc-600 grayscale opacity-40"
+                            "h-10 flex items-center justify-center text-sm transition-all duration-150 preserve-3d py-0 scroll-snap-align-center",
+                            selectedMinute === m ? "text-white font-bold text-lg scale-110" : "text-zinc-600 grayscale opacity-40 scale-90"
                         )}
                         style={{
-                            transform: `rotateX(calc((${i} * 40px - var(--scroll-top, ${minutes.indexOf(selectedMinute) * 40}px)) * -0.8deg)) translateZ(10px)`,
+                            transform: `rotateX(calc((${i} * 40px - var(--scroll-top, ${minutes.indexOf(selectedMinute) * 40}px)) * -0.9deg)) translateZ(20px)`,
                         }}
                     >
                         {m.toString().padStart(2, '0')}
                     </div>
                 ))}
-                <div className="h-[calc(50%-20px)] pointer-events-none" />
+                <div className="h-[60px] pointer-events-none" />
             </div>
         </div>
     );

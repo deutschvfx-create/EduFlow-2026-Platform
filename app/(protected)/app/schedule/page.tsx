@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 // Removed mock imports
 import { ScheduleFilters } from "@/components/schedule/schedule-filters";
-import { AddLessonModal } from "@/components/schedule/add-lesson-modal";
-import { EditLessonModal } from "@/components/schedule/edit-lesson-modal";
+// import { AddLessonModal } from "@/components/schedule/add-lesson-modal";
+import { LessonModal } from "@/components/schedule/edit-lesson-modal";
 import { LessonCard } from "@/components/schedule/lesson-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
@@ -42,7 +42,8 @@ export default function SchedulePage() {
     const [currentDate, setCurrentDate] = useState(new Date("2025-09-01"));
 
     const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
-    const [editModalOpen, setEditModalOpen] = useState(false);
+    const [initialLessonData, setInitialLessonData] = useState<Partial<Lesson> | undefined>(undefined);
+    const [modalOpen, setModalOpen] = useState(false);
 
     // Dynamic Data
     const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -119,25 +120,38 @@ export default function SchedulePage() {
         if (userData.role === 'teacher') {
             setTeacherFilter(userData.uid);
         }
-        // TODO: For students we need their groupId. 
-        // For now we just restrict editing.
     }, [userData]);
 
-    const handleSaveUpdate = async (id: string, updates: Partial<Lesson>) => {
+    const handleSave = async (data: any) => {
         if (!currentOrganizationId) return;
+
         try {
             const { scheduleRepo } = await import("@/lib/data/schedule.repo");
-            const lessonToUpdate = lessons.find(l => l.id === id);
-            if (!lessonToUpdate) return;
 
-            await scheduleRepo.update(currentOrganizationId, {
-                ...lessonToUpdate,
-                ...updates
-            } as Lesson);
-            setEditModalOpen(false);
-        } catch (error) {
-            console.error("Failed to update lesson:", error);
-            alert("Ошибка при сохранении изменений");
+            if (data.id) {
+                // UPDATE
+                const lessonToUpdate = lessons.find(l => l.id === data.id);
+                if (!lessonToUpdate) return;
+
+                await scheduleRepo.update(currentOrganizationId, {
+                    ...lessonToUpdate,
+                    ...data
+                } as Lesson);
+            } else {
+                // CREATE
+                const newLesson: Lesson = {
+                    id: generateId(),
+                    organizationId: currentOrganizationId,
+                    status: 'PLANNED',
+                    createdAt: new Date().toISOString(),
+                    ...data
+                };
+                await scheduleRepo.add(currentOrganizationId, newLesson);
+            }
+            setModalOpen(false);
+        } catch (error: any) {
+            console.error("Schedule save error:", error);
+            alert(`Ошибка при сохранении: ${error.message}`);
         }
     };
 
@@ -148,7 +162,7 @@ export default function SchedulePage() {
         try {
             const { scheduleRepo } = await import("@/lib/data/schedule.repo");
             await scheduleRepo.delete(currentOrganizationId, id);
-            setEditModalOpen(false);
+            setModalOpen(false);
         } catch (error) {
             console.error("Failed to delete lesson:", error);
             alert("Ошибка при удалении занятия");
@@ -167,49 +181,22 @@ export default function SchedulePage() {
     if (!isLoaded) return <div className="p-8 text-zinc-500">Загрузка расписания...</div>;
 
     const handleLessonClick = (lesson: Lesson) => {
-        if (!isOwner && !isTeacher) return; // Read-only for others (students)
+        if (!isOwner && !isTeacher) return; // Read-only for others
+        setInitialLessonData(undefined);
         setSelectedLesson(lesson);
-        setEditModalOpen(true);
+        setModalOpen(true);
     };
 
-    const handleLessonAdd = async (newLessonData: any) => {
-        if (!currentOrganizationId) {
-            console.error("handleLessonAdd: No organization ID");
-            return;
-        }
-
-        console.log("Creating lesson for org:", currentOrganizationId, newLessonData);
-
-        try {
-            const { scheduleRepo } = await import("@/lib/data/schedule.repo");
-            const newLesson: Lesson = {
-                id: newLessonData.id || generateId(), // Use provided ID if available (for optimistic UI consistency)
-                organizationId: currentOrganizationId,
-                status: 'PLANNED',
-                createdAt: new Date().toISOString(),
-                groupId: newLessonData.groupId,
-                teacherId: newLessonData.teacherId,
-                courseId: newLessonData.courseId,
-                dayOfWeek: newLessonData.dayOfWeek,
-                startTime: newLessonData.startTime,
-                endTime: newLessonData.endTime,
-                room: newLessonData.room
-            };
-
-            await scheduleRepo.add(currentOrganizationId, newLesson);
-            console.log("Lesson created successfully");
-        } catch (error: any) {
-            console.error("Failed to add lesson:", error);
-            console.error("Error code:", error.code);
-            console.error("Error message:", error.message);
-            alert(`Ошибка при создании занятия: ${error.message}`);
-        }
+    const handleSlotClick = (initialData: Partial<Lesson>) => {
+        if (!isOwner && !isTeacher) return;
+        setSelectedLesson(null);
+        setInitialLessonData(initialData);
+        setModalOpen(true);
     };
 
     return (
         <ModuleGuard module="schedule">
             <div className="space-y-4 laptop:space-y-6 h-full flex flex-col">
-                {/* Header Actions */}
                 <div className="flex items-center justify-between px-1">
                     <h1 className="text-xl font-bold text-white">Расписание</h1>
                     <div className="flex items-center gap-3">
@@ -229,15 +216,14 @@ export default function SchedulePage() {
                     </div>
                 </div>
 
-                {/* WEEK VIEW ALWAYS */}
                 <div className="flex-1 overflow-x-auto overflow-y-hidden">
                     <div className="min-w-[1024px] h-full">
                         <DesktopWeekGrid
                             lessons={filteredLessons}
                             currentDate={currentDate}
                             onLessonClick={handleLessonClick}
-                            onLessonAdd={handleLessonAdd}
-                            onLessonUpdate={handleSaveUpdate}
+                            onLessonAdd={handleSlotClick}
+                            onLessonUpdate={handleSave}
                             onLessonDelete={handleLessonDelete}
                             groups={groups}
                             teachers={teachers}
@@ -246,29 +232,12 @@ export default function SchedulePage() {
                     </div>
                 </div>
 
-
-                {/* Floating Action Button - Only for Owners/Teachers (if allowed) */}
-                {isOwner && (
-                    <div className="fixed bottom-6 right-4 md:bottom-8 md:right-8 z-40">
-                        <AddLessonModal
-                            lessons={lessons}
-                            groups={groups}
-                            teachers={teachers}
-                            courses={courses}
-                            onSave={handleLessonAdd}
-                        >
-                            <Button size="icon" className="h-14 w-14 rounded-full bg-violet-600 hover:bg-violet-700 shadow-lg shadow-violet-900/40 border border-white/10">
-                                <Plus className="h-6 w-6" />
-                            </Button>
-                        </AddLessonModal>
-                    </div>
-                )}
-
-                <EditLessonModal
+                <LessonModal
                     lesson={selectedLesson}
-                    open={editModalOpen}
-                    onOpenChange={setEditModalOpen}
-                    onSave={handleSaveUpdate}
+                    initialData={initialLessonData}
+                    open={modalOpen}
+                    onOpenChange={setModalOpen}
+                    onSave={handleSave}
                     onDelete={handleLessonDelete}
                     groups={groups}
                     teachers={teachers}
