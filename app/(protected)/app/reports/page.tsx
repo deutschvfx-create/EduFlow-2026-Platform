@@ -14,10 +14,14 @@ import { ReportsFilters } from "@/components/reports/reports-filters";
 import { AttendanceReportTable } from "@/components/reports/attendance-report-table";
 import { GradesReportTable } from "@/components/reports/grades-report-table";
 import { TeacherLoadTable } from "@/components/reports/teacher-load-table";
+import { DataFlowVisualizer } from "@/components/reports/data-flow-visualizer";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserCheck, BarChart, TrendingUp, CalendarDays } from "lucide-react";
+import { Users, UserCheck, BarChart, TrendingUp, CalendarDays, Activity, Globe, Database } from "lucide-react";
 import { ModuleGuard } from "@/components/system/module-guard";
+import { db } from "@/lib/firebase";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { cn } from "@/lib/utils";
 
 export default function ReportsPage() {
     const { currentOrganizationId } = useOrganization();
@@ -32,54 +36,65 @@ export default function ReportsPage() {
     const [schedule, setSchedule] = useState<Lesson[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const [activePulse, setActivePulse] = useState<string | undefined>();
+
     useEffect(() => {
-        if (currentOrganizationId) {
-            setLoading(true);
-            const fetchData = async () => {
-                try {
-                    const [
-                        { studentsRepo },
-                        { teachersRepo },
-                        { groupsRepo },
-                        { coursesRepo },
-                        { attendanceRepo },
-                        { gradesRepo },
-                        { scheduleRepo }
-                    ] = await Promise.all([
-                        import("@/lib/data/students.repo"),
-                        import("@/lib/data/teachers.repo"),
-                        import("@/lib/data/groups.repo"),
-                        import("@/lib/data/courses.repo"),
-                        import("@/lib/data/attendance.repo"),
-                        import("@/lib/data/grades.repo"),
-                        import("@/lib/data/schedule.repo")
-                    ]);
+        if (!currentOrganizationId) return;
+        setLoading(true);
 
-                    const [s, t, g, c, a, gr, sc] = await Promise.all([
-                        studentsRepo.getAll(currentOrganizationId),
-                        teachersRepo.getAll(currentOrganizationId),
-                        groupsRepo.getAll(currentOrganizationId),
-                        coursesRepo.getAll(currentOrganizationId),
-                        attendanceRepo.getAll(currentOrganizationId),
-                        gradesRepo.getAll(currentOrganizationId),
-                        scheduleRepo.getAll(currentOrganizationId)
-                    ]);
+        const triggerPulse = (nodeId: string) => {
+            setActivePulse(nodeId);
+            setTimeout(() => setActivePulse(undefined), 1000);
+        };
 
-                    setStudents(s);
-                    setTeachers(t);
-                    setGroups(g);
-                    setCourses(c);
-                    setAttendance(a);
-                    setGrades(gr);
-                    setSchedule(sc);
-                } catch (error) {
-                    console.error("Failed to fetch report data:", error);
-                } finally {
-                    setLoading(false);
-                }
-            };
-            fetchData();
-        }
+        // Real-time Listeners
+        const qStudents = query(collection(db, "users"), where("organizationId", "==", currentOrganizationId), where("role", "==", "student"));
+        const qTeachers = query(collection(db, "users"), where("organizationId", "==", currentOrganizationId), where("role", "==", "teacher"));
+        const qAttendance = query(collection(db, "attendance"), where("organizationId", "==", currentOrganizationId));
+        const qGrades = query(collection(db, "grades"), where("organizationId", "==", currentOrganizationId));
+        const qGroups = query(collection(db, "groups"), where("organizationId", "==", currentOrganizationId));
+        const qCourses = query(collection(db, "courses"), where("organizationId", "==", currentOrganizationId));
+        const qSchedule = query(collection(db, "schedule"), where("organizationId", "==", currentOrganizationId));
+
+        const unsubStudents = onSnapshot(qStudents, (snap) => {
+            setStudents(snap.docs.map(d => ({ id: d.id, ...d.data() } as Student)));
+            triggerPulse("identity");
+            setLoading(false);
+        });
+        const unsubTeachers = onSnapshot(qTeachers, (snap) => {
+            setTeachers(snap.docs.map(d => ({ id: d.id, ...d.data() } as Teacher)));
+            triggerPulse("identity");
+        });
+        const unsubAttendance = onSnapshot(qAttendance, (snap) => {
+            setAttendance(snap.docs.map(d => ({ id: d.id, ...d.data() } as AttendanceRecord)));
+            triggerPulse("logistics");
+        });
+        const unsubGrades = onSnapshot(qGrades, (snap) => {
+            setGrades(snap.docs.map(d => ({ id: d.id, ...d.data() } as GradeRecord)));
+            triggerPulse("results");
+        });
+        const unsubGroups = onSnapshot(qGroups, (snap) => {
+            setGroups(snap.docs.map(d => ({ id: d.id, ...d.data() } as Group)));
+            triggerPulse("content");
+        });
+        const unsubCourses = onSnapshot(qCourses, (snap) => {
+            setCourses(snap.docs.map(d => ({ id: d.id, ...d.data() } as Course)));
+            triggerPulse("content");
+        });
+        const unsubSchedule = onSnapshot(qSchedule, (snap) => {
+            setSchedule(snap.docs.map(d => ({ id: d.id, ...d.data() } as Lesson)));
+            triggerPulse("logistics");
+        });
+
+        return () => {
+            unsubStudents();
+            unsubTeachers();
+            unsubAttendance();
+            unsubGrades();
+            unsubGroups();
+            unsubCourses();
+            unsubSchedule();
+        };
     }, [currentOrganizationId]);
 
     // Filters State
@@ -170,65 +185,87 @@ export default function ReportsPage() {
 
     return (
         <ModuleGuard module="reports">
-            <div className="space-y-6">
-                <div className="hidden laptop:flex flex-col gap-2" data-help-id="reports-header">
-                    <h1 className="text-3xl font-bold tracking-tight text-white">Отчёты</h1>
-                    <p className="text-zinc-400">Аналитика по студентам, группам и преподавателям</p>
+            <div className="space-y-6 max-w-[1600px] mx-auto p-4 laptop:p-6 pb-20">
+                <div className="flex flex-col laptop:flex-row laptop:items-end justify-between gap-4">
+                    <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2 mb-1">
+                            <Activity className="h-4 w-4 text-indigo-400" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500/80">System Analytics</span>
+                        </div>
+                        <h1 className="text-3xl laptop:text-4xl font-black tracking-tighter text-white">Отчёты</h1>
+                        <p className="text-sm text-zinc-500 font-medium">Мониторинг образовательной экосистемы в реальном времени</p>
+                    </div>
+
+                    <div className="flex items-center gap-4 bg-zinc-950/80 border border-white/5 px-4 py-2.5 rounded-2xl backdrop-blur-md shadow-2xl shadow-indigo-500/5">
+                        <div className="flex flex-col items-end">
+                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest leading-none">Status</span>
+                            <span className="text-xs font-black text-emerald-400 uppercase tracking-tighter">Connected</span>
+                        </div>
+                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                            <Globe className="h-5 w-5 text-emerald-500 animate-pulse" />
+                        </div>
+                    </div>
                 </div>
 
-                {/* KPI Cards */}
-                <div className="grid gap-4 md:grid-cols-2 laptop:grid-cols-4">
-                    <Card className="bg-zinc-900 border-zinc-800">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-zinc-400">Всего студентов</CardTitle>
-                            <Users className="h-4 w-4 text-zinc-500" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-white">{totalStudentsCount}</div>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-zinc-900 border-zinc-800">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-emerald-400">Активные</CardTitle>
-                            <UserCheck className="h-4 w-4 text-emerald-500" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-white">{activeStudentsCount}</div>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-zinc-900 border-zinc-800">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-indigo-400">Ср. Посещаемость</CardTitle>
-                            <CalendarDays className="h-4 w-4 text-indigo-500" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-white">{avgAttendance}%</div>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-zinc-900 border-zinc-800">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-amber-400">Ср. Балл</CardTitle>
-                            <TrendingUp className="h-4 w-4 text-amber-500" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-white">{avgGrade}</div>
-                        </CardContent>
-                    </Card>
-                </div>
+                {/* Node visualizer & Compact KPI */}
+                <div className="grid grid-cols-1 laptop:grid-cols-12 gap-6">
+                    <div className="laptop:col-span-4">
+                        <DataFlowVisualizer activePulse={activePulse} />
+                    </div>
 
-                <ReportsFilters
-                    groups={groups}
-                    courses={courses}
-                    teachers={teachers}
-                    groupId={groupId}
-                    onGroupChange={setGroupId}
-                    courseId={courseId}
-                    onCourseChange={setCourseId}
-                    teacherId={teacherId}
-                    onTeacherChange={setTeacherId}
-                    dateRange={dateRange}
-                    onDateRangeChange={setDateRange}
-                />
+                    <div className="laptop:col-span-8 grid grid-cols-2 laptop:grid-cols-4 gap-4">
+                        {[
+                            { label: "Студенты", val: totalStudentsCount, icon: Users, color: "indigo", sub: "Активны: " + activeStudentsCount },
+                            { label: "Посещаемость", val: avgAttendance + "%", icon: CalendarDays, color: "violet", sub: activePulse === 'logistics' ? "Updating..." : "Стабильно" },
+                            { label: "Успеваемость", val: avgGrade, icon: TrendingUp, color: "emerald", sub: "Средний балл" },
+                            { label: "Данные", val: attendance.length + grades.length, icon: Database, color: "rose", sub: "Записей в БД" }
+                        ].map((kpi, idx) => (
+                            <Card key={idx} className={cn(
+                                "bg-zinc-900/40 border-white/5 backdrop-blur-sm relative overflow-hidden group hover:border-white/10 transition-all duration-500",
+                                activePulse === (kpi.color === 'indigo' ? 'identity' : kpi.color === 'violet' ? 'logistics' : kpi.color === 'emerald' ? 'results' : 'content') && "ring-1 ring-indigo-500/50 scale-[1.02]"
+                            )}>
+                                <div className={cn(
+                                    "absolute top-0 right-0 w-32 h-32 blur-[80px] -mr-16 -mt-16 opacity-20 pointer-events-none transition-opacity group-hover:opacity-40",
+                                    kpi.color === 'indigo' ? "bg-indigo-500" :
+                                        kpi.color === 'violet' ? "bg-violet-500" :
+                                            kpi.color === 'emerald' ? "bg-emerald-500" : "bg-rose-500"
+                                )} />
+                                <CardHeader className="p-4 pb-0">
+                                    <div className="flex items-center justify-between">
+                                        <kpi.icon className={cn("h-4 w-4",
+                                            kpi.color === 'indigo' ? "text-indigo-400" :
+                                                kpi.color === 'violet' ? "text-violet-400" :
+                                                    kpi.color === 'emerald' ? "text-emerald-400" : "text-rose-400"
+                                        )} />
+                                        <div className="h-1.5 w-1.5 rounded-full bg-white/10 group-hover:bg-white/30" />
+                                    </div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mt-2">{kpi.label}</p>
+                                </CardHeader>
+                                <CardContent className="p-4 pt-1">
+                                    <div className="text-2xl font-black text-white tracking-tighter">{kpi.val}</div>
+                                    <p className="text-[10px] font-medium text-zinc-600 mt-1 uppercase tracking-tighter truncate">{kpi.sub}</p>
+                                </CardContent>
+                            </Card>
+                        ))}
+
+                        {/* Filters integrated into the grid for compactness */}
+                        <div className="col-span-2 laptop:col-span-4 mt-2">
+                            <ReportsFilters
+                                groups={groups}
+                                courses={courses}
+                                teachers={teachers}
+                                groupId={groupId}
+                                onGroupChange={setGroupId}
+                                courseId={courseId}
+                                onCourseChange={setCourseId}
+                                teacherId={teacherId}
+                                onTeacherChange={setTeacherId}
+                                dateRange={dateRange}
+                                onDateRangeChange={setDateRange}
+                            />
+                        </div>
+                    </div>
+                </div>
 
                 {loading ? (
                     <div className="text-center py-20 text-zinc-500">Загрузка аналитики...</div>
