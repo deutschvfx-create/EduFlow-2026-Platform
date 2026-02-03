@@ -61,7 +61,7 @@ export function MobileNavBar({ onOpenMenu }: MobileNavBarProps) {
                         window.dispatchEvent(new CustomEvent('open-help'));
                     }
                 }}
-                className={`relative flex flex-col items-center justify-center min-w-[56px] py-1.5 px-2 rounded-xl transition-all duration-200 active:scale-95 cursor-pointer ${(item.isDrawer || item.isHelp) ? 'text-zinc-500' : ''}`}
+                className={`relative flex flex-col items-center justify-center min-w-[56px] py-1.5 px-2 rounded-xl transition-all active:scale-90 active:bg-white/5 cursor-pointer ${(item.isDrawer || item.isHelp) ? 'text-zinc-500' : ''}`}
             >
                 {/* Active indicator */}
                 {isActive && (

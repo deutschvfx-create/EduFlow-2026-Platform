@@ -233,7 +233,7 @@ export default function ReportsPage() {
 
     return (
         <ModuleGuard module="reports">
-            <div className="space-y-6 max-w-[1600px] mx-auto p-4 laptop:p-6 pb-20">
+            <div className="space-y-6 max-w-[1600px] mx-auto p-4 laptop:p-6 pb-32">
                 <div className="flex flex-col laptop:flex-row laptop:items-end justify-between gap-4">
                     <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -258,15 +258,15 @@ export default function ReportsPage() {
                 {/* Main Intelligence Grid */}
                 <div className="grid grid-cols-1 laptop:grid-cols-12 gap-8">
                     {/* Left Column: Visualizer & Matrix */}
-                    <div className="laptop:col-span-5 space-y-8">
-                        <div className="h-[400px]">
+                    <div className="laptop:col-span-5 space-y-8 order-2 laptop:order-1">
+                        <div className="h-[300px] laptop:h-[400px]">
                             <DataFlowVisualizer activePulse={activePulse} />
                         </div>
                         <IntelligenceMatrix data={matrixData} />
                     </div>
 
                     {/* Right Column: KPIs & Ledger */}
-                    <div className="laptop:col-span-7 flex flex-col gap-8">
+                    <div className="laptop:col-span-7 flex flex-col gap-8 order-1 laptop:order-2">
                         <div className="grid grid-cols-1 tablet:grid-cols-2 laptop:grid-cols-2 gap-4">
                             {[
                                 { label: "Студенты", val: totalStudentsCount, icon: Users, color: "indigo", sub: "Активно: " + activeStudentsCount },
@@ -335,12 +335,7 @@ export default function ReportsPage() {
                             <AttendanceReportTable data={attendanceReportData} />
                             <GradesReportTable data={gradesReportData} />
                         </div>
-                        <TeacherLoadTable data={teacherLoadData} />
                     </div>
-                </div>
-
-                <div className="grid grid-cols-1">
-                    <TeacherLoadTable data={teacherLoadData} />
                 </div>
             </div>
         </ModuleGuard>
