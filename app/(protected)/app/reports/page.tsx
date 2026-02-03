@@ -208,12 +208,12 @@ export default function ReportsPage() {
                 </div>
 
                 {/* Node visualizer & Compact KPI */}
-                <div className="grid grid-cols-1 laptop:grid-cols-12 gap-6">
-                    <div className="laptop:col-span-4">
+                <div className="grid grid-cols-1 laptop:grid-cols-12 gap-8">
+                    <div className="laptop:col-span-5 h-[400px]">
                         <DataFlowVisualizer activePulse={activePulse} />
                     </div>
 
-                    <div className="laptop:col-span-8 grid grid-cols-2 laptop:grid-cols-4 gap-4">
+                    <div className="laptop:col-span-7 grid grid-cols-2 laptop:grid-cols-2 gap-4">
                         {[
                             { label: "Студенты", val: totalStudentsCount, icon: Users, color: "indigo", sub: "Активны: " + activeStudentsCount },
                             { label: "Посещаемость", val: avgAttendance + "%", icon: CalendarDays, color: "violet", sub: activePulse === 'logistics' ? "Updating..." : "Стабильно" },
@@ -221,111 +221,73 @@ export default function ReportsPage() {
                             { label: "Данные", val: attendance.length + grades.length, icon: Database, color: "rose", sub: "Записей в БД" }
                         ].map((kpi, idx) => (
                             <Card key={idx} className={cn(
-                                "bg-zinc-900/40 border-white/5 backdrop-blur-sm relative overflow-hidden group hover:border-white/10 transition-all duration-500",
-                                activePulse === (kpi.color === 'indigo' ? 'identity' : kpi.color === 'violet' ? 'logistics' : kpi.color === 'emerald' ? 'results' : 'content') && "ring-1 ring-indigo-500/50 scale-[1.02]"
+                                "bg-zinc-900/10 border-white/5 backdrop-blur-2xl relative overflow-hidden group hover:border-white/10 transition-all duration-700 h-[190px] rounded-[2rem]",
+                                activePulse === (kpi.color === 'indigo' ? 'identity' : kpi.color === 'violet' ? 'logistics' : kpi.color === 'emerald' ? 'results' : 'content') && "ring-2 ring-indigo-500/50 scale-[1.02] shadow-[0_0_40px_rgba(99,102,241,0.2)]"
                             )}>
                                 <div className={cn(
-                                    "absolute top-0 right-0 w-32 h-32 blur-[80px] -mr-16 -mt-16 opacity-20 pointer-events-none transition-opacity group-hover:opacity-40",
+                                    "absolute top-0 right-0 w-64 h-64 blur-[120px] -mr-32 -mt-32 opacity-10 pointer-events-none transition-opacity duration-1000 group-hover:opacity-30",
                                     kpi.color === 'indigo' ? "bg-indigo-500" :
                                         kpi.color === 'violet' ? "bg-violet-500" :
                                             kpi.color === 'emerald' ? "bg-emerald-500" : "bg-rose-500"
                                 )} />
-                                <CardHeader className="p-4 pb-0">
+                                <CardHeader className="p-6 pb-0">
                                     <div className="flex items-center justify-between">
-                                        <kpi.icon className={cn("h-4 w-4",
+                                        <div className={cn("p-3 rounded-2xl border border-white/5 bg-white/[0.03] group-hover:bg-white/[0.06] transition-colors shadow-inner",
                                             kpi.color === 'indigo' ? "text-indigo-400" :
                                                 kpi.color === 'violet' ? "text-violet-400" :
                                                     kpi.color === 'emerald' ? "text-emerald-400" : "text-rose-400"
-                                        )} />
-                                        <div className="h-1.5 w-1.5 rounded-full bg-white/10 group-hover:bg-white/30" />
+                                        )}>
+                                            <kpi.icon className="h-5 w-5" />
+                                        </div>
+                                        <div className="flex flex-col items-end opacity-20 group-hover:opacity-50 transition-opacity">
+                                            <div className="h-1 w-12 rounded-full bg-white/10 overflow-hidden">
+                                                <div className={cn("h-full w-2/3 rounded-full",
+                                                    kpi.color === 'indigo' ? "bg-indigo-500" : "bg-zinc-700"
+                                                )} />
+                                            </div>
+                                        </div>
                                     </div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mt-2">{kpi.label}</p>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 mt-8 mb-1">{kpi.label}</p>
                                 </CardHeader>
-                                <CardContent className="p-4 pt-1">
-                                    <div className="text-2xl font-black text-white tracking-tighter">{kpi.val}</div>
-                                    <p className="text-[10px] font-medium text-zinc-600 mt-1 uppercase tracking-tighter truncate">{kpi.sub}</p>
+                                <CardContent className="p-6 pt-1">
+                                    <div className="text-4xl font-black text-white tracking-tighter group-hover:translate-x-1 transition-transform duration-500">{kpi.val}</div>
+                                    <p className="text-[10px] font-bold text-zinc-600 mt-3 uppercase tracking-widest flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-500/30 animate-pulse" />
+                                        {kpi.sub}
+                                    </p>
                                 </CardContent>
                             </Card>
                         ))}
-
-                        {/* Filters integrated into the grid for compactness */}
-                        <div className="col-span-2 laptop:col-span-4 mt-2">
-                            <ReportsFilters
-                                groups={groups}
-                                courses={courses}
-                                teachers={teachers}
-                                groupId={groupId}
-                                onGroupChange={setGroupId}
-                                courseId={courseId}
-                                onCourseChange={setCourseId}
-                                teacherId={teacherId}
-                                onTeacherChange={setTeacherId}
-                                dateRange={dateRange}
-                                onDateRangeChange={setDateRange}
-                            />
-                        </div>
                     </div>
                 </div>
 
-                {loading ? (
-                    <div className="text-center py-20 text-zinc-500">Загрузка аналитики...</div>
-                ) : (
-                    <>
-                        {/* Chart Placeholders */}
-                        <div className="grid md:grid-cols-1 laptop:grid-cols-2 gap-6">
-                            <Card className="bg-zinc-900 border-zinc-800">
-                                <CardHeader>
-                                    <CardTitle className="text-sm font-medium text-white flex gap-2 items-center">
-                                        <BarChart className="h-4 w-4 text-indigo-400" /> Динамика посещаемости
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="h-[200px] w-full flex items-end justify-between gap-2 px-2 pb-2">
-                                        {[40, 60, 55, 70, 85, 80, 90, 88].map((h, i) => (
-                                            <div key={i} className="w-full bg-indigo-500/20 hover:bg-indigo-500/40 rounded-t transition-all relative group" style={{ height: `${h}%` }}>
-                                                <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity">{h}%</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="flex justify-between text-xs text-zinc-500 px-2 mt-2">
-                                        <span>Week 1</span>
-                                        <span>Week 8</span>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                            <Card className="bg-zinc-900 border-zinc-800">
-                                <CardHeader>
-                                    <CardTitle className="text-sm font-medium text-white flex gap-2 items-center">
-                                        <TrendingUp className="h-4 w-4 text-emerald-400" /> Успеваемость (Ср. балл)
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="h-[200px] w-full flex items-end justify-between gap-2 px-2 pb-2">
-                                        {[75, 78, 80, 82, 81, 85, 84, 86].map((h, i) => (
-                                            <div key={i} className="w-full bg-emerald-500/20 hover:bg-emerald-500/40 rounded-t transition-all relative group" style={{ height: `${h}%` }}>
-                                                <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity">{h}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="flex justify-between text-xs text-zinc-500 px-2 mt-2">
-                                        <span>Week 1</span>
-                                        <span>Week 8</span>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
+                <div className="grid grid-cols-1 laptop:grid-cols-12 gap-8 items-start">
+                    <div className="laptop:col-span-4">
+                        <ReportsFilters
+                            groups={groups}
+                            courses={courses}
+                            teachers={teachers}
+                            groupId={groupId}
+                            onGroupChange={setGroupId}
+                            courseId={courseId}
+                            onCourseChange={setCourseId}
+                            teacherId={teacherId}
+                            onTeacherChange={setTeacherId}
+                            dateRange={dateRange}
+                            onDateRangeChange={setDateRange}
+                        />
+                    </div>
+                    <div className="laptop:col-span-4">
+                        <AttendanceReportTable data={attendanceReportData} />
+                    </div>
+                    <div className="laptop:col-span-4">
+                        <GradesReportTable data={gradesReportData} />
+                    </div>
+                </div>
 
-                        {/* Tables Grid */}
-                        <div className="grid grid-cols-1 laptop:grid-cols-2 gap-6">
-                            <AttendanceReportTable data={attendanceReportData} />
-                            <GradesReportTable data={gradesReportData} />
-                        </div>
-
-                        <div className="grid grid-cols-1">
-                            <TeacherLoadTable data={teacherLoadData} />
-                        </div>
-                    </>
-                )}
+                <div className="grid grid-cols-1">
+                    <TeacherLoadTable data={teacherLoadData} />
+                </div>
             </div>
         </ModuleGuard>
     );
