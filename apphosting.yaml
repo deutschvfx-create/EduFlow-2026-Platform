@@ -1,0 +1,31 @@
+runConfig:
+  runtime: nodejs20
+
+env:
+  # Public variables (Client SDK)
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: "AIzaSyAZ-pavG6ZxI2BofcMJjCKJu_V47yrAtFA"
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: "uniwersitet-kontrolle.firebaseapp.com"
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: "uniwersitet-kontrolle"
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: "uniwersitet-kontrolle.firebasestorage.app"
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "856355317221"
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: "1:856355317221:web:42d2aa689a1b50f686bb0c"
+  - variable: NEXT_PUBLIC_MASTER_ADMIN_UID
+    value: "AC2WpFCYjFdzdHTemoqOSyb4KLJ3"
+
+  # Secrets (Admin SDK) - These will need to be linked in Secret Manager
+  - variable: FIREBASE_PROJECT_ID
+    secret: FIREBASE_PROJECT_ID
+  - variable: FIREBASE_CLIENT_EMAIL
+    secret: FIREBASE_CLIENT_EMAIL
+  - variable: FIREBASE_PRIVATE_KEY
+    secret: FIREBASE_PRIVATE_KEY
+  - variable: OPENAI_API_KEY
+    secret: OPENAI_API_KEY
+  - variable: RESEND_API_KEY
+    secret: RESEND_API_KEY
