@@ -1,4 +1,4 @@
-'use client';
+п»ї'use client';
 
 import { useState, useMemo, useEffect } from "react";
 import { CompactGroupCard } from "@/components/groups/compact-group-card";
@@ -67,7 +67,7 @@ export default function GroupsPage() {
             await groupsRepo.update(currentOrganizationId, id, updates);
         } catch (error) {
             console.error(error);
-            alert("Ошибка при обновлении группы");
+            alert("РћС€РёР±РєР° РїСЂРё РѕР±РЅРѕРІР»РµРЅРёРё РіСЂСѓРїРїС‹");
         }
     };
 
@@ -80,7 +80,7 @@ export default function GroupsPage() {
             setGroupToDelete(null);
         } catch (error) {
             console.error(error);
-            alert("Ошибка при удалении группы");
+            alert("РћС€РёР±РєР° РїСЂРё СѓРґР°Р»РµРЅРёРё РіСЂСѓРїРїС‹");
         }
     };
 
@@ -94,14 +94,14 @@ export default function GroupsPage() {
             setIsArchiveModalOpen(false);
         } catch (error) {
             console.error(error);
-            alert("Ошибка при архивации группы");
+            alert("РћС€РёР±РєР° РїСЂРё Р°СЂС…РёРІР°С†РёРё РіСЂСѓРїРїС‹");
         }
     };
 
     if (loading) return (
         <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4 text-muted-foreground">
             <div className="h-10 w-10 border-2 border-primary/20 border-t-cyan-500 rounded-full animate-spin" />
-            <p className="font-medium animate-pulse">Загрузка групп...</p>
+            <p className="font-medium animate-pulse">Р—Р°РіСЂСѓР·РєР° РіСЂСѓРїРї...</p>
         </div>
     );
 
@@ -117,15 +117,15 @@ export default function GroupsPage() {
                     <div className="p-6 pb-2">
                         <div className="flex items-center justify-between gap-4 mb-6">
                             <div className="min-w-0">
-                                <h1 className="text-[18px] font-black text-[#0F172A] tracking-tight font-inter truncate leading-none">Группы</h1>
+                                <h1 className="text-[18px] font-black text-[#0F172A] tracking-tight font-inter truncate leading-none">Р“СЂСѓРїРїС‹</h1>
                                 <div className="flex items-center gap-1.5 mt-2">
                                     <div className="w-1 h-1 rounded-full bg-[#2563EB]" />
                                     <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider font-inter">
-                                        Всего: {groups.length}
+                                        Р’СЃРµРіРѕ: {groups.length}
                                     </span>
                                 </div>
                             </div>
-                            <ActionGuard actionLabel="Чтобы создать группу, нужно зарегистрироваться">
+                            <ActionGuard actionLabel="Р§С‚РѕР±С‹ СЃРѕР·РґР°С‚СЊ РіСЂСѓРїРїСѓ, РЅСѓР¶РЅРѕ Р·Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ">
                                 <AddGroupModal onSuccess={(newId) => setSelectedGroupId(newId)} />
                             </ActionGuard>
                         </div>
@@ -135,7 +135,7 @@ export default function GroupsPage() {
                         <div className="relative group">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#64748B] group-focus-within:text-[#2563EB] transition-colors" />
                             <Input
-                                placeholder="Поиск по названию или коду..."
+                                placeholder="РџРѕРёСЃРє РїРѕ РЅР°Р·РІР°РЅРёСЋ РёР»Рё РєРѕРґСѓ..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 className="h-10 pl-11 bg-[#F1F5F9] border-transparent text-[13px] font-medium text-[#0F172A] placeholder:text-[#94A3B8] rounded-full focus:bg-white focus:ring-4 focus:ring-[#2563EB]/5 focus:border-[#2563EB] transition-all font-inter shadow-none"
@@ -145,23 +145,23 @@ export default function GroupsPage() {
                         <div className="flex flex-wrap gap-2">
                             <Select value={statusFilter} onValueChange={setStatusFilter}>
                                 <SelectTrigger className="flex-1 min-w-[120px] h-8 bg-white border-[#E2E8F0] text-[#0F172A] text-[10px] font-bold uppercase tracking-wider rounded-full focus:ring-4 focus:ring-[#2563EB]/5 hover:bg-[#F8FAFC] hover:border-[#2563EB]/30 transition-all font-inter px-3.5 shadow-sm">
-                                    <SelectValue placeholder="Статус" />
+                                    <SelectValue placeholder="РЎС‚Р°С‚СѓСЃ" />
                                 </SelectTrigger>
                                 <SelectContent className="rounded-[12px] border-[#E2E8F0] shadow-2xl p-1 animate-in fade-in zoom-in-95 duration-200">
-                                    <SelectItem value="all" className="text-[10px] font-bold py-2 rounded-full font-inter uppercase tracking-wider">ВСЕ СТАТУСЫ</SelectItem>
-                                    <SelectItem value="ACTIVE" className="text-[10px] font-bold py-2 text-[#22C55E] rounded-full font-inter uppercase tracking-wider">АКТИВНЫЕ</SelectItem>
-                                    <SelectItem value="INACTIVE" className="text-[10px] font-bold py-2 text-[#64748B] rounded-full font-inter uppercase tracking-wider">НЕАКТИВНЫЕ</SelectItem>
-                                    <SelectItem value="ARCHIVED" className="text-[10px] font-bold py-2 text-[#EF4444] rounded-full font-inter uppercase tracking-wider">АРХИВ</SelectItem>
+                                    <SelectItem value="all" className="text-[10px] font-bold py-2 rounded-full font-inter uppercase tracking-wider">Р’РЎР• РЎРўРђРўРЈРЎР«</SelectItem>
+                                    <SelectItem value="ACTIVE" className="text-[10px] font-bold py-2 text-[#22C55E] rounded-full font-inter uppercase tracking-wider">РђРљРўРР’РќР«Р•</SelectItem>
+                                    <SelectItem value="INACTIVE" className="text-[10px] font-bold py-2 text-[#64748B] rounded-full font-inter uppercase tracking-wider">РќР•РђРљРўРР’РќР«Р•</SelectItem>
+                                    <SelectItem value="ARCHIVED" className="text-[10px] font-bold py-2 text-[#EF4444] rounded-full font-inter uppercase tracking-wider">РђР РҐРР’</SelectItem>
                                 </SelectContent>
                             </Select>
 
                             {modules.faculties && (
                                 <Select value={facultyFilter} onValueChange={setFacultyFilter}>
                                     <SelectTrigger className="flex-1 min-w-[120px] h-8 bg-white border-[#E2E8F0] text-[#0F172A] text-[10px] font-bold uppercase tracking-wider rounded-full focus:ring-4 focus:ring-[#2563EB]/5 hover:bg-[#F8FAFC] hover:border-[#2563EB]/30 transition-all font-inter px-3.5 shadow-sm">
-                                        <SelectValue placeholder="Факультет" />
+                                        <SelectValue placeholder="Р¤Р°РєСѓР»СЊС‚РµС‚" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-[12px] border-[#E2E8F0] shadow-2xl p-1">
-                                        <SelectItem value="all" className="text-[10px] font-bold py-2 rounded-full font-inter uppercase tracking-wider">ВСЕ ФАКУЛЬТЕТЫ</SelectItem>
+                                        <SelectItem value="all" className="text-[10px] font-bold py-2 rounded-full font-inter uppercase tracking-wider">Р’РЎР• Р¤РђРљРЈР›Р¬РўР•РўР«</SelectItem>
                                         {faculties.map(f => (
                                             <SelectItem key={f.id} value={f.id} className="text-[10px] font-bold py-2 rounded-full font-inter uppercase tracking-wider">{f.name}</SelectItem>
                                         ))}
@@ -171,10 +171,10 @@ export default function GroupsPage() {
 
                             <Select value={teacherFilter} onValueChange={setTeacherFilter}>
                                 <SelectTrigger className="flex-1 min-w-[120px] h-8 bg-white border-[#E2E8F0] text-[#0F172A] text-[10px] font-bold uppercase tracking-wider rounded-full focus:ring-4 focus:ring-[#2563EB]/5 hover:bg-[#F8FAFC] hover:border-[#2563EB]/30 transition-all font-inter px-3.5 shadow-sm">
-                                    <SelectValue placeholder="Куратор" />
+                                    <SelectValue placeholder="РљСѓСЂР°С‚РѕСЂ" />
                                 </SelectTrigger>
                                 <SelectContent className="rounded-[12px] border-[#E2E8F0] shadow-2xl p-1">
-                                    <SelectItem value="all" className="text-[10px] font-bold py-2 rounded-full font-inter uppercase tracking-wider">ВСЕ КУРАТОРЫ</SelectItem>
+                                    <SelectItem value="all" className="text-[10px] font-bold py-2 rounded-full font-inter uppercase tracking-wider">Р’РЎР• РљРЈР РђРўРћР Р«</SelectItem>
                                     {teachers.map(t => (
                                         <SelectItem key={t.id} value={t.id} className="text-[10px] font-bold py-2 rounded-full font-inter uppercase tracking-wider">{t.firstName} {t.lastName}</SelectItem>
                                     ))}
@@ -199,7 +199,7 @@ export default function GroupsPage() {
                         </AnimatePresence>
                         {filteredGroups.length === 0 && (
                             <div className="text-center py-12 px-4">
-                                <p className="text-[11px] font-bold text-[#64748B] uppercase tracking-widest opacity-60">Группы не найдены</p>
+                                <p className="text-[11px] font-bold text-[#64748B] uppercase tracking-widest opacity-60">Р“СЂСѓРїРїС‹ РЅРµ РЅР°Р№РґРµРЅС‹</p>
                             </div>
                         )}
                     </div>
@@ -235,9 +235,9 @@ export default function GroupsPage() {
                                     <div className="w-20 h-20 rounded-[20px] bg-[#F5F6F8] flex items-center justify-center mb-6">
                                         <Layers className="h-8 w-8 opacity-20" />
                                     </div>
-                                    <h2 className="text-[18px] font-black text-[#0F172A] mb-2 tracking-tight font-inter">Выберите группу</h2>
+                                    <h2 className="text-[18px] font-black text-[#0F172A] mb-2 tracking-tight font-inter">Р’С‹Р±РµСЂРёС‚Рµ РіСЂСѓРїРїСѓ</h2>
                                     <p className="text-[14px] text-[#64748B] font-medium max-w-[280px] text-center leading-relaxed font-inter">
-                                        Выберите группу из списка слева для просмотра состава и редактирования информации
+                                        Р’С‹Р±РµСЂРёС‚Рµ РіСЂСѓРїРїСѓ РёР· СЃРїРёСЃРєР° СЃР»РµРІР° РґР»СЏ РїСЂРѕСЃРјРѕС‚СЂР° СЃРѕСЃС‚Р°РІР° Рё СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ РёРЅС„РѕСЂРјР°С†РёРё
                                     </p>
                                 </div>
                             )}
@@ -261,6 +261,6 @@ export default function GroupsPage() {
                 onArchive={handleArchive}
             />
         </div>
-        </ModuleGuard>
+        </ModuleGuard >
     );
 }
