@@ -54,7 +54,7 @@ export function CreditCountdown({ paidUntil }: CreditCountdownProps) {
         return () => clearInterval(timer);
     }, [paidUntil]);
 
-    if (!paidUntil || !timeLeft) return <span className="text-zinc-700 font-black text-[10px]">—</span>;
+    if (!paidUntil || !timeLeft) return <span className="text-muted-foreground font-black text-[10px]">—</span>;
 
     if (timeLeft.isExpired) {
         return (
@@ -69,7 +69,7 @@ export function CreditCountdown({ paidUntil }: CreditCountdownProps) {
         <div className={`flex flex-col gap-0.5 min-w-[100px]`}>
             <div className="flex items-center gap-1.5">
                 <div className={`h-1 w-1 rounded-full ${timeLeft.isUrgent ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
-                <span className={`text-[10px] font-black tracking-widest uppercase ${timeLeft.isUrgent ? 'text-amber-500' : 'text-zinc-500'}`}>
+                <span className={`text-[10px] font-black tracking-widest uppercase ${timeLeft.isUrgent ? 'text-amber-500' : 'text-muted-foreground'}`}>
                     {timeLeft.isUrgent ? 'Истекает' : 'Осталось'}
                 </span>
             </div>
@@ -77,17 +77,17 @@ export function CreditCountdown({ paidUntil }: CreditCountdownProps) {
             <div className="flex items-baseline gap-1 font-mono">
                 {timeLeft.days > 0 && (
                     <div className="flex items-baseline">
-                        <span className="text-sm font-black text-white">{timeLeft.days}</span>
-                        <span className="text-[9px] font-bold text-zinc-600 ml-0.5">д</span>
+                        <span className="text-sm font-black text-foreground">{timeLeft.days}</span>
+                        <span className="text-[9px] font-bold text-muted-foreground ml-0.5">д</span>
                     </div>
                 )}
                 <div className="flex items-baseline">
-                    <span className="text-sm font-black text-white">{timeLeft.hours.toString().padStart(2, '0')}</span>
-                    <span className="text-[9px] font-bold text-zinc-600 ml-0.5">ч</span>
+                    <span className="text-sm font-black text-foreground">{timeLeft.hours.toString().padStart(2, '0')}</span>
+                    <span className="text-[9px] font-bold text-muted-foreground ml-0.5">ч</span>
                 </div>
                 <div className="flex items-baseline">
-                    <span className="text-sm font-black text-white">{timeLeft.minutes.toString().padStart(2, '0')}</span>
-                    <span className="text-[9px] font-bold text-zinc-600 ml-0.5">м</span>
+                    <span className="text-sm font-black text-foreground">{timeLeft.minutes.toString().padStart(2, '0')}</span>
+                    <span className="text-[9px] font-bold text-muted-foreground ml-0.5">м</span>
                 </div>
                 <motion.div
                     key={timeLeft.seconds}
@@ -95,10 +95,10 @@ export function CreditCountdown({ paidUntil }: CreditCountdownProps) {
                     animate={{ opacity: 1 }}
                     className="flex items-baseline"
                 >
-                    <span className={`text-[11px] font-bold ${timeLeft.isUrgent ? 'text-rose-400' : 'text-zinc-500'}`}>
+                    <span className={`text-[11px] font-bold ${timeLeft.isUrgent ? 'text-rose-400' : 'text-muted-foreground'}`}>
                         {timeLeft.seconds.toString().padStart(2, '0')}
                     </span>
-                    <span className="text-[8px] font-bold text-zinc-700 ml-0.5">с</span>
+                    <span className="text-[10px] font-bold text-muted-foreground ml-0.5">с</span>
                 </motion.div>
             </div>
 
@@ -106,7 +106,7 @@ export function CreditCountdown({ paidUntil }: CreditCountdownProps) {
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="h-0.5 w-full bg-zinc-800 rounded-full mt-1 overflow-hidden"
+                    className="h-0.5 w-full bg-secondary rounded-full mt-1 overflow-hidden"
                 >
                     <motion.div
                         animate={{

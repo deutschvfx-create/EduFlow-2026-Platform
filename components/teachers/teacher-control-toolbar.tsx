@@ -13,10 +13,10 @@ export function TeacherControlToolbar({ selectedCount, onClearSelection, onBulkA
     if (selectedCount === 0) return null;
 
     return (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl p-2 px-4 flex items-center gap-4 z-50 animate-in fade-in slide-in-from-bottom-4">
-            <div className="flex items-center gap-2 border-r border-zinc-800 pr-4">
-                <span className="text-sm font-medium text-white">{selectedCount} выбрано</span>
-                <Button variant="ghost" size="sm" className="h-6 text-xs text-zinc-500 hover:text-white" onClick={onClearSelection}>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-card border border-border rounded-xl shadow-2xl p-2 px-4 flex items-center gap-4 z-50 animate-in fade-in slide-in-from-bottom-4">
+            <div className="flex items-center gap-2 border-r border-border pr-4">
+                <span className="text-sm font-medium text-foreground">{selectedCount} выбрано</span>
+                <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-foreground" onClick={onClearSelection}>
                     Сбросить
                 </Button>
             </div>
@@ -25,7 +25,7 @@ export function TeacherControlToolbar({ selectedCount, onClearSelection, onBulkA
                 <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 text-zinc-300 hover:text-white hover:bg-zinc-800"
+                    className="h-8 text-foreground hover:text-foreground hover:bg-secondary"
                     onClick={() => onBulkAction('assign_groups')}
                 >
                     <Users className="h-4 w-4 mr-2" />

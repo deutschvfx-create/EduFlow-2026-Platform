@@ -75,7 +75,7 @@ export function EditFacultyModal({ faculty, open, onOpenChange, onSave }: EditFa
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[500px] bg-zinc-900 border-zinc-800 text-zinc-100">
+            <DialogContent className="sm:max-w-[500px] bg-card border-border text-foreground">
                 <DialogHeader>
                     <DialogTitle>Редактирование факультета</DialogTitle>
                     <DialogDescription>Изменение данных факультета {faculty.code}</DialogDescription>
@@ -85,7 +85,7 @@ export function EditFacultyModal({ faculty, open, onOpenChange, onSave }: EditFa
                     <div className="space-y-2">
                         <Label>Название *</Label>
                         <Input
-                            className="bg-zinc-950 border-zinc-800"
+                            className="bg-background border-border"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                         />
@@ -94,7 +94,7 @@ export function EditFacultyModal({ faculty, open, onOpenChange, onSave }: EditFa
                     <div className="space-y-2">
                         <Label>Код (ID) *</Label>
                         <Input
-                            className="bg-zinc-950 border-zinc-800 uppercase"
+                            className="bg-background border-border uppercase"
                             value={code}
                             onChange={(e) => setCode(e.target.value.toUpperCase())}
                             maxLength={10}
@@ -104,7 +104,7 @@ export function EditFacultyModal({ faculty, open, onOpenChange, onSave }: EditFa
                     <div className="space-y-2">
                         <Label>Описание</Label>
                         <Textarea
-                            className="bg-zinc-950 border-zinc-800 resize-none h-20"
+                            className="bg-background border-border resize-none h-20"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                         />
@@ -114,7 +114,7 @@ export function EditFacultyModal({ faculty, open, onOpenChange, onSave }: EditFa
                         <div className="space-y-2">
                             <Label>Руководитель</Label>
                             <Select value={headTeacherId} onValueChange={setHeadTeacherId}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                <SelectTrigger className="bg-background border-border">
                                     <SelectValue placeholder="Не назначен" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -130,7 +130,7 @@ export function EditFacultyModal({ faculty, open, onOpenChange, onSave }: EditFa
                         <div className="space-y-2">
                             <Label>Статус</Label>
                             <Select value={status} onValueChange={(s) => setStatus(s as FacultyStatus)}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                <SelectTrigger className="bg-background border-border">
                                     <SelectValue placeholder="Статус" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -145,7 +145,7 @@ export function EditFacultyModal({ faculty, open, onOpenChange, onSave }: EditFa
 
                 <DialogFooter>
                     <Button variant="ghost" onClick={() => onOpenChange(false)}>Отмена</Button>
-                    <Button onClick={handleSubmit} disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                    <Button onClick={handleSubmit} disabled={loading} className="bg-primary hover:bg-primary/90 text-foreground">
                         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Сохранить
                     </Button>

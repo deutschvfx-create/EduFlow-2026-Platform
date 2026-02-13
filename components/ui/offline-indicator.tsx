@@ -34,7 +34,7 @@ export function OfflineIndicator() {
     return (
         <div className="fixed bottom-4 right-4 z-50 animate-in fade-in slide-in-from-bottom-2">
             {isOnline ? (
-                <Badge variant="outline" className="bg-zinc-900/80 backdrop-blur border-green-900/50 text-green-400 gap-2 shadow-lg">
+                <Badge variant="outline" className="bg-card/80 backdrop-blur border-green-900/50 text-green-400 gap-2 shadow-lg">
                     <Wifi className="h-4 w-4" />
                     Онлайн
                 </Badge>

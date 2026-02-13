@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo, useEffect } from "react";
 import { Student } from "@/lib/types/student";
@@ -237,16 +237,16 @@ export default function ReportsPage() {
                 <div className="flex flex-col laptop:flex-row laptop:items-end justify-between gap-4">
                     <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2 mb-1">
-                            <Activity className="h-4 w-4 text-indigo-400" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500/80">System Analytics</span>
+                            <Activity className="h-4 w-4 text-primary" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">System Analytics</span>
                         </div>
-                        <h1 className="text-3xl laptop:text-4xl font-black tracking-tighter text-white">Отчёты</h1>
-                        <p className="text-sm text-zinc-500 font-medium">Мониторинг образовательной экосистемы в реальном времени</p>
+                        <h1 className="text-3xl laptop:text-4xl font-black tracking-tighter text-foreground">Отчёты</h1>
+                        <p className="text-sm text-muted-foreground font-medium">Мониторинг образовательной экосистемы в реальном времени</p>
                     </div>
 
-                    <div className="flex items-center gap-4 bg-zinc-950/80 border border-white/5 px-4 py-2.5 rounded-2xl backdrop-blur-md shadow-2xl shadow-indigo-500/5">
+                    <div className="flex items-center gap-4 bg-background/80 border border-border px-4 py-2.5 rounded-2xl backdrop-blur-md shadow-2xl shadow-cyan-500/5">
                         <div className="flex flex-col items-end">
-                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest leading-none">Status</span>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">Status</span>
                             <span className="text-xs font-black text-emerald-400 uppercase tracking-tighter">Connected</span>
                         </div>
                         <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
@@ -269,32 +269,32 @@ export default function ReportsPage() {
                     <div className="tablet:col-span-6 laptop:col-span-7 flex flex-col gap-6 laptop:gap-8 order-1 tablet:order-2">
                         <div className="grid grid-cols-1 tablet:grid-cols-2 gap-4">
                             {[
-                                { label: "Студенты", val: totalStudentsCount, icon: Users, color: "indigo", sub: "Активно: " + activeStudentsCount },
+                                { label: "Студенты", val: totalStudentsCount, icon: Users, color: "cyan", sub: "Активно: " + activeStudentsCount },
                                 { label: "Посещаемость", val: avgAttendance + "%", icon: CalendarDays, color: "violet", sub: "Глобальный тренд" },
                                 { label: "Успеваемость", val: avgGrade, icon: TrendingUp, color: "emerald", sub: "Средний балл" },
                                 { label: "Телеметрия", val: attendance.length + grades.length, icon: Database, color: "rose", sub: "Записей в БД" }
                             ].map((kpi, idx) => (
                                 <Card key={idx} className={cn(
-                                    "bg-zinc-900/10 border-white/5 backdrop-blur-3xl relative overflow-hidden group hover:border-white/10 transition-all duration-700 h-[190px] rounded-[2.5rem]",
-                                    activePulse === (kpi.color === 'indigo' ? 'identity' : kpi.color === 'violet' ? 'logistics' : kpi.color === 'emerald' ? 'results' : 'content') && "ring-2 ring-indigo-500/50 scale-[1.02] shadow-[0_0_50px_rgba(99,102,241,0.1)]"
+                                    "bg-card/10 border-border backdrop-blur-3xl relative overflow-hidden group hover:border-border transition-all duration-700 h-[190px] rounded-[2.5rem]",
+                                    activePulse === (kpi.color === 'cyan' ? 'identity' : kpi.color === 'violet' ? 'logistics' : kpi.color === 'emerald' ? 'results' : 'content') && "ring-2 ring-cyan-500/50 scale-[1.02] shadow-[0_0_50px_rgba(34,211,238,0.1)]"
                                 )}>
                                     <div className={cn(
-                                        "absolute top-0 right-0 w-64 h-64 blur-[120px] -mr-32 -mt-32 opacity-10 pointer-events-none transition-opacity duration-1000 group-hover:opacity-30",
-                                        kpi.color === 'indigo' ? "bg-indigo-500" :
+                                        "absolute top-0 right-0 w-64 h-64 blur-[120px] -mr-32 -mt-32 opacity-40 pointer-events-none transition-opacity duration-1000 group-hover:opacity-60",
+                                        kpi.color === 'cyan' ? "bg-primary" :
                                             kpi.color === 'violet' ? "bg-violet-500" :
                                                 kpi.color === 'emerald' ? "bg-emerald-500" : "bg-rose-500"
                                     )} />
                                     <CardHeader className="p-8 pb-0">
                                         <div className="flex items-center justify-between">
-                                            <div className={cn("p-3 rounded-2xl border border-white/5 bg-white/[0.03] shadow-inner",
-                                                kpi.color === 'indigo' ? "text-indigo-400" :
+                                            <div className={cn("p-3 rounded-2xl border border-border bg-white/[0.03] shadow-inner",
+                                                kpi.color === 'cyan' ? "text-primary" :
                                                     kpi.color === 'violet' ? "text-violet-400" :
                                                         kpi.color === 'emerald' ? "text-emerald-400" : "text-rose-400"
                                             )}>
                                                 <kpi.icon className="h-5 w-5" />
                                             </div>
                                             {/* Sparkline Visual */}
-                                            <div className="flex items-end gap-[2px] h-4 opacity-20 group-hover:opacity-50 transition-opacity">
+                                            <div className="flex items-end gap-[2px] h-4 opacity-50 group-hover:opacity-50 transition-opacity">
                                                 {Array.from({ length: 12 }).map((_, i) => (
                                                     <div key={i} className="w-[3px] bg-white rounded-full" style={{ height: `${20 + Math.random() * 80}%` }} />
                                                 ))}
@@ -302,9 +302,9 @@ export default function ReportsPage() {
                                         </div>
                                     </CardHeader>
                                     <CardContent className="p-8 pt-2">
-                                        <div className="text-4xl font-black text-white tracking-tighter group-hover:translate-x-1 transition-transform duration-500">{kpi.val}</div>
+                                        <div className="text-4xl font-black text-foreground tracking-tighter group-hover:translate-x-1 transition-transform duration-500">{kpi.val}</div>
                                         <div className="flex items-center gap-2 mt-2">
-                                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 leading-none">{kpi.label}</span>
+                                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground leading-none">{kpi.label}</span>
                                         </div>
                                     </CardContent>
                                 </Card>

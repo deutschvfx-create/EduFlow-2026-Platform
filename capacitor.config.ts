@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'EduApp',
   webDir: 'public',
   server: {
-    url: 'https://edu-flow-2026-platform.vercel.app',
+    url: 'https://uniwersitet-kontrolle.web.app',
     androidScheme: 'https',
     cleartext: false
   }

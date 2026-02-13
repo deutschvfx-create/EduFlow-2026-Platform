@@ -9,7 +9,8 @@ import {
     MessageSquare,
     Menu,
     LayoutDashboard,
-    Settings
+    Settings,
+    Award
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRole } from "@/hooks/use-role";
@@ -31,9 +32,9 @@ export function MobileNavBar({ onOpenMenu }: MobileNavBarProps) {
             icon: Menu
         },
         {
-            label: "Главная",
-            href: "/app/dashboard",
-            icon: Home
+            label: isStudent ? "Моё" : "Главная",
+            href: isStudent ? "/student" : "/app/dashboard",
+            icon: isStudent ? LayoutDashboard : Home
         },
         {
             label: "Студенты",
@@ -42,9 +43,21 @@ export function MobileNavBar({ onOpenMenu }: MobileNavBarProps) {
             hidden: isStudent
         },
         {
+            label: "Оценки",
+            href: "/student/grades",
+            icon: Award,
+            hidden: !isStudent
+        },
+        {
             label: "Расписание",
             href: "/app/schedule",
             icon: Calendar
+        },
+        {
+            label: "Чаты",
+            href: "/app/chat",
+            icon: MessageSquare,
+            hidden: !isStudent
         },
     ].filter(item => !item.hidden);
 
@@ -61,13 +74,13 @@ export function MobileNavBar({ onOpenMenu }: MobileNavBarProps) {
                         window.dispatchEvent(new CustomEvent('open-help'));
                     }
                 }}
-                className={`relative flex flex-col items-center justify-center min-w-[64px] tablet:min-w-[80px] py-2 tablet:py-3 px-3 rounded-2xl transition-all active:scale-90 active:bg-white/5 cursor-pointer ${(item.isDrawer || item.isHelp) ? 'text-zinc-500' : ''}`}
+                className={`relative flex flex-col items-center justify-center min-w-[64px] tablet:min-w-[80px] py-2 tablet:py-3 px-3 rounded-2xl transition-all active:scale-90 active:bg-white/5 cursor-pointer ${(item.isDrawer || item.isHelp) ? 'text-muted-foreground' : ''}`}
             >
                 {/* Active indicator */}
                 {isActive && (
                     <motion.div
                         layoutId="mobile-nav-indicator"
-                        className="absolute inset-0 bg-indigo-500/10 rounded-xl border border-indigo-500/20"
+                        className="absolute inset-0 bg-primary/10 rounded-xl border border-primary/20"
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
                     />
                 )}
@@ -76,8 +89,8 @@ export function MobileNavBar({ onOpenMenu }: MobileNavBarProps) {
                 <div className="relative">
                     <Icon
                         className={`h-5 w-5 tablet:h-6 tablet:w-6 transition-colors ${isActive
-                            ? 'text-indigo-400'
-                            : 'text-zinc-500'
+                            ? 'text-primary'
+                            : 'text-muted-foreground'
                             }`}
                     />
 
@@ -86,7 +99,7 @@ export function MobileNavBar({ onOpenMenu }: MobileNavBarProps) {
                         <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
-                            className="absolute -top-1 -right-1 w-1.5 h-1.5 tablet:w-2 tablet:h-2 bg-indigo-500 rounded-full"
+                            className="absolute -top-1 -right-1 w-1.5 h-1.5 tablet:w-2 tablet:h-2 bg-primary rounded-full"
                         />
                     )}
                 </div>
@@ -94,8 +107,8 @@ export function MobileNavBar({ onOpenMenu }: MobileNavBarProps) {
                 {/* Label */}
                 <span
                     className={`text-[10px] tablet:text-xs font-bold mt-1 transition-colors ${isActive
-                        ? 'text-indigo-400'
-                        : 'text-zinc-500'
+                        ? 'text-primary'
+                        : 'text-muted-foreground'
                         }`}
                 >
                     {item.label}
@@ -125,7 +138,7 @@ export function MobileNavBar({ onOpenMenu }: MobileNavBarProps) {
     return (
         <nav className="fixed bottom-0 left-0 right-0 z-40 laptop:hidden" data-help-id="mobile-nav">
             {/* Glassmorphic background */}
-            <div className="relative bg-zinc-900/95 backdrop-blur-xl border-t border-zinc-800 shadow-2xl">
+            <div className="relative bg-card/95 backdrop-blur-xl border-t border-border shadow-2xl">
                 {/* Gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/50 to-transparent pointer-events-none" />
 

@@ -48,13 +48,13 @@ export function ReportsFilters({
     };
 
     return (
-        <div className="flex flex-col gap-4 mb-6 bg-zinc-900/40 p-5 rounded-2xl border border-white/5 backdrop-blur-xl shadow-2xl">
+        <div className="flex flex-col gap-4 mb-6 bg-card/40 p-5 rounded-2xl border border-border backdrop-blur-xl shadow-2xl">
             <div className="grid grid-cols-1 tablet:grid-cols-2 laptop:grid-cols-4 gap-3">
                 <Select value={groupId} onValueChange={onGroupChange}>
-                    <SelectTrigger className="h-11 bg-zinc-950/50 border-white/10 rounded-xl focus:ring-indigo-500/50">
+                    <SelectTrigger className="h-11 bg-background/50 border-border rounded-xl focus:ring-cyan-500/50">
                         <SelectValue placeholder="Группа" />
                     </SelectTrigger>
-                    <SelectContent className="bg-zinc-900 border-white/10 rounded-xl">
+                    <SelectContent className="bg-card border-border rounded-xl">
                         <SelectItem value="all">Все группы</SelectItem>
                         {groups.map(g => (
                             <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
@@ -63,10 +63,10 @@ export function ReportsFilters({
                 </Select>
 
                 <Select value={courseId} onValueChange={onCourseChange}>
-                    <SelectTrigger className="h-11 bg-zinc-950/50 border-white/10 rounded-xl focus:ring-indigo-500/50">
+                    <SelectTrigger className="h-11 bg-background/50 border-border rounded-xl focus:ring-cyan-500/50">
                         <SelectValue placeholder="Предмет" />
                     </SelectTrigger>
-                    <SelectContent className="bg-zinc-900 border-white/10 rounded-xl">
+                    <SelectContent className="bg-card border-border rounded-xl">
                         <SelectItem value="all">Все предметы</SelectItem>
                         {courses.map(c => (
                             <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
@@ -75,10 +75,10 @@ export function ReportsFilters({
                 </Select>
 
                 <Select value={teacherId} onValueChange={onTeacherChange}>
-                    <SelectTrigger className="h-11 bg-zinc-950/50 border-white/10 rounded-xl focus:ring-indigo-500/50">
+                    <SelectTrigger className="h-11 bg-background/50 border-border rounded-xl focus:ring-cyan-500/50">
                         <SelectValue placeholder="Преподаватель" />
                     </SelectTrigger>
-                    <SelectContent className="bg-zinc-900 border-white/10 rounded-xl">
+                    <SelectContent className="bg-card border-border rounded-xl">
                         <SelectItem value="all">Все преподаватели</SelectItem>
                         {teachers.map(t => (
                             <SelectItem key={t.id} value={t.id}>{t.firstName} {t.lastName}</SelectItem>
@@ -87,10 +87,10 @@ export function ReportsFilters({
                 </Select>
 
                 <Select value={dateRange} onValueChange={onDateRangeChange}>
-                    <SelectTrigger className="h-11 bg-zinc-950/50 border-white/10 rounded-xl focus:ring-indigo-500/50">
+                    <SelectTrigger className="h-11 bg-background/50 border-border rounded-xl focus:ring-cyan-500/50">
                         <SelectValue placeholder="Период" />
                     </SelectTrigger>
-                    <SelectContent className="bg-zinc-900 border-white/10 rounded-xl">
+                    <SelectContent className="bg-card border-border rounded-xl">
                         <SelectItem value="week">Эта неделя</SelectItem>
                         <SelectItem value="month">Этот месяц</SelectItem>
                         <SelectItem value="semester">Этот семестр</SelectItem>
@@ -99,12 +99,12 @@ export function ReportsFilters({
             </div>
 
             <div className="flex items-center justify-between pt-2">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">Active Monitoring Filters</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Active Monitoring Filters</p>
                 <Button
                     variant="ghost"
                     size="sm"
                     onClick={clearFilters}
-                    className="text-[10px] uppercase font-black tracking-widest text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg gap-2"
+                    className="text-[10px] uppercase font-black tracking-widest text-primary hover:text-primary hover:bg-primary/10 rounded-lg gap-2"
                 >
                     <X className="h-3 w-3" />
                     Reset System

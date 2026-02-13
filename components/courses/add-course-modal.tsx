@@ -14,8 +14,13 @@ import { Department } from "@/lib/types/department";
 import { generateId } from "@/lib/utils";
 import { useOrganization } from "@/hooks/use-organization";
 import { useModules } from "@/hooks/use-modules";
+import { Course, CourseType } from "@/lib/types/course";
 
-export function AddCourseModal() {
+interface AddCourseModalProps {
+    onSuccess?: (course: Course) => void;
+}
+
+export function AddCourseModal({ onSuccess }: AddCourseModalProps) {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const { currentOrganizationId } = useOrganization();
@@ -26,8 +31,6 @@ export function AddCourseModal() {
     const [code, setCode] = useState("");
     const [facultyId, setFacultyId] = useState("");
     const [departmentId, setDepartmentId] = useState("");
-    const [level, setLevel] = useState("");
-    const [description, setDescription] = useState("");
     const [faculties, setFaculties] = useState<Faculty[]>([]);
     const [allDepartments, setAllDepartments] = useState<Department[]>([]);
 
@@ -73,20 +76,45 @@ export function AddCourseModal() {
 
         try {
             const { coursesRepo } = await import("@/lib/data/courses.repo");
-            await coursesRepo.add(currentOrganizationId, {
+
+            const newCourse: Course = {
                 id: generateId(),
                 organizationId: currentOrganizationId,
+                version: "v2026",
                 name,
                 code,
+                type: "MANDATORY" as CourseType,
                 facultyId: modules.faculties ? facultyId : "none",
                 departmentId: modules.departments ? departmentId : "none",
-                level,
-                description,
+                level: "",
+                description: "",
+                objective: "",
                 status: 'ACTIVE',
+                workload: {
+                    hoursPerWeek: 0,
+                    hoursPerSemester: 0,
+                    hoursPerYear: 0
+                },
+                basePrice: undefined,
+                currency: "RUB",
+                format: "OFFLINE",
+                grouping: "GROUP",
                 teacherIds: [],
                 groupIds: [],
+                modules: [],
+                teachers: [],
+                grading: {
+                    type: "5_POINT",
+                    rounding: "NEAREST",
+                    minPassScore: 3,
+                    weights: { exams: 40, control: 30, homework: 20, participation: 10 }
+                },
+                materials: [],
+                events: [],
                 createdAt: new Date().toISOString()
-            });
+            };
+
+            await coursesRepo.add(currentOrganizationId, newCourse);
 
             setOpen(false);
 
@@ -95,13 +123,15 @@ export function AddCourseModal() {
             setCode("");
             setFacultyId("");
             setDepartmentId("");
-            setLevel("");
-            setDescription("");
 
-            window.location.reload();
-        } catch (e) {
+            if (onSuccess) {
+                onSuccess(newCourse);
+            } else {
+                window.location.reload();
+            }
+        } catch (e: any) {
             console.error(e);
-            alert("Ошибка при создании предмета");
+            alert("Ошибка при создании предмета: " + (e.message || e));
         } finally {
             setLoading(false);
         }
@@ -110,112 +140,93 @@ export function AddCourseModal() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2">
-                    <Plus className="h-4 w-4" />
-                    Добавить предмет
+                <Button
+                    size="xs"
+                    className="!h-6 !px-2.5 bg-[#0F4C3D] hover:bg-[#0F4C3D]/90 text-white font-black text-[9px] uppercase tracking-[0.05em] rounded-full shadow-md shadow-[#0F4C3D]/20 flex items-center gap-1 transition-all font-inter active:scale-95 shrink-0 border-none"
+                >
+                    <Plus className="h-2.5 w-2.5" />
+                    <span>Добавить</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] bg-zinc-900 border-zinc-800 text-zinc-100">
-                <DialogHeader>
-                    <DialogTitle>Добавление предмета</DialogTitle>
-                    <DialogDescription>Создайте новую учебную дисциплину</DialogDescription>
-                </DialogHeader>
+            <DialogContent className="sm:max-w-[440px] bg-card border-border text-foreground overflow-hidden p-0 rounded-[28px] border-none shadow-2xl">
+                <div className="p-8 space-y-8">
+                    <DialogHeader className="space-y-1">
+                        <DialogTitle className="text-[24px] font-black text-[#0F172A] tracking-tight leading-none">Новый курс</DialogTitle>
+                        <DialogDescription className="text-[13px] font-medium text-[#64748B]">
+                            Введите основные данные для быстрого создания курса
+                        </DialogDescription>
+                    </DialogHeader>
 
-                <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        {modules.faculties && (
-                            <div className="space-y-2">
-                                <Label>Факультет *</Label>
-                                <Select value={facultyId} onValueChange={handleFacultyChange}>
-                                    <SelectTrigger className="bg-zinc-950 border-zinc-800">
-                                        <SelectValue placeholder="Выберите факультет" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {faculties.map(f => (
-                                            <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        )}
-                        {modules.departments && (
-                            <div className="space-y-2">
-                                <Label>Кафедра *</Label>
-                                <Select value={departmentId} onValueChange={setDepartmentId} disabled={!facultyId && modules.faculties}>
-                                    <SelectTrigger className="bg-zinc-950 border-zinc-800">
-                                        <SelectValue placeholder={(!facultyId && modules.faculties) ? "Сначала выберите факультет" : "Выберите кафедру"} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {departments.map(d => (
-                                            <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>Название *</Label>
+                    <div className="space-y-4">
+                        <div className="space-y-1.5">
+                            <Label className="text-[11px] font-bold text-[#64748B] uppercase tracking-widest pl-1">Название курса</Label>
                             <Input
                                 placeholder="Например: General English"
-                                className="bg-zinc-950 border-zinc-800"
+                                className="h-11 bg-[#F1F5F9] border-none text-[14px] font-bold text-[#0F172A] placeholder:text-[#94A3B8] rounded-[14px] focus-visible:ring-2 focus-visible:ring-[#0F4C3D]/20 transition-all"
                                 value={name}
                                 onChange={(e) => handleNameChange(e.target.value)}
                             />
                         </div>
 
-                        <div className="space-y-2">
-                            <Label>Код (ID) *</Label>
+                        <div className="space-y-1.5">
+                            <Label className="text-[11px] font-bold text-[#64748B] uppercase tracking-widest pl-1">Код (ID)</Label>
                             <Input
-                                placeholder="ENG-GEN"
-                                className="bg-zinc-950 border-zinc-800 uppercase"
+                                placeholder="ENG-101"
+                                className="h-11 bg-[#F1F5F9] border-none font-mono text-[14px] font-bold text-[#0F172A] placeholder:text-[#94A3B8] rounded-[14px] uppercase focus-visible:ring-2 focus-visible:ring-[#0F4C3D]/20 transition-all"
                                 value={code}
                                 onChange={(e) => setCode(e.target.value.toUpperCase())}
                             />
                         </div>
+
+                        {(modules.faculties || modules.departments) && (
+                            <div className="grid grid-cols-2 gap-3 pt-2">
+                                {modules.faculties && (
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[11px] font-bold text-[#64748B] uppercase tracking-widest pl-1">Факультет</Label>
+                                        <Select value={facultyId} onValueChange={handleFacultyChange}>
+                                            <SelectTrigger className="h-11 bg-[#F1F5F9] border-none text-[13px] font-bold text-[#0F172A] rounded-[14px] focus:ring-2 focus:ring-[#0F4C3D]/20 transition-all">
+                                                <SelectValue placeholder="Выбрать" />
+                                            </SelectTrigger>
+                                            <SelectContent className="rounded-[18px] border-none shadow-xl p-1">
+                                                {faculties.map(f => (
+                                                    <SelectItem key={f.id} value={f.id} className="rounded-[10px] text-[13px] font-medium py-2.5">{f.name}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                )}
+                                {modules.departments && (
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[11px] font-bold text-[#64748B] uppercase tracking-widest pl-1">Кафедра</Label>
+                                        <Select value={departmentId} onValueChange={setDepartmentId} disabled={!facultyId && modules.faculties}>
+                                            <SelectTrigger className="h-11 bg-[#F1F5F9] border-none text-[13px] font-bold text-[#0F172A] rounded-[14px] focus:ring-2 focus:ring-[#0F4C3D]/20 transition-all">
+                                                <SelectValue placeholder="Выбрать" />
+                                            </SelectTrigger>
+                                            <SelectContent className="rounded-[18px] border-none shadow-xl p-1">
+                                                {departments.map(d => (
+                                                    <SelectItem key={d.id} value={d.id} className="rounded-[10px] text-[13px] font-medium py-2.5">{d.name}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
-                    <div className="space-y-2">
-                        <Label>Уровень</Label>
-                        <Select value={level} onValueChange={setLevel}>
-                            <SelectTrigger className="bg-zinc-950 border-zinc-800">
-                                <SelectValue placeholder="Выберите уровень (опционально)" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="A1">A1</SelectItem>
-                                <SelectItem value="A2">A2</SelectItem>
-                                <SelectItem value="B1">B1</SelectItem>
-                                <SelectItem value="B2">B2</SelectItem>
-                                <SelectItem value="C1">C1</SelectItem>
-                                <SelectItem value="1 курс">1 курс</SelectItem>
-                                <SelectItem value="2 курс">2 курс</SelectItem>
-                                <SelectItem value="3 курс">3 курс</SelectItem>
-                                <SelectItem value="4 курс">4 курс</SelectItem>
-                                <SelectItem value="Beginner">Beginner</SelectItem>
-                                <SelectItem value="Advanced">Advanced</SelectItem>
-                            </SelectContent>
-                        </Select>
+                    <div className="flex flex-col gap-3 pt-4">
+                        <Button
+                            onClick={handleSubmit}
+                            disabled={loading}
+                            className="h-12 w-full bg-[#0F4C3D] hover:bg-[#0F4C3D]/90 text-white text-[14px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-[#0F4C3D]/20 transition-all active:scale-95 disabled:opacity-50"
+                        >
+                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Создать курс
+                        </Button>
+                        <Button variant="ghost" onClick={() => setOpen(false)} className="h-10 text-[12px] font-bold text-[#64748B] hover:text-[#0F172A] hover:bg-transparent transition-colors">
+                            Отмена
+                        </Button>
                     </div>
-
-                    <div className="space-y-2">
-                        <Label>Описание</Label>
-                        <Textarea
-                            placeholder="Краткое описание предмета..."
-                            className="bg-zinc-950 border-zinc-800 resize-none h-20"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                        />
-                    </div>
-                </div>
-
-                <div className="flex justify-end gap-2">
-                    <Button variant="ghost" onClick={() => setOpen(false)}>Отмена</Button>
-                    <Button onClick={handleSubmit} disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Создать
-                    </Button>
                 </div>
             </DialogContent>
         </Dialog>

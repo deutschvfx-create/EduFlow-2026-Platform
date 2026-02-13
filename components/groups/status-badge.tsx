@@ -14,7 +14,7 @@ export function GroupStatusBadge({ status }: { status: GroupStatus }) {
     const className = status === 'ACTIVE'
         ? "bg-green-500/15 text-green-500 hover:bg-green-500/25 border-green-500/20"
         : status === 'ARCHIVED'
-            ? "text-zinc-500 border-zinc-700 bg-zinc-800"
+            ? "text-muted-foreground border-border bg-secondary"
             : "";
 
     return (
@@ -27,7 +27,7 @@ export function GroupStatusBadge({ status }: { status: GroupStatus }) {
 export function GroupLevelBadge({ level }: { level?: string }) {
     if (!level) return null;
     return (
-        <Badge variant="outline" className="border-indigo-500/20 text-indigo-400 bg-indigo-500/10">
+        <Badge variant="outline" className="border-primary/20 text-primary bg-primary/10">
             {level}
         </Badge>
     );
@@ -39,7 +39,7 @@ export function GroupPaymentBadge({ type }: { type?: "FREE" | "PAID" }) {
         <Badge variant="outline" className={
             type === 'PAID'
                 ? "border-amber-500/20 text-amber-400 bg-amber-500/10"
-                : "border-zinc-700 text-zinc-400 bg-zinc-800"
+                : "border-border text-muted-foreground bg-secondary"
         }>
             {type === 'PAID' ? 'Платно' : 'Бесплатно'}
         </Badge>

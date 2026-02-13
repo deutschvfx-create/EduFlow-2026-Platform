@@ -61,90 +61,79 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: oklch(0.98 0.01 95);
+  /* #FAFAF2 */
+  --foreground: oklch(0.24 0.05 201);
+  /* #0F3D4C */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.24 0.05 201);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --popover-foreground: oklch(0.24 0.05 201);
+  --primary: oklch(0.72 0.13 194);
+  /* #2EC4C6 */
+  --primary-foreground: oklch(0.24 0.05 201);
+  /* #0F3D4C text on turquoise */
+  --secondary: oklch(0.91 0.01 202);
+  /* #DDE7EA */
+  --secondary-foreground: oklch(0.24 0.05 201);
+  --muted: oklch(0.91 0.01 202);
+  --muted-foreground: oklch(0.24 0.05 201 / 0.6);
+  --accent: oklch(0.72 0.13 194 / 0.1);
+  --accent-foreground: oklch(0.72 0.13 194);
+  --destructive: oklch(0.6 0.18 25);
+  --border: oklch(0.91 0.01 202);
+  /* #DDE7EA */
+  --input: oklch(0.91 0.01 202);
+  --ring: oklch(0.72 0.13 194);
+  --chart-1: oklch(0.72 0.13 194);
+  --chart-2: oklch(0.24 0.05 201);
+  --chart-3: oklch(0.81 0.18 85);
+  /* #FFC533 as accent */
+  --chart-4: oklch(0.75 0.15 210);
+  --chart-5: oklch(0.7 0.1 230);
+  --sidebar: oklch(0.24 0.05 201);
+  /* #0F3D4C */
+  --sidebar-foreground: oklch(1 0 0 / 0.7);
+  --sidebar-primary: oklch(0.72 0.13 194);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.72 0.13 194 / 0.15);
+  --sidebar-accent-foreground: oklch(0.72 0.13 194);
+  --sidebar-border: oklch(1 0 0 / 0.1);
+  --sidebar-ring: oklch(0.72 0.13 194);
 }
 
 .dark {
-  /* Slate 950 for background */
-  --background: oklch(0.15 0.02 260);
-  /* Slate 50 for text */
-  --foreground: oklch(0.95 0.01 260);
-
-  /* Slate 900 for cards */
-  --card: oklch(0.20 0.03 260);
-  --card-foreground: oklch(0.95 0.01 260);
-
-  --popover: oklch(0.20 0.03 260);
-  --popover-foreground: oklch(0.95 0.01 260);
-
-  /* Neon Indigo */
-  --primary: oklch(0.65 0.25 285);
-  --primary-foreground: oklch(1 0 0);
-
-  --secondary: oklch(0.30 0.03 260);
-  --secondary-foreground: oklch(0.95 0.01 260);
-
-  --muted: oklch(0.30 0.03 260);
-  --muted-foreground: oklch(0.70 0.05 260);
-
-  --accent: oklch(0.65 0.25 285);
-  --accent-foreground: oklch(1 0 0);
-
-  --destructive: oklch(0.704 0.191 22.216);
-
-  --border: oklch(0.30 0.03 260);
-  --input: oklch(0.30 0.03 260);
-  --ring: oklch(0.65 0.25 285);
-
-  --chart-1: oklch(0.65 0.25 285);
-  /* Indigo */
-  --chart-2: oklch(0.75 0.20 180);
-  /* Cyan */
-  --chart-3: oklch(0.60 0.20 310);
-  /* Purple */
-  --chart-4: oklch(0.70 0.15 240);
-  /* Blue */
-  --chart-5: oklch(0.80 0.10 50);
-  /* Orange */
-
-  --sidebar: oklch(0.20 0.03 260);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.65 0.25 285);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.30 0.03 260);
-  --sidebar-ring: oklch(0.65 0.25 285);
+  --background: oklch(0.12 0.04 205);
+  --foreground: oklch(0.98 0.01 95);
+  --card: oklch(0.15 0.04 205);
+  --card-foreground: oklch(0.98 0.01 95);
+  --popover: oklch(0.15 0.04 205);
+  --popover-foreground: oklch(0.98 0.01 95);
+  --primary: oklch(0.72 0.13 194);
+  --primary-foreground: oklch(0.24 0.05 201);
+  --secondary: oklch(0.24 0.05 201);
+  --secondary-foreground: oklch(0.98 0.01 95);
+  --muted: oklch(0.24 0.05 201 / 0.5);
+  --muted-foreground: oklch(0.98 0.01 95 / 0.6);
+  --accent: oklch(0.72 0.13 194 / 0.2);
+  --accent-foreground: oklch(0.72 0.13 194);
+  --destructive: oklch(0.5 0.15 25);
+  --border: oklch(0.24 0.05 201);
+  --input: oklch(0.24 0.05 201);
+  --ring: oklch(0.72 0.13 194);
+  --chart-1: oklch(0.72 0.13 194);
+  --chart-2: oklch(0.81 0.18 85);
+  --chart-3: oklch(0.75 0.15 210);
+  --chart-4: oklch(0.7 0.1 230);
+  --chart-5: oklch(0.65 0.12 250);
+  --sidebar: oklch(0.12 0.04 205);
+  --sidebar-foreground: oklch(0.98 0.01 95);
+  --sidebar-primary: oklch(0.72 0.13 194);
+  --sidebar-primary-foreground: oklch(0.24 0.05 201);
+  --sidebar-accent: oklch(0.72 0.13 194 / 0.15);
+  --sidebar-accent-foreground: oklch(0.72 0.13 194);
+  --sidebar-border: oklch(0.24 0.05 201);
+  --sidebar-ring: oklch(0.72 0.13 194);
 }
 
 @layer base {
@@ -153,113 +142,175 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  :root {
-    --touch-target-min: 48px;
-    --touch-padding: 12px;
+  ::selection {
+    background-color: oklch(0.72 0.13 194 / 0.3);
+    color: var(--foreground);
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
     overscroll-behavior-y: none;
     height: 100dvh;
     width: 100vw;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     font-family: var(--font-sans);
+    font-size: 14px;
+    /* Body: 14px */
   }
 
-  /* Tablet-Native Scaling */
-  @media (pointer: coarse) {
-    html {
-      font-size: 110%;
-      /* +10% scaling for 8-13" screens */
-    }
-
-    input,
-    select,
-    textarea,
-    button {
-      min-height: var(--touch-target-min);
-      font-size: 16px !important;
-      /* Prevent auto-zoom on iOS */
-    }
-
-    /* Hide scrollbars on touch for cleaner native look */
-    ::-webkit-scrollbar {
-      display: none;
-    }
-
-    * {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--foreground);
   }
 
-  /* Global Touch Feedback DNA */
-  button:active,
-  a:active,
-  [role="button"]:active {
-    transform: scale(0.96);
-    opacity: 0.8;
-    transition: transform 0.08s ease-out, opacity 0.08s ease-out;
+  h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--foreground);
+  }
+
+  input,
+  select,
+  textarea {
+    @apply bg-white border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all;
+  }
+
+  .dark input,
+  .dark select,
+  .dark textarea {
+    @apply bg-card/50;
   }
 }
 
 @layer utilities {
-  @keyframes pulse-indigo {
+  .desktop-layout-container {
+    min-width: 1280px;
+    max-width: 1280px;
+    margin: 0 auto;
+    width: 100%;
+  }
 
-    0%,
-    100% {
-      opacity: 1;
-      transform: scale(1);
-      box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+  .sidebar-fixed-width {
+    width: 260px;
+    min-width: 260px;
+    max-width: 260px;
+  }
+
+  .grid-standard-gap {
+    gap: 24px;
+  }
+
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80 transition-colors;
+  }
+
+  .btn-cta {
+    background-color: oklch(0.81 0.18 85);
+    /* #FFC533 */
+    color: oklch(0.24 0.05 201);
+    /* #0F3D4C */
+    @apply shadow-sm transition-all;
+  }
+
+  .btn-cta:hover {
+    background-color: oklch(0.75 0.16 85);
+    /* darken by ~8% */
+    @apply shadow-md scale-[1.02];
+  }
+
+  .btn-cta:active {
+    @apply scale-[0.98];
+  }
+
+  /* Specific Hover Darkening for Primary as requested */
+  .primary-darken-hover {
+    &:hover {
+      background-color: oklch(0.65 0.12 194);
+      /* ~10% darken */
+    }
+
+    &:active {
+      background-color: oklch(0.61 0.11 194);
+      /* ~15% darken */
+    }
+  }
+
+  /* Scrollbar refinement */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    @apply rounded-full hover:bg-[#2563EB]/40 transition-colors;
+  }
+
+  /* Utility to hide scrollbars while maintaining functionality */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+    /* Safari and Chrome */
+  }
+
+  @keyframes pulse-yellow {
+    0% {
+      background-color: transparent;
+      border-color: transparent;
     }
 
     50% {
-      opacity: 0.8;
-      transform: scale(1.02);
-      box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
+      background-color: oklch(0.81 0.18 85 / 0.15);
+      border-color: oklch(0.81 0.18 85 / 0.4);
     }
-  }
 
-  @keyframes discovery-glow {
-
-    0%,
     100% {
-      box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
-    }
-
-    50% {
-      box-shadow: 0 0 30px rgba(99, 102, 241, 0.8);
+      background-color: transparent;
+      border-color: transparent;
     }
   }
 
-  .animate-pulse-indigo {
-    animation: pulse-indigo 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  .animate-pulse-yellow {
+    animation: pulse-yellow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
-  .animate-discovery-glow {
-    animation: discovery-glow 2s ease-in-out infinite;
-  }
-
-  .spotlight-mask {
-    mask-image: radial-gradient(circle at var(--x) var(--y), transparent var(--r), black var(--r));
-    mask-composite: exclude;
-  }
-
-  @keyframes wave {
-
-    0%,
-    100% {
-      transform: scaleY(0.5);
+  /* Print Styles for Student ID Card */
+  @media print {
+    body * {
+      visibility: hidden;
     }
 
-    50% {
-      transform: scaleY(1.5);
+    #student-id-card-printable,
+    #student-id-card-printable * {
+      visibility: visible;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
     }
-  }
 
-  .sound-bar {
-    @apply w-0.5 h-3 bg-indigo-400 rounded-full;
-    animation: wave 1s ease-in-out infinite;
+    #student-id-card-printable {
+      position: absolute;
+      left: 0;
+      top: 0;
+      margin: 0;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    @page {
+      size: 86mm 54mm;
+      margin: 0;
+    }
   }
 }

@@ -3,50 +3,42 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // --- HELPERS ---
+    // --- GLOBAL HELPERS ---
     
     function isSignedIn() {
       return request.auth != null;
     }
 
-    function getOrgId() {
-      let path = /databases/$(database)/documents/users/$(request.auth.uid);
-      return exists(path) ? get(path).data.get('organizationId', null) : null;
-    }
-
-    function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
-
+    // Role check helper
     function isRole(role) {
-      return isSignedIn() && getUserData().get('role', 'student') == role;
+      return isSignedIn() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+
+    function getOrgId() {
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return (userDoc != null) ? userDoc.data.organizationId : null;
     }
 
     // --- USER PROFILE RULES ---
     
     match /users/{userId} {
-      // Allow read if it's own profile or same organization
-      allow read: if isSignedIn() && (
-        request.auth.uid == userId || 
-        (exists(/databases/$(database)/documents/users/$(userId)) && 
-         get(/databases/$(database)/documents/users/$(userId)).data.get('organizationId', 'none') == getOrgId())
+      allow read: if isSignedIn();
+      
+      allow create: if (isSignedIn() && (
+        request.auth.uid == userId ||
+        (isRole('owner') && request.resource.data.organizationId == getOrgId())
+      )) || (
+        // Public Registration via Invite
+        request.resource.data.organizationId != null &&
+        (request.resource.data.role == 'teacher' || request.resource.data.role == 'student')
       );
       
-      // Allow create if it's the user's own UID
-      allow create: if isSignedIn() && request.auth.uid == userId;
-      
-      // Allow update for own profile (but not self-role change if owner) or for owner to manage users in their org
       allow update: if isSignedIn() && (
-        (request.auth.uid == userId && (
-          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']) || 
-          isRole('owner') // Owner can change roles, but we'll manage the self-check in UI or more granular rules
-        )) ||
-        (isRole('owner') && 
-         get(/databases/$(database)/documents/users/$(userId)).data.get('organizationId', 'none') == getOrgId() &&
-         request.resource.data.get('role', '') in ['teacher', 'student'])
+        (request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])) ||
+        (isRole('owner') && get(/databases/$(database)/documents/users/$(userId)).data.organizationId == getOrgId())
       );
 
-      // SESSIONS: Allow user to manage their own sessions
       match /sessions/{sessionId} {
         allow read, write: if isSignedIn() && request.auth.uid == userId;
       }
@@ -55,49 +47,55 @@ service cloud.firestore {
     // --- ORGANIZATION RULES ---
     
     match /organizations/{orgId} {
-      // BOOTSTRAP: Allow signed-in users to create an organization 
-      allow create: if isSignedIn() && 
-                    (getOrgId() == null) &&
-                    request.resource.data.ownerId == request.auth.uid &&
-                    request.resource.data.organizationId == orgId;
-
-      // Read allowed for members
-      allow read: if isSignedIn() && (
-        resource.data.organizationId == getOrgId()
-      );
-
-      // Update allowed only for owner
+      allow read: if true; // Discovery Mode: Public access
+      
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      
       allow update: if isSignedIn() && (
         resource.data.ownerId == request.auth.uid || 
-        (isRole('owner') && resource.data.organizationId == getOrgId())
+        (isRole('owner') && orgId == getOrgId())
       );
+    }
+
+    // --- GROUPS RULES ---
+    
+    match /groups/{groupId} {
+      allow read: if true; // Discovery Mode: Public access
+      allow write: if isSignedIn() && isRole('owner') && request.resource.data.organizationId == getOrgId();
     }
 
     // --- MULTI-TENANT DOMAIN RULES ---
 
-    // Generic rule for organization-level data
     match /{collection}/{docId} {
       
-      // Helper to check org access
       function belongsToOrg() {
-        return (resource == null ? request.resource.data.organizationId == getOrgId() : resource.data.organizationId == getOrgId());
+        let currentOrgId = getOrgId();
+        let targetOrgId = (resource == null) ? request.resource.data.organizationId : resource.data.organizationId;
+        return targetOrgId == currentOrgId;
+      }
+
+      // Public Discovery Collections (Read-only)
+      function isDiscoveryCollection() {
+        return collection in ["faculties", "subjects", "departments", "schedules", "courses"];
       }
 
       // 1. OWNER: Full access to everything in their org
       allow read, write: if isRole('owner') && belongsToOrg();
 
       // 2. TEACHER: Specific access
-      // collection in ["schedule", "groups", "students", "courses"]
       allow read: if isRole('teacher') && belongsToOrg();
       allow write: if isRole('teacher') && belongsToOrg() && (collection in ["attendance", "grades"]);
 
       // 3. STUDENT: Own data read-only
       allow read: if isRole('student') && belongsToOrg() && (
-        collection in ["schedule", "courses"] || // General schedule/courses
-        (collection == "attendance" && resource != null && resource.data.get('studentId', '') == request.auth.uid) || // Own attendance
-        (collection == "grades" && resource != null && resource.data.get('studentId', '') == request.auth.uid) || // Own grades
-        (resource != null && resource.data.get('studentId', '') == request.auth.uid) // Other Personal data
+        collection in ["schedule", "courses"] ||
+        (collection == "attendance" && (resource == null || resource.data.studentId == request.auth.uid)) ||
+        (collection == "grades" && (resource == null || resource.data.studentId == request.auth.uid)) ||
+        (resource != null && resource.data.studentId == request.auth.uid)
       );
+
+      // 4. DISCOVERY: Public read for educational structure
+      allow read: if isDiscoveryCollection();
     }
   }
 }

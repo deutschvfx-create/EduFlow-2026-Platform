@@ -94,12 +94,12 @@ export function AddDepartmentModal() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2">
+                <Button className="bg-indigo-600 hover:bg-indigo-700 text-foreground gap-2">
                     <Plus className="h-4 w-4" />
                     Добавить кафедру
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] bg-zinc-900 border-zinc-800 text-zinc-100">
+            <DialogContent className="sm:max-w-[600px] bg-card border-border text-foreground">
                 <DialogHeader>
                     <DialogTitle>Добавление кафедры</DialogTitle>
                     <DialogDescription>Создайте новую кафедру в составе факультета</DialogDescription>
@@ -110,7 +110,7 @@ export function AddDepartmentModal() {
                         <div className="space-y-2">
                             <Label>Факультет *</Label>
                             <Select value={facultyId} onValueChange={setFacultyId}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                <SelectTrigger className="bg-background border-border">
                                     <SelectValue placeholder="Выберите факультет" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -128,7 +128,7 @@ export function AddDepartmentModal() {
                             <Label>Название *</Label>
                             <Input
                                 placeholder="Например: Кафедра математики"
-                                className="bg-zinc-950 border-zinc-800"
+                                className="bg-background border-border"
                                 value={name}
                                 onChange={(e) => handleNameChange(e.target.value)}
                             />
@@ -138,7 +138,7 @@ export function AddDepartmentModal() {
                             <Label>Код (ID) *</Label>
                             <Input
                                 placeholder="MATH-DEPT"
-                                className="bg-zinc-950 border-zinc-800 uppercase"
+                                className="bg-background border-border uppercase"
                                 value={code}
                                 onChange={(e) => setCode(e.target.value.toUpperCase())}
                                 maxLength={12}
@@ -150,7 +150,7 @@ export function AddDepartmentModal() {
                         <Label>Описание</Label>
                         <Textarea
                             placeholder="Описание деятельности кафедры..."
-                            className="bg-zinc-950 border-zinc-800 resize-none h-20"
+                            className="bg-background border-border resize-none h-20"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                         />
@@ -159,7 +159,7 @@ export function AddDepartmentModal() {
                     <div className="space-y-2">
                         <Label>Руководитель (Заведующий)</Label>
                         <Select value={headTeacherId} onValueChange={setHeadTeacherId}>
-                            <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                            <SelectTrigger className="bg-background border-border">
                                 <SelectValue placeholder="Выберите преподавателя" />
                             </SelectTrigger>
                             <SelectContent>
@@ -175,7 +175,7 @@ export function AddDepartmentModal() {
 
                 <div className="flex justify-end gap-2">
                     <Button variant="ghost" onClick={() => setOpen(false)}>Отмена</Button>
-                    <Button onClick={handleSubmit} disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                    <Button onClick={handleSubmit} disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 text-foreground">
                         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Создать
                     </Button>

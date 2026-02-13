@@ -48,11 +48,11 @@ export function GradesFilters({
     };
 
     return (
-        <div className="flex flex-col gap-4 mb-6 bg-zinc-950/50 p-4 rounded-lg border border-zinc-900 shadow-sm">
+        <div className="flex flex-col gap-4 mb-6 bg-background/50 p-4 rounded-lg border border-border shadow-sm">
             <div className="flex flex-col md:flex-row gap-4 items-end md:items-center">
                 <div className="flex flex-wrap gap-2 flex-1">
                     <Select value={groupId} onValueChange={onGroupChange}>
-                        <SelectTrigger className="w-full md:w-[200px] bg-zinc-900 border-zinc-800">
+                        <SelectTrigger className="w-full md:w-[200px] bg-card border-border">
                             <SelectValue placeholder="Группа *" />
                         </SelectTrigger>
                         <SelectContent>
@@ -64,7 +64,7 @@ export function GradesFilters({
                     </Select>
 
                     <Select value={courseId} onValueChange={onCourseChange}>
-                        <SelectTrigger className="w-full md:w-[200px] bg-zinc-900 border-zinc-800">
+                        <SelectTrigger className="w-full md:w-[200px] bg-card border-border">
                             <SelectValue placeholder="Предмет" />
                         </SelectTrigger>
                         <SelectContent>
@@ -76,7 +76,7 @@ export function GradesFilters({
                     </Select>
 
                     <Select value={type} onValueChange={(val) => onTypeChange(val as GradeType | "all")}>
-                        <SelectTrigger className="w-full md:w-[150px] bg-zinc-900 border-zinc-800">
+                        <SelectTrigger className="w-full md:w-[150px] bg-card border-border">
                             <SelectValue placeholder="Тип работы" />
                         </SelectTrigger>
                         <SelectContent>
@@ -94,7 +94,7 @@ export function GradesFilters({
                             <Button
                                 variant={"outline"}
                                 className={cn(
-                                    "w-[180px] justify-start text-left font-normal bg-zinc-900 border-zinc-800",
+                                    "w-[180px] justify-start text-left font-normal bg-card border-border",
                                     !date && "text-muted-foreground"
                                 )}
                             >
@@ -102,7 +102,7 @@ export function GradesFilters({
                                 {date ? format(date, "PPP", { locale: ru }) : <span>Дата</span>}
                             </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 bg-zinc-900 border-zinc-800" align="start">
+                        <PopoverContent className="w-auto p-0 bg-card border-border" align="start">
                             <Calendar
                                 mode="single"
                                 selected={date}

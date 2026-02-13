@@ -1,21 +1,103 @@
 export type CourseStatus = "ACTIVE" | "INACTIVE" | "ARCHIVED";
+export type CourseType = "MANDATORY" | "ELECTIVE" | "OPTIONAL" | "INTENSIVE";
+export type GradingType = "5_POINT" | "10_POINT" | "A_F" | "PERCENTAGE";
 
-export type Course = {
+export interface CourseModule {
     id: string;
-    organizationId: string; // Multi-tenant: course belongs to organization
+    title: string;
+    description?: string;
+    hours: number;
+    order?: number;
+}
+
+export interface TeacherAssignment {
+    userId: string;
+    role: "PRIMARY" | "ASSISTANT" | "SUBSTITUTE";
+    permissions: {
+        manageGrades: boolean;
+        manageAttendance: boolean;
+        manageGroups: boolean;
+        manageMaterials: boolean;
+        manageEvents: boolean;
+        manageModules: boolean;
+    };
+}
+
+export interface GradingConfig {
+    type: GradingType;
+    rounding: "UP" | "DOWN" | "NEAREST";
+    minPassScore: number;
+    weights: {
+        exams: number;
+        control: number;
+        homework: number;
+        participation: number;
+    };
+}
+
+export interface CourseMaterial {
+    id: string;
+    type: "FILE" | "LINK" | "VIDEO" | "PRESENTATION";
+    title: string;
+    description?: string;
+    url: string;
+    accessLevel: "TEACHERS" | "STUDENTS" | "PARENTS" | "PUBLIC";
+    uploadedAt: string;
+    uploadedBy: string;
+}
+
+export interface CourseEvent {
+    id: string;
+    type: "EXAM" | "CONTROL" | "PROJECT" | "COLLOQUIUM";
+    title: string;
+    description: string;
+    date: string;
+}
+
+export interface ArchiveMetadata {
+    reason: string;
+    archivedAt: string;
+    archivedByUid: string;
+    notes?: string;
+}
+
+export interface Course {
+    id: string;
+    organizationId: string;
+    version: string;
     name: string;
     code: string;
+    status: CourseStatus;
+    type: CourseType;
+    format?: "ONLINE" | "OFFLINE" | "HYBRID";
+    grouping?: "INDIVIDUAL" | "GROUP";
 
     facultyId: string;
     departmentId: string;
+    level?: string;
 
-    status: CourseStatus;
+    workload: {
+        hoursPerWeek: number;
+        hoursPerSemester: number;
+        hoursPerYear: number;
+    };
 
-    level?: string; // A1/A2/B1/B2 or "1 курс"
     description?: string;
+    objective?: string;
+    modules: CourseModule[];
 
-    teacherIds: string[];
+    teachers: TeacherAssignment[];
+    teacherIds: string[]; // Keep for backward compatibility/filtering
     groupIds: string[];
 
-    createdAt: string; // ISO
-};
+    grading: GradingConfig;
+    materials: CourseMaterial[];
+    events: CourseEvent[];
+
+    // Language School Additions
+    basePrice?: number;
+    currency?: 'RUB' | 'USD' | 'EUR' | 'TJS';
+
+    archiveInfo?: ArchiveMetadata;
+    createdAt: string;
+}

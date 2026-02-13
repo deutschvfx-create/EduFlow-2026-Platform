@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, onSnapshot, setDoc, serverTimestamp, getDoc, updateDoc, collection, query, where, deleteDoc } from "firebase/firestore";
-import { UserData } from "@/lib/services/firestore";
+import { UserData, Membership } from "@/lib/services/firestore";
 import { useRouter, usePathname } from "next/navigation";
 import { PauseCircle, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,11 +12,13 @@ import { Button } from "@/components/ui/button";
 interface AuthContextType {
     user: User | null;
     userData: UserData | null;
+    memberships: Membership[];
     loading: boolean;
     timeLeft?: number; // In milliseconds
     isSupportSession?: boolean;
     followingSessionId: string | null;
     isMirrored: boolean;
+    isGuest: boolean;
     toggleFollowing: (sessionId: string | null) => void;
     stopMirroring: () => void;
 }
@@ -24,9 +26,11 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
     user: null,
     userData: null,
+    memberships: [],
     loading: true,
     followingSessionId: null,
     isMirrored: false,
+    isGuest: false,
     toggleFollowing: () => { },
     stopMirroring: () => { }
 });
@@ -80,6 +84,7 @@ const getDeviceInfo = () => {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [userData, setUserData] = useState<UserData | null>(null);
+    const [memberships, setMemberships] = useState<Membership[]>([]);
     const [loading, setLoading] = useState(true);
     const [isBlocked, setIsBlocked] = useState(false);
     const [statusChecking, setStatusChecking] = useState(false);
@@ -89,6 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [isSupportSession, setIsSupportSession] = useState(false);
     const [followingSessionId, setFollowingSessionId] = useState<string | null>(null);
     const [isMirrored, setIsMirrored] = useState(false);
+    const [isGuest, setIsGuest] = useState(false);
 
     const toggleFollowing = (id: string | null) => {
         setFollowingSessionId(prev => prev === id ? null : id);
@@ -263,8 +269,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 }
 
                 // Subscribe to real-time user data
+                let unsubUserData: any = () => { };
                 if (db) {
-                    unsubscribeSnapshot = onSnapshot(doc(db, "users", firebaseUser.uid), (doc) => {
+                    unsubUserData = onSnapshot(doc(db, "users", firebaseUser.uid), (doc) => {
                         if (doc.exists()) {
                             const data = doc.data() as UserData;
                             setUserData(data);
@@ -289,11 +296,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         console.error("Failed to subscribe to user data:", error);
                         setLoading(false);
                     });
+
+                    // Subscribe to memberships
+                    const unsubscribeMemberships = onSnapshot(collection(db, "users", firebaseUser.uid, "memberships"), (snap) => {
+                        const mems = snap.docs.map(doc => doc.data() as Membership);
+                        setMemberships(mems);
+                    });
+
+                    // Attach unsubscribe to the cleanup function logic or tracking variable
+                    unsubscribeSnapshot = () => {
+                        unsubUserData();
+                        unsubscribeMemberships();
+                    };
+
                 } else {
                     setLoading(false);
                 }
             } else {
                 setUserData(null);
+                setMemberships([]);
                 setIsBlocked(false);
                 setSessionReady(false);
                 setLiveTimeLeft(undefined);
@@ -317,7 +338,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const isProtected = pathname.startsWith('/student') || pathname.startsWith('/app') || pathname.startsWith('/teacher');
 
-        if (!user && isProtected) {
+        // GUEST MODE DETECTION
+        const guestOrgId = typeof window !== 'undefined' ? localStorage.getItem('edu_org_id') : null;
+        const currentGuestStatus = !user && !!guestOrgId;
+        setIsGuest(currentGuestStatus);
+
+        if (!user && !currentGuestStatus && isProtected) {
             router.push('/login');
             return;
         }
@@ -326,11 +352,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // 🛡️ SUPPORT FIX: Skip registration redirect for support sessions
             if (isSupportSession) return;
 
-            if (userData && !userData.organizationId && isProtected) {
-                router.push('/register');
+            if (isProtected) {
+                // If the doc doesn't exist yet, we MUST go to /register
+                if (!userData && pathname !== '/register') {
+                    router.push('/register');
+                    return;
+                }
+
+                if (userData) {
+                    // 1. If on protected page but NO organization, go to select-school
+                    if (!userData.organizationId && pathname !== '/select-school' && pathname !== '/') {
+                        if (pathname === '/register') return;
+                        router.push('/select-school');
+                        return;
+                    }
+                }
             }
         }
-    }, [user, userData, loading, sessionReady, pathname, router]);
+
+        // 🛡️ GUEST PROTECTION: If guest on protected page without orgId, kick to login
+        if (currentGuestStatus && isProtected && !guestOrgId) {
+            router.push('/login');
+            return;
+        }
+    }, [user, userData, memberships, loading, sessionReady, pathname, router]);
 
     // 🛡️ AUTO-FOLLOW SUPPORT SESSIONS (FOR OWNER)
     useEffect(() => {
@@ -644,13 +689,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // UI RENDERING
     const isProtected = pathname.startsWith('/student') || pathname.startsWith('/app') || pathname.startsWith('/teacher');
 
-    if (loading || (user && !sessionReady)) {
+    // For protected routes, show loader while checking auth
+    if (isProtected && (loading || (user && !sessionReady))) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
         );
     }
+
+    // For public routes, we render children even if loading is true (meaning hydration handles the UI)
+    // This prevents the full screen loader on public pages like /verify/[id]
 
     // Helper for formatting timeLeft
     const formatTimeLeft = (ms: number) => {
@@ -661,15 +710,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, userData, loading, timeLeft: liveTimeLeft, isSupportSession, followingSessionId, isMirrored, toggleFollowing, stopMirroring }}>
-            {isProtected && (!user || isBlocked) ? (
+        <AuthContext.Provider value={{ user, userData, memberships, loading, timeLeft: liveTimeLeft, isSupportSession, followingSessionId, isMirrored, isGuest, toggleFollowing, stopMirroring }}>
+            {isProtected && (!user && !isGuest || isBlocked) ? (
                 <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
                     {isBlocked ? (
                         <>
                             <div className="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mb-6">
                                 <PauseCircle className="w-8 h-8" />
                             </div>
-                            <h1 className="text-xl font-bold text-white mb-2">Аккаунт приостановлен</h1>
+                            <h1 className="text-xl font-bold text-foreground mb-2">Аккаунт приостановлен</h1>
                             <p className="text-neutral-400 max-w-xs text-sm mb-8">
                                 Ваша сессия была временно заблокирована администратором. Доступ восстановится автоматически.
                             </p>
@@ -678,7 +727,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                                     variant="default"
                                     onClick={checkStatus}
                                     disabled={statusChecking}
-                                    className="bg-indigo-600 hover:bg-indigo-500 min-w-[140px]"
+                                    className="bg-primary hover:bg-primary min-w-[140px]"
                                 >
                                     {statusChecking ? (
                                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -687,7 +736,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                                 <Button
                                     variant="ghost"
                                     onClick={() => auth.signOut()}
-                                    className="text-neutral-500 hover:text-white"
+                                    className="text-neutral-500 hover:text-foreground"
                                 >
                                     Выйти
                                 </Button>

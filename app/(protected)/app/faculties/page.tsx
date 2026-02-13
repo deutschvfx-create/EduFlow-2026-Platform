@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from "react";
 import { FacultyFilters } from "@/components/faculties/faculty-filters";
@@ -12,6 +12,7 @@ import { Faculty } from "@/lib/types/faculty";
 import { ModuleGuard } from "@/components/system/module-guard";
 import { motion, AnimatePresence } from "framer-motion";
 import { useOrganization } from "@/hooks/use-organization";
+import { ActionGuard } from "@/components/auth/action-guard";
 
 export default function FacultiesPage() {
     const { currentOrganizationId } = useOrganization();
@@ -89,8 +90,8 @@ export default function FacultiesPage() {
 
     if (!isLoaded) return (
         <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-            <div className="h-12 w-12 rounded-2xl border-2 border-indigo-500/20 border-t-indigo-500 animate-spin" />
-            <p className="text-zinc-500 font-medium animate-pulse">Загрузка факультетов...</p>
+            <div className="h-12 w-12 rounded-2xl border-2 border-primary/20 border-t-cyan-500 animate-spin" />
+            <p className="text-muted-foreground font-medium animate-pulse">Загрузка факультетов...</p>
         </div>
     );
 
@@ -125,33 +126,35 @@ export default function FacultiesPage() {
                 </AnimatePresence>
 
                 {/* Header Section */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-zinc-900" data-help-id="faculties-header">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-border" data-help-id="faculties-header">
                     <div className="space-y-1 hidden laptop:block">
                         {/* Breadcrumbs */}
-                        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-2">
+                        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
                             <span>Главная</span>
                             <ChevronRight className="h-3 w-3" />
                             <span>Структура</span>
-                            <ChevronRight className="h-3 w-3 text-indigo-500" />
-                            <span className="text-zinc-300">Факультеты</span>
+                            <ChevronRight className="h-3 w-3 text-primary" />
+                            <span className="text-foreground/80">Факультеты</span>
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                                <Building2 className="h-5 w-5 text-white" />
+                            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                                <Building2 className="h-5 w-5 text-foreground" />
                             </div>
-                            <h1 className="text-4xl font-black tracking-tight text-white">
+                            <h1 className="text-4xl font-black tracking-tight text-foreground">
                                 Факультеты
                             </h1>
                         </div>
-                        <p className="text-zinc-500 text-sm mt-2">
+                        <p className="text-muted-foreground text-sm mt-2">
                             Управление академической структурой и подразделениями университета
                         </p>
                     </div>
 
                     <div className="flex items-center gap-3" data-help-id="faculties-add-btn">
-                        <AddFacultyModal />
-                        <div className="h-10 w-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-indigo-400 cursor-pointer transition-all hover:scale-105 active:scale-95 shadow-lg">
+                        <ActionGuard actionLabel="Чтобы создать факультет, нужно зарегистрироваться">
+                            <AddFacultyModal />
+                        </ActionGuard>
+                        <div className="h-10 w-10 rounded-xl bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-primary cursor-pointer transition-all hover:scale-105 active:scale-95 shadow-lg">
                             <LayoutGrid className="h-5 w-5" />
                         </div>
                     </div>
@@ -163,7 +166,7 @@ export default function FacultiesPage() {
                         title="Всего факультетов"
                         value={total}
                         icon={Building2}
-                        gradient="bg-gradient-to-br from-indigo-600 to-violet-700"
+                        gradient="bg-gradient-to-br from-cyan-600 to-blue-700"
                         trend="+2 в этом семестре"
                         isUp={true}
                     />
@@ -189,9 +192,9 @@ export default function FacultiesPage() {
 
                 <div className="space-y-6">
                     {/* Modern Filters */}
-                    <div className="bg-zinc-900/30 backdrop-blur-md p-6 rounded-3xl border border-zinc-800/50 shadow-2xl overflow-hidden relative">
+                    <div className="bg-card/30 backdrop-blur-md p-6 rounded-3xl border border-border/50 shadow-2xl overflow-hidden relative">
                         {/* Decorative glow */}
-                        <div className="absolute -left-20 -top-20 h-40 w-40 bg-indigo-500/10 blur-3xl pointer-events-none" />
+                        <div className="absolute -left-20 -top-20 h-40 w-40 bg-primary/10 blur-3xl pointer-events-none" />
 
                         <FacultyFilters
                             search={search}
@@ -219,9 +222,9 @@ export default function FacultiesPage() {
                                 <motion.div
                                     initial={{ opacity: 0, scale: 0.95 }}
                                     animate={{ opacity: 1, scale: 1 }}
-                                    className="flex flex-col items-center justify-center py-20 text-zinc-600 bg-zinc-950/20 rounded-2xl border border-dashed border-zinc-800"
+                                    className="flex flex-col items-center justify-center py-20 text-muted-foreground bg-background/20 rounded-2xl border border-dashed border-border"
                                 >
-                                    <Building2 className="h-16 w-16 mb-4 opacity-10" />
+                                    <Building2 className="h-16 w-16 mb-4 opacity-40" />
                                     <p className="text-xl font-bold">Факультеты не найдены</p>
                                     <p className="text-sm">Попробуйте изменить параметры поиска или фильтры</p>
                                 </motion.div>

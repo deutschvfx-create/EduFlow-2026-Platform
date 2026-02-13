@@ -149,13 +149,13 @@ export function AddLessonModal({
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 {children ? children : (
-                    <Button className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2">
+                    <Button className="bg-primary hover:bg-primary/90 text-foreground gap-2">
                         <Plus className="h-4 w-4" />
                         Добавить занятие
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] bg-zinc-900 border-zinc-800 text-zinc-100">
+            <DialogContent className="sm:max-w-[600px] bg-card border-border text-foreground">
                 <DialogHeader>
                     <DialogTitle>Добавление занятия</DialogTitle>
                     <DialogDescription>Система автоматически проверяет конфликты.</DialogDescription>
@@ -169,7 +169,7 @@ export function AddLessonModal({
                                 Группа {conflicts.group && "*"}
                             </Label>
                             <Select value={groupId} onValueChange={setGroupId}>
-                                <SelectTrigger className={conflicts.group ? "border-red-500 bg-red-950/10" : "bg-zinc-950 border-zinc-800"}>
+                                <SelectTrigger className={conflicts.group ? "border-red-500 bg-red-950/10" : "bg-background border-border"}>
                                     <SelectValue placeholder="Выберите группу" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -185,7 +185,7 @@ export function AddLessonModal({
                         <div className="space-y-2">
                             <Label>Предмет *</Label>
                             <Select value={courseId} onValueChange={setCourseId}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                <SelectTrigger className="bg-background border-border">
                                     <SelectValue placeholder="Выберите предмет" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -204,7 +204,7 @@ export function AddLessonModal({
                                 Преподаватель {conflicts.teacher && "*"}
                             </Label>
                             <Select value={teacherId} onValueChange={setTeacherId}>
-                                <SelectTrigger className={conflicts.teacher ? "border-red-500 bg-red-950/10" : "bg-zinc-950 border-zinc-800"}>
+                                <SelectTrigger className={conflicts.teacher ? "border-red-500 bg-red-950/10" : "bg-background border-border"}>
                                     <SelectValue placeholder="Преподаватель" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -221,7 +221,7 @@ export function AddLessonModal({
                         <div className="space-y-2">
                             <Label>День недели *</Label>
                             <Select value={dayOfWeek} onValueChange={(d) => setDayOfWeek(d as DayOfWeek)}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                <SelectTrigger className="bg-background border-border">
                                     <SelectValue placeholder="День" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -246,7 +246,7 @@ export function AddLessonModal({
                         <div className="space-y-2">
                             <Label>Начало</Label>
                             <Select value={startTime} onValueChange={setStartTime}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                <SelectTrigger className="bg-background border-border">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="max-h-[200px]">
@@ -259,7 +259,7 @@ export function AddLessonModal({
                         <div className="space-y-2">
                             <Label>Конец</Label>
                             <Select value={endTime} onValueChange={setEndTime}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                <SelectTrigger className="bg-background border-border">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="max-h-[200px]">
@@ -275,7 +275,7 @@ export function AddLessonModal({
                                     Аудитория {conflicts.room && "*"}
                                 </Label>
                                 <Select value={room} onValueChange={setRoom}>
-                                    <SelectTrigger className={conflicts.room ? "border-red-500 bg-red-950/10 text-red-100" : "bg-zinc-950 border-zinc-800"}>
+                                    <SelectTrigger className={conflicts.room ? "border-red-500 bg-red-950/10 text-red-100" : "bg-background border-border"}>
                                         <SelectValue placeholder="Не выбрана" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -285,7 +285,7 @@ export function AddLessonModal({
                                                 <div className="flex items-center gap-2">
                                                     <span>{cls.name}</span>
                                                     {cls.type === 'ONLINE' && (
-                                                        <span className="text-[10px] text-cyan-400">Онлайн</span>
+                                                        <span className="text-[10px] text-primary">Онлайн</span>
                                                     )}
                                                 </div>
                                             </SelectItem>
@@ -300,12 +300,12 @@ export function AddLessonModal({
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-2 pt-4 border-t border-zinc-800">
+                <div className="flex justify-end gap-2 pt-4 border-t border-border">
                     <Button variant="ghost" onClick={() => setOpen(false)}>Отмена</Button>
                     <Button
                         onClick={handleSubmit}
                         disabled={loading || Object.keys(conflicts).length > 0}
-                        className={Object.keys(conflicts).length > 0 ? "bg-red-900/50 text-red-400 border border-red-900 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700 text-white"}
+                        className={Object.keys(conflicts).length > 0 ? "bg-red-900/50 text-red-400 border border-red-900 cursor-not-allowed" : "bg-primary hover:bg-primary/90 text-white"}
                     >
                         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {Object.keys(conflicts).length > 0 ? "Исправьте конфликты" : "Создать"}

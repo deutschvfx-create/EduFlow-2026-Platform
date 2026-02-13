@@ -35,7 +35,7 @@ const DAYS: DayOfWeek[] = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
 const TEACHER_COLORS = [
     { bg: "bg-blue-900/80", border: "border-blue-700/50", text: "text-blue-100", ghost: "border-blue-400/50 bg-blue-400/10" },
-    { bg: "bg-indigo-900/80", border: "border-indigo-700/50", text: "text-indigo-100", ghost: "border-indigo-400/50 bg-indigo-400/10" },
+    { bg: "bg-cyan-900/80", border: "border-cyan-700/50", text: "text-cyan-100", ghost: "border-primary/50 bg-primary/10" },
     { bg: "bg-emerald-900/80", border: "border-emerald-700/50", text: "text-emerald-100", ghost: "border-emerald-400/50 bg-emerald-400/10" },
     { bg: "bg-rose-900/80", border: "border-rose-700/50", text: "text-rose-100", ghost: "border-rose-400/50 bg-rose-400/10" },
     { bg: "bg-amber-900/80", border: "border-amber-700/50", text: "text-amber-100", ghost: "border-amber-400/50 bg-amber-400/10" },
@@ -377,22 +377,22 @@ export function DesktopWeekGrid({
     return (
         <div
             id="schedule-grid-container"
-            className="flex h-full flex-col bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl shadow-black/50 select-none relative"
+            className="flex h-full flex-col bg-background border border-border rounded-xl overflow-hidden shadow-2xl shadow-black/50 select-none relative"
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerLeave={handlePointerUp}
         >
-            <div className="flex border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-sm">
-                <div className="w-14 border-r border-zinc-800 shrink-0" />
+            <div className="flex border-b border-border bg-card/50 backdrop-blur-sm">
+                <div className="w-14 border-r border-border shrink-0" />
                 <div className="flex-1 grid grid-cols-7 divide-x divide-zinc-800">
                     {weekDays.map((date, i) => {
                         const isToday = isSameDay(date, new Date());
                         return (
-                            <div key={i} className={cn("py-3 text-center border-zinc-800", isToday && "bg-violet-900/10")}>
-                                <div className={cn("text-[10px] font-bold uppercase mb-0.5 tracking-wider", isToday ? "text-violet-400" : "text-zinc-500")}>
+                            <div key={i} className={cn("py-3 text-center border-border", isToday && "bg-violet-900/10")}>
+                                <div className={cn("text-[10px] font-bold uppercase mb-0.5 tracking-wider", isToday ? "text-violet-400" : "text-muted-foreground")}>
                                     {format(date, 'EEE', { locale: ru })}
                                 </div>
-                                <div className={cn("text-xl font-bold leading-none", isToday ? "text-violet-100" : "text-zinc-300")}>
+                                <div className={cn("text-xl font-bold leading-none", isToday ? "text-violet-100" : "text-foreground")}>
                                     {format(date, 'd')}
                                 </div>
                             </div>
@@ -402,18 +402,18 @@ export function DesktopWeekGrid({
             </div>
 
             <div className="flex-1 flex overflow-y-auto relative min-h-[600px] select-none">
-                <div className="w-14 border-r border-zinc-800 bg-zinc-900/30 shrink-0 flex flex-col text-[10px] text-zinc-500 font-medium pt-2">
+                <div className="w-14 border-r border-border bg-card/30 shrink-0 flex flex-col text-[10px] text-muted-foreground font-medium pt-2">
                     {HOURS.map(hour => (
-                        <div key={hour} className="h-[60px] border-b border-zinc-800/30 flex items-start justify-center relative">
+                        <div key={hour} className="h-[60px] border-b border-border/30 flex items-start justify-center relative">
                             {hour}:00
                         </div>
                     ))}
                 </div>
 
-                <div ref={gridRef} id="grid-columns-container" className="flex-1 grid grid-cols-7 divide-x divide-zinc-800 relative bg-zinc-950/80">
+                <div ref={gridRef} id="grid-columns-container" className="flex-1 grid grid-cols-7 divide-x divide-zinc-800 relative bg-background/80">
                     <div className="absolute inset-0 z-0 flex flex-col pointer-events-none">
                         {HOURS.map(hour => (
-                            <div key={hour} className="h-[60px] border-b border-zinc-800/20 w-full" />
+                            <div key={hour} className="h-[60px] border-b border-border/20 w-full" />
                         ))}
                     </div>
 
@@ -422,12 +422,12 @@ export function DesktopWeekGrid({
                         const isActiveDay = isDragging && initialGrab?.lesson.dayOfWeek === day;
 
                         return (
-                            <div key={day} className={cn("relative h-[900px] border-zinc-800/40 border-r last:border-r-0 group", isActiveDay ? "z-50" : "z-10")}>
+                            <div key={day} className={cn("relative h-[900px] border-border/40 border-r last:border-r-0 group", isActiveDay ? "z-50" : "z-10")}>
                                 <div className="absolute inset-0 z-0">
                                     {HOURS.map(hour => (
                                         <div
                                             key={hour}
-                                            className="h-[60px] w-full border-b border-zinc-800/20 hover:bg-white/[0.02] active:bg-violet-500/10 transition-colors cursor-cell"
+                                            className="h-[60px] w-full border-b border-border/20 hover:bg-white/[0.02] active:bg-violet-500/10 transition-colors cursor-cell"
                                             onClick={() => handleSlotClick(day, hour)}
                                         />
                                     ))}
@@ -489,10 +489,10 @@ export function DesktopWeekGrid({
 
                                                         <div className="p-2.5 flex flex-col h-full relative z-10 pointer-events-none">
                                                             <div className="flex flex-col mb-2">
-                                                                <span className="font-black text-[11px] leading-tight tracking-tight uppercase text-white drop-shadow-sm truncate">
+                                                                <span className="font-black text-[11px] leading-tight tracking-tight uppercase text-foreground drop-shadow-sm truncate">
                                                                     {course?.name || lesson.courseId}
                                                                 </span>
-                                                                <span className="text-[10px] font-bold text-white/90 flex items-center gap-1.5 mt-1 bg-black/20 self-start px-1.5 py-0.5 rounded-full">
+                                                                <span className="text-[10px] font-bold text-foreground/90 flex items-center gap-1.5 mt-1 bg-black/20 self-start px-1.5 py-0.5 rounded-full">
                                                                     <Clock className="h-3 w-3 shrink-0 opacity-80" />
                                                                     {isDragging && lesson.id === activeLessonId && liveTimeRange
                                                                         ? `${liveTimeRange.start} — ${liveTimeRange.end}`
@@ -502,13 +502,13 @@ export function DesktopWeekGrid({
                                                             </div>
 
                                                             <div className="mt-auto space-y-1.5 overflow-hidden">
-                                                                <div className="flex items-center gap-1.5 text-[10px] font-medium text-white/95 truncate">
+                                                                <div className="flex items-center gap-1.5 text-[10px] font-medium text-foreground/95 truncate">
                                                                     <div className="h-4 w-4 rounded-full bg-white/20 flex items-center justify-center shrink-0">
                                                                         <Users className="h-2.5 w-2.5" />
                                                                     </div>
                                                                     <span className="truncate">{group?.name || lesson.groupId}</span>
                                                                 </div>
-                                                                <div className="flex items-center gap-1.5 text-[10px] font-medium text-white/95 truncate">
+                                                                <div className="flex items-center gap-1.5 text-[10px] font-medium text-foreground/95 truncate">
                                                                     <div className="h-4 w-4 rounded-full bg-white/20 flex items-center justify-center shrink-0">
                                                                         <GraduationCap className="h-2.5 w-2.5" />
                                                                     </div>
@@ -517,7 +517,7 @@ export function DesktopWeekGrid({
                                                                     </span>
                                                                 </div>
                                                                 {lesson.room && (
-                                                                    <div className="flex items-center gap-1.5 text-[10px] font-medium text-white/95 truncate">
+                                                                    <div className="flex items-center gap-1.5 text-[10px] font-medium text-foreground/95 truncate">
                                                                         <div className="h-4 w-4 rounded-full bg-white/20 flex items-center justify-center shrink-0">
                                                                             <MapPin className="h-2.5 w-2.5" />
                                                                         </div>

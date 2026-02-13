@@ -181,8 +181,8 @@ export function IOSStyleTimePicker({
     };
 
     return (
-        <div className={cn("flex bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl w-48 h-40 select-none relative group touch-none", className)}>
-            <div className="absolute inset-x-0 top-[60px] h-10 border-y border-white/10 bg-white/5 pointer-events-none z-20" />
+        <div className={cn("flex bg-background border border-border rounded-xl overflow-hidden shadow-2xl w-48 h-40 select-none relative group touch-none", className)}>
+            <div className="absolute inset-x-0 top-[60px] h-10 border-y border-border bg-white/5 pointer-events-none z-20" />
             <div className="absolute inset-0 pointer-events-none z-30">
                 <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-zinc-950 via-zinc-950/80 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-transparent" />
@@ -203,7 +203,7 @@ export function IOSStyleTimePicker({
                         key={h}
                         className={cn(
                             "h-10 flex items-center justify-center text-sm transition-[color,font-weight,transform,opacity] duration-240 preserve-3d py-0 scroll-snap-align-center",
-                            selectedHour === h ? "text-white font-black text-xl" : "text-zinc-600 grayscale opacity-30"
+                            selectedHour === h ? "text-foreground font-black text-xl" : "text-muted-foreground/30 grayscale opacity-60"
                         )}
                         style={{
                             transform: `rotateX(calc(${i * 40}deg - (var(--scroll-top, ${hours.indexOf(selectedHour) * 40}px) * 1deg))) translateZ(95px)`,
@@ -216,7 +216,7 @@ export function IOSStyleTimePicker({
                 <div className="h-[60px] pointer-events-none" />
             </div>
 
-            <div className="flex items-center justify-center text-zinc-500 font-bold bg-zinc-900/50 z-20 pb-0.5 px-1">:</div>
+            <div className="flex items-center justify-center text-muted-foreground font-bold bg-card/50 z-20 pb-0.5 px-1">:</div>
 
             {/* Minutes */}
             <div
@@ -233,7 +233,7 @@ export function IOSStyleTimePicker({
                         key={m}
                         className={cn(
                             "h-10 flex items-center justify-center text-sm transition-[color,font-weight,transform,opacity] duration-240 preserve-3d py-0 scroll-snap-align-center",
-                            selectedMinute === m ? "text-white font-black text-xl" : "text-zinc-600 grayscale opacity-30"
+                            selectedMinute === m ? "text-foreground font-black text-xl" : "text-muted-foreground/30 grayscale opacity-60"
                         )}
                         style={{
                             transform: `rotateX(calc(${i * 40}deg - (var(--scroll-top, ${minutes.indexOf(selectedMinute) * 40}px) * 1deg))) translateZ(95px)`,

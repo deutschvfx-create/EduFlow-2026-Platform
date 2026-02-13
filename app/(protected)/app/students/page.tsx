@@ -1,40 +1,46 @@
-'use client';
+﻿'use client';
 
-import { useState, useEffect } from "react";
-// Removed mock imports
+import { useState, useMemo, useEffect } from "react";
 import { StudentFilters } from "@/components/students/student-filters";
-import { StudentsTable } from "@/components/students/students-table";
 import { AddStudentModal } from "@/components/students/add-student-modal";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserCheck, UserX, Clock, Search, TrendingUp, TrendingDown, AlertCircle, RefreshCcw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Search, Users, Plus, X, Trash2, Mail, Archive, MoreVertical, Info } from "lucide-react";
 import { ModuleGuard } from "@/components/system/module-guard";
-import { motion, AnimatePresence } from "framer-motion";
 import { useOrganization } from "@/hooks/use-organization";
-import { StudentCards } from "@/components/students/student-cards";
-import { LayoutGrid, List } from "lucide-react";
-
 import { useStudents } from "@/hooks/use-students";
+import { StudentCompactCard } from "@/components/students/student-compact-card";
+import { StudentDetailPanel } from "@/components/students/student-detail-panel";
+import { StudentStatsDashboard } from "@/components/students/student-stats-dashboard";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
+import { ActionGuard } from "@/components/auth/action-guard";
+
+import { StudentIDCard } from "@/components/students/student-id-card";
 
 export default function StudentsPage() {
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [groupFilter, setGroupFilter] = useState("all");
-    const [viewMode, setViewMode] = useState<"table" | "cards">("table");
+    const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
     const { students, loading } = useStudents();
     const { currentOrganizationId } = useOrganization();
     const [error, setError] = useState<string | null>(null);
 
+    // Responsive check for Drawer
+    const [isLargeScreen, setIsLargeScreen] = useState(false);
+
     useEffect(() => {
-        const savedView = localStorage.getItem("students-view-preference") as "table" | "cards";
-        if (savedView) setViewMode(savedView);
+        const checkScreen = () => setIsLargeScreen(window.innerWidth >= 1024); // lg breakpoint
+        checkScreen();
+        window.addEventListener('resize', checkScreen);
+        return () => window.removeEventListener('resize', checkScreen);
     }, []);
 
-    const toggleView = (mode: "table" | "cards") => {
-        setViewMode(mode);
-        localStorage.setItem("students-view-preference", mode);
-    };
+    // Multi-select state
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const isMultiSelecting = selectedIds.size > 0;
 
     const handleAction = async (action: string, id: string) => {
         if (!currentOrganizationId) return;
@@ -46,146 +52,113 @@ export default function StudentsPage() {
                 if (confirm("Вы уверены?")) await studentsRepo.update(currentOrganizationId, id, { status: 'ARCHIVED' } as any);
                 else return;
             }
-            // Real-time hook will update automatically
         } catch (error) {
             console.error(error);
             alert("Ошибка при выполнении действия");
         }
     };
 
+    const toggleCheck = (id: string) => {
+        const newSelected = new Set(selectedIds);
+        if (newSelected.has(id)) {
+            newSelected.delete(id);
+        } else {
+            newSelected.add(id);
+        }
+        setSelectedIds(newSelected);
+    };
+
+    const clearSelection = () => setSelectedIds(new Set());
+
     // Filter Logic
-    const filteredStudents = students.filter(student => {
-        const matchesSearch =
-            student.firstName.toLowerCase().includes(search.toLowerCase()) ||
-            student.lastName.toLowerCase().includes(search.toLowerCase()) ||
-            student.email?.toLowerCase().includes(search.toLowerCase());
+    const filteredStudents = useMemo(() => {
+        return students.filter(student => {
+            const matchesSearch =
+                student.firstName.toLowerCase().includes(search.toLowerCase()) ||
+                student.lastName.toLowerCase().includes(search.toLowerCase()) ||
+                student.email?.toLowerCase().includes(search.toLowerCase());
 
-        const matchesStatus = statusFilter === 'all' || student.status === statusFilter;
+            const matchesStatus = statusFilter === 'all' || student.status === statusFilter;
+            const matchesGroup = groupFilter === 'all' || student.groupIds?.includes(groupFilter);
 
-        const matchesGroup = groupFilter === 'all' || student.groupIds?.includes(groupFilter);
+            return matchesSearch && matchesStatus && matchesGroup;
+        });
+    }, [students, search, statusFilter, groupFilter]);
 
-        return matchesSearch && matchesStatus && matchesGroup;
-    });
+    const selectedStudent = useMemo(() =>
+        filteredStudents.find(s => s.id === selectedStudentId) || null,
+        [filteredStudents, selectedStudentId]);
+
+    // State for real-time passport preview
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [previewOverrides, setPreviewOverrides] = useState<Partial<any>>({});
+
+    // Reset preview when selection changes
+    useEffect(() => {
+        setPreviewOverrides({});
+    }, [selectedStudentId]);
+
+    const displayStudent = useMemo(() => {
+        if (!selectedStudent) return null;
+        return { ...selectedStudent, ...previewOverrides };
+    }, [selectedStudent, previewOverrides]);
 
     // Stats
     const total = students.length;
     const active = students.filter(s => s.status === 'ACTIVE').length;
-    const pending = students.filter(s => s.status === 'PENDING').length;
-    const suspended = students.filter(s => s.status === 'SUSPENDED').length;
 
-    if (loading && !error) return <div className="p-8 text-zinc-500 font-bold uppercase tracking-widest animate-pulse">Загрузка данных...</div>;
+    if (loading && !error) {
+        return (
+            <div className="flex flex-col h-full bg-[#F5F6F8]">
+                <div className="flex gap-6 h-full p-6">
+                    <div className="w-[320px] flex flex-col gap-4">
+                        <Skeleton className="h-[200px] w-full rounded-[12px]" />
+                        {[1, 2, 3, 4, 5, 6].map(i => (
+                            <Skeleton key={i} className="h-[68px] w-full rounded-[12px]" />
+                        ))}
+                    </div>
+                    <div className="flex-1 flex flex-col gap-6">
+                        <Skeleton className="h-[180px] w-full rounded-[12px]" />
+                        <Skeleton className="flex-1 w-full rounded-[12px]" />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
 
     return (
         <ModuleGuard module="students">
-            <div className="space-y-4 laptop:space-y-6">
-                <AnimatePresence>
-                    {error && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl p-6 shadow-2xl backdrop-blur-md flex gap-4"
-                        >
-                            <AlertCircle className="h-6 w-6 mt-1 flex-shrink-0" />
-                            <div className="flex-1">
-                                <h3 className="font-black uppercase tracking-tight text-lg leading-tight">Ошибка загрузки</h3>
-                                <p className="text-sm font-bold opacity-80 mt-1">
-                                    {error}. Проверьте соединение или права доступа.
-                                </p>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                        setError(null);
-                                        // Refetch not needed with real-time listeners unless auth changed
-                                    }}
-                                    className="mt-4 border-red-500/50 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-black uppercase tracking-widest text-[10px] h-10 rounded-xl px-6"
-                                >
-                                    <RefreshCcw className="mr-2 h-3 w-3" /> Сбросить ошибку
-                                </Button>
+            <div className="flex h-full overflow-hidden bg-[#F5F6F8]">
+                {/* 1. LEFT PANEL: Student List (320px Fixed) */}
+                <div className={cn(
+                    "w-full lg:w-[320px] border-r border-[#E5E7EB] bg-white flex flex-col shrink-0 transition-all duration-300 relative z-30",
+                    selectedStudentId && "hidden lg:flex"
+                )}>
+                    {/* List Header */}
+                    <div className="p-6 pb-2">
+                        <div className="flex items-center justify-between gap-4 mb-6">
+                            <div className="min-w-0">
+                                <h1 className="text-[18px] font-black text-[#0F172A] tracking-tight font-inter truncate leading-none">Студенты</h1>
+                                <div className="flex items-center gap-1.5 mt-2">
+                                    <div className="w-1 h-1 rounded-full bg-[#2563EB]" />
+                                    <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider font-inter">
+                                        База: {total}
+                                    </span>
+                                </div>
                             </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 laptop:gap-4" data-help-id="students-header">
-                    <div className="hidden laptop:flex items-center gap-3 laptop:gap-4">
-                        <div className="h-10 w-10 laptop:h-12 laptop:w-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-                            <Users className="h-5 w-5 laptop:h-6 laptop:w-6 text-indigo-400" />
+                            <ActionGuard actionLabel="Добавление студентов доступно после регистрации">
+                                <AddStudentModal customTrigger={
+                                    <Button
+                                        size="xs"
+                                        className="!h-6 !px-2.5 bg-[#2563EB] hover:bg-[#2563EB]/90 text-white font-black text-[9px] uppercase tracking-[0.05em] rounded-full shadow-md shadow-[#2563EB]/20 flex items-center gap-1 transition-all font-inter active:scale-95 shrink-0 border-none"
+                                    >
+                                        <Plus className="h-2.5 w-2.5" />
+                                        <span>Добавить</span>
+                                    </Button>
+                                } />
+                            </ActionGuard>
                         </div>
-                        <div>
-                            <h1 className="text-2xl laptop:text-3xl font-black tracking-tighter text-white" accessibilityId="students-title-view">Студенты</h1>
-                            <p className="text-[10px] laptop:text-xs font-bold uppercase tracking-widest text-zinc-500 hidden laptop:block">Система контроля контингента</p>
-                        </div>
-                    </div>
-                    <div className="flex gap-2">
-                        <div className="bg-zinc-900 p-0.5 rounded-lg border border-zinc-800 flex items-center mr-2">
-                            <Button
-                                variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-                                size="sm"
-                                className={`h-8 px-2 ${viewMode === 'table' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
-                                onClick={() => toggleView('table')}
-                            >
-                                <List className="h-4 w-4 mr-1" />
-                                Таблица
-                            </Button>
-                            <Button
-                                variant={viewMode === 'cards' ? 'secondary' : 'ghost'}
-                                size="sm"
-                                className={`h-8 px-2 ${viewMode === 'cards' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
-                                onClick={() => toggleView('cards')}
-                            >
-                                <LayoutGrid className="h-4 w-4 mr-1" />
-                                Карточки
-                            </Button>
-                        </div>
-                        <Button variant="outline" className="hidden laptop:flex gap-2 border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl" data-help-id="students-qr-btn" accessibilityId="qr-scanner-trigger">
-                            <Search className="h-4 w-4" /> Сканировать QR
-                        </Button>
-                        <div data-help-id="students-add-btn" accessibilityId="add-student-trigger" data-action="open-registration-form">
-                            <AddStudentModal />
-                        </div>
-                    </div>
-                </div>
-
-                {/* High-Density Stats Cards - 2 columns on mobile */}
-                <div className="grid gap-3 laptop:gap-4 grid-cols-2 laptop:grid-cols-4">
-                    <KPICard
-                        title="Всего студентов"
-                        value={total}
-                        trend="+2.4%"
-                        isUp={true}
-                        icon={Users}
-                        color="indigo"
-                    />
-                    <KPICard
-                        title="Активные"
-                        value={active}
-                        trend="+5.1%"
-                        isUp={true}
-                        icon={UserCheck}
-                        color="emerald"
-                    />
-                    <KPICard
-                        title="Ожидают"
-                        value={pending}
-                        trend="-1.2%"
-                        isUp={false}
-                        icon={Clock}
-                        color="purple"
-                    />
-                    <KPICard
-                        title="Заблокированы"
-                        value={suspended}
-                        trend="0%"
-                        isUp={true}
-                        icon={UserX}
-                        color="cyan"
-                    />
-                </div>
-
-                <div className="bg-zinc-900/30 border border-zinc-800/50 rounded-2xl overflow-hidden backdrop-blur-sm shadow-2xl">
-                    <div className="p-4 border-b border-zinc-800/50 bg-zinc-950/20">
                         <StudentFilters
                             search={search}
                             onSearchChange={setSearch}
@@ -196,86 +169,107 @@ export default function StudentsPage() {
                         />
                     </div>
 
-                    <div className="p-1">
-                        {viewMode === 'table' ? (
-                            <StudentsTable
-                                students={filteredStudents}
-                                onAction={handleAction}
-                            />
-                        ) : (
-                            <StudentCards
-                                students={filteredStudents}
-                                onAction={handleAction}
-                            />
-                        )}
+                    {/* Student List */}
+                    <div className="flex-1 overflow-y-auto no-scrollbar px-3 pb-6">
+                        <div className="flex flex-col gap-1">
+                            {filteredStudents.length === 0 ? (
+                                <div className="py-20 text-center text-[#64748B] px-8">
+                                    <Search className="h-10 w-10 mx-auto mb-4 opacity-10" />
+                                    <p className="text-[12px] font-bold uppercase tracking-widest leading-relaxed font-inter">Студенты не найдены</p>
+                                </div>
+                            ) : (
+                                filteredStudents.map(student => (
+                                    <StudentCompactCard
+                                        key={student.id}
+                                        student={student}
+                                        isSelected={selectedStudentId === student.id}
+                                        isMultiSelecting={isMultiSelecting}
+                                        isChecked={selectedIds.has(student.id)}
+                                        onToggleCheck={toggleCheck}
+                                        onClick={() => setSelectedStudentId(student.id)}
+                                    />
+                                ))
+                            )}
+                        </div>
                     </div>
+                </div>
+
+                {/* 2. MAIN & TOP PANELS: Content Area */}
+                <div className="flex-1 flex flex-col min-w-0 overflow-y-auto no-scrollbar relative">
+
+                    {/* 3. TOP PANEL (Sticky ID Card) */}
+                    <StudentIDCard
+                        student={displayStudent}
+                        onAction={handleAction}
+                    />
+
+                    {/* Bulk Actions Overlay */}
+                    {isMultiSelecting && (
+                        <div className="absolute top-[170px] left-1/2 -translate-x-1/2 z-50 bg-[#0F172A] text-white px-6 py-3 rounded-full flex items-center gap-6 shadow-2xl animate-in fade-in slide-in-from-top-4">
+                            <div className="flex items-center gap-3">
+                                <X onClick={clearSelection} className="h-4 w-4 cursor-pointer opacity-60 hover:opacity-100" />
+                                <span className="text-[14px] font-bold font-inter">Выбрано: {selectedIds.size}</span>
+                            </div>
+                            <div className="h-4 w-px bg-white/10" />
+                            <div className="flex items-center gap-2">
+                                <ActionGuard>
+                                    <Button variant="ghost" size="sm" className="h-8 text-white/70 hover:text-white hover:bg-white/10 rounded-full gap-2 text-[12px] font-bold font-inter px-4">
+                                        <Mail className="h-3.5 w-3.5" /> Написать
+                                    </Button>
+                                </ActionGuard>
+                                <ActionGuard>
+                                    <Button variant="ghost" size="sm" className="h-8 text-white/70 hover:text-white hover:bg-white/10 rounded-full gap-2 text-[12px] font-bold font-inter px-4">
+                                        <Archive className="h-3.5 w-3.5" /> В архив
+                                    </Button>
+                                </ActionGuard>
+                                <ActionGuard actionLabel="Удаление доступно только владельцам">
+                                    <Button size="sm" className="h-8 bg-[#EF4444] hover:bg-[#EF4444]/90 text-white rounded-full gap-2 text-[12px] font-black px-6 font-inter">
+                                        <Trash2 className="h-3.5 w-3.5" /> Удалить
+                                    </Button>
+                                </ActionGuard>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 2. CENTRAL PANEL (Working Area) */}
+                    <div className="flex-1 flex flex-col items-center bg-transparent p-6 pt-0">
+                        <div className="w-full max-w-[1040px] flex-1 flex flex-col min-h-[600px] mt-3">
+                            {selectedStudent ? (
+                                <StudentDetailPanel
+                                    student={selectedStudent}
+                                    onAction={handleAction}
+                                    onClose={isLargeScreen ? undefined : () => setSelectedStudentId(null)}
+                                    onPreviewChange={setPreviewOverrides}
+                                />
+                            ) : (
+                                <div className="flex-1 flex flex-col items-center justify-center text-[#64748B] p-12 bg-white rounded-[24px] border border-[#E5E7EB] shadow-sm">
+                                    <div className="w-20 h-20 rounded-[20px] bg-[#F5F6F8] flex items-center justify-center mb-6">
+                                        <Users className="h-8 w-8 opacity-20" />
+                                    </div>
+                                    <h2 className="text-[18px] font-black text-[#0F172A] mb-2 tracking-tight font-inter">Выберите студента</h2>
+                                    <p className="text-[14px] text-[#64748B] font-medium max-w-[280px] text-center leading-relaxed font-inter">
+                                        Выберите запись из списка слева для начала работы с профилем
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Mobile Detail Overlay */}
+                    {!isLargeScreen && selectedStudentId && (
+                        <Sheet open={true} onOpenChange={() => setSelectedStudentId(null)}>
+                            <SheetContent side="right" className="p-0 w-full sm:max-w-[540px] border-l border-[#E5E7EB]">
+                                <StudentDetailPanel
+                                    student={selectedStudent}
+                                    onAction={handleAction}
+                                    onClose={() => setSelectedStudentId(null)}
+                                    onPreviewChange={setPreviewOverrides}
+                                />
+                            </SheetContent>
+                        </Sheet>
+                    )}
                 </div>
             </div>
         </ModuleGuard>
-    );
-}
-
-function KPICard({ title, value, trend, isUp, icon: Icon, color }: any) {
-    const colors: any = {
-        indigo: 'from-indigo-500/10 to-transparent border-indigo-500/20 text-indigo-400 bg-indigo-500/5',
-        purple: 'from-purple-500/10 to-transparent border-purple-500/20 text-purple-400 bg-purple-500/5',
-        cyan: 'from-cyan-500/10 to-transparent border-cyan-500/20 text-cyan-400 bg-cyan-500/5',
-        emerald: 'from-emerald-500/10 to-transparent border-emerald-500/20 text-emerald-400 bg-emerald-500/5'
-    };
-
-    return (
-        <Card className={`relative overflow-hidden bg-zinc-900/60 border-zinc-800 rounded-2xl group transition-all hover:bg-zinc-900/80 hover:border-zinc-700/50 shadow-2xl ring-1 ring-white/5 h-[130px]`}>
-            {/* Dynamic Background Glow */}
-            <div className={`absolute -right-6 -top-6 h-28 w-28 rounded-full bg-gradient-to-br ${colors[color]} blur-3xl opacity-10 group-hover:opacity-25 transition-all duration-700`} />
-
-            <div className="relative z-10 p-4 flex flex-col h-full justify-between">
-                <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 group-hover:text-zinc-400 transition-colors">
-                            {title}
-                        </h3>
-                        <div className="text-2xl font-black text-white tracking-tighter flex items-baseline gap-1">
-                            {typeof value === 'number' ? value.toLocaleString() : value}
-                        </div>
-                    </div>
-                    <div className={`p-2 rounded-xl border border-white/5 ${colors[color]} shadow-inner`}>
-                        <Icon className="h-4 w-4" />
-                    </div>
-                </div>
-
-                <div className="flex items-center justify-between gap-4 mt-auto">
-                    <div className="flex flex-col gap-1">
-                        <div className={`flex items-center gap-1 text-[10px] font-bold ${isUp ? 'text-emerald-400' : 'text-rose-400'}`}>
-                            {isUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                            {trend}
-                            <span className="text-[9px] text-zinc-600 font-medium ml-1">vs MoM</span>
-                        </div>
-                        <div className="h-1 w-24 bg-zinc-950 rounded-full overflow-hidden border border-white/5">
-                            <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: isUp ? "70%" : "30%" }}
-                                className={`h-full ${isUp ? 'bg-emerald-500/40' : 'bg-rose-500/40'}`}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="h-10 w-24 relative opacity-50 group-hover:opacity-100 transition-opacity">
-                        <svg viewBox="0 0 100 40" className="w-full h-full overflow-visible">
-                            <motion.path
-                                initial={{ pathLength: 0, opacity: 0 }}
-                                animate={{ pathLength: 1, opacity: 1 }}
-                                transition={{ duration: 1.5, ease: "easeOut" }}
-                                d={isUp ? "M0,35 Q20,35 30,20 T60,15 T100,0" : "M0,5 Q20,5 30,20 T60,25 T100,40"}
-                                fill="none"
-                                stroke={isUp ? "#10b981" : "#f43f5e"}
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                className="drop-shadow-[0_0_5px_currentColor]"
-                            />
-                        </svg>
-                    </div>
-                </div>
-            </div>
-        </Card>
     );
 }

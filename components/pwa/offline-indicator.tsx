@@ -53,7 +53,7 @@ export function OfflineIndicator() {
 
                                     {/* Text */}
                                     <div className="flex-1">
-                                        <h3 className="text-base font-bold text-white mb-0.5">
+                                        <h3 className="text-base font-bold text-foreground mb-0.5">
                                             Нет подключения к интернету
                                         </h3>
                                         <p className="text-sm text-amber-200">

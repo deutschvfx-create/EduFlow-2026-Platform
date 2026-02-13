@@ -56,7 +56,7 @@ export function ScheduleFilters({
     return (
         <Sheet>
             <SheetTrigger asChild>
-                <Button variant="outline" size="sm" className="h-9 gap-2 border-dashed border-zinc-700 bg-zinc-900/50 hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors">
+                <Button variant="outline" size="sm" className="h-9 gap-2 border-dashed border-border bg-card/50 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
                     <Filter className="h-4 w-4" />
                     <span className="text-xs font-medium">Фильтры</span>
                     {activeFiltersCount > 0 && (
@@ -66,8 +66,8 @@ export function ScheduleFilters({
                     )}
                 </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="h-[85vh] rounded-t-[20px] border-t border-zinc-800 bg-zinc-950 p-0">
-                <SheetHeader className="p-6 border-b border-zinc-900">
+            <SheetContent side="bottom" className="h-[85vh] rounded-t-[20px] border-t border-border bg-background p-0">
+                <SheetHeader className="p-6 border-b border-border">
                     <div className="flex items-center justify-between">
                         <SheetTitle className="text-lg font-bold">Фильтры расписания</SheetTitle>
                         {activeFiltersCount > 0 && (
@@ -81,9 +81,9 @@ export function ScheduleFilters({
                 <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(85vh-80px)]">
                     <div className="space-y-4">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-zinc-400">Группа</label>
+                            <label className="text-sm font-medium text-muted-foreground">Группа</label>
                             <Select value={groupFilter} onValueChange={onGroupChange}>
-                                <SelectTrigger className="w-full bg-zinc-900 border-zinc-800 h-12">
+                                <SelectTrigger className="w-full bg-card border-border h-12">
                                     <SelectValue placeholder="Все группы" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -96,9 +96,9 @@ export function ScheduleFilters({
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-zinc-400">Преподаватель</label>
+                            <label className="text-sm font-medium text-muted-foreground">Преподаватель</label>
                             <Select value={teacherFilter} onValueChange={onTeacherChange}>
-                                <SelectTrigger className="w-full bg-zinc-900 border-zinc-800 h-12">
+                                <SelectTrigger className="w-full bg-card border-border h-12">
                                     <SelectValue placeholder="Все преподаватели" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -111,9 +111,9 @@ export function ScheduleFilters({
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-zinc-400">Предмет</label>
+                            <label className="text-sm font-medium text-muted-foreground">Предмет</label>
                             <Select value={courseFilter} onValueChange={onCourseChange}>
-                                <SelectTrigger className="w-full bg-zinc-900 border-zinc-800 h-12">
+                                <SelectTrigger className="w-full bg-card border-border h-12">
                                     <SelectValue placeholder="Все предметы" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -127,7 +127,7 @@ export function ScheduleFilters({
                     </div>
 
                     <div className="pt-4">
-                        <Button className="w-full h-12 font-bold bg-violet-600 hover:bg-violet-700 text-white rounded-xl">
+                        <Button className="w-full h-12 font-bold bg-violet-600 hover:bg-violet-700 text-foreground rounded-xl">
                             Применить
                         </Button>
                     </div>

@@ -19,9 +19,19 @@ export default function TeacherScannerPage() {
             setScannedData(text);
 
             // Mock processing
-            // Expected format: "student:ID"
+            // Support formats: "student:ID" OR "https://.../verify/ID"
+            let studentId = text;
+
             if (text.startsWith("student:")) {
-                const studentId = text.split(":")[1];
+                studentId = text.split(":")[1];
+            } else if (text.includes("/verify/")) {
+                const parts = text.split("/verify/");
+                if (parts.length > 1) {
+                    studentId = parts[1];
+                }
+            }
+
+            if (studentId) {
                 setScanResult({
                     status: 'success',
                     message: `Студент найден: ${studentId}`,

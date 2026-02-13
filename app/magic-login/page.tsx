@@ -41,7 +41,7 @@ function MagicLoginContent() {
             <div className="max-w-md w-full bg-neutral-800 rounded-2xl p-8 border border-neutral-700 shadow-2xl text-center">
                 {status === 'loading' && (
                     <>
-                        <div className="animate-spin w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full mx-auto mb-6"></div>
+                        <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-6"></div>
                         <h1 className="text-2xl font-bold mb-2">Входим в систему...</h1>
                         <p className="text-neutral-400">Пожалуйста, подождите, магия происходит ✨</p>
                     </>

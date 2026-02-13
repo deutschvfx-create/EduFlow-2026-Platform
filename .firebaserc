@@ -1,5 +1,7 @@
 {
   "projects": {
     "default": "uniwersitet-kontrolle"
-  }
+  },
+  "targets": {},
+  "etags": {}
 }

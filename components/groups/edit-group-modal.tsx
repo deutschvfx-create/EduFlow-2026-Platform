@@ -102,149 +102,164 @@ export function EditGroupModal({ group, open, onOpenChange, onSave }: EditGroupM
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[600px] bg-zinc-900 border-zinc-800 text-zinc-100">
-                <DialogHeader>
-                    <DialogTitle>Редактирование группы</DialogTitle>
-                    <DialogDescription>Изменение данных группы {group.code}</DialogDescription>
-                </DialogHeader>
+            <DialogContent className="sm:max-w-[600px] bg-white border-none p-0 overflow-hidden rounded-[28px] shadow-2xl">
+                <div className="p-8">
+                    <DialogHeader className="space-y-1 mb-8">
+                        <DialogTitle className="text-[22px] font-black text-[#0F172A] tracking-tight uppercase">Редактирование группы</DialogTitle>
+                        <DialogDescription className="text-[12px] font-bold text-[#64748B] uppercase tracking-widest opacity-70">Изменение данных группы {group.code}</DialogDescription>
+                    </DialogHeader>
 
-                <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        {modules.faculties && (
-                            <div className="space-y-2">
-                                <Label>Факультет *</Label>
-                                <Select value={facultyId} onValueChange={handleFacultyChange}>
-                                    <SelectTrigger className="bg-zinc-950 border-zinc-800">
-                                        <SelectValue placeholder="Выберите факультет" />
+                    <div className="grid gap-6 py-2">
+                        <div className="grid grid-cols-2 gap-6">
+                            {modules.faculties && (
+                                <div className="space-y-2.5">
+                                    <Label className="text-[11px] font-black text-[#0F172A] uppercase tracking-wider ml-1">Факультет *</Label>
+                                    <Select value={facultyId} onValueChange={handleFacultyChange}>
+                                        <SelectTrigger className="h-12 bg-[#F8FAFC] border-[#E2E8F0] rounded-[15px] text-[12px] font-bold uppercase transition-all focus:ring-[#2563EB]/10">
+                                            <SelectValue placeholder="Выберите факультет" />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-[18px] border-[#E2E8F0] shadow-xl">
+                                            {faculties.map(f => (
+                                                <SelectItem key={f.id} value={f.id} className="text-[12px] font-bold uppercase py-2.5">{f.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            )}
+                            {modules.departments && (
+                                <div className="space-y-2.5">
+                                    <Label className="text-[11px] font-black text-[#0F172A] uppercase tracking-wider ml-1">Кафедра *</Label>
+                                    <Select value={departmentId} onValueChange={setDepartmentId} disabled={!facultyId && modules.faculties}>
+                                        <SelectTrigger className="h-12 bg-[#F8FAFC] border-[#E2E8F0] rounded-[15px] text-[12px] font-bold uppercase transition-all focus:ring-[#2563EB]/10">
+                                            <SelectValue placeholder={(!facultyId && modules.faculties) ? "Сначала факультет" : "Выберите кафедру"} />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-[18px] border-[#E2E8F0] shadow-xl">
+                                            {departments.map(d => (
+                                                <SelectItem key={d.id} value={d.id} className="text-[12px] font-bold uppercase py-2.5">{d.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-6">
+                            <div className="space-y-2.5">
+                                <Label className="text-[11px] font-black text-[#0F172A] uppercase tracking-wider ml-1">Название группы *</Label>
+                                <Input
+                                    className="h-12 bg-[#F8FAFC] border-[#E2E8F0] rounded-[15px] text-[12px] font-bold uppercase shadow-none transition-all focus:ring-[#2563EB]/10"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="space-y-2.5">
+                                <Label className="text-[11px] font-black text-[#0F172A] uppercase tracking-wider ml-1">Код (ID) *</Label>
+                                <Input
+                                    className="h-12 bg-[#F8FAFC] border-[#E2E8F0] rounded-[15px] text-[12px] font-bold uppercase shadow-none transition-all focus:ring-[#2563EB]/10"
+                                    value={code}
+                                    onChange={(e) => setCode(e.target.value.toUpperCase())}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-6">
+                            <div className="space-y-2.5">
+                                <Label className="text-[11px] font-black text-[#0F172A] uppercase tracking-wider ml-1">Уровень</Label>
+                                <Select value={level} onValueChange={setLevel}>
+                                    <SelectTrigger className="h-12 bg-[#F8FAFC] border-[#E2E8F0] rounded-[15px] text-[12px] font-bold uppercase transition-all focus:ring-[#2563EB]/10">
+                                        <SelectValue placeholder="Выберите уровень" />
                                     </SelectTrigger>
-                                    <SelectContent>
-                                        {faculties.map(f => (
-                                            <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                                    <SelectContent className="rounded-[18px] border-[#E2E8F0] shadow-xl">
+                                        <SelectItem value="A1" className="text-[12px] font-bold uppercase py-2.5">A1</SelectItem>
+                                        <SelectItem value="A2" className="text-[12px] font-bold uppercase py-2.5">A2</SelectItem>
+                                        <SelectItem value="B1" className="text-[12px] font-bold uppercase py-2.5">B1</SelectItem>
+                                        <SelectItem value="B2" className="text-[12px] font-bold uppercase py-2.5">B2</SelectItem>
+                                        <SelectItem value="C1" className="text-[12px] font-bold uppercase py-2.5">C1</SelectItem>
+                                        <SelectItem value="1 курс" className="text-[12px] font-bold uppercase py-2.5">1 курс</SelectItem>
+                                        <SelectItem value="2 курс" className="text-[12px] font-bold uppercase py-2.5">2 курс</SelectItem>
+                                        <SelectItem value="3 курс" className="text-[12px] font-bold uppercase py-2.5">3 курс</SelectItem>
+                                        <SelectItem value="4 курс" className="text-[12px] font-bold uppercase py-2.5">4 курс</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2.5">
+                                <Label className="text-[11px] font-black text-[#0F172A] uppercase tracking-wider ml-1">Тип обучения</Label>
+                                <Select value={paymentType} onValueChange={(v) => setPaymentType(v as "FREE" | "PAID")}>
+                                    <SelectTrigger className="h-12 bg-[#F8FAFC] border-[#E2E8F0] rounded-[15px] text-[12px] font-bold uppercase transition-all focus:ring-[#2563EB]/10">
+                                        <SelectValue placeholder="Тип оплаты" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-[18px] border-[#E2E8F0] shadow-xl">
+                                        <SelectItem value="FREE" className="text-[12px] font-bold uppercase py-2.5">Бесплатно (Бюджет)</SelectItem>
+                                        <SelectItem value="PAID" className="text-[12px] font-bold uppercase py-2.5">Платно (Контракт)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-6">
+                            <div className="space-y-2.5">
+                                <Label className="text-[11px] font-black text-[#0F172A] uppercase tracking-wider ml-1">Статус</Label>
+                                <Select value={status} onValueChange={(s) => setStatus(s as GroupStatus)}>
+                                    <SelectTrigger className="h-12 bg-[#F8FAFC] border-[#E2E8F0] rounded-[15px] text-[12px] font-bold uppercase transition-all focus:ring-[#2563EB]/10">
+                                        <SelectValue placeholder="Статус" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-[18px] border-[#E2E8F0] shadow-xl">
+                                        <SelectItem value="ACTIVE" className="text-[12px] font-bold uppercase py-2.5">Активна</SelectItem>
+                                        <SelectItem value="INACTIVE" className="text-[12px] font-bold uppercase py-2.5">Неактивна</SelectItem>
+                                        <SelectItem value="ARCHIVED" className="text-[12px] font-bold uppercase py-2.5">Архив</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2.5">
+                                <Label className="text-[11px] font-black text-[#0F172A] uppercase tracking-wider ml-1">Куратор</Label>
+                                <Select value={curatorId} onValueChange={setCuratorId}>
+                                    <SelectTrigger className="h-12 bg-[#F8FAFC] border-[#E2E8F0] rounded-[15px] text-[12px] font-bold uppercase transition-all focus:ring-[#2563EB]/10">
+                                        <SelectValue placeholder="Не назначен" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-[18px] border-[#E2E8F0] shadow-xl">
+                                        {teachers.map(t => (
+                                            <SelectItem key={t.id} value={t.id} className="text-[12px] font-bold uppercase py-2.5">
+                                                {t.firstName} {t.lastName}
+                                            </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
                             </div>
-                        )}
-                        {modules.departments && (
-                            <div className="space-y-2">
-                                <Label>Кафедра *</Label>
-                                <Select value={departmentId} onValueChange={setDepartmentId} disabled={!facultyId && modules.faculties}>
-                                    <SelectTrigger className="bg-zinc-950 border-zinc-800">
-                                        <SelectValue placeholder={(!facultyId && modules.faculties) ? "Сначала выберите факультет" : "Выберите кафедру"} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {departments.map(d => (
-                                            <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                            <div className="space-y-2.5">
+                                <Label className="text-[11px] font-black text-[#0F172A] uppercase tracking-wider ml-1">Лимит</Label>
+                                <Input
+                                    type="number"
+                                    className="h-12 bg-[#F8FAFC] border-[#E2E8F0] rounded-[15px] text-[12px] font-bold shadow-none transition-all focus:ring-[#2563EB]/10"
+                                    value={maxStudents}
+                                    onChange={(e) => setMaxStudents(e.target.value)}
+                                />
                             </div>
-                        )}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>Название *</Label>
-                            <Input
-                                className="bg-zinc-950 border-zinc-800"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Код (ID) *</Label>
-                            <Input
-                                className="bg-zinc-950 border-zinc-800 uppercase"
-                                value={code}
-                                onChange={(e) => setCode(e.target.value.toUpperCase())}
-                            />
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>Уровень</Label>
-                            <Select value={level} onValueChange={setLevel}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
-                                    <SelectValue placeholder="Выберите уровень" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="A1">A1</SelectItem>
-                                    <SelectItem value="A2">A2</SelectItem>
-                                    <SelectItem value="B1">B1</SelectItem>
-                                    <SelectItem value="B2">B2</SelectItem>
-                                    <SelectItem value="C1">C1</SelectItem>
-                                    <SelectItem value="1 курс">1 курс</SelectItem>
-                                    <SelectItem value="2 курс">2 курс</SelectItem>
-                                    <SelectItem value="3 курс">3 курс</SelectItem>
-                                    <SelectItem value="4 курс">4 курс</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Тип оплаты</Label>
-                            <Select value={paymentType} onValueChange={(v) => setPaymentType(v as "FREE" | "PAID")}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
-                                    <SelectValue placeholder="Тип оплаты" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="FREE">Бесплатно (Бюджет)</SelectItem>
-                                    <SelectItem value="PAID">Платно (Коммерция)</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4">
-                        <div className="col-span-1 space-y-2">
-                            <Label>Статус</Label>
-                            <Select value={status} onValueChange={(s) => setStatus(s as GroupStatus)}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
-                                    <SelectValue placeholder="Статус" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="ACTIVE">Активна</SelectItem>
-                                    <SelectItem value="INACTIVE">Неактивна</SelectItem>
-                                    <SelectItem value="ARCHIVED">Архив</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="col-span-1 space-y-2">
-                            <Label>Куратор</Label>
-                            <Select value={curatorId} onValueChange={setCuratorId}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
-                                    <SelectValue placeholder="Не назначен" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {teachers.map(t => (
-                                        <SelectItem key={t.id} value={t.id}>
-                                            {t.firstName} {t.lastName}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="col-span-1 space-y-2">
-                            <Label>Лимит</Label>
-                            <Input
-                                type="number"
-                                className="bg-zinc-950 border-zinc-800"
-                                value={maxStudents}
-                                onChange={(e) => setMaxStudents(e.target.value)}
-                            />
-                        </div>
+                    <div className="flex flex-col gap-3 pt-10">
+                        <Button
+                            onClick={handleSubmit}
+                            disabled={loading}
+                            className="h-14 w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-[14px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-[#2563EB]/20 transition-all active:scale-95 disabled:opacity-50"
+                        >
+                            {loading ? (
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                            ) : (
+                                "Сохранить изменения"
+                            )}
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            onClick={() => onOpenChange(false)}
+                            className="h-10 text-[11px] font-bold text-[#64748B] hover:text-[#0F172A] hover:bg-transparent transition-colors uppercase tracking-widest"
+                        >
+                            Отмена
+                        </Button>
                     </div>
                 </div>
-
-                <DialogFooter>
-                    <Button variant="ghost" onClick={() => onOpenChange(false)}>Отмена</Button>
-                    <Button onClick={handleSubmit} disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Сохранить
-                    </Button>
-                </DialogFooter>
             </DialogContent>
         </Dialog>
     );

@@ -6,6 +6,15 @@
     "storage": {
         "rules": "storage.rules"
     },
+    "hosting": {
+        "site": "uniwersitet-kontrolle",
+        "source": ".",
+        "ignore": [
+            "firebase.json",
+            "**/.*",
+            "**/node_modules/**"
+        ]
+    },
     "emulators": {
         "auth": {
             "port": 9099

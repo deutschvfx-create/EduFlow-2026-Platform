@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from "react";
 // Removed mock imports
@@ -178,7 +178,7 @@ export default function SchedulePage() {
         return matchesGroup && matchesTeacher && matchesCourse && matchesDay;
     });
 
-    if (!isLoaded) return <div className="p-8 text-zinc-500">Загрузка расписания...</div>;
+    if (!isLoaded) return <div className="p-8 text-muted-foreground">Загрузка расписания...</div>;
 
     const handleLessonClick = (lesson: Lesson) => {
         if (!isOwner && !isTeacher) return; // Read-only for others
@@ -198,7 +198,7 @@ export default function SchedulePage() {
         <ModuleGuard module="schedule">
             <div className="space-y-4 laptop:space-y-6 h-full flex flex-col">
                 <div className="flex items-center justify-between px-1">
-                    <h1 className="text-xl font-bold text-white">Расписание</h1>
+                    <h1 className="text-xl font-bold text-foreground">Расписание</h1>
                     <div className="flex items-center gap-3">
                         <ScheduleFilters
                             groups={groups}

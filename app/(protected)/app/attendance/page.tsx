@@ -1,89 +1,86 @@
 'use client';
 
-import { useState, useMemo, useEffect } from "react";
-import { AttendanceStatusBadge } from "@/components/attendance/status-badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
-import { ru } from "date-fns/locale";
-import { CalendarIcon, Loader2, Check, X, Clock, FileText, Save, Users, UserCheck, UserX, Clock4 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { SmartJournalHeader } from "@/components/journal/smart-journal-header";
+import { StudentJournalCard } from "@/components/journal/student-journal-card";
+import { LessonActionsPanel } from "@/components/journal/lesson-actions-panel";
+import { SmartJournalQuickActions } from "@/components/journal/quick-actions";
 import { AttendanceRecord, AttendanceStatus } from "@/lib/types/attendance";
-// import { toast } from "sonner"; // Removed missing dependency
-const toast = { success: (m: string) => alert(m), error: (m: string) => alert(m) };
 import { Lesson } from "@/lib/types/schedule";
 import { ModuleGuard } from "@/components/system/module-guard";
 import { useOrganization } from "@/hooks/use-organization";
 import { useRole } from "@/hooks/use-role";
 import { useAuth } from "@/components/auth/auth-provider";
 import { attendanceRepo } from "@/lib/data/attendance.repo";
+import { cn } from "@/lib/utils";
+import { Loader2, Search, Filter, History } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 type LocalAttendanceMap = Record<string, AttendanceRecord>;
 
 export default function AttendancePage() {
-    // Filters
-    const [date, setDate] = useState<Date | undefined>(new Date());
-    const [groupId, setGroupId] = useState("all");
+    // Filters & Selection
+    const [date, setDate] = useState<Date>(new Date());
     const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
-    // Data State (Simulate DB)
+    // Data State
     const [attendanceData, setAttendanceData] = useState<LocalAttendanceMap>({});
+    const [allAttendance, setAllAttendance] = useState<AttendanceRecord[]>([]);
     const [schedule, setSchedule] = useState<Lesson[]>([]);
     const [students, setStudents] = useState<any[]>([]);
     const [groups, setGroups] = useState<any[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
+
+    // History for Undo
+    const [actionHistory, setActionHistory] = useState<any[]>([]);
+
     const { currentOrganizationId } = useOrganization();
-    const { isTeacher, isOwner } = useRole();
+    const { isTeacher } = useRole();
     const { userData } = useAuth();
 
-    // Load Metadata (Static-ish)
+    // 1. Initial Data Fetch (Metadata)
     useEffect(() => {
         if (!currentOrganizationId) return;
 
-        setIsLoaded(false);
-        Promise.all([
-            import("@/lib/data/schedule.repo").then(m =>
-                m.scheduleRepo.getAll(currentOrganizationId!, undefined, isTeacher ? { teacherId: userData?.uid } : {})
-            ),
-            import("@/lib/data/students.repo").then(m =>
-                m.studentsRepo.getAll(currentOrganizationId!, isTeacher ? { groupIds: (userData as any)?.groupIds } : {})
-            ),
-            import("@/lib/data/groups.repo").then(m =>
-                m.groupsRepo.getAll(currentOrganizationId!, isTeacher ? { groupIds: (userData as any)?.groupIds } : {})
-            )
-        ]).then(([sch, stu, grps]) => {
-            const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-            const mappedSchedule: Lesson[] = sch.map((item: any) => ({
-                ...item,
-                dayOfWeek: typeof item.dayOfWeek === 'number' ? days[item.dayOfWeek] || 'MON' : item.dayOfWeek,
-                status: 'PLANNED',
-                createdAt: new Date().toISOString()
-            } as Lesson));
+        const fetchData = async () => {
+            setIsLoaded(false);
+            try {
+                const [schRepo, stuRepo, grpRepo] = await Promise.all([
+                    import("@/lib/data/schedule.repo"),
+                    import("@/lib/data/students.repo"),
+                    import("@/lib/data/groups.repo")
+                ]);
 
-            setSchedule(mappedSchedule);
-            setStudents(stu);
-            setGroups(grps);
-            setIsLoaded(true);
-        });
+                const [sch, stu, grps] = await Promise.all([
+                    schRepo.scheduleRepo.getAll(currentOrganizationId!, undefined, isTeacher ? { teacherId: userData?.uid } : {}),
+                    stuRepo.studentsRepo.getAll(currentOrganizationId!, isTeacher ? { groupIds: (userData as any)?.groupIds } : {}),
+                    grpRepo.groupsRepo.getAll(currentOrganizationId!, isTeacher ? { groupIds: (userData as any)?.groupIds } : {})
+                ]);
+
+                setSchedule(sch as Lesson[]);
+                setStudents(stu);
+                setGroups(grps);
+                setIsLoaded(true);
+            } catch (error) {
+                console.error("Metadata fetch error:", error);
+            }
+        };
+
+        fetchData();
     }, [currentOrganizationId, isTeacher, userData?.uid]);
 
-    // Real-time Attendance Listener (Scoped)
+    // 2. Real-time Attendance Sync
     useEffect(() => {
         if (!currentOrganizationId || !isLoaded) return;
 
-        const scheduleIds = isTeacher
-            ? schedule.map(l => l.id)
-            : undefined;
+        const scheduleIds = isTeacher ? schedule.map(l => l.id) : undefined;
 
         attendanceRepo.getAll(
             currentOrganizationId,
             (records) => {
+                setAllAttendance(records);
                 const map: LocalAttendanceMap = {};
                 records.forEach(r => {
                     const key = `${r.scheduleId}-${r.studentId}`;
@@ -94,55 +91,108 @@ export default function AttendancePage() {
             scheduleIds ? { scheduleIds } : {}
         );
 
-        return () => {
-            attendanceRepo.unsubscribe(currentOrganizationId);
-        };
+        return () => attendanceRepo.unsubscribe(currentOrganizationId);
     }, [currentOrganizationId, isLoaded, schedule, isTeacher]);
 
-    // Derived State: Lessons for the day
+    // 3. Derived State: Lessons for Today
     const lessonsForDate = useMemo(() => {
-        if (!date) return [];
-        const dayOfWeekIndex = date.getDay(); // 0 = Sun, 1 = Mon...
+        const dayOfWeekIndex = date.getDay();
         const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
         const dayString = days[dayOfWeekIndex];
 
-        return schedule.filter(l =>
-            l.dayOfWeek === dayString &&
-            (groupId === 'all' || l.groupId === groupId) &&
-            l.status !== 'CANCELLED' // hide cancelled?
-        ).sort((a, b) => a.startTime.localeCompare(b.startTime));
-    }, [date, groupId, schedule]);
+        return schedule
+            .filter(l => l.dayOfWeek === dayString && l.status !== 'CANCELLED')
+            .sort((a, b) => a.startTime.localeCompare(b.startTime));
+    }, [date, schedule]);
 
-    // Auto-select first lesson if available and none selected
+    // Auto-select first lesson
     useEffect(() => {
         if (lessonsForDate.length > 0 && !selectedLessonId) {
             setSelectedLessonId(lessonsForDate[0].id);
         } else if (lessonsForDate.length === 0) {
             setSelectedLessonId(null);
         }
-    }, [lessonsForDate]);
+    }, [lessonsForDate, selectedLessonId]);
 
-    const currentLesson = lessonsForDate.find(l => l.id === selectedLessonId);
+    const currentLesson = useMemo(() =>
+        lessonsForDate.find(l => l.id === selectedLessonId),
+        [lessonsForDate, selectedLessonId]);
 
-    // Derived State: Students for selected lesson (by group)
+    const currentGroup = useMemo(() =>
+        groups.find(g => g.id === currentLesson?.groupId),
+        [groups, currentLesson]);
+
+    const currentCourse = useMemo(() => ({
+        id: currentLesson?.courseId || "unknown",
+        name: currentLesson?.courseId || "Предмет"
+    }), [currentLesson]);
+
+    // Streak Calculation
+    const getStudentStreak = useCallback((studentId: string) => {
+        const studentAttendance = allAttendance
+            .filter(r => r.studentId === studentId)
+            .sort((a, b) => {
+                const dateA = a.date ? new Date(a.date).getTime() : 0;
+                const dateB = b.date ? new Date(b.date).getTime() : 0;
+                return dateB - dateA;
+            });
+
+        let streak = 0;
+        for (const record of studentAttendance) {
+            if (record.status === "PRESENT") {
+                streak++;
+            } else if (record.status === "ABSENT") {
+                break;
+            }
+        }
+        return streak;
+    }, [allAttendance]);
+
+    // Selection Derived State
+    const selectedStudent = useMemo(() => {
+        if (!selectedStudentId || !selectedLessonId) return null;
+        const student = students.find(s => s.id === selectedStudentId);
+        const key = `${selectedLessonId}-${selectedStudentId}`;
+        const attendance = attendanceData[key];
+        return student ? {
+            id: student.id,
+            name: `${student.lastName} ${student.firstName}`,
+            note: attendance?.note
+        } : null;
+    }, [selectedStudentId, students, attendanceData, selectedLessonId]);
+
+    // 4. Students Filter & Sort
     const studentsInLesson = useMemo(() => {
         if (!currentLesson) return [];
-        // Find students in group
-        return students.filter(s => s.groupIds?.includes(currentLesson.groupId));
-    }, [currentLesson, students]);
+        return students
+            .filter(s => s.groupIds?.includes(currentLesson.groupId))
+            .filter(s => {
+                const fullName = `${s.lastName} ${s.firstName}`.toLowerCase();
+                return fullName.includes(searchQuery.toLowerCase());
+            })
+            .sort((a, b) => a.lastName.localeCompare(b.lastName));
+    }, [currentLesson, students, searchQuery]);
 
-    const handleStatusChange = async (studentId: string, status: AttendanceStatus) => {
-        if (!selectedLessonId || !currentLesson || !currentOrganizationId) return;
+    // 5. Handlers (Real-time autosave)
+    const handleStatusChange = useCallback(async (studentId: string, status: AttendanceStatus) => {
+        if (!selectedLessonId || !currentOrganizationId) return;
 
         const key = `${selectedLessonId}-${studentId}`;
         const existing = attendanceData[key];
+
+        // Save to history for undo
+        setActionHistory(prev => [{
+            studentId,
+            previousStatus: existing?.status || "UNKNOWN",
+            timestamp: Date.now()
+        }, ...prev].slice(0, 10));
 
         const record: AttendanceRecord = {
             id: existing?.id || `new-${Date.now()}-${studentId}`,
             organizationId: currentOrganizationId,
             scheduleId: selectedLessonId,
             studentId: studentId,
-            date: date?.toISOString() || new Date().toISOString(),
+            date: date.toISOString(),
             status,
             note: existing?.note || "",
             updatedAt: new Date().toISOString()
@@ -150,325 +200,201 @@ export default function AttendancePage() {
 
         try {
             await attendanceRepo.save(currentOrganizationId, record);
-            // Optimistic update locally for immediate UX if needed, 
-            // but onSnapshot will handle it.
         } catch (error) {
-            console.error("Attendance save error:", error);
-            toast.error("Ошибка при сохранении");
+            console.error("Autosave failed:", error);
+        }
+    }, [selectedLessonId, currentOrganizationId, attendanceData, date]);
+
+    const handleReward = async (studentId: string) => {
+        if (!currentOrganizationId || !selectedLessonId) return;
+
+        try {
+            const { gradesRepo } = await import("@/lib/data/grades.repo");
+            const rewardGrade = {
+                id: `reward-${Date.now()}-${studentId}`,
+                organizationId: currentOrganizationId,
+                studentId,
+                courseId: currentCourse.id,
+                groupId: currentGroup?.id || "",
+                type: "PARTICIPATION" as any,
+                score: 10,
+                date: new Date().toISOString().split('T')[0],
+                comment: `Bonus reward for active participation in lesson [Lesson:${selectedLessonId}]`,
+                updatedAt: new Date().toISOString()
+            };
+            await gradesRepo.save(currentOrganizationId, rewardGrade);
+            alert(`Студент получил +10 бонусных баллов!`);
+        } catch (error) {
+            console.error("Reward failed:", error);
         }
     };
 
     const handleBulkStatus = async (status: AttendanceStatus) => {
-        if (!selectedLessonId || !currentLesson || !currentOrganizationId) return;
+        if (!selectedLessonId || !currentOrganizationId) return;
+
+        const promises = studentsInLesson.map(s => {
+            const key = `${selectedLessonId}-${s.id}`;
+            const existing = attendanceData[key];
+            const record: AttendanceRecord = {
+                id: existing?.id || `new-${Date.now()}-${s.id}`,
+                organizationId: currentOrganizationId,
+                scheduleId: selectedLessonId,
+                studentId: s.id,
+                date: date.toISOString(),
+                status,
+                note: existing?.note || "",
+            };
+            return attendanceRepo.save(currentOrganizationId, record);
+        });
 
         try {
-            const promises = studentsInLesson.map(s => {
-                const key = `${selectedLessonId}-${s.id}`;
-                const existing = attendanceData[key];
-                const record: AttendanceRecord = {
-                    id: existing?.id || `new-${Date.now()}-${s.id}`,
-                    organizationId: currentOrganizationId,
-                    scheduleId: selectedLessonId,
-                    studentId: s.id,
-                    date: date?.toISOString() || new Date().toISOString(),
-                    status,
-                    note: existing?.note || "",
-                };
-                return attendanceRepo.save(currentOrganizationId, record);
-            });
             await Promise.all(promises);
-            toast.success(`Все отмечены как ${status}`);
         } catch (error) {
-            console.error("Bulk attendance error:", error);
-            toast.error("Ошика при массовом обновлении");
+            console.error("Bulk save failed:", error);
         }
     };
 
-    const getStatus = (studentId: string): AttendanceStatus => {
-        if (!selectedLessonId) return "UNKNOWN"; // Default
-        // Logic for "UNKNOWN" vs undefined? 
-        // If undefined, return UNKNOWN (gray)
-        return attendanceData[`${selectedLessonId}-${studentId}`]?.status || "UNKNOWN";
+    const handleUndo = useCallback(async () => {
+        if (actionHistory.length === 0 || !selectedLessonId || !currentOrganizationId) return;
+
+        const lastAction = actionHistory[0];
+        const key = `${selectedLessonId}-${lastAction.studentId}`;
+        const existing = attendanceData[key];
+
+        if (existing) {
+            try {
+                await attendanceRepo.save(currentOrganizationId, {
+                    ...existing,
+                    status: lastAction.previousStatus,
+                    updatedAt: new Date().toISOString()
+                });
+                setActionHistory(prev => prev.slice(1));
+            } catch (error) {
+                console.error("Undo failed:", error);
+            }
+        }
+    }, [actionHistory, selectedLessonId, currentOrganizationId, attendanceData]);
+
+    if (!isLoaded) {
+        return (
+            <div className="flex h-screen items-center justify-center bg-[hsl(var(--secondary))]">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
     }
-
-    const getNote = (studentId: string): string => {
-        // if (!selectedLessonId) return "";
-        // return attendanceData[`${selectedLessonId}-${studentId}`]?.note || "";
-        return "";
-    }
-
-    const setNote = (studentId: string, note: string) => {
-        // Mock note
-    };
-
-    // Stats for Top Cards (Mock based on selected date or total DB?)
-    // Let's compute statistics for the CURRENTLY selected date across ALL lessons (or filtered ones).
-    const stats = useMemo(() => {
-        let totalScheduled = 0;
-        let present = 0;
-        let absent = 0;
-        let late = 0;
-
-        // Iterate over filtered lessons for the day
-        lessonsForDate.forEach(l => {
-            // For simplicity, find mock students for this lesson's group
-            const studs = students.filter(s => s.groupIds?.includes(l.groupId));
-            totalScheduled += studs.length;
-
-            studs.forEach(s => {
-                const key = `${l.id}-${s.id}`;
-                const r = attendanceData[key];
-                if (r) {
-                    if (r.status === 'PRESENT') present++;
-                    if (r.status === 'ABSENT') absent++;
-                    if (r.status === 'LATE') late++;
-                    if (r.status === 'EXCUSED') absent++; // Count excused as absent or separate? Let's assume filtered.
-                }
-            });
-        });
-
-        // "Unmarked" are totalScheduled - (records count)
-        // But `attendanceData` might be sparse.
-        // Simple logic for UI:
-        return { totalScheduled, present, absent, late };
-    }, [lessonsForDate, attendanceData, students]);
-
 
     return (
         <ModuleGuard module="attendance">
-            <div className="space-y-6 flex flex-col h-full">
-                <div className="hidden laptop:flex flex-col gap-2">
-                    <h1 className="text-3xl font-bold tracking-tight text-white">Посещаемость</h1>
-                    <p className="text-zinc-400">Отметки посещения по занятиям и группам</p>
-                </div>
+            <div className="flex flex-col h-screen bg-[hsl(var(--secondary))] overflow-hidden">
+                <SmartJournalHeader
+                    courseName={currentCourse.name}
+                    courseId={currentCourse.id}
+                    groupName={currentGroup?.name || "Группа"}
+                    groupId={currentGroup?.id || "unknown"}
+                    date={date}
+                    onDateChange={(d) => d && setDate(d)}
+                    lessonTime={currentLesson ? `${currentLesson.startTime}–${currentLesson.endTime}` : "Нет уроков"}
+                    teacherName={userData?.name || "Я"}
+                />
 
-                {/* Stats Cards */}
-                <div className="grid gap-4 md:grid-cols-2 laptop:grid-cols-4">
-                    <Card className="bg-zinc-900 border-zinc-800">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-zinc-400">Ожидается (на дату)</CardTitle>
-                            <Users className="h-4 w-4 text-zinc-500" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-white">{stats.totalScheduled}</div>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-zinc-900 border-zinc-800">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-emerald-400">Присутствуют</CardTitle>
-                            <UserCheck className="h-4 w-4 text-emerald-500" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-white">{stats.present}</div>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-zinc-900 border-zinc-800">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-red-400">Отсутствуют</CardTitle>
-                            <UserX className="h-4 w-4 text-red-500" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-white">{stats.absent}</div>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-zinc-900 border-zinc-800">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-amber-400">Опоздали</CardTitle>
-                            <Clock4 className="h-4 w-4 text-amber-500" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-white">{stats.late}</div>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Filters */}
-                <div className="flex flex-col md:flex-row gap-4 bg-zinc-950/50 p-4 rounded-lg border border-zinc-900">
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button
-                                variant={"outline"}
-                                className={cn(
-                                    "w-[240px] justify-start text-left font-normal bg-zinc-900 border-zinc-800",
-                                    !date && "text-muted-foreground"
-                                )}
-                            >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {date ? format(date, "PPP", { locale: ru }) : <span>Выберите дату</span>}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 bg-zinc-900 border-zinc-800" align="start">
-                            <Calendar
-                                mode="single"
-                                selected={date}
-                                onSelect={setDate}
-                                initialFocus
+                <main className="flex-1 flex overflow-hidden">
+                    {/* Left Column: Students (40%) */}
+                    <div className="w-[40%] flex flex-col border-r border-[hsl(var(--border))] bg-white">
+                        <div className="p-4 border-b border-[hsl(var(--border))] flex items-center justify-between">
+                            <SmartJournalQuickActions
+                                onMarkAllPresent={() => handleBulkStatus("PRESENT")}
+                                onReset={() => handleBulkStatus("UNKNOWN")}
+                                onUndo={handleUndo}
                             />
-                        </PopoverContent>
-                    </Popover>
+                        </div>
 
-                    <Select value={groupId} onValueChange={setGroupId}>
-                        <SelectTrigger className="w-[200px] bg-zinc-900 border-zinc-800">
-                            <SelectValue placeholder="Группа" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Все группы</SelectItem>
-                            {groups.map((g: any) => (
-                                <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
+                        <div className="p-4 bg-[hsl(var(--secondary))]/50 flex items-center gap-4">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
+                                <Input
+                                    placeholder="Поиск студента..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="pl-10 h-10 bg-white border-[hsl(var(--border))] focus:ring-cyan-500 rounded-xl text-sm"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2 text-xs font-bold text-[hsl(var(--muted-foreground))] uppercase tracking-wider">
+                                <History className="h-3.5 w-3.5" />
+                                {studentsInLesson.length} Студентов
+                            </div>
+                        </div>
 
-                <div className="grid md:grid-cols-4 gap-6 flex-1 min-h-[500px]">
-                    {/* Left Panel: Filtered Lessons */}
-                    <div className="md:col-span-1 flex flex-col gap-3">
-                        <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Занятия</h3>
-                        <div className="flex flex-col gap-2">
-                            {lessonsForDate.length > 0 ? (
-                                lessonsForDate.map(lesson => (
-                                    <div
-                                        key={lesson.id}
-                                        onClick={() => setSelectedLessonId(lesson.id)}
-                                        className={cn(
-                                            "p-3 rounded-lg border cursor-pointer transition-all",
-                                            selectedLessonId === lesson.id
-                                                ? "bg-indigo-900/30 border-indigo-500 ring-1 ring-indigo-500/50"
-                                                : "bg-zinc-900 border-zinc-800 hover:bg-zinc-800"
-                                        )}
-                                    >
-                                        <div className="flex justify-between items-start mb-1">
-                                            <span className="font-bold text-zinc-200">{lesson.startTime}</span>
-                                            <Badge variant="secondary" className="text-[10px] h-5 bg-zinc-800 text-zinc-400">{lesson.room || 'online'}</Badge>
-                                        </div>
-                                        <div className="text-sm font-medium text-indigo-300 mb-0.5">Гр: {lesson.groupId}</div>
-                                        <div className="text-xs text-zinc-500 truncate">Курс: {lesson.courseId}</div>
-                                        <div className="text-xs text-zinc-600 mt-2 flex items-center gap-1">
-                                            <Users className="h-3 w-3" /> Пр: {lesson.teacherId}
-                                        </div>
-                                    </div>
+                        <div className="flex-1 overflow-auto p-4 space-y-3">
+                            {studentsInLesson.length > 0 ? (
+                                studentsInLesson.map(student => (
+                                    <StudentJournalCard
+                                        key={student.id}
+                                        studentId={student.id}
+                                        studentName={`${student.lastName} ${student.firstName}`}
+                                        status={attendanceData[`${selectedLessonId}-${student.id}`]?.status || "UNKNOWN"}
+                                        hasNote={!!attendanceData[`${selectedLessonId}-${student.id}`]?.note}
+                                        streak={getStudentStreak(student.id)}
+                                        onStatusChange={(status) => handleStatusChange(student.id, status)}
+                                        onClick={() => setSelectedStudentId(student.id)}
+                                        onReward={() => handleReward(student.id)}
+                                        isSelected={selectedStudentId === student.id}
+                                        isLastAction={actionHistory[0]?.studentId === student.id}
+                                    />
                                 ))
                             ) : (
-                                <div className="text-center py-10 text-zinc-500 border border-zinc-800 border-dashed rounded-lg">
-                                    Нет занятий на эту дату
+                                <div className="text-center py-20">
+                                    <p className="text-[hsl(var(--muted-foreground))] text-sm italic">
+                                        {currentLesson ? "Студенты не найдены" : "Выберите урок"}
+                                    </p>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {/* Right Panel: Attendance Table */}
-                    <div className="md:col-span-3 flex flex-col h-full bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-                        {currentLesson ? (
-                            <>
-                                <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
-                                    <div>
-                                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                                            Группа {currentLesson.groupId}
-                                            <span className="text-zinc-500 font-normal text-sm">| Курс {currentLesson.courseId}</span>
-                                        </h2>
-                                        <p className="text-sm text-zinc-400">
-                                            {format(date!, "d MMMM yyyy", { locale: ru })} • {currentLesson.startTime} - {currentLesson.endTime}
-                                        </p>
+                    {/* Right Column: Lesson Actions (60%) */}
+                    <div className="w-[60%] flex flex-col bg-[hsl(var(--secondary))]">
+                        <div className="flex-1 overflow-hidden">
+                            {selectedLessonId ? (
+                                <LessonActionsPanel
+                                    lessonId={selectedLessonId}
+                                    selectedStudent={selectedStudent}
+                                    courseId={currentCourse.id}
+                                    groupId={currentGroup?.id}
+                                />
+                            ) : (
+                                <div className="h-full flex flex-col items-center justify-center p-12 text-center">
+                                    <div className="h-20 w-20 bg-white rounded-3xl shadow-sm border border-[hsl(var(--border))] flex items-center justify-center mb-6">
+                                        <Filter className="h-10 w-10 text-cyan-200" />
                                     </div>
-                                    <div className="flex gap-2">
-                                        <Button variant="outline" size="sm" className="border-zinc-700 hover:bg-zinc-800" onClick={() => handleBulkStatus("PRESENT")}>
-                                            <Check className="mr-2 h-4 w-4 text-green-500" /> Все пришли
-                                        </Button>
-                                        <Button variant="outline" size="sm" className="border-zinc-700 hover:bg-zinc-800" onClick={() => handleBulkStatus("UNKNOWN")}>
-                                            Сбросить
-                                        </Button>
-                                    </div>
+                                    <h3 className="text-xl font-bold text-[hsl(var(--foreground))] mb-2">Выберите занятие</h3>
+                                    <p className="text-[hsl(var(--muted-foreground))] max-w-xs mx-auto text-sm">
+                                        Выберите урок из списка или другого дня, чтобы увидеть детали и управлять материалами.
+                                    </p>
                                 </div>
+                            )}
+                        </div>
 
-                                <div className="flex-1 overflow-auto">
-                                    <Table>
-                                        <TableHeader className="bg-zinc-950/50">
-                                            <TableRow className="border-zinc-800 hover:bg-zinc-900">
-                                                <TableHead className="w-[30%]">Студент</TableHead>
-                                                <TableHead className="text-center">Статус</TableHead>
-                                                <TableHead>Комментарий</TableHead>
-                                                <TableHead className="text-right">Быстрые действия</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {studentsInLesson.length > 0 ? (
-                                                studentsInLesson.map(student => {
-                                                    const status = getStatus(student.id);
-                                                    return (
-                                                        <TableRow key={student.id} className="border-zinc-800 hover:bg-zinc-800/50">
-                                                            <TableCell className="font-medium text-zinc-200">
-                                                                {student.lastName} {student.firstName}
-                                                            </TableCell>
-                                                            <TableCell className="text-center">
-                                                                <AttendanceStatusBadge status={status} />
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                <Input
-                                                                    placeholder="..."
-                                                                    className="h-8 bg-transparent border-transparent hover:border-zinc-700 focus:border-indigo-500 focus:bg-zinc-950 text-zinc-300 w-full"
-                                                                    value={getNote(student.id)}
-                                                                    onChange={(e) => setNote(student.id, e.target.value)}
-                                                                />
-                                                            </TableCell>
-                                                            <TableCell className="text-right">
-                                                                <div className="flex justify-end gap-1">
-                                                                    <Button
-                                                                        variant="ghost" size="icon"
-                                                                        className={cn("h-8 w-8", status === 'PRESENT' ? "bg-green-500/20 text-green-500" : "text-zinc-500 hover:text-green-500 hover:bg-green-500/10")}
-                                                                        onClick={() => handleStatusChange(student.id, "PRESENT")}
-                                                                        title="Присутствует"
-                                                                    >
-                                                                        <Check className="h-4 w-4" />
-                                                                    </Button>
-                                                                    <Button
-                                                                        variant="ghost" size="icon"
-                                                                        className={cn("h-8 w-8", status === 'ABSENT' ? "bg-red-500/20 text-red-500" : "text-zinc-500 hover:text-red-500 hover:bg-red-500/10")}
-                                                                        onClick={() => handleStatusChange(student.id, "ABSENT")}
-                                                                        title="Отсутствует"
-                                                                    >
-                                                                        <X className="h-4 w-4" />
-                                                                    </Button>
-                                                                    <Button
-                                                                        variant="ghost" size="icon"
-                                                                        className={cn("h-8 w-8", status === 'LATE' ? "bg-amber-500/20 text-amber-500" : "text-zinc-500 hover:text-amber-500 hover:bg-amber-500/10")}
-                                                                        onClick={() => handleStatusChange(student.id, "LATE")}
-                                                                        title="Опоздал"
-                                                                    >
-                                                                        <Clock className="h-4 w-4" />
-                                                                    </Button>
-                                                                    <Button
-                                                                        variant="ghost" size="icon"
-                                                                        className={cn("h-8 w-8", status === 'EXCUSED' ? "bg-blue-500/20 text-blue-500" : "text-zinc-500 hover:text-blue-500 hover:bg-blue-500/10")}
-                                                                        onClick={() => handleStatusChange(student.id, "EXCUSED")}
-                                                                        title="Уважительная причина"
-                                                                    >
-                                                                        <FileText className="h-4 w-4" />
-                                                                    </Button>
-                                                                </div>
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    )
-                                                })
-                                            ) : (
-                                                <TableRow>
-                                                    <TableCell colSpan={4} className="text-center py-8 text-zinc-500">
-                                                        В этой группе нет студентов
-                                                    </TableCell>
-                                                </TableRow>
-                                            )}
-                                        </TableBody>
-                                    </Table>
-                                </div>
-                            </>
-                        ) : (
-                            <div className="flex flex-col items-center justify-center h-full text-zinc-500">
-                                <Users className="h-12 w-12 mb-4 opacity-20" />
-                                <p className="text-lg font-medium">Выберите занятие</p>
-                                <p className="text-sm">Чтобы отметить посещаемость, выберите урок из списка слева</p>
-                            </div>
-                        )}
+                        {/* Bottom Bar: Lesson Picker */}
+                        <div className="h-20 border-t border-[hsl(var(--border))] bg-white px-6 flex items-center gap-3 overflow-x-auto no-scrollbar">
+                            {lessonsForDate.map((lesson) => (
+                                <button
+                                    key={lesson.id}
+                                    onClick={() => setSelectedLessonId(lesson.id)}
+                                    className={cn(
+                                        "h-12 px-5 rounded-xl border-2 transition-all shrink-0 flex items-center gap-3",
+                                        selectedLessonId === lesson.id
+                                            ? "border-primary bg-cyan-50 text-cyan-700"
+                                            : "border-[hsl(var(--border))] bg-white text-[hsl(var(--muted-foreground))] hover:border-cyan-200"
+                                    )}
+                                >
+                                    <span className="font-bold text-sm tracking-tight">{lesson.startTime}</span>
+                                    <div className="h-4 w-px bg-current opacity-50" />
+                                    <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">{lesson.room || 'Room'}</span>
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                </div>
+                </main>
             </div>
         </ModuleGuard>
     );

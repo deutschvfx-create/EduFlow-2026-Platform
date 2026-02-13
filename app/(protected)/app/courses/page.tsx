@@ -1,21 +1,23 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from "react";
 // Removed mock imports
 import { CourseFilters } from "@/components/courses/course-filters";
-import { CoursesTable } from "@/components/courses/courses-table";
+// import { CoursesTable } from "@/components/courses/courses-table"; // Removed
+import { CourseListPanel } from "@/components/courses/course-list-panel";
+import { CourseDetailPanel } from "@/components/courses/course-detail-panel";
 import { AddCourseModal } from "@/components/courses/add-course-modal";
 import { EditCourseModal } from "@/components/courses/edit-course-modal";
 import { AssignTeachersModal } from "@/components/courses/assign-teachers-modal";
 import { LinkGroupsModal } from "@/components/courses/link-groups-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, CheckCircle2, XCircle, Archive, AlertCircle, RefreshCcw } from "lucide-react";
+import { BookOpen, CheckCircle2, XCircle, Archive, AlertCircle, RefreshCcw, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { Course } from "@/lib/types/course";
 import { ModuleGuard } from "@/components/system/module-guard";
 import { useOrganization } from "@/hooks/use-organization";
-import { coursesRepo } from "@/lib/data/courses.repo";
+import { cn } from "@/lib/utils";
 
 export default function CoursesPage() {
     const [search, setSearch] = useState("");
@@ -24,12 +26,7 @@ export default function CoursesPage() {
     const [departmentFilter, setDepartmentFilter] = useState("all");
     const [teacherFilter, setTeacherFilter] = useState("all");
 
-    // Modal States
-    const [editModalOpen, setEditModalOpen] = useState(false);
-    const [assignTeachersOpen, setAssignTeachersOpen] = useState(false);
-    const [linkGroupsOpen, setLinkGroupsOpen] = useState(false);
-
-    const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+    const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
 
     // Filter Logic
     const [courses, setCourses] = useState<Course[]>([]);
@@ -47,7 +44,7 @@ export default function CoursesPage() {
                 setIsLoaded(true);
             } catch (err: any) {
                 console.error("Courses load error:", err);
-                setError(err.message || "Не удалось загрузить предметы");
+                setError(err.message || "Не удалось загрузить курсы");
                 setIsLoaded(true);
             }
         }).catch(err => {
@@ -77,6 +74,8 @@ export default function CoursesPage() {
         return matchesSearch && matchesStatus && matchesFaculty && matchesDepartment && matchesTeacher;
     });
 
+    const selectedCourse = courses.find(c => c.id === selectedCourseId) || null;
+
     // Stats
     const total = courses.length;
     const active = courses.filter(s => s.status === 'ACTIVE').length;
@@ -84,26 +83,11 @@ export default function CoursesPage() {
     const archived = courses.filter(s => s.status === 'ARCHIVED').length;
 
     if (!isLoaded) return (
-        <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4 text-zinc-500">
-            <div className="h-10 w-10 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
-            <p className="font-medium animate-pulse">Загрузка предметов...</p>
+        <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4 text-muted-foreground">
+            <div className="h-10 w-10 border-2 border-primary/20 border-t-cyan-500 rounded-full animate-spin" />
+            <p className="font-medium animate-pulse">Загрузка курсов...</p>
         </div>
     );
-
-    const handleEdit = (course: Course) => {
-        setSelectedCourse(course);
-        setEditModalOpen(true);
-    };
-
-    const handleAssignTeachers = (course: Course) => {
-        setSelectedCourse(course);
-        setAssignTeachersOpen(true);
-    };
-
-    const handleLinkGroups = (course: Course) => {
-        setSelectedCourse(course);
-        setLinkGroupsOpen(true);
-    };
 
     const handleSaveUpdate = async (id: string, updates: Partial<Course>) => {
         if (!currentOrganizationId) return;
@@ -115,139 +99,100 @@ export default function CoursesPage() {
             setCourses(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
         } catch (error) {
             console.error(error);
-            alert("Ошибка при обновлении предмета");
+            alert("Ошибка при обновлении курса");
         }
     };
 
-    const handleSaveTeachers = async (id: string, teacherIds: string[]) => {
-        await handleSaveUpdate(id, { teacherIds });
-    };
-
-    const handleSaveGroups = async (id: string, groupIds: string[]) => {
-        await handleSaveUpdate(id, { groupIds });
+    const handleDelete = async (id: string) => {
+        try {
+            const { coursesRepo } = await import("@/lib/data/courses.repo");
+            await coursesRepo.delete(id);
+            setCourses(prev => prev.filter(c => c.id !== id));
+            if (selectedCourseId === id) {
+                setSelectedCourseId(null);
+            }
+        } catch (e) {
+            console.error("Failed to delete course:", e);
+        }
     };
 
     return (
         <ModuleGuard module="courses">
-            <div className="space-y-6">
-                <AnimatePresence>
-                    {error && (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl p-6 shadow-2xl backdrop-blur-md flex gap-4"
-                        >
-                            <AlertCircle className="h-6 w-6 mt-1 flex-shrink-0" />
-                            <div className="flex-1">
-                                <h3 className="font-black uppercase tracking-tight text-lg leading-tight">Ошибка загрузки</h3>
-                                <p className="text-sm font-bold opacity-80 mt-1">
-                                    {error}. Проверьте соединение или права доступа.
-                                </p>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => loadCourses(currentOrganizationId!)}
-                                    className="mt-4 border-red-500/50 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-black uppercase tracking-widest text-[10px] h-10 rounded-xl px-6"
-                                >
-                                    <RefreshCcw className="mr-2 h-3 w-3" /> Попробовать снова
-                                </Button>
+            <div className="flex h-full overflow-hidden bg-[#F5F6F8]">
+                {/* 1. LEFT PANEL: Course List (320px Fixed) */}
+                <div className={cn(
+                    "w-full lg:w-[320px] border-r border-[#E5E7EB] bg-white flex flex-col shrink-0 transition-all duration-300 relative z-30",
+                    selectedCourseId && "hidden lg:flex"
+                )}>
+                    {/* List Header */}
+                    <div className="p-6 pb-2">
+                        <div className="flex items-center justify-between gap-4 mb-6">
+                            <div className="min-w-0">
+                                <h1 className="text-[18px] font-black text-[#0F172A] tracking-tight font-inter truncate leading-none">Курсы</h1>
+                                <div className="flex items-center gap-1.5 mt-2">
+                                    <div className="w-1 h-1 rounded-full bg-[#2563EB]" />
+                                    <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider font-inter">
+                                        Всего: {total}
+                                    </span>
+                                </div>
                             </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div className="hidden laptop:block">
-                        <h1 className="text-3xl font-bold tracking-tight text-white mb-1">Предметы</h1>
-                        <p className="text-zinc-400">Управление учебными дисциплинами и назначениями</p>
+                            <AddCourseModal onSuccess={(newCourse) => {
+                                setCourses(prev => [newCourse, ...prev]);
+                                setSelectedCourseId(newCourse.id);
+                            }} />
+                        </div>
+                        <CourseFilters
+                            search={search}
+                            onSearchChange={setSearch}
+                            statusFilter={statusFilter}
+                            onStatusChange={setStatusFilter}
+                            facultyFilter={facultyFilter}
+                            onFacultyChange={setFacultyFilter}
+                            departmentFilter={departmentFilter}
+                            onDepartmentChange={setDepartmentFilter}
+                            teacherFilter={teacherFilter}
+                            onTeacherChange={setTeacherFilter}
+                        />
                     </div>
-                    <div className="flex gap-2">
-                        <AddCourseModal />
+
+                    {/* Course List */}
+                    <div className="flex-1 overflow-y-auto no-scrollbar px-3 pb-6">
+                        <div className="flex flex-col gap-1">
+                            <CourseListPanel
+                                courses={filteredCourses}
+                                selectedCourseId={selectedCourseId}
+                                onSelect={(c) => setSelectedCourseId(c.id)}
+                            />
+                        </div>
                     </div>
                 </div>
 
-                {/* Stats Cards */}
-                <div className="grid gap-4 md:grid-cols-2 laptop:grid-cols-4">
-                    <Card className="bg-zinc-900 border-zinc-800">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-zinc-400">Всего предметов</CardTitle>
-                            <BookOpen className="h-4 w-4 text-zinc-500" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-white">{total}</div>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-zinc-900 border-zinc-800">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-emerald-400">Активные</CardTitle>
-                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-white">{active}</div>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-zinc-900 border-zinc-800">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-amber-400">Неактивные</CardTitle>
-                            <XCircle className="h-4 w-4 text-amber-500" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-white">{inactive}</div>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-zinc-900 border-zinc-800">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-zinc-500">Архив</CardTitle>
-                            <Archive className="h-4 w-4 text-zinc-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-zinc-500">{archived}</div>
-                        </CardContent>
-                    </Card>
+                {/* 2. MAIN & TOP PANELS: Content Area */}
+                <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+
+                    {/* 4. CENTER PANEL (Working Area) */}
+                    <div className="flex-1 flex flex-col items-center bg-transparent p-6">
+                        <div className="w-full max-w-[1040px] flex-1 flex flex-col min-h-[600px]">
+                            {selectedCourse ? (
+                                <CourseDetailPanel
+                                    course={selectedCourse}
+                                    onUpdate={handleSaveUpdate}
+                                    onDelete={handleDelete}
+                                />
+                            ) : (
+                                <div className="flex-1 flex flex-col items-center justify-center text-[#64748B] p-12 bg-white rounded-[24px] border border-[#E5E7EB] shadow-sm">
+                                    <div className="w-20 h-20 rounded-[20px] bg-[#F5F6F8] flex items-center justify-center mb-6">
+                                        <BookOpen className="h-8 w-8 opacity-20" />
+                                    </div>
+                                    <h2 className="text-[18px] font-black text-[#0F172A] mb-2 tracking-tight font-inter">Выберите курс</h2>
+                                    <p className="text-[14px] text-[#64748B] font-medium max-w-[280px] text-center leading-relaxed font-inter">
+                                        Выберите курс из списка слева для просмотра деталей и редактирования
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
-
-                <div className="bg-zinc-950/50 p-1">
-                    <CourseFilters
-                        search={search}
-                        onSearchChange={setSearch}
-                        statusFilter={statusFilter}
-                        onStatusChange={setStatusFilter}
-                        facultyFilter={facultyFilter}
-                        onFacultyChange={setFacultyFilter}
-                        departmentFilter={departmentFilter}
-                        onDepartmentChange={setDepartmentFilter}
-                        teacherFilter={teacherFilter}
-                        onTeacherChange={setTeacherFilter}
-                    />
-
-                    <CoursesTable
-                        courses={filteredCourses}
-                        onEdit={handleEdit}
-                        onAssignTeachers={handleAssignTeachers}
-                        onLinkGroups={handleLinkGroups}
-                    />
-                </div>
-
-                <EditCourseModal
-                    course={selectedCourse}
-                    open={editModalOpen}
-                    onOpenChange={setEditModalOpen}
-                    onSave={handleSaveUpdate}
-                />
-
-                <AssignTeachersModal
-                    course={selectedCourse}
-                    open={assignTeachersOpen}
-                    onOpenChange={setAssignTeachersOpen}
-                    onSave={handleSaveTeachers}
-                />
-
-                <LinkGroupsModal
-                    course={selectedCourse}
-                    open={linkGroupsOpen}
-                    onOpenChange={setLinkGroupsOpen}
-                    onSave={handleSaveGroups}
-                />
             </div>
         </ModuleGuard>
     );

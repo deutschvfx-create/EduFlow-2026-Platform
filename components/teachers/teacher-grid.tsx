@@ -15,9 +15,9 @@ interface TeacherGridProps {
 export function TeacherGrid({ teachers, onEditPermissions, controlMode, selectedIds = [], onToggleSelect }: TeacherGridProps) {
     if (teachers.length === 0) {
         return (
-            <div className="text-center py-20 bg-zinc-900/50 rounded-lg border border-zinc-800 border-dashed">
-                <p className="text-zinc-500 mb-2 font-bold uppercase tracking-widest text-xs">Преподаватели не найдены</p>
-                <p className="text-sm text-zinc-600">Попробуйте изменить фильтры или добавьте нового преподавателя</p>
+            <div className="text-center py-20 bg-card/50 rounded-lg border border-border border-dashed">
+                <p className="text-muted-foreground mb-2 font-bold uppercase tracking-widest text-xs">Преподаватели не найдены</p>
+                <p className="text-sm text-muted-foreground">Попробуйте изменить фильтры или добавьте нового преподавателя</p>
             </div>
         );
     }

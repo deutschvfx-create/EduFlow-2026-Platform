@@ -88,12 +88,12 @@ export function AddFacultyModal() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2">
+                <Button className="bg-primary hover:bg-primary/90 text-foreground gap-2">
                     <Plus className="h-4 w-4" />
                     Добавить факультет
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] bg-zinc-900 border-zinc-800 text-zinc-100">
+            <DialogContent className="sm:max-w-[500px] bg-card border-border text-foreground">
                 <DialogHeader>
                     <DialogTitle>Добавление факультета</DialogTitle>
                     <DialogDescription>Создайте новый факультет в структуре университета</DialogDescription>
@@ -104,7 +104,7 @@ export function AddFacultyModal() {
                         <Label>Название *</Label>
                         <Input
                             placeholder="Например: Факультет информационных технологий"
-                            className="bg-zinc-950 border-zinc-800"
+                            className="bg-background border-border"
                             value={name}
                             onChange={(e) => handleNameChange(e.target.value)}
                         />
@@ -114,7 +114,7 @@ export function AddFacultyModal() {
                         <Label>Код (ID) *</Label>
                         <Input
                             placeholder="IT"
-                            className="bg-zinc-950 border-zinc-800 uppercase"
+                            className="bg-background border-border uppercase"
                             value={code}
                             onChange={(e) => setCode(e.target.value.toUpperCase())}
                             maxLength={10}
@@ -125,7 +125,7 @@ export function AddFacultyModal() {
                         <Label>Описание</Label>
                         <Textarea
                             placeholder="Краткое описание деятельности..."
-                            className="bg-zinc-950 border-zinc-800 resize-none h-20"
+                            className="bg-background border-border resize-none h-20"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                         />
@@ -134,7 +134,7 @@ export function AddFacultyModal() {
                     <div className="space-y-2">
                         <Label>Руководитель (Декан)</Label>
                         <Select value={headTeacherId} onValueChange={setHeadTeacherId}>
-                            <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                            <SelectTrigger className="bg-background border-border">
                                 <SelectValue placeholder="Выберите преподавателя" />
                             </SelectTrigger>
                             <SelectContent>
@@ -150,7 +150,7 @@ export function AddFacultyModal() {
 
                 <div className="flex justify-end gap-2">
                     <Button variant="ghost" onClick={() => setOpen(false)}>Отмена</Button>
-                    <Button onClick={handleSubmit} disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                    <Button onClick={handleSubmit} disabled={loading} className="bg-primary hover:bg-primary/90 text-foreground">
                         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Создать
                     </Button>

@@ -177,5 +177,34 @@ export const scheduleRepo = {
             unsubscribe();
             subscriptions.delete(organizationId);
         }
+    },
+
+    getGlobalSchedule: async (
+        organizationIds: string[],
+        options?: { teacherId?: string }
+    ): Promise<Lesson[]> => {
+        if (typeof window === 'undefined' || !firestoreDb || organizationIds.length === 0) return [];
+        try {
+            const { collection, query, where, getDocs } = await import("firebase/firestore");
+            const lessonsRef = collection(firestoreDb, COLLECTION_NAME);
+
+            // Note: Firestore 'in' query supports up to 30 values
+            const q = query(
+                lessonsRef,
+                where("organizationId", "in", organizationIds.slice(0, 30))
+            );
+
+            const snap = await getDocs(q);
+            let lessons = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lesson));
+
+            if (options?.teacherId) {
+                lessons = lessons.filter(l => l.teacherId === options.teacherId);
+            }
+
+            return lessons;
+        } catch (error) {
+            console.error("scheduleRepo.getGlobalSchedule failed:", error);
+            return [];
+        }
     }
 };

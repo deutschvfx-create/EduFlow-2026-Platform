@@ -128,11 +128,11 @@ export default function StudentQuickRegistration() {
     // Render QR Code View (Generated)
     if (qrData) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4">
-                <Card className="w-full max-w-sm bg-zinc-900 border-zinc-800 shadow-2xl">
+            <div className="flex min-h-screen items-center justify-center bg-background p-4">
+                <Card className="w-full max-w-sm bg-card border-border shadow-2xl">
                     <CardHeader className="space-y-1 text-center">
                         <CardTitle className="text-2xl font-bold text-white">Покажите учителю</CardTitle>
-                        <CardDescription className="text-zinc-400">
+                        <CardDescription className="text-muted-foreground">
                             Код действителен {formatTime(timer)}
                         </CardDescription>
                     </CardHeader>
@@ -142,11 +142,11 @@ export default function StudentQuickRegistration() {
                         </div>
                         <div className="space-y-1 text-center text-white">
                             <div className="text-xl font-medium">{name} {lastName}</div>
-                            <div className="text-zinc-400">{day}.{month}.{year}</div>
+                            <div className="text-muted-foreground">{day}.{month}.{year}</div>
                         </div>
                     </CardContent>
                     <CardFooter>
-                        <Button variant="outline" onClick={() => setQrData(null)} className="w-full border-zinc-700 text-zinc-300 hover:text-white">
+                        <Button variant="outline" onClick={() => setQrData(null)} className="w-full border-border text-foreground hover:text-white">
                             Назад
                         </Button>
                     </CardFooter>
@@ -156,33 +156,33 @@ export default function StudentQuickRegistration() {
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4">
-            <Card className="w-full max-w-md bg-zinc-900 border-zinc-800 shadow-2xl">
+        <div className="flex min-h-screen items-center justify-center bg-background p-4">
+            <Card className="w-full max-w-md bg-card border-border shadow-2xl">
                 <CardHeader className="space-y-1">
                     <div className="flex items-center gap-2 mb-2">
                         <Link href="/">
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-400 hover:text-white">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-white">
                                 <ArrowLeft className="h-4 w-4" />
                             </Button>
                         </Link>
-                        <div className="p-2 rounded-full bg-indigo-500/10">
-                            <GraduationCap className="h-5 w-5 text-indigo-400" />
+                        <div className="p-2 rounded-full bg-primary/10">
+                            <GraduationCap className="h-5 w-5 text-primary" />
                         </div>
                     </div>
                     <CardTitle className="text-2xl font-bold tracking-tight text-white">
                         Быстрая регистрация
                     </CardTitle>
-                    <CardDescription className="text-zinc-400">
+                    <CardDescription className="text-muted-foreground">
                         Присоединяйтесь к школе за пару минут
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                        <TabsList className="grid w-full grid-cols-2 bg-zinc-800">
-                            <TabsTrigger value="qr" className="data-[state=active]:bg-zinc-700 text-zinc-300 data-[state=active]:text-white">
+                        <TabsList className="grid w-full grid-cols-2 bg-secondary">
+                            <TabsTrigger value="qr" className="data-[state=active]:bg-secondary text-foreground data-[state=active]:text-white">
                                 <QrCode className="mr-2 h-4 w-4" /> QR-код
                             </TabsTrigger>
-                            <TabsTrigger value="invite" className="data-[state=active]:bg-zinc-700 text-zinc-300 data-[state=active]:text-white">
+                            <TabsTrigger value="invite" className="data-[state=active]:bg-secondary text-foreground data-[state=active]:text-white">
                                 <Ticket className="mr-2 h-4 w-4" /> Приглашение
                             </TabsTrigger>
                         </TabsList>
@@ -190,44 +190,44 @@ export default function StudentQuickRegistration() {
                         <TabsContent value="qr" className="mt-6 space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label className="text-zinc-200">Имя</Label>
+                                    <Label className="text-foreground">Имя</Label>
                                     <Input
                                         placeholder="Иван"
-                                        className="bg-zinc-950 border-zinc-700 text-zinc-100 placeholder:text-zinc-600"
+                                        className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-zinc-200">Фамилия</Label>
+                                    <Label className="text-foreground">Фамилия</Label>
                                     <Input
                                         placeholder="Иванов"
-                                        className="bg-zinc-950 border-zinc-700 text-zinc-100 placeholder:text-zinc-600"
+                                        className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                                         value={lastName}
                                         onChange={(e) => setLastName(e.target.value)}
                                     />
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-zinc-200">Дата рождения</Label>
+                                <Label className="text-foreground">Дата рождения</Label>
                                 <div className="flex gap-2">
                                     <Input
                                         placeholder="ДД"
-                                        className="bg-zinc-950 border-zinc-700 text-zinc-100 text-center w-16 placeholder:text-zinc-600"
+                                        className="bg-background border-border text-foreground text-center w-16 placeholder:text-muted-foreground"
                                         value={day}
                                         onChange={(e) => setDay(e.target.value)}
                                         maxLength={2}
                                     />
                                     <Input
                                         placeholder="ММ"
-                                        className="bg-zinc-950 border-zinc-700 text-zinc-100 text-center w-16 placeholder:text-zinc-600"
+                                        className="bg-background border-border text-foreground text-center w-16 placeholder:text-muted-foreground"
                                         value={month}
                                         onChange={(e) => setMonth(e.target.value)}
                                         maxLength={2}
                                     />
                                     <Input
                                         placeholder="ГГГГ"
-                                        className="bg-zinc-950 border-zinc-700 text-zinc-100 text-center flex-1 placeholder:text-zinc-600"
+                                        className="bg-background border-border text-foreground text-center flex-1 placeholder:text-muted-foreground"
                                         value={year}
                                         onChange={(e) => setYear(e.target.value)}
                                         maxLength={4}
@@ -236,7 +236,7 @@ export default function StudentQuickRegistration() {
                             </div>
                             <Button
                                 onClick={handleGenerateQR}
-                                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium h-10"
+                                className="w-full bg-primary hover:bg-primary/90 text-white font-medium h-10"
                             >
                                 Создать QR-код
                             </Button>
@@ -245,32 +245,32 @@ export default function StudentQuickRegistration() {
                         <TabsContent value="invite" className="mt-6 space-y-6">
                             {showScanner ? (
                                 <div className="space-y-4">
-                                    <div className="rounded-lg overflow-hidden border border-zinc-700 relative bg-black h-64 flex flex-col items-center justify-center">
-                                        <Camera className="h-12 w-12 text-zinc-600 mb-2" />
-                                        <div className="text-zinc-500 text-sm">Сканер QR отключен в Dev Mode</div>
+                                    <div className="rounded-lg overflow-hidden border border-border relative bg-black h-64 flex flex-col items-center justify-center">
+                                        <Camera className="h-12 w-12 text-muted-foreground mb-2" />
+                                        <div className="text-muted-foreground text-sm">Сканер QR отключен в Dev Mode</div>
                                         {/* <QrReader ... /> removed to fix build */}
                                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                            <div className="w-48 h-48 border-2 border-indigo-500 rounded-lg opacity-50"></div>
+                                            <div className="w-48 h-48 border-2 border-primary rounded-lg opacity-50"></div>
                                         </div>
                                     </div>
                                     <Button
                                         variant="outline"
                                         onClick={() => setShowScanner(false)}
-                                        className="w-full border-zinc-700 text-zinc-300"
+                                        className="w-full border-border text-foreground"
                                     >
                                         <X className="mr-2 h-4 w-4" /> Закрыть сканер
                                     </Button>
-                                    <p className="text-center text-xs text-zinc-500">
+                                    <p className="text-center text-xs text-muted-foreground">
                                         Наведите камеру на QR-код учителя
                                     </p>
                                 </div>
                             ) : (
                                 <>
                                     <div className="space-y-2">
-                                        <Label className="text-zinc-200">Код приглашения</Label>
+                                        <Label className="text-foreground">Код приглашения</Label>
                                         <Input
                                             placeholder="Введите код вручную"
-                                            className="bg-zinc-950 border-zinc-700 text-zinc-100 text-center tracking-wider font-mono placeholder:text-zinc-600"
+                                            className="bg-background border-border text-foreground text-center tracking-wider font-mono placeholder:text-muted-foreground"
                                             value={inviteCode}
                                             onChange={(e) => setInviteCode(e.target.value)}
                                         />
@@ -287,17 +287,17 @@ export default function StudentQuickRegistration() {
 
                                         <div className="relative">
                                             <div className="absolute inset-0 flex items-center">
-                                                <span className="w-full border-t border-zinc-800" />
+                                                <span className="w-full border-t border-border" />
                                             </div>
                                             <div className="relative flex justify-center text-xs uppercase">
-                                                <span className="bg-zinc-900 px-2 text-zinc-500">Или</span>
+                                                <span className="bg-card px-2 text-muted-foreground">Или</span>
                                             </div>
                                         </div>
 
                                         <Button
                                             variant="outline"
                                             onClick={() => setShowScanner(true)}
-                                            className="w-full border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                                            className="w-full border-border text-foreground hover:bg-secondary hover:text-white"
                                         >
                                             <Camera className="mr-2 h-4 w-4" /> Сканировать QR-код
                                         </Button>

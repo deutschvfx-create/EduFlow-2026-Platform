@@ -19,7 +19,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EduFlow 2.0",
+  title: "UNI PRIME 2.0",
   description: "Современная платформа для управления учебными заведениями",
 };
 
@@ -32,7 +32,7 @@ export default function RootLayout({
     <html lang="ru" suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#6366f1" />
+        <meta name="theme-color" content="#06b6d4" />
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
       </head>
       <body
@@ -40,7 +40,8 @@ export default function RootLayout({
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="light"
+          forcedTheme="light"
           enableSystem={false}
           disableTransitionOnChange
         >

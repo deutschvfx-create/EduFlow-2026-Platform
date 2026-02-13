@@ -32,7 +32,7 @@ export function MobileDateStrip({ currentDate, onDateSelect }: MobileDateStripPr
     }, [currentDate]);
 
     return (
-        <div className="w-full bg-zinc-950 border-b border-zinc-800 sticky top-0 z-10">
+        <div className="w-full bg-background border-b border-border sticky top-0 z-10">
             <div
                 ref={scrollRef}
                 className="flex overflow-x-auto py-2 px-2 gap-2 no-scrollbar snap-x"
@@ -51,18 +51,18 @@ export function MobileDateStrip({ currentDate, onDateSelect }: MobileDateStripPr
                                 "flex flex-col items-center justify-center min-w-[56px] h-[72px] rounded-2xl snap-center transition-all duration-300 relative",
                                 isSelected
                                     ? "bg-violet-600 text-white shadow-md shadow-violet-900/30"
-                                    : "bg-transparent text-zinc-500 hover:text-zinc-300"
+                                    : "bg-transparent text-muted-foreground hover:text-foreground"
                             )}
                         >
                             <span className={cn(
                                 "text-[11px] font-medium uppercase tracking-wider mb-0.5",
-                                isSelected ? "text-violet-100" : "text-zinc-500"
+                                isSelected ? "text-violet-100" : "text-muted-foreground"
                             )}>
                                 {format(date, 'EEE', { locale: ru })}
                             </span>
                             <span className={cn(
                                 "text-2xl font-bold leading-none",
-                                isSelected ? "text-white" : "text-zinc-400"
+                                isSelected ? "text-white" : "text-muted-foreground"
                             )}>
                                 {format(date, 'd')}
                             </span>

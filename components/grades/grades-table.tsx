@@ -19,17 +19,17 @@ interface GradesTableProps {
 export function GradesTable({ students, gradesMap, onScoreChange, onCommentChange, onClear }: GradesTableProps) {
     if (students.length === 0) {
         return (
-            <div className="text-center py-20 bg-zinc-900/50 rounded-lg border border-zinc-800 border-dashed">
-                <p className="text-zinc-500 mb-2">В этой группе нет студентов</p>
+            <div className="text-center py-20 bg-card/50 rounded-lg border border-border border-dashed">
+                <p className="text-muted-foreground mb-2">В этой группе нет студентов</p>
             </div>
         )
     }
 
     return (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+        <div className="bg-card border border-border rounded-lg overflow-hidden">
             <Table>
-                <TableHeader className="bg-zinc-950/50">
-                    <TableRow className="border-zinc-800 hover:bg-zinc-900">
+                <TableHeader className="bg-background/50">
+                    <TableRow className="border-border hover:bg-card">
                         <TableHead className="w-[30%]">Студент</TableHead>
                         <TableHead className="w-[150px] text-center">Оценка (0-100)</TableHead>
                         <TableHead className="w-[150px] text-center">Статус</TableHead>
@@ -43,8 +43,8 @@ export function GradesTable({ students, gradesMap, onScoreChange, onCommentChang
                         const hasScore = grade?.score !== undefined && grade?.score !== null;
 
                         return (
-                            <TableRow key={student.id} className="border-zinc-800 hover:bg-zinc-800/50">
-                                <TableCell className="font-medium text-zinc-200">
+                            <TableRow key={student.id} className="border-border hover:bg-secondary/50">
+                                <TableCell className="font-medium text-foreground">
                                     {student.lastName} {student.firstName}
                                 </TableCell>
                                 <TableCell>
@@ -53,7 +53,7 @@ export function GradesTable({ students, gradesMap, onScoreChange, onCommentChang
                                         min={0}
                                         max={100}
                                         placeholder="-"
-                                        className={`bg-zinc-950 text-center ${hasScore ? 'border-indigo-500/50 focus:border-indigo-500' : 'border-zinc-800'}`}
+                                        className={`bg-background text-center ${hasScore ? 'border-primary/50 focus:border-primary' : 'border-border'}`}
                                         value={grade?.score ?? ''}
                                         onChange={(e) => onScoreChange(student.id, e.target.value)}
                                     />
@@ -64,7 +64,7 @@ export function GradesTable({ students, gradesMap, onScoreChange, onCommentChang
                                             Оценено
                                         </Badge>
                                     ) : (
-                                        <Badge variant="outline" className="text-zinc-500 border-zinc-700">
+                                        <Badge variant="outline" className="text-muted-foreground border-border">
                                             Не оценено
                                         </Badge>
                                     )}
@@ -72,14 +72,14 @@ export function GradesTable({ students, gradesMap, onScoreChange, onCommentChang
                                 <TableCell>
                                     <Input
                                         placeholder="Комментарий..."
-                                        className="bg-transparent border-transparent hover:border-zinc-700 focus:border-indigo-500 focus:bg-zinc-950 text-zinc-300"
+                                        className="bg-transparent border-transparent hover:border-border focus:border-primary focus:bg-background text-foreground"
                                         value={grade?.comment ?? ''}
                                         onChange={(e) => onCommentChange(student.id, e.target.value)}
                                     />
                                 </TableCell>
                                 <TableCell className="text-right">
                                     {hasScore && (
-                                        <Button variant="ghost" size="icon" onClick={() => onClear(student.id)} className="h-8 w-8 text-zinc-500 hover:text-red-400">
+                                        <Button variant="ghost" size="icon" onClick={() => onClear(student.id)} className="h-8 w-8 text-muted-foreground hover:text-red-400">
                                             <X className="h-4 w-4" />
                                         </Button>
                                     )}

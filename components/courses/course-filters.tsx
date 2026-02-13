@@ -72,47 +72,41 @@ export function CourseFilters({
     }
 
     return (
-        <div className="flex flex-col gap-4 mb-6">
-            <div className="flex flex-col md:flex-row gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
-                    <Input
-                        placeholder="Поиск по названию или коду..."
-                        className="pl-9 bg-zinc-900 border-zinc-800"
-                        value={search}
-                        onChange={(e) => onSearchChange(e.target.value)}
-                    />
-                </div>
-                <div className="flex gap-2">
-                    <Select value={statusFilter} onValueChange={onStatusChange}>
-                        <SelectTrigger className="w-[140px] bg-zinc-900 border-zinc-800">
-                            <SelectValue placeholder="Статус" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Все статусы</SelectItem>
-                            <SelectItem value="ACTIVE">Активные</SelectItem>
-                            <SelectItem value="INACTIVE">Неактивные</SelectItem>
-                            <SelectItem value="ARCHIVED">Архив</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    {hasActiveFilters && (
-                        <Button variant="ghost" size="icon" onClick={clearFilters} title="Сбросить фильтры">
-                            <X className="h-4 w-4" />
-                        </Button>
-                    )}
-                </div>
+        <div className="flex flex-col gap-2.5 mb-6">
+            {/* Search */}
+            <div className="relative group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#64748B] transition-colors group-focus-within:text-[#0F4C3D]" />
+                <Input
+                    placeholder="Поиск по названию или коду..."
+                    className="h-10 pl-11 bg-[#F1F5F9] border-transparent text-[13px] font-medium text-[#0F172A] placeholder:text-[#94A3B8] rounded-full focus:bg-white focus:ring-4 focus:ring-[#0F4C3D]/5 focus:border-[#0F4C3D] transition-all font-inter shadow-none"
+                    value={search}
+                    onChange={(e) => onSearchChange(e.target.value)}
+                />
             </div>
 
+            {/* Filters Row */}
             <div className="flex flex-wrap gap-2">
+                <Select value={statusFilter} onValueChange={onStatusChange}>
+                    <SelectTrigger className="flex-1 min-w-[120px] h-8 bg-white border-[#E2E8F0] text-[#0F172A] text-[10px] font-bold uppercase tracking-wider rounded-full focus:ring-4 focus:ring-[#0F4C3D]/5 hover:bg-[#F8FAFC] hover:border-[#0F4C3D]/30 transition-all font-inter px-3.5 shadow-sm">
+                        <SelectValue placeholder="Статус" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-[12px] border-[#E2E8F0] shadow-2xl p-1 animate-in fade-in zoom-in-95 duration-200">
+                        <SelectItem value="all" className="text-[10px] font-bold py-2 rounded-full font-inter uppercase tracking-wider">ВСЕ СТАТУСЫ</SelectItem>
+                        <SelectItem value="ACTIVE" className="text-[10px] font-bold py-2 text-[#22C55E] rounded-full font-inter uppercase tracking-wider">АКТИВНЫЕ</SelectItem>
+                        <SelectItem value="INACTIVE" className="text-[10px] font-bold py-2 text-[#64748B] rounded-full font-inter uppercase tracking-wider">НЕАКТИВНЫЕ</SelectItem>
+                        <SelectItem value="ARCHIVED" className="text-[10px] font-bold py-2 text-[#EF4444] rounded-full font-inter uppercase tracking-wider">АРХИВ</SelectItem>
+                    </SelectContent>
+                </Select>
+
                 {modules.faculties && (
                     <Select value={facultyFilter} onValueChange={(val) => { onFacultyChange(val); onDepartmentChange('all'); }}>
-                        <SelectTrigger className="w-[180px] bg-zinc-900 border-zinc-800">
+                        <SelectTrigger className="flex-1 min-w-[120px] h-8 bg-white border-[#E2E8F0] text-[#0F172A] text-[10px] font-bold uppercase tracking-wider rounded-full focus:ring-4 focus:ring-[#0F4C3D]/5 hover:bg-[#F8FAFC] hover:border-[#0F4C3D]/30 transition-all font-inter px-3.5 shadow-sm">
                             <SelectValue placeholder="Факультет" />
                         </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Все факультеты</SelectItem>
+                        <SelectContent className="rounded-[12px] border-[#E2E8F0] shadow-2xl p-1">
+                            <SelectItem value="all" className="text-[10px] font-bold py-2 rounded-full font-inter uppercase tracking-wider">ВСЕ ФАКУЛЬТЕТЫ</SelectItem>
                             {faculties.map(f => (
-                                <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                                <SelectItem key={f.id} value={f.id} className="text-[10px] font-bold py-2 rounded-full font-inter uppercase tracking-wider">{f.name}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
@@ -120,29 +114,41 @@ export function CourseFilters({
 
                 {modules.departments && (
                     <Select value={departmentFilter} onValueChange={onDepartmentChange} disabled={availableDepartments.length === 0}>
-                        <SelectTrigger className="w-[180px] bg-zinc-900 border-zinc-800">
-                            <SelectValue placeholder={availableDepartments.length === 0 && facultyFilter !== 'all' ? "Нет кафедр" : "Кафедра"} />
+                        <SelectTrigger className="flex-1 min-w-[120px] h-8 bg-white border-[#E2E8F0] text-[#0F172A] text-[10px] font-bold uppercase tracking-wider rounded-full focus:ring-4 focus:ring-[#0F4C3D]/5 hover:bg-[#F8FAFC] hover:border-[#0F4C3D]/30 transition-all font-inter px-3.5 shadow-sm">
+                            <SelectValue placeholder={availableDepartments.length === 0 && facultyFilter !== 'all' ? "НЕТ КАФЕДР" : "КАФЕДРА"} />
                         </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Все кафедры</SelectItem>
+                        <SelectContent className="rounded-[12px] border-[#E2E8F0] shadow-2xl p-1">
+                            <SelectItem value="all" className="text-[10px] font-bold py-2 rounded-full font-inter uppercase tracking-wider">ВСЕ КАФЕДРЫ</SelectItem>
                             {availableDepartments.map(d => (
-                                <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                                <SelectItem key={d.id} value={d.id} className="text-[10px] font-bold py-2 rounded-full font-inter uppercase tracking-wider">{d.name}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
                 )}
 
                 <Select value={teacherFilter} onValueChange={onTeacherChange}>
-                    <SelectTrigger className="w-[180px] bg-zinc-900 border-zinc-800">
+                    <SelectTrigger className="flex-1 min-w-[120px] h-8 bg-white border-[#E2E8F0] text-[#0F172A] text-[10px] font-bold uppercase tracking-wider rounded-full focus:ring-4 focus:ring-[#0F4C3D]/5 hover:bg-[#F8FAFC] hover:border-[#0F4C3D]/30 transition-all font-inter px-3.5 shadow-sm">
                         <SelectValue placeholder="Преподаватель" />
                     </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">Все преподаватели</SelectItem>
+                    <SelectContent className="rounded-[12px] border-[#E2E8F0] shadow-2xl p-1">
+                        <SelectItem value="all" className="text-[10px] font-bold py-2 rounded-full font-inter uppercase tracking-wider">ВСЕ ПРЕПОДАВАТЕЛИ</SelectItem>
                         {teachers.map(t => (
-                            <SelectItem key={t.id} value={t.id}>{t.firstName} {t.lastName}</SelectItem>
+                            <SelectItem key={t.id} value={t.id} className="text-[10px] font-bold py-2 rounded-full font-inter uppercase tracking-wider">{t.firstName} {t.lastName}</SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
+
+                {hasActiveFilters && (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-[#64748B] hover:text-[#EF4444] hover:bg-[#EF4444]/5 rounded-full shrink-0 transition-colors"
+                        onClick={clearFilters}
+                        title="Сбросить фильтры"
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
+                )}
             </div>
         </div>
     );

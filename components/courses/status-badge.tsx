@@ -14,7 +14,7 @@ export function CourseStatusBadge({ status }: { status: CourseStatus }) {
     const className = status === 'ACTIVE'
         ? "bg-green-500/15 text-green-500 hover:bg-green-500/25 border-green-500/20"
         : status === 'ARCHIVED'
-            ? "text-zinc-500 border-zinc-700 bg-zinc-800"
+            ? "text-muted-foreground border-border bg-secondary"
             : "";
 
     return (

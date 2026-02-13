@@ -50,7 +50,7 @@ export function EditPermissionsModal({ teacher, open, onOpenChange, onSave }: Ed
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[500px] bg-zinc-900 border-zinc-800 text-zinc-100">
+            <DialogContent className="sm:max-w-[500px] bg-card border-border text-foreground">
                 <DialogHeader>
                     <DialogTitle>Права доступа</DialogTitle>
                     <DialogDescription>
@@ -62,7 +62,7 @@ export function EditPermissionsModal({ teacher, open, onOpenChange, onSave }: Ed
                     {Object.keys(PERMISSION_LABELS).map((key) => {
                         const k = key as keyof TeacherPermissions;
                         return (
-                            <div key={k} className="flex items-center justify-between space-x-2 border p-3 rounded-md border-zinc-800">
+                            <div key={k} className="flex items-center justify-between space-x-2 border p-3 rounded-md border-border">
                                 <Label htmlFor={k} className="flex-1 cursor-pointer">
                                     {PERMISSION_LABELS[k]}
                                 </Label>
@@ -77,8 +77,8 @@ export function EditPermissionsModal({ teacher, open, onOpenChange, onSave }: Ed
                 </div>
 
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)} className="border-zinc-700 text-zinc-300">Отмена</Button>
-                    <Button onClick={handleSave} className="bg-indigo-600 hover:bg-indigo-700">Сохранить</Button>
+                    <Button variant="outline" onClick={() => onOpenChange(false)} className="border-border text-foreground">Отмена</Button>
+                    <Button onClick={handleSave} className="bg-primary hover:bg-primary/90">Сохранить</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

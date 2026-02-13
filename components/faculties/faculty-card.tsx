@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 import { useModules } from "@/hooks/use-modules";
+import { ActionGuard } from "@/components/auth/action-guard";
 
 interface FacultyCardProps {
     faculty: Faculty;
@@ -44,8 +45,8 @@ export function FacultyCard({ faculty, onEdit }: FacultyCardProps) {
         },
         ARCHIVED: {
             border: "border-l-zinc-500",
-            badge: "bg-zinc-500/10 text-zinc-500 border-zinc-500/20",
-            dot: "bg-zinc-500",
+            badge: "bg-muted/10 text-muted-foreground border-border/20",
+            dot: "bg-muted",
             label: "Архив"
         }
     };
@@ -59,7 +60,7 @@ export function FacultyCard({ faculty, onEdit }: FacultyCardProps) {
             viewport={{ once: true }}
             whileHover={{ y: -5 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            className={`group relative bg-zinc-900/40 backdrop-blur-xl border border-zinc-800/50 ${style.border} border-l-4 rounded-2xl p-5 shadow-xl hover:shadow-indigo-500/5 transition-all ring-1 ring-white/5`}
+            className={`group relative bg-card/40 backdrop-blur-xl border border-border/50 ${style.border} border-l-4 rounded-2xl p-5 shadow-xl hover:shadow-cyan-500/5 transition-all ring-1 ring-white/5`}
         >
             {/* Top Row: Code & Actions */}
             <div className="flex items-center justify-between mb-4">
@@ -68,64 +69,68 @@ export function FacultyCard({ faculty, onEdit }: FacultyCardProps) {
                 </Badge>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
                             <MoreVertical className="h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48 bg-zinc-950 border-zinc-800">
-                        <DropdownMenuItem onClick={() => onEdit(faculty)} className="text-zinc-400 focus:text-white focus:bg-zinc-900 cursor-pointer">
-                            Редактировать
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-zinc-400 focus:text-white focus:bg-zinc-900 cursor-pointer">
+                    <DropdownMenuContent align="end" className="w-48 bg-background border-border">
+                        <ActionGuard actionLabel="Для редактирования факультета нужна учетная запись">
+                            <DropdownMenuItem onClick={() => onEdit(faculty)} className="text-muted-foreground focus:text-foreground focus:bg-card cursor-pointer">
+                                Редактировать
+                            </DropdownMenuItem>
+                        </ActionGuard>
+                        <DropdownMenuItem className="text-muted-foreground focus:text-foreground focus:bg-card cursor-pointer">
                             Статистика
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-400 focus:text-red-300 focus:bg-red-500/10 cursor-pointer">
-                            В архив
-                        </DropdownMenuItem>
+                        <ActionGuard actionLabel="Архивация доступна только зарегистрированным пользователям">
+                            <DropdownMenuItem className="text-red-400 focus:text-red-300 focus:bg-red-500/10 cursor-pointer">
+                                В архив
+                            </DropdownMenuItem>
+                        </ActionGuard>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
 
             {/* Title */}
-            <h3 className="text-lg font-bold text-white mb-6 group-hover:text-indigo-400 transition-colors line-clamp-2 min-h-[3.5rem] leading-tight flex items-start">
+            <h3 className="text-lg font-bold text-foreground mb-6 group-hover:text-primary transition-colors line-clamp-2 min-h-[3.5rem] leading-tight flex items-start">
                 {faculty.name}
             </h3>
 
             {/* Metrics */}
             <div className="grid grid-cols-2 gap-3 mb-6">
                 {(modules as any).departments !== false && (
-                    <div className="flex items-center gap-2 bg-zinc-950/40 border border-zinc-800/50 rounded-xl p-2.5">
-                        <div className="h-8 w-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-                            <Layers className="h-4 w-4 text-indigo-400" />
+                    <div className="flex items-center gap-2 bg-background/40 border border-border/50 rounded-xl p-2.5">
+                        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Layers className="h-4 w-4 text-primary" />
                         </div>
                         <div>
-                            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Кафедры</p>
-                            <p className="text-sm font-black text-white">{faculty.departmentsCount || 0}</p>
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Кафедры</p>
+                            <p className="text-sm font-black text-foreground">{faculty.departmentsCount || 0}</p>
                         </div>
                     </div>
                 )}
                 {(modules as any).groups !== false && (
-                    <div className="flex items-center gap-2 bg-zinc-950/40 border border-zinc-800/50 rounded-xl p-2.5">
+                    <div className="flex items-center gap-2 bg-background/40 border border-border/50 rounded-xl p-2.5">
                         <div className="h-8 w-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
                             <Users className="h-4 w-4 text-purple-400" />
                         </div>
                         <div>
-                            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Группы</p>
-                            <p className="text-sm font-black text-white">{faculty.groupsCount || 0}</p>
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Группы</p>
+                            <p className="text-sm font-black text-foreground">{faculty.groupsCount || 0}</p>
                         </div>
                     </div>
                 )}
             </div>
 
             {/* Bottom Row: Students & Status */}
-            <div className="flex items-center justify-between pt-4 border-t border-zinc-800/50">
-                <div className="flex items-center gap-2 text-zinc-400">
+            <div className="flex items-center justify-between pt-4 border-t border-border/50">
+                <div className="flex items-center gap-2 text-muted-foreground">
                     <GraduationCap className="h-4 w-4" />
                     <span className="text-xs font-bold">120 Студентов</span>
                 </div>
-                <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-zinc-950/50 border border-zinc-800">
+                <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-background/50 border border-border">
                     <div className={`h-1.5 w-1.5 rounded-full ${style.dot} animate-pulse`} />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">{style.label}</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{style.label}</span>
                 </div>
             </div>
 

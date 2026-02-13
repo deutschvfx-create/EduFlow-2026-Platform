@@ -44,14 +44,54 @@ export const coursesRepo = {
         }
     },
 
-    add: async (organizationId: string, course: Course) => {
+    add: async (organizationId: string, course: Partial<Course>) => {
         const ref = course.id ? doc(db, COLLECTION, course.id) : doc(collection(db, COLLECTION));
-        const newCourse = {
-            ...course,
+        const newCourse: Course = {
             id: ref.id,
             organizationId,
-            createdAt: course.createdAt || new Date().toISOString()
+            version: course.version || "v2026",
+            name: course.name || "",
+            code: course.code || "",
+            status: course.status || "ACTIVE",
+            type: course.type || "MANDATORY",
+            facultyId: course.facultyId || "none",
+            departmentId: course.departmentId || "none",
+            level: course.level,
+            workload: course.workload || {
+                hoursPerWeek: 0,
+                hoursPerSemester: 0,
+                hoursPerYear: 0
+            },
+            description: course.description,
+            objective: course.objective,
+            modules: course.modules || [],
+            teachers: course.teachers || [],
+            teacherIds: course.teacherIds || [],
+            groupIds: course.groupIds || [],
+            grading: course.grading || {
+                type: "5_POINT",
+                rounding: "NEAREST",
+                minPassScore: 3,
+                weights: {
+                    exams: 40,
+                    control: 30,
+                    homework: 20,
+                    participation: 10
+                }
+            },
+            materials: course.materials || [],
+            events: course.events || [],
+            basePrice: course.basePrice || 0,
+            currency: course.currency || 'RUB',
+            archiveInfo: course.archiveInfo || undefined,
+            ...course,
+            format: course.format || "OFFLINE",
+            grouping: course.grouping || "GROUP",
+            createdAt: new Date().toISOString()
         };
+        // Remove undefined fields to avoid Firestore errors
+        Object.keys(newCourse).forEach(key => newCourse[key as keyof Course] === undefined && delete newCourse[key as keyof Course]);
+
         await setDoc(ref, newCourse);
         return newCourse;
     },

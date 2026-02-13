@@ -1,4 +1,4 @@
-
+﻿
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +25,7 @@ export default function ModulesSettingsPage() {
         router.refresh(); // Refresh layout to update sidebar
     };
 
-    if (!isLoaded) return <div className="text-zinc-500">Loading...</div>;
+    if (!isLoaded) return <div className="text-muted-foreground">Loading...</div>;
 
     return (
         <div className="space-y-6 max-w-4xl">
@@ -39,13 +39,13 @@ export default function ModulesSettingsPage() {
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
                         Модули платформы
                     </h1>
-                    <p className="text-zinc-400">Включайте только то, что нужно вашей организации</p>
+                    <p className="text-muted-foreground/70">Включайте только то, что нужно вашей организации</p>
                 </div>
             </div>
 
             <div className="grid gap-6">
                 {/* People */}
-                <Card className="bg-zinc-900 border-zinc-800">
+                <Card className="bg-card border-border">
                     <CardHeader>
                         <CardTitle>Люди</CardTitle>
                         <CardDescription>Управление пользователями</CardDescription>
@@ -54,14 +54,14 @@ export default function ModulesSettingsPage() {
                         <div className="flex items-center justify-between">
                             <Label className="flex flex-col gap-1">
                                 <span>Студенты</span>
-                                <span className="font-normal text-xs text-zinc-500">Базовый модуль</span>
+                                <span className="font-normal text-xs text-muted-foreground">Базовый модуль</span>
                             </Label>
                             <Switch checked={true} disabled />
                         </div>
                         <div className="flex items-center justify-between">
                             <Label htmlFor="teachers" className="flex flex-col gap-1">
                                 <span>Преподаватели</span>
-                                <span className="font-normal text-xs text-zinc-500">Управление штатом</span>
+                                <span className="font-normal text-xs text-muted-foreground">Управление штатом</span>
                             </Label>
                             <Switch
                                 id="teachers"
@@ -73,7 +73,7 @@ export default function ModulesSettingsPage() {
                 </Card>
 
                 {/* Structure */}
-                <Card className="bg-zinc-900 border-zinc-800">
+                <Card className="bg-card border-border">
                     <CardHeader>
                         <CardTitle>Структура</CardTitle>
                         <CardDescription>Иерархия организации</CardDescription>
@@ -95,7 +95,7 @@ export default function ModulesSettingsPage() {
                 </Card>
 
                 {/* Education */}
-                <Card className="bg-zinc-900 border-zinc-800">
+                <Card className="bg-card border-border">
                     <CardHeader>
                         <CardTitle>Обучение</CardTitle>
                         <CardDescription>Учебный процесс</CardDescription>
@@ -121,7 +121,7 @@ export default function ModulesSettingsPage() {
                 </Card>
 
                 {/* Communication */}
-                <Card className="bg-zinc-900 border-zinc-800">
+                <Card className="bg-card border-border">
                     <CardHeader>
                         <CardTitle>Коммуникация</CardTitle>
                     </CardHeader>
@@ -138,7 +138,7 @@ export default function ModulesSettingsPage() {
                 </Card>
 
                 {/* Analytics */}
-                <Card className="bg-zinc-900 border-zinc-800">
+                <Card className="bg-card border-border">
                     <CardHeader>
                         <CardTitle>Аналитика</CardTitle>
                     </CardHeader>
@@ -150,7 +150,7 @@ export default function ModulesSettingsPage() {
                     </CardContent>
                 </Card>
             </div>
-            {saving && <div className="fixed bottom-4 right-4 bg-indigo-600 text-white px-4 py-2 rounded-full flex items-center gap-2 shadow-lg animate-in slide-in-from-bottom-5"><Loader2 className="h-4 w-4 animate-spin" /> Сохранение...</div>}
+            {saving && <div className="fixed bottom-4 right-4 bg-primary text-foreground px-4 py-2 rounded-full flex items-center gap-2 shadow-lg animate-in slide-in-from-bottom-5"><Loader2 className="h-4 w-4 animate-spin" /> Сохранение...</div>}
         </div>
     );
 }

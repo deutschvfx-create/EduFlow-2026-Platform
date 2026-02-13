@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from "react";
 import { useOrganization } from "@/hooks/use-organization";
@@ -90,8 +90,8 @@ export default function DepartmentsPage() {
             <div className="space-y-6">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="hidden laptop:block">
-                        <h1 className="text-3xl font-bold tracking-tight text-white mb-1">Кафедры</h1>
-                        <p className="text-zinc-400">Управление кафедрами и структурой факультетов</p>
+                        <h1 className="text-3xl font-bold tracking-tight text-foreground mb-1">Кафедры</h1>
+                        <p className="text-muted-foreground/70">Управление кафедрами и структурой факультетов</p>
                     </div>
                     <div className="flex gap-2">
                         <AddDepartmentModal />
@@ -100,45 +100,45 @@ export default function DepartmentsPage() {
 
                 {/* Stats Cards */}
                 <div className="grid gap-4 md:grid-cols-2 laptop:grid-cols-4">
-                    <Card className="bg-zinc-900 border-zinc-800">
+                    <Card className="bg-card border-border">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-zinc-400">Всего кафедр</CardTitle>
-                            <Landmark className="h-4 w-4 text-zinc-500" />
+                            <CardTitle className="text-sm font-medium text-muted-foreground/70">Всего кафедр</CardTitle>
+                            <Landmark className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-white">{total}</div>
+                            <div className="text-2xl font-bold text-foreground">{total}</div>
                         </CardContent>
                     </Card>
-                    <Card className="bg-zinc-900 border-zinc-800">
+                    <Card className="bg-card border-border">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium text-emerald-400">Активные</CardTitle>
                             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-white">{active}</div>
+                            <div className="text-2xl font-bold text-foreground">{active}</div>
                         </CardContent>
                     </Card>
-                    <Card className="bg-zinc-900 border-zinc-800">
+                    <Card className="bg-card border-border">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium text-amber-400">Неактивные</CardTitle>
                             <XCircle className="h-4 w-4 text-amber-500" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-white">{inactive}</div>
+                            <div className="text-2xl font-bold text-foreground">{inactive}</div>
                         </CardContent>
                     </Card>
-                    <Card className="bg-zinc-900 border-zinc-800">
+                    <Card className="bg-card border-border">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-zinc-500">Архив</CardTitle>
-                            <Archive className="h-4 w-4 text-zinc-600" />
+                            <CardTitle className="text-sm font-medium text-muted-foreground">Архив</CardTitle>
+                            <Archive className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-zinc-500">{archived}</div>
+                            <div className="text-2xl font-bold text-muted-foreground">{archived}</div>
                         </CardContent>
                     </Card>
                 </div>
 
-                <div className="bg-zinc-950/50 p-1">
+                <div className="bg-background/50 p-1">
                     <DepartmentFilters
                         search={search}
                         onSearchChange={setSearch}
@@ -153,8 +153,8 @@ export default function DepartmentsPage() {
                         onEdit={handleEdit}
                     />
                     {loading && (
-                        <div className="flex flex-col items-center justify-center py-20 text-zinc-500 space-y-4">
-                            <div className="h-8 w-8 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
+                        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground space-y-4">
+                            <div className="h-8 w-8 border-2 border-primary/20 border-t-cyan-500 rounded-full animate-spin" />
                             <p className="text-sm font-medium">Загрузка...</p>
                         </div>
                     )}

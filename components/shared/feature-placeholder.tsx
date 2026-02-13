@@ -106,7 +106,7 @@ export function FeaturePlaceholder({
     };
 
     const content = (
-        <div className={`relative group overflow-hidden rounded-3xl border border-dashed border-zinc-800 bg-zinc-900/20 p-8 text-center transition-all hover:bg-zinc-900/40 ${className}`}>
+        <div className={`relative group overflow-hidden rounded-3xl border border-dashed border-border bg-secondary/20 p-8 text-center transition-all hover:bg-secondary/40 ${className}`}>
             <div className="absolute top-0 right-0 p-4">
                 <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[10px] font-black uppercase tracking-widest px-3 py-1 animate-pulse">
                     В разработке
@@ -114,16 +114,16 @@ export function FeaturePlaceholder({
             </div>
 
             <div className="flex flex-col items-center space-y-4 max-w-sm mx-auto">
-                <div className="h-16 w-16 rounded-2xl bg-zinc-950/50 border border-zinc-800 flex items-center justify-center relative">
-                    <Construction className="h-8 w-8 text-zinc-700 group-hover:text-amber-500 transition-colors" />
-                    <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-lg bg-amber-500 flex items-center justify-center text-zinc-950 shadow-lg">
+                <div className="h-16 w-16 rounded-2xl bg-secondary/50 border border-border flex items-center justify-center relative">
+                    <Construction className="h-8 w-8 text-muted-foreground group-hover:text-amber-500 transition-colors" />
+                    <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-lg bg-amber-500 flex items-center justify-center text-background shadow-lg">
                         <Clock className="h-3.5 w-3.5" />
                     </div>
                 </div>
 
                 <div className="space-y-1">
-                    <h3 className="text-lg font-black text-white tracking-tight uppercase tracking-widest">{featureName}</h3>
-                    <p className="text-zinc-500 text-xs font-medium leading-relaxed">
+                    <h3 className="text-lg font-black text-foreground tracking-tight uppercase tracking-widest">{featureName}</h3>
+                    <p className="text-muted-foreground text-xs font-medium leading-relaxed">
                         Мы проектируем мощный инструмент для {featureName.toLowerCase()}. Эта функция скоро станет доступной для вашего аккаунта.
                     </p>
                 </div>
@@ -131,11 +131,11 @@ export function FeaturePlaceholder({
                 <div className="flex flex-col w-full gap-2">
                     <Dialog>
                         <DialogTrigger asChild>
-                            <Button variant="outline" className="rounded-xl border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:text-white text-[10px] font-black uppercase tracking-widest py-6 h-auto transition-all hover:scale-[1.02]">
+                            <Button variant="outline" className="rounded-xl border-border bg-secondary/50 text-muted-foreground hover:text-foreground text-[10px] font-black uppercase tracking-widest py-6 h-auto transition-all hover:scale-[1.02]">
                                 <Info className="mr-2 h-4 w-4" /> Узнать подробнее
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-2xl rounded-3xl overflow-hidden p-0 gap-0 shadow-2xl">
+                        <DialogContent className="bg-background border-border text-foreground max-w-2xl rounded-3xl overflow-hidden p-0 gap-0 shadow-2xl">
                             <div className="h-2 bg-gradient-to-r from-amber-500 to-orange-500 w-full" />
                             <div className="p-8 space-y-8">
                                 <DialogHeader>
@@ -145,20 +145,20 @@ export function FeaturePlaceholder({
                                         </div>
                                         <div>
                                             <DialogTitle className="text-2xl font-black uppercase tracking-tight">Роадмап: {featureName}</DialogTitle>
-                                            <DialogDescription className="text-zinc-500 font-bold uppercase text-[10px] tracking-[0.2em]">Будущие возможности и преимущества</DialogDescription>
+                                            <DialogDescription className="text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em]">Будущие возможности и преимущества</DialogDescription>
                                         </div>
                                     </div>
                                 </DialogHeader>
 
                                 <div className="grid md:grid-cols-2 gap-8">
                                     <div className="space-y-4">
-                                        <h4 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2">
+                                        <h4 className="text-xs font-black text-foreground uppercase tracking-widest flex items-center gap-2">
                                             <Construction className="h-4 w-4 text-amber-500" /> Что появится:
                                         </h4>
                                         <ul className="space-y-3">
                                             {plannedFeatures.map((f, i) => (
-                                                <li key={i} className="flex gap-3 text-sm text-zinc-400 font-medium">
-                                                    <div className="h-5 w-5 rounded-full bg-zinc-800 flex items-center justify-center shrink-0 mt-0.5 text-[10px] text-zinc-600 font-black">
+                                                <li key={i} className="flex gap-3 text-sm text-muted-foreground font-medium">
+                                                    <div className="h-5 w-5 rounded-full bg-secondary flex items-center justify-center shrink-0 mt-0.5 text-[10px] text-muted-foreground/50 font-black">
                                                         {i + 1}
                                                     </div>
                                                     {f}
@@ -168,16 +168,16 @@ export function FeaturePlaceholder({
                                     </div>
 
                                     <div className="space-y-4">
-                                        <h4 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2">
+                                        <h4 className="text-xs font-black text-foreground uppercase tracking-widest flex items-center gap-2">
                                             <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Преимущества:
                                         </h4>
                                         <div className="grid gap-3">
                                             {benefits.map((b, i) => (
-                                                <div key={i} className="p-3 rounded-xl bg-zinc-950/40 border border-white/5 flex gap-3 group/item hover:border-emerald-500/30 transition-colors">
+                                                <div key={i} className="p-3 rounded-xl bg-background/40 border border-border flex gap-3 group/item hover:border-emerald-500/30 transition-colors">
                                                     <div className="h-5 w-5 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
                                                         <Check className="h-3.5 w-3.5" />
                                                     </div>
-                                                    <span className="text-xs text-zinc-500 font-medium group-hover/item:text-zinc-300 transition-colors">{b}</span>
+                                                    <span className="text-xs text-muted-foreground font-medium group-hover/item:text-foreground transition-colors">{b}</span>
                                                 </div>
                                             ))}
                                         </div>
@@ -185,11 +185,11 @@ export function FeaturePlaceholder({
                                 </div>
 
                                 {/* Ideas Section */}
-                                <div className="pt-8 border-t border-zinc-800 space-y-6">
+                                <div className="pt-8 border-t border-border space-y-6">
                                     <div className="flex items-center justify-between">
                                         <div className="space-y-1">
-                                            <h4 className="text-xs font-black text-white uppercase tracking-widest">Ваши идеи</h4>
-                                            <p className="text-[10px] text-zinc-600 font-bold uppercase">Помогите нам сделать функцию еще лучше</p>
+                                            <h4 className="text-xs font-black text-foreground uppercase tracking-widest">Ваши идеи</h4>
+                                            <p className="text-[10px] text-muted-foreground font-bold uppercase">Помогите нам сделать функцию еще лучше</p>
                                         </div>
                                         <AnimatePresence>
                                             {showSuccess && (
@@ -210,12 +210,12 @@ export function FeaturePlaceholder({
                                             placeholder="У меня есть идея..."
                                             value={newIdea}
                                             onChange={(e) => setNewIdea(e.target.value)}
-                                            className="bg-zinc-950/50 border-zinc-800 rounded-2xl min-h-[50px] text-zinc-200 placeholder:text-zinc-700 resize-none text-xs p-4"
+                                            className="bg-background/50 border-border rounded-2xl min-h-[50px] text-foreground placeholder:text-muted-foreground/30 resize-none text-xs p-4"
                                         />
                                         <Button
                                             onClick={addIdea}
                                             disabled={!newIdea.trim()}
-                                            className="h-auto px-6 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl aspect-square"
+                                            className="h-auto px-6 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl aspect-square"
                                         >
                                             <Plus className="h-5 w-5" />
                                         </Button>
@@ -229,34 +229,34 @@ export function FeaturePlaceholder({
                                                     initial={{ opacity: 0, height: 0, marginBottom: 0 }}
                                                     animate={{ opacity: 1, height: 'auto', marginBottom: 12 }}
                                                     exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                                                    className="p-4 rounded-2xl bg-zinc-950/30 border border-white/5 group relative"
+                                                    className="p-4 rounded-2xl bg-background/30 border border-border flex group relative"
                                                 >
                                                     {editingId === idea.id ? (
                                                         <div className="space-y-3">
                                                             <Textarea
                                                                 value={editText}
                                                                 onChange={(e) => setEditText(e.target.value)}
-                                                                className="bg-zinc-900 border-zinc-700 min-h-[40px] text-xs p-2"
+                                                                className="bg-background border-border min-h-[40px] text-xs p-2"
                                                                 autoFocus
                                                             />
                                                             <div className="flex justify-end gap-2">
-                                                                <Button size="sm" variant="ghost" onClick={cancelEdit} className="h-7 text-[10px] font-bold uppercase tracking-widest text-zinc-500">Отмена</Button>
-                                                                <Button size="sm" onClick={saveEdit} className="h-7 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest px-4 rounded-lg">Сохранить</Button>
+                                                                <Button size="sm" variant="ghost" onClick={cancelEdit} className="h-7 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Отмена</Button>
+                                                                <Button size="sm" onClick={saveEdit} className="h-7 bg-emerald-600 hover:bg-emerald-500 text-foreground text-[10px] font-black uppercase tracking-widest px-4 rounded-lg">Сохранить</Button>
                                                             </div>
                                                         </div>
                                                     ) : (
                                                         <div className="flex justify-between items-start gap-4">
                                                             <div className="space-y-1">
-                                                                <p className="text-xs text-zinc-300 font-medium leading-relaxed">{idea.text}</p>
-                                                                <p className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest">
+                                                                <p className="text-xs text-foreground/80 font-medium leading-relaxed">{idea.text}</p>
+                                                                <p className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest">
                                                                     {new Date(idea.createdAt).toLocaleString('ru', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                                                                 </p>
                                                             </div>
                                                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                <Button size="icon" variant="ghost" onClick={() => startEditing(idea)} className="h-7 w-7 text-zinc-600 hover:text-indigo-400">
+                                                                <Button size="icon" variant="ghost" onClick={() => startEditing(idea)} className="h-7 w-7 text-muted-foreground hover:text-primary">
                                                                     <Edit2 className="h-3.5 w-3.5" />
                                                                 </Button>
-                                                                <Button size="icon" variant="ghost" onClick={() => deleteIdea(idea.id)} className="h-7 w-7 text-zinc-600 hover:text-rose-400">
+                                                                <Button size="icon" variant="ghost" onClick={() => deleteIdea(idea.id)} className="h-7 w-7 text-muted-foreground hover:text-destructive">
                                                                     <Trash2 className="h-3.5 w-3.5" />
                                                                 </Button>
                                                             </div>
@@ -269,7 +269,7 @@ export function FeaturePlaceholder({
                                         {ideas.length === 0 && (
                                             <div className="text-center py-6 space-y-2">
                                                 <Lightbulb className="h-6 w-6 text-zinc-800 mx-auto" />
-                                                <p className="text-[10px] text-zinc-700 font-bold uppercase tracking-widest leading-relaxed">
+                                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest leading-relaxed">
                                                     Идей пока нет.<br />Станьте первым, кто предложит улучшение!
                                                 </p>
                                             </div>
@@ -278,8 +278,8 @@ export function FeaturePlaceholder({
                                 </div>
                             </div>
 
-                            <div className="p-4 bg-zinc-950/40 border-t border-zinc-800 text-center">
-                                <p className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest">Ваш вклад важен для развития EduFlow 2.0</p>
+                            <div className="p-4 bg-background/40 border-t border-border text-center">
+                                <p className="text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest">Ваш вклад важен для развития EduFlow 2.0</p>
                             </div>
                         </DialogContent>
                     </Dialog>

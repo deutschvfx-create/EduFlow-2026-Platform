@@ -89,7 +89,7 @@ export default function StudentGradesPage() {
 
     if (!isLoaded) {
         return (
-            <div className="flex items-center justify-center min-h-[400px] text-zinc-500">
+            <div className="flex items-center justify-center min-h-[400px] text-muted-foreground">
                 Загрузка оценок...
             </div>
         );
@@ -99,43 +99,43 @@ export default function StudentGradesPage() {
         <div className="flex flex-col gap-6 p-4 md:p-6 max-w-2xl mx-auto w-full pb-24">
             <div className="flex flex-col gap-1">
                 <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                    <GraduationCap className="h-6 w-6 text-indigo-400" />
+                    <GraduationCap className="h-6 w-6 text-primary" />
                     Мои оценки
                 </h1>
-                <p className="text-zinc-400 text-sm">Ваша успеваемость в режиме реального времени</p>
+                <p className="text-muted-foreground text-sm">Ваша успеваемость в режиме реального времени</p>
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-3 gap-3">
-                <Card className="bg-zinc-900 border-zinc-800">
+                <Card className="bg-card border-border">
                     <CardContent className="p-4 flex flex-col items-center justify-center text-center">
                         <TrendingUp className="h-4 w-4 text-emerald-400 mb-1" />
                         <div className="text-xl font-bold text-white">{stats.avg}</div>
-                        <div className="text-[10px] text-zinc-500 uppercase font-medium">Ср. балл</div>
+                        <div className="text-[10px] text-muted-foreground uppercase font-medium">Ср. балл</div>
                     </CardContent>
                 </Card>
-                <Card className="bg-zinc-900 border-zinc-800">
+                <Card className="bg-card border-border">
                     <CardContent className="p-4 flex flex-col items-center justify-center text-center">
-                        <BookOpen className="h-4 w-4 text-indigo-400 mb-1" />
+                        <BookOpen className="h-4 w-4 text-primary mb-1" />
                         <div className="text-xl font-bold text-white">{stats.total}</div>
-                        <div className="text-[10px] text-zinc-500 uppercase font-medium">Всего</div>
+                        <div className="text-[10px] text-muted-foreground uppercase font-medium">Всего</div>
                     </CardContent>
                 </Card>
-                <Card className="bg-zinc-900 border-zinc-800">
+                <Card className="bg-card border-border">
                     <CardContent className="p-4 flex flex-col items-center justify-center text-center">
                         <Calendar className="h-4 w-4 text-red-400 mb-1" />
                         <div className="text-xl font-bold text-white">{stats.exams}</div>
-                        <div className="text-[10px] text-zinc-500 uppercase font-medium">Экзамены</div>
+                        <div className="text-[10px] text-muted-foreground uppercase font-medium">Экзамены</div>
                     </CardContent>
                 </Card>
             </div>
 
             {/* Search */}
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                     placeholder="Поиск по предмету или типу..."
-                    className="bg-zinc-900 border-zinc-800 pl-10 h-11 text-zinc-200"
+                    className="bg-card border-border pl-10 h-11 text-foreground"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                 />
@@ -145,26 +145,26 @@ export default function StudentGradesPage() {
             <div className="space-y-3">
                 {filteredGrades.length > 0 ? (
                     filteredGrades.map((grade) => (
-                        <Card key={grade.id} className="bg-zinc-900/50 border-zinc-800/50 overflow-hidden">
+                        <Card key={grade.id} className="bg-card/50 border-border/50 overflow-hidden">
                             <CardContent className="p-4 flex gap-4 items-center">
-                                <div className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl bg-zinc-800 border border-zinc-700/50 relative">
+                                <div className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl bg-secondary border border-border/50 relative">
                                     <span className="text-xl font-bold text-white">{grade.score ?? '-'}</span>
-                                    <span className="text-[8px] text-zinc-500 uppercase font-bold absolute bottom-2">балл</span>
+                                    <span className="text-[8px] text-muted-foreground uppercase font-bold absolute bottom-2">балл</span>
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
                                         <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-auto ${GRADE_TYPE_COLORS[grade.type]}`}>
                                             {GRADE_TYPE_LABELS[grade.type]}
                                         </Badge>
-                                        <span className="text-[10px] text-zinc-500">
+                                        <span className="text-[10px] text-muted-foreground">
                                             {format(new Date(grade.date), "d MMM yyyy", { locale: ru })}
                                         </span>
                                     </div>
-                                    <h3 className="font-semibold text-zinc-200 truncate">
+                                    <h3 className="font-semibold text-foreground truncate">
                                         {courses.find(c => c.id === grade.courseId)?.name || grade.courseId}
                                     </h3>
                                     {grade.comment && (
-                                        <p className="text-xs text-zinc-500 mt-1 line-clamp-1 italic">
+                                        <p className="text-xs text-muted-foreground mt-1 line-clamp-1 italic">
                                             "{grade.comment}"
                                         </p>
                                     )}
@@ -173,8 +173,8 @@ export default function StudentGradesPage() {
                         </Card>
                     ))
                 ) : (
-                    <div className="text-center py-12 text-zinc-600 bg-zinc-900/20 rounded-2xl border border-dashed border-zinc-800">
-                        <GraduationCap className="h-10 w-10 mx-auto mb-3 opacity-20" />
+                    <div className="text-center py-12 text-muted-foreground bg-card/20 rounded-2xl border border-dashed border-border">
+                        <GraduationCap className="h-10 w-10 mx-auto mb-3 opacity-50" />
                         <p className="text-sm">Оценок пока нет</p>
                     </div>
                 )}

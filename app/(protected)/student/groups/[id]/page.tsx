@@ -22,28 +22,28 @@ export default function StudentGroupPage() {
         }
     });
 
-    if (isLoading) return <div className="p-8 text-zinc-400 flex items-center gap-2"><Loader2 className="animate-spin" /> Загрузка...</div>;
+    if (isLoading) return <div className="p-8 text-muted-foreground flex items-center gap-2"><Loader2 className="animate-spin" /> Загрузка...</div>;
 
     const group = groups?.find((g: any) => g.id === id);
 
     if (!group) {
-        return <div className="p-8 text-zinc-400">Группа не найдена или вы не являетесь её участником.</div>;
+        return <div className="p-8 text-muted-foreground">Группа не найдена или вы не являетесь её участником.</div>;
     }
 
     // Status Check
     if (group.myStatus === 'PENDING') {
         return (
-            <div className="min-h-screen bg-zinc-950 p-8 flex flex-col items-center justify-center text-center">
+            <div className="min-h-screen bg-background p-8 flex flex-col items-center justify-center text-center">
                 <div className="p-4 rounded-full bg-yellow-500/10 mb-6">
                     <Clock className="h-12 w-12 text-yellow-500" />
                 </div>
                 <h1 className="text-3xl font-bold text-white mb-2">Ожидание активации</h1>
-                <p className="text-zinc-400 max-w-md mb-8">
-                    Вы успешно подали заявку на вступление в группу <span className="text-indigo-400 font-medium">"{group.name}"</span>.
+                <p className="text-muted-foreground max-w-md mb-8">
+                    Вы успешно подали заявку на вступление в группу <span className="text-primary font-medium">"{group.name}"</span>.
                     Преподаватель должен подтвердить ваш доступ.
                 </p>
                 <Link href="/student">
-                    <Button variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-900">
+                    <Button variant="outline" className="border-border text-foreground hover:bg-card">
                         Вернуться на главную
                     </Button>
                 </Link>
@@ -53,16 +53,16 @@ export default function StudentGroupPage() {
 
     if (group.myStatus === 'SUSPENDED') {
         return (
-            <div className="min-h-screen bg-zinc-950 p-8 flex flex-col items-center justify-center text-center">
+            <div className="min-h-screen bg-background p-8 flex flex-col items-center justify-center text-center">
                 <div className="p-4 rounded-full bg-red-500/10 mb-6">
                     <Ban className="h-12 w-12 text-red-500" />
                 </div>
                 <h1 className="text-3xl font-bold text-white mb-2">Доступ приостановлен</h1>
-                <p className="text-zinc-400 max-w-md mb-8">
-                    Ваш доступ к группе <span className="text-indigo-400 font-medium">"{group.name}"</span> временно ограничен преподавателем.
+                <p className="text-muted-foreground max-w-md mb-8">
+                    Ваш доступ к группе <span className="text-primary font-medium">"{group.name}"</span> временно ограничен преподавателем.
                 </p>
                 <Link href="/student">
-                    <Button variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-900">
+                    <Button variant="outline" className="border-border text-foreground hover:bg-card">
                         Вернуться на главную
                     </Button>
                 </Link>
@@ -72,35 +72,35 @@ export default function StudentGroupPage() {
 
     // ACTIVE CONTENT
     return (
-        <div className="p-6 md:p-8 space-y-8 bg-zinc-950 min-h-screen text-zinc-100">
+        <div className="p-6 md:p-8 space-y-8 bg-background min-h-screen text-foreground">
             <div className="flex items-center gap-4">
                 <Link href="/student">
-                    <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white">
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white">
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
                 </Link>
                 <div>
-                    <h1 className="text-3xl font-bold text-indigo-400">{group.name}</h1>
-                    <p className="text-zinc-400">{group.schedule || 'Расписание не задано'}</p>
+                    <h1 className="text-3xl font-bold text-primary">{group.name}</h1>
+                    <p className="text-muted-foreground">{group.schedule || 'Расписание не задано'}</p>
                 </div>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
-                <Card className="bg-zinc-900 border-zinc-800">
+                <Card className="bg-card border-border">
                     <CardContent className="p-6 flex flex-col items-center justify-center min-h-[200px] gap-4">
-                        <BookOpen className="h-10 w-10 text-indigo-500" />
+                        <BookOpen className="h-10 w-10 text-primary" />
                         <h2 className="text-xl font-medium text-white">Материалы курса</h2>
-                        <p className="text-center text-zinc-500 text-sm">Доступ к учебникам и файлам</p>
-                        <Button className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200">Открыть</Button>
+                        <p className="text-center text-muted-foreground text-sm">Доступ к учебникам и файлам</p>
+                        <Button className="bg-secondary hover:bg-secondary text-foreground">Открыть</Button>
                     </CardContent>
                 </Card>
-                <Card className="bg-zinc-900 border-zinc-800">
+                <Card className="bg-card border-border">
                     <CardContent className="p-6 flex flex-col items-center justify-center min-h-[200px] gap-4">
                         <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
                             <Lock className="h-5 w-5 text-emerald-500" />
                         </div>
                         <h2 className="text-xl font-medium text-white">Домашние задания</h2>
-                        <p className="text-center text-zinc-500 text-sm">Нет активных заданий</p>
+                        <p className="text-center text-muted-foreground text-sm">Нет активных заданий</p>
                     </CardContent>
                 </Card>
             </div>

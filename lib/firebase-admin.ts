@@ -51,6 +51,12 @@ function initFirebaseAdmin() {
             if (!process.env.FIREBASE_CLIENT_EMAIL) missing.push("FIREBASE_CLIENT_EMAIL");
             if (!process.env.FIREBASE_PRIVATE_KEY) missing.push("FIREBASE_PRIVATE_KEY");
             console.warn(`⚠️ Firebase Admin skipped. Missing: ${missing.join(", ")}`);
+            console.log("DEBUG ENV:", {
+                projectId: process.env.FIREBASE_PROJECT_ID ? 'exists' : 'missing',
+                email: process.env.FIREBASE_CLIENT_EMAIL ? 'exists' : 'missing',
+                key: process.env.FIREBASE_PRIVATE_KEY ? 'exists' : 'missing',
+                allKeys: Object.keys(process.env).filter(k => k.startsWith('FIREBASE_'))
+            });
         }
     }
 }

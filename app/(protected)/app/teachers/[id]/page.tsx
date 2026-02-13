@@ -41,12 +41,12 @@ export default function TeacherProfilePage() {
         }
     }, [currentOrganizationId, id]);
 
-    if (loading) return <div className="p-8 text-zinc-500">Загрузка данных...</div>;
+    if (loading) return <div className="p-8 text-muted-foreground">Загрузка данных...</div>;
 
     if (!teacher) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
-                <div className="text-2xl font-bold text-zinc-100">Преподаватель не найден</div>
+                <div className="text-2xl font-bold text-foreground">Преподаватель не найден</div>
                 <Button onClick={() => router.push('/app/teachers')} variant="secondary">
                     <ArrowLeft className="mr-2 h-4 w-4" /> Вернуться к списку
                 </Button>
@@ -81,22 +81,22 @@ export default function TeacherProfilePage() {
         <div className="space-y-6">
             {/* Header / Top Nav */}
             <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" onClick={() => router.push('/app/teachers')} className="text-zinc-400 hover:text-white">
+                <Button variant="ghost" size="icon" onClick={() => router.push('/app/teachers')} className="text-muted-foreground hover:text-foreground">
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <div>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
                         {teacher.firstName} {teacher.lastName}
                         <TeacherStatusBadge status={teacher.status} />
                         <TeacherRoleBadge role={teacher.role} />
                     </h1>
-                    <div className="text-zinc-400 text-sm flex gap-4">
+                    <div className="text-muted-foreground text-sm flex gap-4">
                         <span>ID: {teacher.id}</span>
                         <span>Добавлен: {new Date(teacher.createdAt).toLocaleDateString()}</span>
                     </div>
                 </div>
                 <div className="ml-auto flex gap-2">
-                    <Button variant="outline" className="border-zinc-700 bg-zinc-900 text-zinc-300 hover:bg-zinc-800" onClick={() => setPermissionsModalOpen(true)}>
+                    <Button variant="outline" className="border-border bg-card text-foreground hover:bg-secondary" onClick={() => setPermissionsModalOpen(true)}>
                         <Lock className="mr-2 h-4 w-4" /> Права
                     </Button>
 
@@ -106,27 +106,27 @@ export default function TeacherProfilePage() {
                                 <MoreVertical className="h-4 w-4" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-800 text-zinc-200">
+                        <DropdownMenuContent align="end" className="bg-card border-border text-foreground">
                             <DropdownMenuLabel>Действия</DropdownMenuLabel>
-                            <DropdownMenuSeparator className="bg-zinc-800" />
+                            <DropdownMenuSeparator className="bg-secondary" />
 
-                            <DropdownMenuItem onClick={() => setPermissionsModalOpen(true)} className="text-zinc-400 cursor-pointer hover:bg-zinc-800">
+                            <DropdownMenuItem onClick={() => setPermissionsModalOpen(true)} className="text-muted-foreground cursor-pointer hover:bg-secondary">
                                 <Lock className="mr-2 h-4 w-4" /> Настроить доступ
                             </DropdownMenuItem>
 
                             {teacher.status !== 'ACTIVE' && (
-                                <DropdownMenuItem onClick={() => handleStatusChange('ACTIVE')} className="text-green-400 cursor-pointer hover:bg-zinc-800">
+                                <DropdownMenuItem onClick={() => handleStatusChange('ACTIVE')} className="text-green-400 cursor-pointer hover:bg-secondary">
                                     <Shield className="mr-2 h-4 w-4" /> Активировать
                                 </DropdownMenuItem>
                             )}
 
                             {teacher.status === 'ACTIVE' && (
-                                <DropdownMenuItem onClick={() => handleStatusChange('SUSPENDED')} className="text-amber-400 cursor-pointer hover:bg-zinc-800">
+                                <DropdownMenuItem onClick={() => handleStatusChange('SUSPENDED')} className="text-amber-400 cursor-pointer hover:bg-secondary">
                                     <ShieldAlert className="mr-2 h-4 w-4" /> Заблокировать
                                 </DropdownMenuItem>
                             )}
 
-                            <DropdownMenuItem onClick={() => handleStatusChange('ARCHIVED')} className="text-zinc-500 cursor-pointer hover:bg-zinc-800">
+                            <DropdownMenuItem onClick={() => handleStatusChange('ARCHIVED')} className="text-muted-foreground cursor-pointer hover:bg-secondary">
                                 <Archive className="mr-2 h-4 w-4" /> В архив
                             </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -136,32 +136,32 @@ export default function TeacherProfilePage() {
 
             {/* Main Info Card */}
             <div className="grid md:grid-cols-3 gap-6">
-                <Card className="bg-zinc-900 border-zinc-800 md:col-span-1">
+                <Card className="bg-card border-border md:col-span-1">
                     <CardHeader>
-                        <CardTitle className="text-lg text-zinc-200">Информация</CardTitle>
+                        <CardTitle className="text-lg text-foreground">Информация</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-1">
-                            <div className="text-xs text-zinc-500 uppercase font-semibold">Email</div>
-                            <div className="text-zinc-300">{teacher.email || 'Не указан'}</div>
+                            <div className="text-xs text-muted-foreground uppercase font-semibold">Email</div>
+                            <div className="text-foreground">{teacher.email || 'Не указан'}</div>
                         </div>
                         <div className="space-y-1">
-                            <div className="text-xs text-zinc-500 uppercase font-semibold">Специализация</div>
-                            <div className="text-zinc-300">{teacher.specialization || '—'}</div>
+                            <div className="text-xs text-muted-foreground uppercase font-semibold">Специализация</div>
+                            <div className="text-foreground">{teacher.specialization || '—'}</div>
                         </div>
                         <div className="space-y-1">
-                            <div className="text-xs text-zinc-500 uppercase font-semibold">Группы</div>
+                            <div className="text-xs text-muted-foreground uppercase font-semibold">Группы</div>
                             <div className="flex flex-wrap gap-2 pt-1">
                                 {teacher.groupIds && teacher.groupIds.length > 0 ? (
-                                    <span className="text-zinc-300 text-sm">
+                                    <span className="text-foreground text-sm">
                                         {teacher.groupIds.length} {teacher.groupIds.length === 1 ? 'группа' : 'групп'}
                                     </span>
-                                ) : <span className="text-zinc-500 italic text-sm">Нет групп</span>}
+                                ) : <span className="text-muted-foreground italic text-sm">Нет групп</span>}
                             </div>
                         </div>
                         <div className="space-y-1">
-                            <div className="text-xs text-zinc-500 uppercase font-semibold">Последняя активность</div>
-                            <div className="text-zinc-300">
+                            <div className="text-xs text-muted-foreground uppercase font-semibold">Последняя активность</div>
+                            <div className="text-foreground">
                                 {teacher.lastActivityAt ? new Date(teacher.lastActivityAt).toLocaleString() : '—'}
                             </div>
                         </div>
@@ -170,44 +170,44 @@ export default function TeacherProfilePage() {
 
                 <div className="md:col-span-2">
                     <Tabs defaultValue="general" className="w-full">
-                        <TabsList className="w-full justify-start bg-zinc-900 border-b border-zinc-800 rounded-none h-auto p-0">
-                            <TabsTrigger value="general" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-400 rounded-none py-3 px-6 text-zinc-400">Общее</TabsTrigger>
-                            <TabsTrigger value="groups" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-400 rounded-none py-3 px-6 text-zinc-400">Группы</TabsTrigger>
-                            <TabsTrigger value="permissions" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-400 rounded-none py-3 px-6 text-zinc-400">Настройки доступа</TabsTrigger>
+                        <TabsList className="w-full justify-start bg-card border-b border-border rounded-none h-auto p-0">
+                            <TabsTrigger value="general" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 px-6 text-muted-foreground">Общее</TabsTrigger>
+                            <TabsTrigger value="groups" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 px-6 text-muted-foreground">Группы</TabsTrigger>
+                            <TabsTrigger value="permissions" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none py-3 px-6 text-muted-foreground">Настройки доступа</TabsTrigger>
                         </TabsList>
 
                         <div className="mt-6">
                             <TabsContent value="general">
-                                <Card className="bg-zinc-900 border-zinc-800 border-dashed">
-                                    <CardContent className="flex flex-col items-center justify-center py-10 text-zinc-500">
+                                <Card className="bg-card border-border border-dashed">
+                                    <CardContent className="flex flex-col items-center justify-center py-10 text-muted-foreground">
                                         <p>Статистика работы скоро появится.</p>
                                     </CardContent>
                                 </Card>
                             </TabsContent>
                             <TabsContent value="groups">
-                                <Card className="bg-zinc-900 border-zinc-800 border-dashed">
-                                    <CardContent className="flex flex-col items-center justify-center py-10 text-zinc-500">
+                                <Card className="bg-card border-border border-dashed">
+                                    <CardContent className="flex flex-col items-center justify-center py-10 text-muted-foreground">
                                         <p>Управление группами учителя в разработке.</p>
                                     </CardContent>
                                 </Card>
                             </TabsContent>
                             <TabsContent value="permissions">
-                                <Card className="bg-zinc-900 border-zinc-800">
+                                <Card className="bg-card border-border">
                                     <CardHeader>
-                                        <CardTitle className="text-zinc-200">Текущие права</CardTitle>
+                                        <CardTitle className="text-foreground">Текущие права</CardTitle>
                                         <CardDescription>Только просмотр. Для изменения нажмите "Настроить доступ".</CardDescription>
                                     </CardHeader>
                                     <CardContent className="grid gap-2">
                                         {teacher.permissions ? Object.entries(teacher.permissions).map(([key, value]) => (
-                                            <div key={key} className="flex justify-between items-center py-2 border-b border-zinc-800 last:border-0">
-                                                <span className="text-zinc-400 font-mono text-sm">{key}</span>
+                                            <div key={key} className="flex justify-between items-center py-2 border-b border-border last:border-0">
+                                                <span className="text-muted-foreground font-mono text-sm">{key}</span>
                                                 {value ? (
                                                     <Badge variant="outline" className="text-green-500 border-green-500/20">Да</Badge>
                                                 ) : (
                                                     <Badge variant="outline" className="text-red-500 border-red-500/20">Нет</Badge>
                                                 )}
                                             </div>
-                                        )) : <p className="text-zinc-500 italic">Права не настроены</p>}
+                                        )) : <p className="text-muted-foreground italic">Права не настроены</p>}
                                     </CardContent>
                                 </Card>
                             </TabsContent>

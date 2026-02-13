@@ -251,14 +251,14 @@ export function AccessManager() {
                     <div className="space-y-4">
 
                         {/* 1. Connect New Device (QR) */}
-                        <div className="p-5 bg-zinc-900/40 border border-zinc-800/50 rounded-xl flex flex-col items-center text-center space-y-4 relative overflow-hidden group">
+                        <div className="p-5 bg-card/40 border border-border/50 rounded-xl flex flex-col items-center text-center space-y-4 relative overflow-hidden group">
                             <div className="mb-4">
-                                <div className="h-10 w-10 bg-indigo-500/10 rounded-lg flex items-center justify-center mx-auto">
-                                    <Smartphone className="h-5 w-5 text-indigo-400" />
+                                <div className="h-10 w-10 bg-primary/10 rounded-lg flex items-center justify-center mx-auto">
+                                    <Smartphone className="h-5 w-5 text-primary" />
                                 </div>
                             </div>
-                            <h3 className="text-lg font-medium text-white mb-2">Подключить устройство</h3>
-                            <p className="text-zinc-400 text-sm mb-6 max-w-[200px]">
+                            <h3 className="text-lg font-medium text-foreground mb-2">Подключить устройство</h3>
+                            <p className="text-muted-foreground text-sm mb-6 max-w-[200px]">
                                 Отсканируйте, чтобы войти с телефона автоматически
                             </p>
 
@@ -291,7 +291,7 @@ export function AccessManager() {
                                     </div>
                                 )}
                             </div>
-                            <Button variant="link" className="text-[9px] h-auto p-0 text-zinc-600 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity pt-1" onClick={generateMagicToken}>
+                            <Button variant="link" className="text-[9px] h-auto p-0 text-muted-foreground uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity pt-1" onClick={generateMagicToken}>
                                 Обновить QR
                             </Button>
                         </div>
@@ -299,11 +299,11 @@ export function AccessManager() {
                         {/* 2. Active Sessions List */}
                         <div className="space-y-3">
                             <div className="flex items-center justify-between px-1">
-                                <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
+                                <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                                     <Monitor className="h-3.5 w-3.5" />
                                     Ваши устройства
                                 </h3>
-                                <Badge variant="secondary" className="text-[9px] h-4 px-1 bg-zinc-800 text-zinc-400">
+                                <Badge variant="secondary" className="text-[9px] h-4 px-1 bg-secondary text-muted-foreground">
                                     {sessions.filter(s => s.type !== 'support').length}
                                 </Badge>
                             </div>
@@ -311,7 +311,7 @@ export function AccessManager() {
                             <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
                                 <AnimatePresence initial={false}>
                                     {sessions.filter(s => s.type !== 'support').length === 0 && (
-                                        <p className="text-center text-xs text-zinc-600 py-4">Нет активных сессий</p>
+                                        <p className="text-center text-xs text-muted-foreground py-4">Нет активных сессий</p>
                                     )}
                                     {sessions.filter(s => s.type !== 'support').map((session) => (
                                         <motion.div
@@ -321,8 +321,8 @@ export function AccessManager() {
                                             animate={{ opacity: 1, height: "auto", scale: 1 }}
                                             exit={{ opacity: 0, height: 0, scale: 0.95, transition: { duration: 0.2 } }}
                                             className={cn(
-                                                "group flex flex-col gap-3 p-3 bg-zinc-900/30 border border-zinc-800/50 rounded-xl transition-all hover:border-zinc-700/50 hover:bg-zinc-900/50",
-                                                session.status === 'blocked' && "opacity-60 grayscale-[0.5] border-red-500/20 bg-red-500/5"
+                                                "group flex flex-col gap-3 p-3 bg-card/30 border border-border/50 rounded-xl transition-all hover:border-border/50 hover:bg-card/50",
+                                                session.status === 'blocked' && "opacity-60 grayscale-[0.5] border-red-500/20 bg-red-500/20"
                                             )}
                                         >
                                             <div className="flex items-start justify-between">
@@ -330,7 +330,7 @@ export function AccessManager() {
                                                     <div className={cn(
                                                         "relative h-9 w-9 flex-shrink-0 rounded-full flex items-center justify-center transition-colors",
                                                         session.status === 'blocked' ? "bg-red-500/10 text-red-500" :
-                                                            session.isCurrent ? "bg-emerald-500/10 text-emerald-500" : "bg-zinc-800 text-zinc-400"
+                                                            session.isCurrent ? "bg-emerald-500/10 text-emerald-500" : "bg-secondary text-muted-foreground"
                                                     )}>
                                                         {session.status === 'blocked' ? (
                                                             <PauseCircle className="h-4 w-4" />
@@ -343,22 +343,22 @@ export function AccessManager() {
                                                         )}
 
                                                         {session.status !== 'blocked' && session.isCurrent && (
-                                                            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-emerald-500 border-2 border-zinc-950 rounded-full"></span>
+                                                            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-emerald-500 border-2 border-border rounded-full"></span>
                                                         )}
                                                     </div>
                                                     <div className="min-w-0">
                                                         <div className="flex items-center gap-2">
-                                                            <span className="text-xs font-bold text-zinc-200 truncate">{session.device.substring(0, 25)}</span>
+                                                            <span className="text-xs font-bold text-foreground truncate">{session.device.substring(0, 25)}</span>
                                                             {session.status === 'blocked' && <Badge variant="destructive" className="text-[9px] h-4 px-1">Приостановлен</Badge>}
-                                                            {session.type === 'support' && <Badge variant="outline" className="text-[9px] h-4 px-1 border-indigo-500/30 text-indigo-400 bg-indigo-500/5">Гость</Badge>}
-                                                            {session.isCurrent && <Badge variant="outline" className="text-[9px] h-4 px-1 border-emerald-500/30 text-emerald-500 bg-emerald-500/5">Вы</Badge>}
+                                                            {session.type === 'support' && <Badge variant="outline" className="text-[9px] h-4 px-1 border-primary/30 text-primary bg-primary/20">Гость</Badge>}
+                                                            {session.isCurrent && <Badge variant="outline" className="text-[9px] h-4 px-1 border-emerald-500/30 text-emerald-500 bg-emerald-500/20">Вы</Badge>}
                                                         </div>
-                                                        <div className="flex items-center gap-2 text-[10px] text-zinc-500 mt-0.5">
+                                                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
                                                             {/* Location optional if not provided */}
                                                             {session.location && (
                                                                 <>
                                                                     <span>{session.location}</span>
-                                                                    <span className="text-zinc-700 mx-0.5">•</span>
+                                                                    <span className="text-muted-foreground mx-0.5">•</span>
                                                                 </>
                                                             )}
                                                             <span>{formatLastActive(session.lastActive)}</span>
@@ -369,7 +369,7 @@ export function AccessManager() {
 
                                             {/* Action Buttons */}
                                             {!session.isCurrent && (
-                                                <div className="flex items-center gap-2 pt-2 border-t border-zinc-800/30">
+                                                <div className="flex items-center gap-2 pt-2 border-t border-border/30">
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
@@ -391,11 +391,11 @@ export function AccessManager() {
                                                             </>
                                                         )}
                                                     </Button>
-                                                    <div className="w-[1px] h-4 bg-zinc-800" />
+                                                    <div className="w-[1px] h-4 bg-secondary" />
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        className="h-7 text-[10px] flex-1 text-zinc-500 hover:text-red-400 hover:bg-red-400/10"
+                                                        className="h-7 text-[10px] flex-1 text-muted-foreground hover:text-red-400 hover:bg-red-400/10"
                                                         onClick={() => removeSession(session.id)}
                                                     >
                                                         <Trash2 className="h-3 w-3 mr-1.5" />
@@ -412,20 +412,20 @@ export function AccessManager() {
 
                     {/* RIGHT COLUMN: Guest/Support Access (Kept mostly same, but cleaned up) */}
                     <div className="h-full">
-                        <div className="h-full p-6 bg-indigo-500/5 border border-indigo-500/10 rounded-xl flex flex-col relative overflow-hidden">
+                        <div className="h-full p-6 bg-primary/20 border border-primary/10 rounded-xl flex flex-col relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
-                                <Shield className="h-64 w-64 text-indigo-500" />
+                                <Shield className="h-64 w-64 text-primary" />
                             </div>
 
                             <div className="space-y-6 relative z-10 flex flex-col h-full">
                                 <div className="space-y-2">
-                                    <div className="h-10 w-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 mb-2">
+                                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-2">
                                         <Shield className="h-5 w-5" />
                                     </div>
-                                    <h3 className="text-lg font-bold text-zinc-100">
+                                    <h3 className="text-lg font-bold text-foreground">
                                         Гостевой доступ
                                     </h3>
-                                    <p className="text-xs text-zinc-400 leading-relaxed max-w-sm">
+                                    <p className="text-xs text-muted-foreground leading-relaxed max-w-sm">
                                         Создайте безопасную временную ссылку для техподдержки или администратора.
                                         Доступ автоматически закроется по истечении таймера.
                                     </p>
@@ -433,14 +433,14 @@ export function AccessManager() {
 
                                 <div className="flex-1 flex flex-col justify-center">
                                     {!supportLink ? (
-                                        <div className="space-y-5 bg-zinc-900/40 p-5 rounded-xl border border-indigo-500/10 backdrop-blur-sm">
+                                        <div className="space-y-5 bg-card/40 p-5 rounded-xl border border-primary/10 backdrop-blur-sm">
                                             <div className="space-y-2">
-                                                <label className="text-[10px] uppercase font-bold text-zinc-500 pl-1">Выберите срок действия</label>
+                                                <label className="text-[10px] uppercase font-bold text-muted-foreground pl-1">Выберите срок действия</label>
                                                 <div className="relative group">
                                                     <select
                                                         value={duration}
                                                         onChange={(e) => setDuration(e.target.value)}
-                                                        className="w-full h-11 bg-black/40 border border-zinc-800 rounded-lg px-3 text-sm text-zinc-200 outline-none focus:border-indigo-500/50 appearance-none cursor-pointer hover:border-zinc-700 transition-colors"
+                                                        className="w-full h-11 bg-black/40 border border-border rounded-lg px-3 text-sm text-foreground outline-none focus:border-primary/50 appearance-none cursor-pointer hover:border-border transition-colors"
                                                     >
                                                         <option value="5m">⚡ 5 минут (Быстрый осмотр)</option>
                                                         <option value="30m">⏱ 30 минут</option>
@@ -448,13 +448,13 @@ export function AccessManager() {
                                                         <option value="24h">📅 24 часа</option>
                                                         <option value="48h">📆 48 часов</option>
                                                     </select>
-                                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 pointer-events-none group-hover:text-zinc-400" />
+                                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none group-hover:text-muted-foreground" />
                                                 </div>
                                             </div>
                                             <Button
                                                 onClick={generateSupportLink}
                                                 disabled={generatingLink}
-                                                className="w-full h-11 bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-xl shadow-indigo-500/20 text-xs tracking-wide uppercase"
+                                                className="w-full h-11 bg-primary hover:bg-primary text-foreground font-medium shadow-xl shadow-cyan-500/20 text-xs tracking-wide uppercase"
                                             >
                                                 {generatingLink ? (
                                                     <span className="flex items-center gap-2">
@@ -479,27 +479,27 @@ export function AccessManager() {
                                                         </span>
                                                         Активная ссылка
                                                     </span>
-                                                    <span className="text-zinc-500 flex items-center gap-1">
+                                                    <span className="text-muted-foreground flex items-center gap-1">
                                                         <Clock className="h-3 w-3" />
                                                         {duration}
                                                     </span>
                                                 </div>
 
-                                                <div className="bg-black/40 p-1 pr-1.5 rounded-lg border border-indigo-500/20 flex items-center gap-2">
-                                                    <div className="h-9 flex-1 flex items-center px-3 font-mono text-xs text-indigo-300 truncate select-all">
+                                                <div className="bg-black/40 p-1 pr-1.5 rounded-lg border border-primary/20 flex items-center gap-2">
+                                                    <div className="h-9 flex-1 flex items-center px-3 font-mono text-xs text-primary truncate select-all">
                                                         {supportLink}
                                                     </div>
-                                                    <Button size="icon" className="h-8 w-8 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white" onClick={copyToClipboard}>
+                                                    <Button size="icon" className="h-8 w-8 bg-primary/10 text-primary hover:bg-primary hover:text-foreground" onClick={copyToClipboard}>
                                                         {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                                                     </Button>
                                                 </div>
                                             </div>
 
                                             <div
-                                                className="bg-white p-4 rounded-xl shadow-2xl flex items-center gap-5 cursor-pointer hover:bg-zinc-50 transition-colors group/qr"
+                                                className="bg-white p-4 rounded-xl shadow-2xl flex items-center gap-5 cursor-pointer hover:bg-secondary transition-colors group/qr"
                                                 onClick={() => setZoomedQr(supportLink)}
                                             >
-                                                <div className="h-20 w-20 flex-shrink-0 bg-zinc-50 rounded border flex items-center justify-center relative">
+                                                <div className="h-20 w-20 flex-shrink-0 bg-secondary rounded border flex items-center justify-center relative">
                                                     <QRCode
                                                         value={supportLink}
                                                         size={72}
@@ -512,7 +512,7 @@ export function AccessManager() {
                                                 </div>
                                                 <div className="space-y-1">
                                                     <p className="text-xs font-bold text-zinc-900 uppercase tracking-wide">QR для входа</p>
-                                                    <p className="text-[11px] text-zinc-500 leading-snug">
+                                                    <p className="text-[11px] text-muted-foreground leading-snug">
                                                         Нажмите, чтобы увеличить <br /> и сканировать удобнее.
                                                     </p>
                                                 </div>
@@ -520,7 +520,7 @@ export function AccessManager() {
 
                                             <Button
                                                 variant="destructive"
-                                                className="w-full h-9 text-xs bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border-none"
+                                                className="w-full h-9 text-xs bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-foreground border-none"
                                                 onClick={() => setSupportLink(null)}
                                             >
                                                 Аннулировать доступ
@@ -528,8 +528,8 @@ export function AccessManager() {
 
                                             {/* 🛡️ GUEST SESSION DISPLAY (MOVED HERE) */}
                                             {sessions.filter(s => s.type === 'support').length > 0 && (
-                                                <div className="pt-4 border-t border-indigo-500/10 mt-4 space-y-3">
-                                                    <h4 className="text-[10px] font-bold text-indigo-400/60 uppercase tracking-widest pl-1">Подключенные гости</h4>
+                                                <div className="pt-4 border-t border-primary/10 mt-4 space-y-3">
+                                                    <h4 className="text-[10px] font-bold text-primary/60 uppercase tracking-widest pl-1">Подключенные гости</h4>
                                                     {sessions.filter(s => s.type === 'support').map((session) => (
                                                         <motion.div
                                                             key={session.id}
@@ -538,22 +538,22 @@ export function AccessManager() {
                                                             className={cn(
                                                                 "p-3 rounded-xl border transition-all flex flex-col gap-2",
                                                                 session.status === 'blocked'
-                                                                    ? "bg-red-500/5 border-red-500/20 opacity-70"
-                                                                    : "bg-black/40 border-indigo-500/20"
+                                                                    ? "bg-red-500/20 border-red-500/20 opacity-70"
+                                                                    : "bg-black/40 border-primary/20"
                                                             )}
                                                         >
                                                             <div className="flex items-center justify-between">
                                                                 <div className="flex items-center gap-2 overflow-hidden">
                                                                     <div className={cn(
                                                                         "h-7 w-7 rounded-full flex items-center justify-center",
-                                                                        session.status === 'blocked' ? "bg-red-500/10 text-red-500" : "bg-indigo-500/10 text-indigo-400"
+                                                                        session.status === 'blocked' ? "bg-red-500/10 text-red-500" : "bg-primary/10 text-primary"
                                                                     )}>
                                                                         <Shield className="h-3.5 w-3.5" />
                                                                     </div>
                                                                     <div className="min-w-0">
                                                                         <div className="flex items-center gap-2">
-                                                                            <p className="text-[11px] font-bold text-zinc-200 truncate">{session.device}</p>
-                                                                            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-[8px] font-bold text-emerald-400 uppercase tracking-widest border border-emerald-500/20">
+                                                                            <p className="text-[11px] font-bold text-foreground truncate">{session.device}</p>
+                                                                            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-[10px] font-bold text-emerald-400 uppercase tracking-widest border border-emerald-500/20">
                                                                                 <span className="relative flex h-1.5 w-1.5">
                                                                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                                                                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
@@ -561,14 +561,14 @@ export function AccessManager() {
                                                                                 Live
                                                                             </span>
                                                                         </div>
-                                                                        <div className="flex items-center gap-1.5 text-[9px] text-zinc-500">
+                                                                        <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground">
                                                                             <span>{formatLastActive(session.lastActive)}</span>
                                                                             {session.expiresAt && (
                                                                                 <>
-                                                                                    <span className="text-zinc-700 mx-0.5">•</span>
+                                                                                    <span className="text-muted-foreground mx-0.5">•</span>
                                                                                     <span className={cn(
                                                                                         "font-mono font-bold flex items-center gap-1",
-                                                                                        guestTimers[session.id] && guestTimers[session.id] < 60000 ? "text-amber-500" : "text-indigo-400"
+                                                                                        guestTimers[session.id] && guestTimers[session.id] < 60000 ? "text-amber-500" : "text-primary"
                                                                                     )}>
                                                                                         <Clock className="h-2.5 w-2.5" />
                                                                                         {formatCountdown(guestTimers[session.id] || 0)}
@@ -582,7 +582,7 @@ export function AccessManager() {
                                                                     <Button
                                                                         variant="ghost"
                                                                         size="icon"
-                                                                        className="h-7 w-7 text-zinc-500 hover:text-red-400"
+                                                                        className="h-7 w-7 text-muted-foreground hover:text-red-400"
                                                                         onClick={() => removeSession(session.id)}
                                                                     >
                                                                         <Trash2 className="h-3 w-3" />
@@ -591,28 +591,28 @@ export function AccessManager() {
                                                             </div>
 
                                                             {/* 🌐 LIVE TELEMETRY DISPLAY */}
-                                                            <div className="flex flex-col gap-1.5 p-2 bg-black/40 rounded-lg border border-white/5 mt-1">
+                                                            <div className="flex flex-col gap-1.5 p-2 bg-black/40 rounded-lg border border-border mt-1">
                                                                 <div className="flex items-center justify-between">
-                                                                    <span className="text-[9px] text-zinc-500 uppercase tracking-wider font-medium">Сейчас смотрит:</span>
-                                                                    <span className="text-[10px] text-indigo-300 font-bold truncate max-w-[140px]">
+                                                                    <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Сейчас смотрит:</span>
+                                                                    <span className="text-[10px] text-primary font-bold truncate max-w-[140px]">
                                                                         {session.currentPath || "Панель управления"}
                                                                     </span>
                                                                 </div>
                                                                 <div className="flex items-center justify-between">
-                                                                    <span className="text-[9px] text-zinc-500 uppercase tracking-wider font-medium">Последнее действие:</span>
+                                                                    <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">Последнее действие:</span>
                                                                     <span className="text-[9px] text-emerald-400/80 italic font-medium truncate max-w-[140px]">
                                                                         {session.lastAction || "Ожидание..."}
                                                                     </span>
                                                                 </div>
                                                             </div>
 
-                                                            <div className="flex items-center gap-2 pt-1 border-t border-white/5">
+                                                            <div className="flex items-center gap-2 pt-1 border-t border-border">
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="sm"
                                                                     className={cn(
                                                                         "h-7 text-[9px] px-2 flex-1",
-                                                                        followingSessionId === session.id ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "text-indigo-400 hover:bg-indigo-500/10"
+                                                                        followingSessionId === session.id ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "text-primary hover:bg-primary/10"
                                                                     )}
                                                                     onClick={() => toggleFollowing(session.id)}
                                                                 >
@@ -650,7 +650,7 @@ export function AccessManager() {
 
             {/* QR Zoom Modal */}
             <Dialog open={!!zoomedQr} onOpenChange={() => setZoomedQr(null)}>
-                <DialogContent className="bg-zinc-950 border-zinc-800 text-zinc-100 sm:max-w-sm flex flex-col items-center justify-center p-10 gap-6">
+                <DialogContent className="bg-background border-border text-foreground sm:max-w-sm flex flex-col items-center justify-center p-10 gap-6">
                     <DialogHeader>
                         <DialogTitle className="text-center text-xl font-bold">Сканируйте код</DialogTitle>
                     </DialogHeader>
@@ -664,7 +664,7 @@ export function AccessManager() {
                             />
                         )}
                     </div>
-                    <p className="text-zinc-500 text-sm text-center">
+                    <p className="text-muted-foreground text-sm text-center">
                         Камера телефона авторизует вас автоматически
                     </p>
                 </DialogContent>

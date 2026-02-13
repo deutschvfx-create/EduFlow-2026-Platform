@@ -11,33 +11,33 @@ export function TodaySchedule() {
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold uppercase tracking-widest text-zinc-500">Сегодня в школе</h3>
-                <span className="text-[10px] bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded-full font-bold">LIVE</span>
+                <h3 className="text-sm font-bold uppercase tracking-widest text-[#0F3D4C]/60">Сегодня в школе</h3>
+                <span className="text-[10px] bg-[#2EC4C6]/15 text-[#2EC4C6] px-2 py-0.5 rounded-full font-bold">LIVE</span>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
                 {schedule.map((item) => (
-                    <div key={item.id} className="group flex items-center justify-between p-4 rounded-2xl bg-zinc-900/50 border border-zinc-800 hover:border-indigo-500/30 transition-all active:scale-[0.98] cursor-pointer">
+                    <div key={item.id} className="group flex items-center justify-between p-4 rounded-[14px] bg-white border border-[#DDE7EA] hover:border-primary/30 transition-all active:scale-[0.98] cursor-pointer shadow-sm">
                         <div className="flex items-center gap-4">
-                            <div className="flex flex-col items-center justify-center h-12 w-12 rounded-xl bg-zinc-950 font-mono text-xs">
-                                <span className="text-indigo-400 font-black">{item.time.split(':')[0]}</span>
-                                <span className="text-zinc-600 font-bold">:{item.time.split(':')[1]}</span>
+                            <div className="flex flex-col items-center justify-center h-12 w-12 rounded-xl bg-[#FAFAF2] font-mono text-xs">
+                                <span className="text-primary font-black">{item.time.split(':')[0]}</span>
+                                <span className="text-[#0F3D4C]/50 font-bold">:{item.time.split(':')[1]}</span>
                             </div>
                             <div>
-                                <h4 className="text-base font-black text-zinc-100 group-hover:text-indigo-400 transition-colors tracking-tight">{item.name}</h4>
-                                <div className="flex items-center gap-2 text-xs text-zinc-500 font-bold">
-                                    <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {item.teacher}</span>
-                                    <span className="opacity-30">•</span>
+                                <h4 className="text-sm font-bold text-[#0F3D4C] group-hover:text-primary transition-colors tracking-tight">{item.name}</h4>
+                                <div className="flex items-center gap-2 text-[11px] text-[#0F3D4C]/60 font-medium">
+                                    <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {item.teacher}</span>
+                                    <span className="opacity-40">•</span>
                                     <span>{item.room}</span>
                                 </div>
                             </div>
                         </div>
-                        <ArrowRight className="h-5 w-5 text-zinc-700 group-hover:text-indigo-400 transform group-hover:translate-x-1 transition-all" />
+                        <ArrowRight className="h-4 w-4 text-[#0F3D4C]/30 group-hover:text-primary transform group-hover:translate-x-1 transition-all" />
                     </div>
                 ))}
             </div>
 
-            <Link href="/app/schedule" className="text-xs text-indigo-400/80 hover:text-indigo-400 font-medium px-1 block w-fit">
+            <Link href="/app/schedule" className="text-xs text-primary/80 hover:text-primary font-bold px-1 block w-fit transition-colors">
                 Перейти в расписание →
             </Link>
         </div>

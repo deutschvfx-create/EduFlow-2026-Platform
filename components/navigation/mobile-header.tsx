@@ -39,7 +39,7 @@ export function MobileHeader({
     return (
         <header className="sticky top-0 z-30 laptop:hidden">
             {/* Glassmorphic background */}
-            <div className="relative bg-zinc-900/95 backdrop-blur-xl border-b border-zinc-800">
+            <div className="relative bg-card/95 backdrop-blur-xl border-b border-border">
                 {/* Gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-b from-zinc-900/50 to-transparent pointer-events-none" />
 
@@ -52,13 +52,13 @@ export function MobileHeader({
                                 variant="ghost"
                                 size="icon"
                                 onClick={handleBack}
-                                className="text-zinc-400 hover:text-white hover:bg-zinc-800 shrink-0"
+                                className="text-muted-foreground hover:text-foreground hover:bg-secondary shrink-0"
                             >
                                 <ArrowLeft className="h-5 w-5" />
                             </Button>
                         ) : (
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shrink-0">
-                                <span className="text-white font-black text-sm">E</span>
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shrink-0">
+                                <span className="text-foreground font-black text-sm">E</span>
                             </div>
                         )}
 
@@ -68,7 +68,7 @@ export function MobileHeader({
                                 key={pageTitle}
                                 initial={{ opacity: 0, y: 5 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest truncate"
+                                className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest truncate"
                             >
                                 {pageTitle}
                             </motion.span>
@@ -108,5 +108,5 @@ function getPageTitle(pathname: string): string {
         'payments': 'Платежи',
     };
 
-    return titleMap[lastSegment] || 'EduFlow';
+    return titleMap[lastSegment] || 'UNI PRIME';
 }

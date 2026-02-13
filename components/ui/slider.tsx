@@ -69,14 +69,14 @@ export function Slider({
             className={cn("relative flex w-full touch-none select-none items-center cursor-pointer", className)}
             onMouseDown={handleMouseDown}
         >
-            <div className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-zinc-800">
+            <div className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-secondary">
                 <div
-                    className="absolute h-full bg-indigo-500 transition-all"
+                    className="absolute h-full bg-primary transition-all"
                     style={{ width: `${percent}%` }}
                 />
             </div>
             <div
-                className="absolute block h-4 w-4 rounded-full border border-indigo-500 bg-white shadow transition-all"
+                className="absolute block h-4 w-4 rounded-full border border-primary bg-white shadow transition-all"
                 style={{ left: `calc(${percent}% - 8px)` }}
             />
         </div>

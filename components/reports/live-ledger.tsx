@@ -20,25 +20,25 @@ interface LiveLedgerProps {
 
 export function LiveLedger({ events }: LiveLedgerProps) {
     return (
-        <div className="bg-zinc-950/40 border border-white/5 rounded-[2rem] p-6 backdrop-blur-3xl relative overflow-hidden h-[400px] shadow-2xl flex flex-col">
+        <div className="bg-background/40 border border-border rounded-[2rem] p-6 backdrop-blur-3xl relative overflow-hidden h-[400px] shadow-2xl flex flex-col">
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                     <div className="relative">
-                        <div className="w-2 h-2 rounded-full bg-indigo-500 animate-ping absolute inset-0" />
-                        <div className="w-2 h-2 rounded-full bg-indigo-500 relative" />
+                        <div className="w-2 h-2 rounded-full bg-primary animate-ping absolute inset-0" />
+                        <div className="w-2 h-2 rounded-full bg-primary relative" />
                     </div>
                     <div className="flex flex-col">
-                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Live Ledger</span>
-                        <span className="text-[8px] font-medium text-zinc-600 uppercase tracking-tighter">Real-time Activity Stream</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Live Ledger</span>
+                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-tighter">Real-time Activity Stream</span>
                     </div>
                 </div>
-                <Zap className="w-3 h-3 text-indigo-500/50" />
+                <Zap className="w-3 h-3 text-primary/50" />
             </div>
 
             <div className="flex-1 overflow-y-auto pr-2 space-y-4 scrollbar-hide">
                 <AnimatePresence initial={false}>
                     {events.length === 0 ? (
-                        <div className="text-center py-10 opacity-20 flex flex-col items-center">
+                        <div className="text-center py-10 opacity-50 flex flex-col items-center">
                             <Clock className="w-8 h-8 mb-2" />
                             <span className="text-[10px] uppercase font-black tracking-widest">Waiting for events...</span>
                         </div>
@@ -49,24 +49,24 @@ export function LiveLedger({ events }: LiveLedgerProps) {
                                 initial={{ opacity: 0, x: -20, height: 0 }}
                                 animate={{ opacity: 1, x: 0, height: "auto" }}
                                 exit={{ opacity: 0, x: 20 }}
-                                className="group relative pl-4 border-l border-white/5 py-1"
+                                className="group relative pl-4 border-l border-border py-1"
                             >
                                 <div className={cn(
                                     "absolute left-[-3px] top-2 w-1.5 h-1.5 rounded-full",
                                     event.status === 'success' ? "bg-emerald-500" :
                                         event.status === 'warning' ? "bg-amber-500" :
-                                            event.status === 'danger' ? "bg-rose-500" : "bg-indigo-500"
+                                            event.status === 'danger' ? "bg-rose-500" : "bg-primary"
                                 )} />
 
                                 <div className="flex justify-between items-start">
-                                    <span className="text-[10px] font-black text-zinc-300 uppercase tracking-tight group-hover:text-white transition-colors">
+                                    <span className="text-[10px] font-black text-foreground uppercase tracking-tight group-hover:text-foreground transition-colors">
                                         {event.title}
                                     </span>
-                                    <span className="text-[8px] font-medium text-zinc-700 uppercase tabular-nums">
+                                    <span className="text-[10px] font-medium text-muted-foreground uppercase tabular-nums">
                                         {event.timestamp.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                                     </span>
                                 </div>
-                                <p className="text-[9px] text-zinc-500 font-medium group-hover:text-zinc-400 transition-colors mt-0.5">
+                                <p className="text-[9px] text-muted-foreground font-medium group-hover:text-muted-foreground transition-colors mt-0.5">
                                     {event.description}
                                 </p>
 
@@ -77,12 +77,12 @@ export function LiveLedger({ events }: LiveLedgerProps) {
                 </AnimatePresence>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
+            <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                     <div className="w-1 h-1 rounded-full bg-emerald-500" />
-                    <span className="text-[7px] font-black text-zinc-600 uppercase tracking-widest">System Operational</span>
+                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">System Operational</span>
                 </div>
-                <span className="text-[7px] font-black text-zinc-800 uppercase tabular-nums">SYNC: 100%</span>
+                <span className="text-[10px] font-black text-zinc-800 uppercase tabular-nums">SYNC: 100%</span>
             </div>
         </div>
     );

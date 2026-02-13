@@ -37,7 +37,9 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## Mobile App (Android)
 
-This project uses [Capacitor](https://capacitorjs.com) to bundle the PWA as a native Android app. The app is configured to load the live Vercel deployment (`https://eduflow-2026.vercel.app`), ensuring that users always see the latest version without needing app store updates.
+This project uses [Capacitor](https://capacitorjs.com) to bundle the PWA as a native Android app. ### 📱 Android App (Capacitor)
+- Native wrapper loading `https://uniwersitet-kontrolle.web.app`
+), ensuring that users always see the latest version without needing app store updates.
 
 ### Prerequisites
 - Android Studio installed

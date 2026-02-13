@@ -13,7 +13,15 @@ export const MOCK_COURSES: Course[] = [
         description: "Базовый курс английского языка для начинающих.",
         teacherIds: ["t1", "t3"],
         groupIds: ["g1"],
-        createdAt: "2025-08-20T10:00:00Z"
+        createdAt: "2025-08-20T10:00:00Z",
+        version: "v2026",
+        type: "MANDATORY",
+        workload: { hoursPerWeek: 4, hoursPerSemester: 64, hoursPerYear: 128 },
+        modules: [],
+        grading: { type: "10_POINT", rounding: "NEAREST", minPassScore: 5, weights: { exams: 40, control: 30, homework: 20, participation: 10 } },
+        materials: [],
+        teachers: [],
+        events: []
     },
     {
         id: "c2",
@@ -27,7 +35,15 @@ export const MOCK_COURSES: Course[] = [
         description: "Дифференциальное исчисление и математический анализ.",
         teacherIds: ["t2", "t5"],
         groupIds: ["g3", "g7"],
-        createdAt: "2025-08-21T10:00:00Z"
+        createdAt: "2025-08-21T10:00:00Z",
+        version: "v2026",
+        type: "MANDATORY",
+        workload: { hoursPerWeek: 6, hoursPerSemester: 96, hoursPerYear: 192 },
+        modules: [],
+        grading: { type: "10_POINT", rounding: "NEAREST", minPassScore: 5, weights: { exams: 50, control: 30, homework: 15, participation: 5 } },
+        materials: [],
+        teachers: [],
+        events: []
     },
     {
         id: "c3",
@@ -41,7 +57,15 @@ export const MOCK_COURSES: Course[] = [
         description: "Основы робототехники и автоматизации.",
         teacherIds: ["t5"],
         groupIds: ["g4"],
-        createdAt: "2025-01-10T10:00:00Z"
+        createdAt: "2025-01-10T10:00:00Z",
+        version: "v2025",
+        type: "ELECTIVE",
+        workload: { hoursPerWeek: 3, hoursPerSemester: 48, hoursPerYear: 96 },
+        modules: [],
+        grading: { type: "10_POINT", rounding: "UP", minPassScore: 5, weights: { exams: 30, control: 30, homework: 30, participation: 10 } },
+        materials: [],
+        teachers: [],
+        events: []
     },
     {
         id: "c4",
@@ -55,7 +79,15 @@ export const MOCK_COURSES: Course[] = [
         description: "Изучение базовой грамматики и лексики немецкого языка.",
         teacherIds: ["t3"],
         groupIds: ["g5"],
-        createdAt: "2025-09-01T10:00:00Z"
+        createdAt: "2025-09-01T10:00:00Z",
+        version: "v2026",
+        type: "ELECTIVE",
+        workload: { hoursPerWeek: 4, hoursPerSemester: 64, hoursPerYear: 128 },
+        modules: [],
+        grading: { type: "10_POINT", rounding: "NEAREST", minPassScore: 5, weights: { exams: 40, control: 30, homework: 20, participation: 10 } },
+        materials: [],
+        teachers: [],
+        events: []
     },
     {
         id: "c5",
@@ -69,7 +101,15 @@ export const MOCK_COURSES: Course[] = [
         description: "Обзор основных периодов в истории искусства.",
         teacherIds: [],
         groupIds: ["g6"],
-        createdAt: "2025-09-01T10:00:00Z"
+        createdAt: "2025-09-01T10:00:00Z",
+        version: "v2026",
+        type: "OPTIONAL",
+        workload: { hoursPerWeek: 2, hoursPerSemester: 32, hoursPerYear: 64 },
+        modules: [],
+        grading: { type: "10_POINT", rounding: "NEAREST", minPassScore: 5, weights: { exams: 40, control: 30, homework: 20, participation: 10 } },
+        materials: [],
+        teachers: [],
+        events: []
     },
     {
         id: "c6",
@@ -83,7 +123,15 @@ export const MOCK_COURSES: Course[] = [
         description: "Введение в алгоритмы и структуры данных.",
         teacherIds: ["t5"],
         groupIds: ["g7"],
-        createdAt: "2025-09-01T10:00:00Z"
+        createdAt: "2025-09-01T10:00:00Z",
+        version: "v2026",
+        type: "MANDATORY",
+        workload: { hoursPerWeek: 5, hoursPerSemester: 80, hoursPerYear: 160 },
+        modules: [],
+        grading: { type: "10_POINT", rounding: "NEAREST", minPassScore: 5, weights: { exams: 50, control: 30, homework: 15, participation: 5 } },
+        materials: [],
+        teachers: [],
+        events: []
     },
     {
         id: "c7",
@@ -97,6 +145,15 @@ export const MOCK_COURSES: Course[] = [
         description: "Чтение и анализ текстов на древнегреческом.",
         teacherIds: [],
         groupIds: ["g8"],
-        createdAt: "2019-09-01T10:00:00Z"
+        createdAt: "2019-09-01T10:00:00Z",
+        version: "v2019",
+        type: "ELECTIVE",
+        workload: { hoursPerWeek: 3, hoursPerSemester: 48, hoursPerYear: 96 },
+        modules: [],
+        grading: { type: "10_POINT", rounding: "NEAREST", minPassScore: 5, weights: { exams: 40, control: 30, homework: 20, participation: 10 } },
+        materials: [],
+        teachers: [],
+        events: [],
+        archiveInfo: { reason: "OUTDATED", archivedAt: "2024-06-01T10:00:00Z", archivedByUid: "admin" }
     }
 ];

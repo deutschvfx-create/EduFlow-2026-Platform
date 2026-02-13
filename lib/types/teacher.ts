@@ -21,6 +21,17 @@ export type Teacher = {
     email?: string;
     phone?: string;
     specialization?: string;
+    passportPhotoUrl?: string; // New
+    gender?: 'male' | 'female' | 'other';
+    address?: string;          // New
+    notes?: string;           // New - JSON string for extended data
+    emailVerified?: boolean;
+    publicSettings?: {        // New
+        showPhoto: boolean;
+        showContacts: boolean;
+    };
+    citizenship?: string;      // New - ISO country code or custom
+    nativeLanguage?: string;   // New
     status: TeacherStatus;
     role: TeacherRole;
     permissions: TeacherPermissions;

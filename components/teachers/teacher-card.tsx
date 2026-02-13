@@ -48,8 +48,8 @@ export function TeacherCard({
             variants={item}
             whileHover={{ y: -5 }}
             className={cn(
-                "group relative bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden hover:border-indigo-500/50 hover:shadow-[0_0_25px_rgba(99,102,241,0.2)] transition-all duration-300 cursor-pointer aspect-[3/4.5] flex flex-col",
-                isSelected && controlMode && "border-indigo-500 shadow-[0_0_15px_rgba(79,70,229,0.3)] ring-1 ring-indigo-500"
+                "group relative bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/50 hover:shadow-[0_0_25px_rgba(6,182,212,0.2)] transition-all duration-300 cursor-pointer aspect-[3/4.5] flex flex-col",
+                isSelected && controlMode && "border-primary shadow-[0_0_15px_rgba(6,182,212,0.3)] ring-1 ring-cyan-500"
             )}
             onClick={() => router.push(`/app/teachers/${teacher.id}`)}
         >
@@ -58,41 +58,41 @@ export function TeacherCard({
                 <div className="absolute top-2 left-2 z-30">
                     <div
                         className={cn(
-                            "h-5 w-5 rounded border border-zinc-700 flex items-center justify-center cursor-pointer transition-all",
-                            isSelected ? "bg-indigo-600 border-indigo-600 shadow-[0_0_10px_rgba(79,70,229,0.5)]" : "bg-zinc-950/80 backdrop-blur-sm hover:border-zinc-500"
+                            "h-5 w-5 rounded border border-border flex items-center justify-center cursor-pointer transition-all",
+                            isSelected ? "bg-primary border-primary shadow-[0_0_10px_rgba(6,182,212,0.5)]" : "bg-background/80 backdrop-blur-sm hover:border-border"
                         )}
                         onClick={(e) => {
                             e.stopPropagation();
                             onToggleSelect?.();
                         }}
                     >
-                        {isSelected && <Check className="h-3.5 w-3.5 text-white" />}
+                        {isSelected && <Check className="h-3.5 w-3.5 text-foreground" />}
                     </div>
                 </div>
             )}
 
             {/* Premium Header Gradient */}
-            <div className="h-14 bg-gradient-to-br from-indigo-500/30 via-emerald-500/10 to-transparent relative overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(99,102,241,0.2),transparent)]" />
+            <div className="h-14 bg-gradient-to-br from-cyan-500/30 via-emerald-500/10 to-transparent relative overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(6,182,212,0.2),transparent)]" />
 
                 {/* Dropdown in Header */}
                 <div className="absolute top-1 right-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-7 w-7 p-0 text-zinc-400 hover:text-white bg-zinc-950/50 backdrop-blur-md rounded-full border border-white/10" onClick={(e) => e.stopPropagation()}>
+                            <Button variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground bg-background/50 backdrop-blur-md rounded-full border border-border" onClick={(e) => e.stopPropagation()}>
                                 <MoreHorizontal className="h-3 w-3" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-800 text-zinc-200">
-                            <DropdownMenuLabel className="text-[10px] uppercase font-black text-zinc-500">Действия</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/app/teachers/${teacher.id}`); }} className="cursor-pointer hover:bg-zinc-800 text-xs">
+                        <DropdownMenuContent align="end" className="bg-card border-border text-foreground">
+                            <DropdownMenuLabel className="text-[10px] uppercase font-black text-muted-foreground">Действия</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/app/teachers/${teacher.id}`); }} className="cursor-pointer hover:bg-secondary text-xs">
                                 <Eye className="mr-2 h-3.5 w-3.5" /> Профиль
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEditPermissions(teacher); }} className="cursor-pointer hover:bg-zinc-800 text-xs">
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEditPermissions(teacher); }} className="cursor-pointer hover:bg-secondary text-xs">
                                 <Lock className="mr-2 h-3.5 w-3.5" /> Права доступа
                             </DropdownMenuItem>
-                            <DropdownMenuSeparator className="bg-zinc-800" />
-                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleAction('archive', teacher.id); }} className="text-zinc-500 cursor-pointer hover:bg-zinc-800 text-xs">
+                            <DropdownMenuSeparator className="bg-secondary" />
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleAction('archive', teacher.id); }} className="text-muted-foreground cursor-pointer hover:bg-secondary text-xs">
                                 <Archive className="mr-2 h-3.5 w-3.5" /> В архив
                             </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -113,23 +113,23 @@ export function TeacherCard({
 
             {/* Avatar & Name Section */}
             <div className="-mt-9 px-1 flex flex-col items-center z-10">
-                <Avatar className="h-14 w-14 border-[3px] border-zinc-900 ring-1 ring-white/10 shadow-2xl group-hover:scale-110 transition-transform duration-500">
+                <Avatar className="h-14 w-14 border-[3px] border-border ring-1 ring-white/10 shadow-2xl group-hover:scale-110 transition-transform duration-500">
                     <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${teacher.firstName}${teacher.lastName}`} />
-                    <AvatarFallback className="bg-zinc-950 text-indigo-400 font-black text-[10px]">
+                    <AvatarFallback className="bg-background text-primary font-black text-[10px]">
                         {teacher.firstName[0]}{teacher.lastName[0]}
                     </AvatarFallback>
                 </Avatar>
 
                 <div className="mt-1.5 text-center w-full px-1 overflow-hidden">
-                    <h3 className="text-[11px] font-black text-white truncate leading-tight tracking-tight drop-shadow-md" title={`${teacher.firstName} ${teacher.lastName}`}>
+                    <h3 className="text-[11px] font-black text-foreground truncate leading-tight tracking-tight drop-shadow-md" title={`${teacher.firstName} ${teacher.lastName}`}>
                         {teacher.firstName}
                     </h3>
-                    <p className="text-[9px] font-bold text-zinc-500 truncate leading-tight uppercase tracking-tighter opacity-80 mb-1">
+                    <p className="text-[9px] font-bold text-muted-foreground truncate leading-tight uppercase tracking-tighter opacity-80 mb-1">
                         {teacher.lastName}
                     </p>
                     <div className="flex items-center justify-center gap-1 opacity-60">
-                        <Briefcase className="h-2 w-2 text-zinc-500" />
-                        <span className="text-[8px] font-bold text-zinc-500 truncate max-w-[80%] uppercase">
+                        <Briefcase className="h-2 w-2 text-muted-foreground" />
+                        <span className="text-[10px] font-bold text-muted-foreground truncate max-w-[80%] uppercase">
                             {teacher.specialization || "Учитель"}
                         </span>
                     </div>
@@ -137,11 +137,11 @@ export function TeacherCard({
             </div>
 
             {/* Bottom Information (Glassmorphism Section) */}
-            <div className="mt-auto bg-zinc-950/80 backdrop-blur-md border-t border-zinc-800/50 p-1.5 group-hover:bg-zinc-950 transition-colors">
+            <div className="mt-auto bg-background/80 backdrop-blur-md border-t border-border/50 p-1.5 group-hover:bg-background transition-colors">
                 <div className="flex justify-between items-center gap-1 mb-1 opacity-90">
-                    <div className="flex items-center gap-0.5 bg-indigo-500/10 px-1 py-0 rounded border border-indigo-500/20">
-                        <Users className="h-2 w-2 text-indigo-400" />
-                        <span className="text-[7px] font-black text-indigo-300 uppercase">
+                    <div className="flex items-center gap-0.5 bg-primary/10 px-1 py-0 rounded border border-primary/20">
+                        <Users className="h-2 w-2 text-primary" />
+                        <span className="text-[10px] font-black text-primary uppercase">
                             {groupsCount} ГР.
                         </span>
                     </div>
@@ -155,8 +155,8 @@ export function TeacherCard({
                         <TeacherRoleBadge role={teacher.role} />
                     </div>
                     <div className="flex gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity">
-                        {teacher.permissions.canGradeStudents && <GraduationCap className="h-2.5 w-2.5 text-zinc-400" />}
-                        {teacher.permissions.canMarkAttendance && <Users className="h-2.5 w-2.5 text-zinc-400" />}
+                        {teacher.permissions.canGradeStudents && <GraduationCap className="h-2.5 w-2.5 text-muted-foreground" />}
+                        {teacher.permissions.canMarkAttendance && <Users className="h-2.5 w-2.5 text-muted-foreground" />}
                     </div>
                 </div>
             </div>

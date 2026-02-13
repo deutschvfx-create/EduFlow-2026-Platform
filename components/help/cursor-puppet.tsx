@@ -35,7 +35,7 @@ export function CursorPuppet({ targetRect, isClicking = false, isVisible = true 
             exit={{ opacity: 0 }}
         >
             <motion.div
-                className="absolute text-indigo-500 drop-shadow-2xl select-none"
+                className="absolute text-primary drop-shadow-2xl select-none"
                 initial={{ opacity: 0, x: x - 50, y: y + 50 }}
                 animate={{
                     opacity: 1,
@@ -52,7 +52,7 @@ export function CursorPuppet({ targetRect, isClicking = false, isVisible = true 
                 }}
             >
                 <div className="relative">
-                    <MousePointer2 className="w-10 h-10 md:w-8 md:h-8 fill-indigo-500/20 stroke-[3]" />
+                    <MousePointer2 className="w-10 h-10 md:w-8 md:h-8 fill-cyan-500/20 stroke-[3]" />
 
                     {/* Click Ripple Effect */}
                     <AnimatePresence>
@@ -61,7 +61,7 @@ export function CursorPuppet({ targetRect, isClicking = false, isVisible = true 
                                 initial={{ scale: 0, opacity: 1 }}
                                 animate={{ scale: 2, opacity: 0 }}
                                 exit={{ opacity: 0 }}
-                                className="absolute -top-2 -left-2 w-14 h-14 bg-indigo-500/40 rounded-full blur-[2px]"
+                                className="absolute -top-2 -left-2 w-14 h-14 bg-primary/40 rounded-full blur-[2px]"
                             />
                         )}
                     </AnimatePresence>

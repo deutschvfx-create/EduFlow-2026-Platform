@@ -44,7 +44,7 @@ export function CreateClassroomModal({ children, onSave }: CreateClassroomModalP
             status: 'ACTIVE',
             capacity: capacity ? parseInt(capacity) : undefined,
             note: note || undefined,
-            color: '#6366f1', // Default Indigo
+            color: '#06b6d4', // Default Cyan
             building: building || undefined,
             floor: floor || undefined,
         };
@@ -69,13 +69,13 @@ export function CreateClassroomModal({ children, onSave }: CreateClassroomModalP
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 {children || (
-                    <Button className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2">
+                    <Button className="bg-primary hover:bg-primary/90 text-foreground gap-2">
                         <Plus className="h-4 w-4" />
                         Добавить аудиторию
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] bg-zinc-900 border-zinc-800 text-zinc-100">
+            <DialogContent className="sm:max-w-[425px] bg-card border-border text-foreground">
                 <DialogHeader>
                     <DialogTitle>Новая аудитория</DialogTitle>
                     <DialogDescription>
@@ -88,7 +88,7 @@ export function CreateClassroomModal({ children, onSave }: CreateClassroomModalP
                         <Label>Название / Номер *</Label>
                         <Input
                             placeholder="Например: 101, Лаборатория А, Zoom #1"
-                            className="bg-zinc-950 border-zinc-800"
+                            className="bg-background border-border"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                         />
@@ -98,7 +98,7 @@ export function CreateClassroomModal({ children, onSave }: CreateClassroomModalP
                         <div className="space-y-2">
                             <Label>Тип</Label>
                             <Select value={type} onValueChange={(v) => setType(v as ClassroomType)}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                <SelectTrigger className="bg-background border-border">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -130,7 +130,7 @@ export function CreateClassroomModal({ children, onSave }: CreateClassroomModalP
                             <Input
                                 type="number"
                                 placeholder="Необязательно"
-                                className="bg-zinc-950 border-zinc-800"
+                                className="bg-background border-border"
                                 value={capacity}
                                 onChange={(e) => setCapacity(e.target.value)}
                             />
@@ -141,7 +141,7 @@ export function CreateClassroomModal({ children, onSave }: CreateClassroomModalP
                         <Label>Примечание</Label>
                         <Input
                             placeholder="Проектор, доска, макбуки..."
-                            className="bg-zinc-950 border-zinc-800"
+                            className="bg-background border-border"
                             value={note}
                             onChange={(e) => setNote(e.target.value)}
                         />
@@ -153,7 +153,7 @@ export function CreateClassroomModal({ children, onSave }: CreateClassroomModalP
                         variant="ghost"
                         size="sm"
                         onClick={() => setShowAdvanced(!showAdvanced)}
-                        className="w-full text-xs text-zinc-400 hover:text-zinc-200 gap-2"
+                        className="w-full text-xs text-muted-foreground hover:text-foreground gap-2"
                     >
                         {showAdvanced ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                         Дополнительные параметры
@@ -161,12 +161,12 @@ export function CreateClassroomModal({ children, onSave }: CreateClassroomModalP
 
                     {/* Advanced Fields */}
                     {showAdvanced && type !== 'ONLINE' && (
-                        <div className="grid grid-cols-2 gap-4 pt-2 border-t border-zinc-800">
+                        <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border">
                             <div className="space-y-2">
                                 <Label>Корпус / Блок</Label>
                                 <Input
                                     placeholder="A, B, Главный..."
-                                    className="bg-zinc-950 border-zinc-800"
+                                    className="bg-background border-border"
                                     value={building}
                                     onChange={(e) => setBuilding(e.target.value)}
                                 />
@@ -175,7 +175,7 @@ export function CreateClassroomModal({ children, onSave }: CreateClassroomModalP
                                 <Label>Этаж</Label>
                                 <Input
                                     placeholder="1, 2, Подвал..."
-                                    className="bg-zinc-950 border-zinc-800"
+                                    className="bg-background border-border"
                                     value={floor}
                                     onChange={(e) => setFloor(e.target.value)}
                                 />
@@ -189,7 +189,7 @@ export function CreateClassroomModal({ children, onSave }: CreateClassroomModalP
                     <Button
                         onClick={handleSubmit}
                         disabled={!name || loading}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                        className="bg-primary hover:bg-primary/90 text-foreground"
                     >
                         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Создать

@@ -19,7 +19,7 @@ export function ModuleGuard({
     if (!isLoaded) {
         return (
             <div className="flex items-center justify-center min-h-[500px]">
-                <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
         );
     }
@@ -27,11 +27,11 @@ export function ModuleGuard({
     if (!modules[module]) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-                <div className="bg-zinc-900 p-4 rounded-full mb-4 border border-zinc-800">
-                    <Lock className="h-8 w-8 text-zinc-500" />
+                <div className="bg-card p-4 rounded-full mb-4 border border-border">
+                    <Lock className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-2">Модуль отключён</h2>
-                <p className="text-zinc-500 max-w-md mb-8">
+                <h2 className="text-2xl font-bold text-foreground mb-2">Модуль отключён</h2>
+                <p className="text-muted-foreground max-w-md mb-8">
                     Доступ к разделу ограничен администратором в настройках системы.
                 </p>
                 <Link href="/app/dashboard">

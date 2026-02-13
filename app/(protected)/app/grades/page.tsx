@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo, useEffect } from "react";
 import { GradeRecord, GradeType } from "@/lib/types/grades";
@@ -213,37 +213,37 @@ export default function GradesPage() {
         <ModuleGuard module="grades">
             <div className="space-y-6">
                 <div className="hidden laptop:flex flex-col gap-2">
-                    <h1 className="text-3xl font-bold tracking-tight text-white">Оценки / Экзамены</h1>
-                    <p className="text-zinc-400">Выставление оценок по группам и предметам</p>
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground">Оценки / Экзамены</h1>
+                    <p className="text-muted-foreground/70">Выставление оценок по группам и предметам</p>
                 </div>
 
                 {/* Stats Cards */}
                 <div className="grid gap-4 md:grid-cols-2 laptop:grid-cols-4">
-                    <Card className="bg-zinc-900 border-zinc-800">
+                    <Card className="bg-card border-border">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-zinc-400">Всего оценок</CardTitle>
-                            <GraduationCap className="h-4 w-4 text-zinc-500" />
+                            <CardTitle className="text-sm font-medium text-muted-foreground/70">Всего оценок</CardTitle>
+                            <GraduationCap className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-white">{totalGrades}</div>
+                            <div className="text-2xl font-bold text-foreground">{totalGrades}</div>
                         </CardContent>
                     </Card>
-                    <Card className="bg-zinc-900 border-zinc-800">
+                    <Card className="bg-card border-border">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-indigo-400">Средний балл</CardTitle>
-                            <BarChart3 className="h-4 w-4 text-indigo-500" />
+                            <CardTitle className="text-sm font-medium text-primary">Средний балл</CardTitle>
+                            <BarChart3 className="h-4 w-4 text-primary" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-white">{avgScore}</div>
+                            <div className="text-2xl font-bold text-foreground">{avgScore}</div>
                         </CardContent>
                     </Card>
-                    <Card className="bg-zinc-900 border-zinc-800">
+                    <Card className="bg-card border-border">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium text-amber-400">Не оценено</CardTitle>
                             <AlertCircle className="h-4 w-4 text-amber-500" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-white">{unrated > 0 ? unrated : 0}</div>
+                            <div className="text-2xl font-bold text-foreground">{unrated > 0 ? unrated : 0}</div>
                         </CardContent>
                     </Card>
                 </div>
@@ -265,15 +265,15 @@ export default function GradesPage() {
                 <div className="space-y-4">
                     {groupId !== 'all' && courseId !== 'all' ? (
                         <div className="space-y-4">
-                            <div className="flex justify-between items-center bg-zinc-900/50 p-3 rounded-lg border border-zinc-800">
-                                <div className="text-sm text-zinc-400">
-                                    Студентов: <span className="text-white font-medium">{studentsInGroup.length}</span>
+                            <div className="flex justify-between items-center bg-card/50 p-3 rounded-lg border border-border">
+                                <div className="text-sm text-muted-foreground/70">
+                                    Студентов: <span className="text-foreground font-medium">{studentsInGroup.length}</span>
                                 </div>
                                 <div className="flex gap-2">
-                                    <Button variant="ghost" className="text-zinc-400 hover:text-white" onClick={() => setLocalEdits({})}>
+                                    <Button variant="ghost" className="text-muted-foreground/70 hover:text-foreground" onClick={() => setLocalEdits({})}>
                                         Сбросить изменения
                                     </Button>
-                                    <Button className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2" onClick={handleSave}>
+                                    <Button className="bg-primary hover:bg-primary/90 text-foreground gap-2" onClick={handleSave}>
                                         <Loader2 className="h-4 w-4 animate-spin hidden" /> {/* Logic placeholder */}
                                         Сохранить оценки
                                     </Button>
@@ -289,12 +289,12 @@ export default function GradesPage() {
                             />
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center min-h-[400px] border border-zinc-800 border-dashed rounded-lg bg-zinc-900/20">
-                            <div className="p-4 rounded-full bg-zinc-900 mb-4">
-                                <GraduationCap className="h-8 w-8 text-zinc-500" />
+                        <div className="flex flex-col items-center justify-center min-h-[400px] border border-border border-dashed rounded-lg bg-card/20">
+                            <div className="p-4 rounded-full bg-card mb-4">
+                                <GraduationCap className="h-8 w-8 text-muted-foreground" />
                             </div>
-                            <h3 className="text-lg font-medium text-white mb-1">Оценивание не начато</h3>
-                            <p className="text-zinc-500 max-w-sm text-center mb-6">Выберите группу и предмет сверху, чтобы начать сессию выставления оценок.</p>
+                            <h3 className="text-lg font-medium text-foreground mb-1">Оценивание не начато</h3>
+                            <p className="text-muted-foreground max-w-sm text-center mb-6">Выберите группу и предмет сверху, чтобы начать сессию выставления оценок.</p>
                         </div>
                     )}
                 </div>

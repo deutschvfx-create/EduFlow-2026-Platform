@@ -172,29 +172,29 @@ Chrome заблокировал автоматическую установку.
                 className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6 pointer-events-none"
             >
                 <div className="max-w-4xl mx-auto pointer-events-auto">
-                    <div className="relative bg-gradient-to-r from-indigo-900/95 via-purple-900/95 to-indigo-900/95 backdrop-blur-xl border-t-2 border-indigo-500/50 rounded-2xl shadow-2xl shadow-indigo-500/20 overflow-hidden">
+                    <div className="relative bg-gradient-to-r from-cyan-900/95 via-purple-900/95 to-cyan-900/95 backdrop-blur-xl border-t-2 border-primary/50 rounded-2xl shadow-2xl shadow-cyan-500/20 overflow-hidden">
                         {/* Animated gradient overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 animate-pulse" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10 animate-pulse" />
 
                         {/* Close Button */}
                         <button
                             onClick={handleClose}
-                            className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-zinc-800/50 hover:bg-zinc-700/50 flex items-center justify-center transition-colors group"
+                            className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-secondary/50 hover:bg-secondary/50 flex items-center justify-center transition-colors group"
                             aria-label="Закрыть"
                         >
-                            <X className="h-4 w-4 text-zinc-400 group-hover:text-white" />
+                            <X className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
                         </button>
 
                         {/* Collapse/Expand Button */}
                         <button
                             onClick={() => setIsExpanded(!isExpanded)}
-                            className="absolute -top-10 left-1/2 -translate-x-1/2 w-20 h-10 bg-gradient-to-r from-indigo-900/95 via-purple-900/95 to-indigo-900/95 backdrop-blur-xl border-2 border-indigo-500/50 border-b-0 rounded-t-xl flex items-center justify-center hover:from-indigo-800/95 hover:via-purple-800/95 hover:to-indigo-800/95 transition-all shadow-lg"
+                            className="absolute -top-10 left-1/2 -translate-x-1/2 w-20 h-10 bg-gradient-to-r from-cyan-900/95 via-purple-900/95 to-cyan-900/95 backdrop-blur-xl border-2 border-primary/50 border-b-0 rounded-t-xl flex items-center justify-center hover:from-cyan-800/95 hover:via-purple-800/95 hover:to-cyan-800/95 transition-all shadow-lg"
                         >
                             <motion.div
                                 animate={{ rotate: isExpanded ? 180 : 0 }}
                                 transition={{ duration: 0.3 }}
                             >
-                                <ChevronDown className="h-5 w-5 text-white" />
+                                <ChevronDown className="h-5 w-5 text-foreground" />
                             </motion.div>
                         </button>
 
@@ -211,16 +211,16 @@ Chrome заблокировал автоматическую установку.
                                     <div className="relative p-4 md:p-6">
                                         <div className="flex flex-col md:flex-row items-center gap-4">
                                             {/* Icon */}
-                                            <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-4xl shadow-lg shadow-indigo-500/30">
+                                            <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-4xl shadow-lg shadow-cyan-500/30">
                                                 {promptText.icon}
                                             </div>
 
                                             {/* Text */}
                                             <div className="flex-1 text-center md:text-left">
-                                                <h3 className="text-lg md:text-xl font-bold text-white mb-1">
+                                                <h3 className="text-lg md:text-xl font-bold text-foreground mb-1">
                                                     {promptText.title}
                                                 </h3>
-                                                <p className="text-sm text-zinc-300">
+                                                <p className="text-sm text-foreground">
                                                     {promptText.subtitle}
                                                 </p>
                                             </div>
@@ -229,7 +229,7 @@ Chrome заблокировал автоматическую установку.
                                             {!isInstalled && (
                                                 <Button
                                                     onClick={handleInstall}
-                                                    className="h-11 px-6 bg-white hover:bg-zinc-100 text-indigo-900 font-bold shadow-lg gap-2"
+                                                    className="h-11 px-6 bg-white hover:bg-secondary text-cyan-900 font-bold shadow-lg gap-2"
                                                 >
                                                     <Download className="h-4 w-4" />
                                                     {platform === 'ios' ? 'Инструкция' : 'Установить'}
@@ -244,7 +244,7 @@ Chrome заблокировал автоматическую установку.
                         {/* Collapsed state - show mini indicator */}
                         {!isExpanded && (
                             <div className="p-2 flex items-center justify-center">
-                                <div className="flex items-center gap-2 text-white text-sm">
+                                <div className="flex items-center gap-2 text-foreground text-sm">
                                     <span className="text-2xl">{promptText.icon}</span>
                                     <span className="font-semibold hidden sm:inline">
                                         {isInstalled ? 'Установлено' : 'Установить приложение'}

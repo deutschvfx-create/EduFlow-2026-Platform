@@ -23,7 +23,8 @@ export const teachersRepo = {
             const q = query(
                 collRef,
                 where("role", "==", "teacher"),
-                where("organizationId", "==", organizationId)
+                where("organizationId", "==", organizationId),
+                where("emailVerified", "==", true)
             );
 
             const snapshot = await getDocs(q);
@@ -63,7 +64,7 @@ export const teachersRepo = {
             ...teacher,
             id: ref.id,
             organizationId,
-            role: "teacher",
+            role: "teacher", // Hardcoded lowercase
             createdAt: teacher.createdAt || new Date().toISOString()
         };
         await setDoc(ref, newTeacher);

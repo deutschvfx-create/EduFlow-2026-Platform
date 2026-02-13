@@ -1,8 +1,9 @@
-'use client';
+"use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+    Home,
     LayoutDashboard,
     Users,
     GraduationCap,
@@ -20,19 +21,29 @@ import {
     LogOut,
     Menu,
     X,
-    MapPin
+    MapPin,
+    ShieldAlert,
+    Search,
+    Activity,
+    Gamepad2,
+    BellRing,
+    MessageCircle,
+    User
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useModules } from "@/hooks/use-modules"; // Using hook instead of props
 import { useAuth } from "@/components/auth/auth-provider";
+import { SchoolSwitcher } from "@/components/shared/school-switcher";
+import { ContextBreadcrumb } from "@/components/navigation/context-breadcrumb";
 
 const sidebarItems = [
     {
         title: "Главная",
         items: [
-            { label: "Дашборд", href: "/app/dashboard", icon: LayoutDashboard },
+            { label: "Общий обзор", href: "/app/home", icon: Home },
+            { label: "Дашборд школы", href: "/app/dashboard", icon: LayoutDashboard },
         ]
     },
     {
@@ -54,7 +65,7 @@ const sidebarItems = [
     {
         title: "Обучение",
         items: [
-            { label: "Предметы", href: "/app/courses", icon: BookOpen },
+            { label: "Курсы", href: "/app/courses", icon: BookOpen },
             { label: "Расписание", href: "/app/schedule", icon: Calendar },
             { label: "Журнал", href: "/app/attendance", icon: CheckSquare },
             { label: "Оценки", href: "/app/grades", icon: Award },
@@ -63,8 +74,8 @@ const sidebarItems = [
     {
         title: "Коммуникация",
         items: [
-            { label: "Объявления", href: "/app/announcements", icon: Megaphone },
-            { label: "Чаты", href: "/app/chat", icon: MessageSquare },
+            { label: "Объявления", href: "/app/announcements", icon: BellRing },
+            { label: "Чаты", href: "/app/chat", icon: MessageCircle },
         ]
     },
     {
@@ -76,6 +87,7 @@ const sidebarItems = [
     {
         title: "Система",
         items: [
+            { label: "Профиль", href: "/app/profile", icon: User },
             { label: "Настройки", href: "/app/settings", icon: Settings },
         ]
     },
@@ -95,7 +107,7 @@ export default function ClientSidebar({
 
     // Use client-side hook for dynamic configuration
     const { modules, isLoaded } = useModules();
-    const { userData: user } = useAuth();
+    const { userData: user, memberships } = useAuth();
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -107,9 +119,9 @@ export default function ClientSidebar({
     const dynamicSidebarItems = [...sidebarItems];
 
     if (user?.role === 'teacher' || user?.role === 'owner') {
-        const mainGroup = dynamicSidebarItems.find(g => g.title === "Главная");
-        if (mainGroup && !mainGroup.items.find(i => i.href === '/teacher')) {
-            mainGroup.items.unshift({ label: "Кабинет учителя", href: "/teacher", icon: LayoutDashboard });
+        const commsGroup = dynamicSidebarItems.find(g => g.title === "Коммуникация");
+        if (commsGroup && !commsGroup.items.find(i => i.href === '/teacher')) {
+            commsGroup.items.unshift({ label: "Игры", href: "/teacher", icon: Gamepad2 });
         }
     } else if (user?.role === 'student') {
         const mainGroup = dynamicSidebarItems.find(g => g.title === "Главная");
@@ -126,6 +138,11 @@ export default function ClientSidebar({
             }
             return item;
         }).filter(item => {
+            // Logic: Hide Global Overview if user has 0 or 1 organization
+            if (item.href === '/app/home' && (memberships?.length || 0) <= 1) {
+                return false;
+            }
+
             if (item.href === '/teacher' || item.href === '/student') return true;
             if (item.href === '/app/dashboard') return true;
             if (item.href === '/app/settings') return true;
@@ -153,7 +170,7 @@ export default function ClientSidebar({
     }).filter(group => group.items.length > 0);
 
     return (
-        <div className="min-h-screen bg-zinc-950 flex font-sans text-zinc-100">
+        <div className="h-screen w-full bg-background flex font-sans text-foreground overflow-hidden justify-center overflow-x-auto">
             {/* Mobile Sidebar Overlay */}
             {mobileOpen && (
                 <div
@@ -162,98 +179,140 @@ export default function ClientSidebar({
                 />
             )}
 
-            {/* Sidebar */}
-            <aside
-                className={`fixed laptop:sticky top-0 h-screen z-50 flex flex-col bg-zinc-900 border-r border-zinc-800 transition-all duration-300 transform 
-                ${mobileOpen ? 'translate-x-0 w-64' : '-translate-x-full laptop:translate-x-0'} 
-                ${isOpen ? 'laptop:w-64' : 'laptop:w-20'}
-                `}
-            >
-                {/* Header */}
-                <div className="h-16 flex items-center justify-between px-4 border-b border-zinc-800">
-                    <div className={`font-bold text-xl bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent transition-all duration-300 ${!isOpen && 'laptop:opacity-0 laptop:w-0 overflow-hidden'}`}>
-                        EduFlow
+            {/* Main Wrapper that centers everything if screen is very wide */}
+            <div className="flex w-full min-w-fit justify-center">
+                {/* Fixed Sidebar */}
+                <aside
+                    className={`fixed laptop:sticky top-0 h-screen z-50 flex flex-col bg-[#0F3D4C] border-r border-white/10 transition-all duration-300 transform 
+                    ${mobileOpen ? 'translate-x-0 w-64' : '-translate-x-full laptop:translate-x-0'} 
+                    w-[260px] min-w-[260px] max-w-[260px]
+                    ${user?.organizationId ? 'border-r-primary/50' : 'border-r-white/10'}
+                    `}
+                >
+                    {/* Visual context indicator for active school */}
+                    {user?.organizationId && (
+                        <div className="absolute inset-y-0 right-0 w-[2px] bg-gradient-to-b from-transparent via-primary to-transparent opacity-50" />
+                    )}
+                    {/* Header */}
+                    <div className="h-[4.5rem] flex items-center justify-between px-3 border-b border-white/10">
+                        <SchoolSwitcher />
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setMobileOpen(false)}
+                            className="laptop:hidden text-sidebar-foreground/70"
+                        >
+                            <X className="h-5 w-5" />
+                        </Button>
                     </div>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setMobileOpen(false)}
-                        className="laptop:hidden text-zinc-400"
-                    >
-                        <X className="h-5 w-5" />
-                    </Button>
-                </div>
 
-                {/* Navigation */}
-                <ScrollArea className="flex-1 px-3 py-4">
-                    <div className="space-y-6">
-                        {filteredItems.map((group: any, i: number) => (
-                            <div key={i} className="px-2">
-                                {(isOpen || mobileOpen) && (
-                                    <h4 className="mb-2 px-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                    {/* Navigation */}
+                    <ScrollArea className="flex-1 px-3 py-4">
+                        <div className="space-y-6">
+                            {/* MASTER SECTION (TOP SECRET) */}
+                            {user?.uid === process.env.NEXT_PUBLIC_MASTER_ADMIN_UID && (
+                                <div className="px-2 mb-8">
+                                    <div className="flex items-center gap-2 mb-3 px-2">
+                                        <div className="h-1 w-1 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,1)]" />
+                                        <h4 className="text-[10px] font-black text-red-500 uppercase tracking-[0.3em]">
+                                            Master Control
+                                        </h4>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Link
+                                            href="/app/master-center"
+                                            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 text-sm font-black
+                                            ${pathname === '/app/master-center'
+                                                    ? 'bg-red-500/20 text-red-400 border border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.1)]'
+                                                    : 'text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
+                                                }`}
+                                        >
+                                            <ShieldAlert className={`h-5 w-5 ${pathname === '/app/master-center' ? 'text-red-400' : 'text-muted-foreground'}`} />
+                                            <span>
+                                                Command Center
+                                            </span>
+                                        </Link>
+                                    </div>
+                                    <div className="h-px bg-gradient-to-r from-transparent via-sidebar-border to-transparent my-6" />
+                                </div>
+                            )}
+
+                            {filteredItems.map((group: any, i: number) => (
+                                <div key={i} className="px-2">
+                                    <h4 className="mb-2 px-2 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider">
                                         {group.title}
                                     </h4>
-                                )}
-                                <div className="space-y-1">
-                                    {group.items.map((item: any) => {
-                                        const isActive = pathname === item.href;
-                                        return (
-                                            <Link
-                                                key={item.href}
-                                                href={item.href}
-                                                data-help-id={`sidebar-item-${item.href}`}
-                                                className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium
-                                                ${isActive
-                                                        ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-                                                        : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
-                                                    }`}
-                                            >
-                                                {/* Icon rendering needs care if coming from server */}
-                                                <item.icon className={`h-5 w-5 ${isActive ? 'text-indigo-400' : 'text-zinc-500'}`} />
-                                                <span className={`transition-all duration-300 ${!isOpen && 'laptop:hidden'}`}>
-                                                    {item.label}
-                                                </span>
-                                            </Link>
-                                        )
-                                    })}
+                                    <div className="space-y-1">
+                                        {group.items.map((item: any) => {
+                                            const isActive = pathname === item.href;
+                                            return (
+                                                <Link
+                                                    key={item.href}
+                                                    href={item.href}
+                                                    data-help-id={`sidebar-item-${item.href}`}
+                                                    className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium
+                                                    ${isActive
+                                                            ? 'bg-[#2EC4C6]/15 text-[#2EC4C6] border border-[#2EC4C6]/30'
+                                                            : 'text-white/65 hover:text-white hover:bg-white/5'
+                                                        }`}
+                                                >
+                                                    <item.icon className={`h-5 w-5 ${isActive ? 'text-[#2EC4C6]' : 'text-white/50'}`} />
+                                                    <span>
+                                                        {item.label}
+                                                    </span>
+                                                </Link>
+                                            )
+                                        })}
+                                    </div>
                                 </div>
+                            ))}
+                        </div>
+                    </ScrollArea>
+
+                    {/* Footer / Logout / Rating */}
+                    <div className="p-4 border-t border-sidebar-border space-y-4">
+                        <div className="px-2 py-3 rounded-xl bg-primary/20 border border-primary/10 flex flex-col items-center gap-2">
+                            <div className="flex gap-1">
+                                {[1, 2, 3, 4, 5].map((s) => (
+                                    <Activity key={s} className="h-3 w-3 text-primary fill-cyan-400" />
+                                ))}
                             </div>
-                        ))}
+                            <span className="text-[10px] font-black text-primary/60 uppercase tracking-[0.2em]">Premium Platform</span>
+                        </div>
+
+                        <Button
+                            variant="ghost"
+                            className="w-full justify-start text-sidebar-foreground/70 hover:text-red-400 hover:bg-red-500/10 gap-3"
+                            onClick={handleLogout}
+                        >
+                            <LogOut className="h-5 w-5" />
+                            <span>Выйти</span>
+                        </Button>
                     </div>
-                </ScrollArea>
+                </aside>
 
-                {/* Footer / Logout */}
-                <div className="p-4 border-t border-zinc-800">
-                    <Button
-                        variant="ghost"
-                        className={`w-full justify-start text-zinc-400 hover:text-red-400 hover:bg-red-500/10 gap-3 ${!isOpen && 'laptop:justify-center px-0'}`}
-                        onClick={handleLogout}
-                    >
-                        <LogOut className="h-5 w-5" />
-                        <span className={`${!isOpen && 'laptop:hidden'}`}>Выйти</span>
-                    </Button>
-                </div>
-            </aside>
+                {/* Main Content Area */}
+                <main className="flex-1 flex flex-col bg-background">
+                    {/* Mobile Header */}
+                    <header className="h-16 laptop:hidden flex items-center px-4 border-b border-sidebar-border bg-sidebar sticky top-0 z-30">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setMobileOpen(true)}
+                            className="mr-3 text-sidebar-foreground/70"
+                        >
+                            <Menu className="h-6 w-6" />
+                        </Button>
+                        <div className="font-bold text-lg text-white">UNI PRIME App</div>
+                    </header>
 
-            {/* Main Content */}
-            <main className="flex-1 min-w-0 flex flex-col">
-                {/* Mobile Header */}
-                <header className="h-16 laptop:hidden flex items-center px-4 border-b border-zinc-800 bg-zinc-900 sticky top-0 z-30">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setMobileOpen(true)}
-                        className="mr-3 text-zinc-400"
-                    >
-                        <Menu className="h-6 w-6" />
-                    </Button>
-                    <div className="font-bold text-lg text-white">EduFlow App</div>
-                </header>
-
-                <div className="flex-1 px-6 md:px-8 pb-6 md:pb-8 pt-12 md:pt-14 overflow-y-auto">
-                    {children}
-                </div>
-            </main>
+                    {/* Standardized 1280px Container */}
+                    <div className="desktop-layout-container px-6 py-8 min-h-screen overflow-y-visible">
+                        <ContextBreadcrumb />
+                        {children}
+                    </div>
+                </main>
+            </div>
         </div>
     );
 }

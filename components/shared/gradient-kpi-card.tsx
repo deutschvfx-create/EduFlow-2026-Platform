@@ -33,20 +33,20 @@ export function GradientKPICard({
                 <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-4">
                         <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-md shadow-inner">
-                            <Icon className="h-6 w-6 text-white shadow-glow" />
+                            <Icon className="h-6 w-6 text-foreground shadow-glow" />
                         </div>
                         {trend && (
-                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[10px] font-bold text-white uppercase tracking-wider shadow-sm">
+                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[10px] font-bold text-foreground uppercase tracking-wider shadow-sm">
                                 {isUp ? "↑" : "↓"} {trend}
                             </div>
                         )}
                     </div>
 
                     <div className="space-y-1">
-                        <p className="text-xs font-bold text-white/70 uppercase tracking-widest">
+                        <p className="text-xs font-bold text-foreground/70 uppercase tracking-widest">
                             {title}
                         </p>
-                        <h3 className="text-4xl font-black text-white tracking-tighter">
+                        <h3 className="text-4xl font-black text-foreground tracking-tighter">
                             {value}
                         </h3>
                     </div>

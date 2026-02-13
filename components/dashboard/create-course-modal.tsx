@@ -46,26 +46,26 @@ export function CreateCourseModal({ onSuccess }: CreateCourseModalProps) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <div className="group flex flex-col items-center gap-2 p-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-indigo-500/50 hover:bg-zinc-800/50 transition-all cursor-pointer">
-                    <div className="h-10 w-10 rounded-lg bg-zinc-950 flex items-center justify-center group-hover:bg-indigo-500/10 group-hover:text-indigo-400 text-zinc-500 transition-colors">
-                        <BookOpen className="h-5 w-5" />
+                <div className="group flex flex-col items-center justify-center gap-2.5 w-[140px] h-[96px] rounded-[14px] bg-white border border-[#DDE7EA] hover:border-[#2EC4C6] hover:bg-[#2EC4C6]/8 transition-all cursor-pointer shadow-sm hover:shadow-md">
+                    <div className="h-9 w-9 rounded-xl bg-[#F2F7F6] flex items-center justify-center group-hover:bg-[#2EC4C6]/15 text-[#0F3D4C] transition-colors">
+                        <BookOpen className="h-4.5 w-4.5" />
                     </div>
-                    <span className="text-xs font-medium text-zinc-400 group-hover:text-zinc-200 uppercase tracking-tighter">Курс</span>
+                    <span className="text-[12px] font-semibold text-[#0F3D4C] transition-colors">Курс</span>
                 </div>
             </DialogTrigger>
-            <DialogContent className="bg-zinc-900 border-zinc-800 text-zinc-100 sm:max-w-[425px]">
+            <DialogContent className="bg-card border-border text-foreground sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle>Создать предмет</DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
                         <Label htmlFor="name">Название *</Label>
-                        <Input id="name" value={name} onChange={e => setName(e.target.value)} className="bg-zinc-950 border-zinc-800" />
+                        <Input id="name" value={name} onChange={e => setName(e.target.value)} className="bg-background border-border" />
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => setOpen(false)} className="border-zinc-700 hover:bg-zinc-800 hover:text-white">Отмена</Button>
-                    <Button onClick={handleSubmit} disabled={!name} className="bg-cyan-600 hover:bg-cyan-700 text-white">Создать</Button>
+                    <Button variant="outline" onClick={() => setOpen(false)} className="border-border hover:bg-secondary hover:text-foreground">Отмена</Button>
+                    <Button onClick={handleSubmit} disabled={!name} className="bg-primary hover:bg-primary/90 text-foreground">Создать</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

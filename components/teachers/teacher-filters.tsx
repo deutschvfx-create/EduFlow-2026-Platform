@@ -1,7 +1,7 @@
 'use client';
 
 import { Input } from "@/components/ui/input";
-import { Search, X } from "lucide-react";
+import { Search, Filter, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from 'react';
@@ -15,8 +15,6 @@ interface TeacherFiltersProps {
     onStatusChange: (val: string) => void;
     roleFilter: string;
     onRoleChange: (val: string) => void;
-    groupFilter: string;
-    onGroupChange: (val: string) => void;
 }
 
 export function TeacherFilters({
@@ -25,81 +23,60 @@ export function TeacherFilters({
     statusFilter,
     onStatusChange,
     roleFilter,
-    onRoleChange,
-    groupFilter,
-    onGroupChange
+    onRoleChange
 }: TeacherFiltersProps) {
-    const { currentOrganizationId } = useOrganization();
-    const [groups, setGroups] = useState<Group[]>([]);
-
-    useEffect(() => {
-        if (currentOrganizationId) {
-            import("@/lib/data/groups.repo").then(({ groupsRepo }) => {
-                groupsRepo.getAll(currentOrganizationId).then(setGroups);
-            });
-        }
-    }, [currentOrganizationId]);
-
-    const hasActiveFilters = search || statusFilter !== 'all' || roleFilter !== 'all' || groupFilter !== 'all';
+    const hasActiveFilters = search || statusFilter !== 'all' || roleFilter !== 'all';
 
     const clearFilters = () => {
         onSearchChange('');
         onStatusChange('all');
         onRoleChange('all');
-        onGroupChange('all');
     }
 
     return (
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+        <div className="flex flex-col gap-2.5">
+            <div className="relative group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#64748B] transition-colors group-focus-within:text-[#0F4C3D]" />
                 <Input
-                    placeholder="Поиск по имени, специализации..."
-                    className="pl-9 bg-zinc-900 border-zinc-800"
+                    placeholder="Поиск по имени или email..."
+                    className="h-10 pl-11 bg-[#F1F5F9] border-transparent text-[13px] font-medium text-[#0F172A] placeholder:text-[#94A3B8] rounded-full focus:bg-white focus:ring-4 focus:ring-[#0F4C3D]/5 focus:border-[#0F4C3D] transition-all font-inter shadow-none"
                     value={search}
                     onChange={(e) => onSearchChange(e.target.value)}
                 />
             </div>
-            <div className="flex flex-wrap gap-2">
+
+            <div className="flex items-center gap-2">
                 <Select value={statusFilter} onValueChange={onStatusChange}>
-                    <SelectTrigger className="w-[140px] bg-zinc-900 border-zinc-800">
+                    <SelectTrigger className="flex-1 h-8 bg-white border-[#E2E8F0] text-[#0F172A] text-[10px] font-bold uppercase tracking-wider rounded-full focus:ring-4 focus:ring-[#0F4C3D]/5 hover:bg-[#F8FAFC] hover:border-[#0F4C3D]/30 transition-all font-inter px-3.5 shadow-sm">
                         <SelectValue placeholder="Статус" />
                     </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">Все статусы</SelectItem>
-                        <SelectItem value="ACTIVE">Активные</SelectItem>
-                        <SelectItem value="INVITED">Приглашены</SelectItem>
-                        <SelectItem value="SUSPENDED">Заблокированы</SelectItem>
-                        <SelectItem value="ARCHIVED">Архив</SelectItem>
+                    <SelectContent className="rounded-[12px] border-[#E2E8F0] shadow-2xl p-1 animate-in fade-in zoom-in-95 duration-200">
+                        <SelectItem value="all" className="text-[10px] font-bold py-2 rounded-full font-inter uppercase tracking-wider">ВСЕ СТАТУСЫ</SelectItem>
+                        <SelectItem value="ACTIVE" className="text-[10px] font-bold py-2 text-[#22C55E] rounded-full font-inter uppercase tracking-wider">АКТИВНЫЕ</SelectItem>
+                        <SelectItem value="INVITED" className="text-[10px] font-bold py-2 text-[#F59E0B] rounded-full font-inter uppercase tracking-wider">ПРИГЛАШЕНЫ</SelectItem>
+                        <SelectItem value="SUSPENDED" className="text-[10px] font-bold py-2 text-[#F59E0B] rounded-full font-inter uppercase tracking-wider">ОЖИДАНИЕ</SelectItem>
                     </SelectContent>
                 </Select>
 
                 <Select value={roleFilter} onValueChange={onRoleChange}>
-                    <SelectTrigger className="w-[140px] bg-zinc-900 border-zinc-800">
+                    <SelectTrigger className="flex-1 h-8 bg-white border-[#E2E8F0] text-[#0F172A] text-[10px] font-bold uppercase tracking-wider rounded-full focus:ring-4 focus:ring-[#0F4C3D]/5 hover:bg-[#F8FAFC] hover:border-[#0F4C3D]/30 transition-all font-inter px-3.5 shadow-sm">
                         <SelectValue placeholder="Роль" />
                     </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">Все роли</SelectItem>
-                        <SelectItem value="TEACHER">Учитель</SelectItem>
-                        <SelectItem value="CURATOR">Куратор</SelectItem>
-                        <SelectItem value="ADMIN">Админ</SelectItem>
-                    </SelectContent>
-                </Select>
-
-                <Select value={groupFilter} onValueChange={onGroupChange}>
-                    <SelectTrigger className="w-[140px] bg-zinc-900 border-zinc-800">
-                        <SelectValue placeholder="Группа" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">Все группы</SelectItem>
-                        {groups.map(g => (
-                            <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
-                        ))}
+                    <SelectContent className="rounded-[12px] border-[#E2E8F0] shadow-2xl p-1 animate-in fade-in zoom-in-95 duration-200">
+                        <SelectItem value="all" className="text-[10px] font-bold py-2 rounded-full font-inter uppercase tracking-wider">ВСЕ РОЛИ</SelectItem>
+                        <SelectItem value="teacher" className="text-[10px] font-bold py-2 uppercase rounded-full font-inter tracking-wider">УЧИТЕЛЬ</SelectItem>
+                        <SelectItem value="curator" className="text-[10px] font-bold py-2 uppercase rounded-full font-inter tracking-wider">КУРАТОР</SelectItem>
+                        <SelectItem value="admin" className="text-[10px] font-bold py-2 uppercase rounded-full font-inter tracking-wider">АДМИН</SelectItem>
                     </SelectContent>
                 </Select>
 
                 {hasActiveFilters && (
-                    <Button variant="ghost" size="icon" onClick={clearFilters} title="Сбросить фильтры">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-[#64748B] hover:text-[#EF4444] hover:bg-[#EF4444]/5 rounded-full shrink-0 transition-colors"
+                        onClick={clearFilters}
+                    >
                         <X className="h-4 w-4" />
                     </Button>
                 )}

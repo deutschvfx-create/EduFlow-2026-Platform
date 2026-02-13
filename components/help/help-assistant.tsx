@@ -1147,36 +1147,36 @@ export function HelpAssistant() {
             <Sheet open={open} onOpenChange={setOpen}>
                 <SheetContent
                     side="right"
-                    className="w-[85vw] sm:w-[540px] bg-zinc-950/98 backdrop-blur-2xl border-l border-zinc-900 text-zinc-100 p-0 flex flex-col z-[100] md:rounded-l-3xl shadow-2xl h-full"
+                    className="w-[85vw] sm:w-[540px] bg-background/98 backdrop-blur-2xl border-l border-border text-foreground p-0 flex flex-col z-[100] md:rounded-l-3xl shadow-2xl h-full"
                 >
                     <div className="absolute top-4 right-4 z-20">
-                        <Button variant="ghost" size="icon" onClick={() => setOpen(false)} className="rounded-full bg-zinc-900/50 hover:bg-zinc-800 transition-colors h-8 w-8">
+                        <Button variant="ghost" size="icon" onClick={() => setOpen(false)} className="rounded-full bg-card/50 hover:bg-secondary transition-colors h-8 w-8">
                             <X className="h-4 w-4" />
                         </Button>
                     </div>
 
-                    <SheetHeader className="p-4 md:p-8 border-b border-zinc-900/50 bg-zinc-950/50 relative overflow-hidden flex-none">
+                    <SheetHeader className="p-4 md:p-8 border-b border-border/50 bg-background/50 relative overflow-hidden flex-none">
                         {/* Background Decoration */}
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-[120px] rounded-full -mr-32 -mt-32" />
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[120px] rounded-full -mr-32 -mt-32" />
 
                         <div className="flex items-center gap-3 md:gap-6 mb-4 md:mb-6 relative z-10">
                             <div className="relative w-12 h-12 md:w-20 md:h-20 flex-none group">
-                                <div className={`absolute inset-0 blur-2xl rounded-full transition-all duration-500 ${hasNewFeatures ? 'bg-indigo-500/40 animate-discovery-glow' : 'bg-indigo-500/20 group-hover:bg-indigo-500/30'}`} />
+                                <div className={`absolute inset-0 blur-2xl rounded-full transition-all duration-500 ${hasNewFeatures ? 'bg-primary/40 animate-discovery-glow' : 'bg-primary/20 group-hover:bg-primary/30'}`} />
                                 <Mascot status={open ? "thinking" : (hasNewFeatures ? "surprised" : "idle")} className="w-12 h-12 md:w-full md:h-full relative z-10" />
                                 {hasNewFeatures && (
-                                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-indigo-500 rounded-full border-2 border-zinc-950 flex items-center justify-center animate-bounce z-20">
-                                        <Sparkles className="h-3 w-3 text-white" />
+                                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary rounded-full border-2 border-border flex items-center justify-center animate-bounce z-20">
+                                        <Sparkles className="h-3 w-3 text-foreground" />
                                     </div>
                                 )}
                             </div>
                             <div className="space-y-1">
-                                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[9px] md:text-[10px] font-black uppercase text-indigo-400">
+                                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[9px] md:text-[10px] font-black uppercase text-primary">
                                     <Bot className="h-3 w-3" /> Online Assistant
                                 </div>
-                                <SheetTitle className="text-xl md:text-2xl font-black text-white uppercase tracking-tight">
+                                <SheetTitle className="text-xl md:text-2xl font-black text-foreground uppercase tracking-tight">
                                     Edu-Bot Guide
                                 </SheetTitle>
-                                <p className="text-zinc-500 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-none">Как я могу помочь?</p>
+                                <p className="text-muted-foreground text-[10px] md:text-xs font-bold uppercase tracking-widest leading-none">Как я могу помочь?</p>
                             </div>
                         </div>
 
@@ -1191,13 +1191,13 @@ export function HelpAssistant() {
                             >
                                 <div className="relative">
                                     <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                                        <Search className="h-4 w-4 text-zinc-600" />
+                                        <Search className="h-4 w-4 text-muted-foreground" />
                                     </div>
                                     <Input
                                         placeholder="Поиск по разделам помощи..."
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
-                                        className="h-12 pl-11 bg-zinc-900/50 border-zinc-900 focus:bg-zinc-900 transition-all rounded-2xl text-sm placeholder:text-zinc-700"
+                                        className="h-12 pl-11 bg-card/50 border-border focus:bg-card transition-all rounded-2xl text-sm placeholder:text-muted-foreground"
                                     />
                                 </div>
                             </motion.div>
@@ -1205,7 +1205,7 @@ export function HelpAssistant() {
                     </SheetHeader>
 
                     {/* Content Area */}
-                    <div className="flex-1 overflow-y-auto min-h-0 bg-zinc-950/30">
+                    <div className="flex-1 overflow-y-auto min-h-0 bg-background/30">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key="tours-content"
@@ -1222,22 +1222,22 @@ export function HelpAssistant() {
                                             animate={{ opacity: 1, y: 0 }}
                                             className="relative group/card"
                                         >
-                                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-3xl blur-xl group-hover/card:blur-2xl transition-all" />
-                                            <div className="relative bg-zinc-900/50 backdrop-blur-xl border border-indigo-500/20 rounded-3xl p-6 shadow-xl">
+                                            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 rounded-3xl blur-xl group-hover/card:blur-2xl transition-all" />
+                                            <div className="relative bg-card/50 backdrop-blur-xl border border-primary/20 rounded-3xl p-6 shadow-xl">
                                                 <div className="flex items-start justify-between mb-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                                                        <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-primary/20 flex items-center justify-center text-primary">
                                                             <Sparkles className="h-5 w-5" />
                                                         </div>
                                                         <div>
-                                                            <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">Активный раздел</div>
-                                                            <h4 className="text-base font-bold text-white leading-none">{activeSection.title}</h4>
+                                                            <div className="text-[10px] font-black text-primary uppercase tracking-widest mb-0.5">Активный раздел</div>
+                                                            <h4 className="text-base font-bold text-foreground leading-none">{activeSection.title}</h4>
                                                         </div>
                                                     </div>
                                                     <Button
                                                         variant="default"
                                                         size="sm"
-                                                        className="h-8 text-[10px] px-4 font-black uppercase tracking-widest gap-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all shadow-lg shadow-indigo-500/20"
+                                                        className="h-8 text-[10px] px-4 font-black uppercase tracking-widest gap-2 bg-primary hover:bg-primary text-foreground rounded-lg transition-all shadow-lg shadow-cyan-500/20"
                                                         onClick={() => startTour(activeSection)}
                                                     >
                                                         <PlayCircle className="h-3.5 w-3.5" />
@@ -1248,12 +1248,12 @@ export function HelpAssistant() {
                                                 <div className="space-y-3 relative z-10">
                                                     {activeSection.steps.map((step, idx) => (
                                                         <div key={idx} className="flex gap-3 items-start group/step">
-                                                            <div className="flex-none flex items-center justify-center w-5 h-5 rounded-md bg-zinc-900 text-[10px] font-bold text-indigo-400 border border-zinc-800 mt-0.5 group-hover/step:border-indigo-500/50 transition-colors">
+                                                            <div className="flex-none flex items-center justify-center w-5 h-5 rounded-md bg-card text-[10px] font-bold text-primary border border-border mt-0.5 group-hover/step:border-indigo-500/50 transition-colors">
                                                                 {idx + 1}
                                                             </div>
                                                             <div>
-                                                                <h4 className="text-xs font-bold text-zinc-200 mb-0.5">{step.title}</h4>
-                                                                <p className="text-[11px] text-zinc-500 leading-relaxed">{step.text}</p>
+                                                                <h4 className="text-xs font-bold text-foreground mb-0.5">{step.title}</h4>
+                                                                <p className="text-[11px] text-muted-foreground leading-relaxed">{step.text}</p>
                                                             </div>
                                                         </div>
                                                     ))}
@@ -1264,7 +1264,7 @@ export function HelpAssistant() {
 
                                     {/* ALL SECTIONS */}
                                     <div className="space-y-3">
-                                        <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] px-1">
+                                        <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] px-1">
                                             {search ? "Результаты поиска" : "Все разделы помощи"}
                                         </h3>
                                         <div className="grid gap-2">
@@ -1273,26 +1273,26 @@ export function HelpAssistant() {
                                                     key={section.id}
                                                     onClick={() => setActiveSection(section)}
                                                     className={`group w-full text-left p-3 rounded-xl border transition-all duration-300 flex items-center justify-between ${activeSection?.id === section.id
-                                                        ? "bg-indigo-950/20 border-indigo-500/30 text-indigo-300"
-                                                        : "bg-zinc-900/30 border-zinc-800/50 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800/50 hover:text-zinc-200"
+                                                        ? "bg-cyan-950/20 border-primary/30 text-primary"
+                                                        : "bg-card/30 border-border/50 text-muted-foreground hover:border-border hover:bg-secondary/50 hover:text-foreground"
                                                         }`}
                                                 >
                                                     <div className="flex items-center gap-3">
-                                                        <div className={`w-1.5 h-1.5 rounded-full transition-colors ${activeSection?.id === section.id ? "bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)]" : "bg-zinc-700"}`} />
+                                                        <div className={`w-1.5 h-1.5 rounded-full transition-colors ${activeSection?.id === section.id ? "bg-primary shadow-[0_0_8px_rgba(34,211,238,0.6)]" : "bg-secondary"}`} />
                                                         <span className="text-sm font-medium">{section.title}</span>
                                                         {section.moduleKey && !modules[section.moduleKey as ModuleKey] && (
                                                             <span className="text-[9px] uppercase font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">Выкл</span>
                                                         )}
                                                     </div>
                                                     {section.route === pathname && (
-                                                        <MapPin className="h-3.5 w-3.5 text-indigo-500/50" />
+                                                        <MapPin className="h-3.5 w-3.5 text-primary/50" />
                                                     )}
                                                 </button>
                                             ))}
                                         </div>
                                         {filteredSections.length === 0 && (
-                                            <div className="text-zinc-600 text-center py-12 flex flex-col items-center gap-3">
-                                                <Search className="h-8 w-8 opacity-20" />
+                                            <div className="text-muted-foreground text-center py-12 flex flex-col items-center gap-3">
+                                                <Search className="h-8 w-8 opacity-50" />
                                                 <p className="text-sm font-medium">Ничего не найдено</p>
                                             </div>
                                         )}
@@ -1303,12 +1303,12 @@ export function HelpAssistant() {
                     </div>
 
                     {/* Bottom Status */}
-                    <div className="p-4 border-t border-zinc-900/50 bg-zinc-950 flex items-center justify-between flex-none">
+                    <div className="p-4 border-t border-border/50 bg-background flex items-center justify-between flex-none">
                         <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="text-[10px] uppercase font-black text-zinc-500 tracking-wider">Edu-Bot Online</span>
+                            <span className="text-[10px] uppercase font-black text-muted-foreground tracking-wider">Edu-Bot Online</span>
                         </div>
-                        <span className="text-[10px] font-bold text-zinc-700">v1.2.5</span>
+                        <span className="text-[10px] font-bold text-muted-foreground">v1.2.5</span>
                     </div>
                 </SheetContent>
             </Sheet>
@@ -1334,7 +1334,7 @@ export function HelpAssistant() {
                             {/* Highlight Border with Pulse */}
                             <motion.div
                                 layoutId="tour-highlight"
-                                className="absolute rounded-2xl border-[3px] border-indigo-400 z-10 animate-pulse-indigo shadow-[0_0_30px_rgba(129,140,248,0.4)] pointer-events-none"
+                                className="absolute rounded-2xl border-[3px] border-primary z-10 animate-pulse-cyan shadow-[0_0_30px_rgba(34,211,238,0.4)] pointer-events-none"
                                 style={{
                                     top: highlightRect.top - 12,
                                     left: highlightRect.left - 12,
@@ -1357,9 +1357,9 @@ export function HelpAssistant() {
                                     width: 300
                                 }}
                             >
-                                <div className="w-full bg-zinc-900/95 backdrop-blur-2xl border border-zinc-800/50 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_20px_rgba(99,102,241,0.1)] p-6 overflow-hidden relative group">
+                                <div className="w-full bg-card/95 backdrop-blur-2xl border border-border/50 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_20px_rgba(99,102,241,0.1)] p-6 overflow-hidden relative group">
                                     {/* Top Glow */}
-                                    <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
+                                    <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
 
                                     {/* Progress Indicator */}
                                     <div className="absolute top-0 left-0 h-[2px] bg-indigo-500 transition-all duration-500"
@@ -1379,7 +1379,7 @@ export function HelpAssistant() {
                                                 )}
                                             </div>
                                             <div className="flex flex-col">
-                                                <div className="bg-indigo-500/10 text-indigo-400 text-[9px] font-black px-2.5 py-1 rounded-full border border-indigo-500/20 uppercase tracking-tighter self-start mb-1">
+                                                <div className="bg-indigo-500/10 text-primary text-[9px] font-black px-2.5 py-1 rounded-full border border-primary/20 uppercase tracking-tighter self-start mb-1">
                                                     Шаг {tourStep + 1} из {activeSection.steps.length}
                                                 </div>
                                             </div>
@@ -1387,12 +1387,12 @@ export function HelpAssistant() {
                                         <div className="flex items-center gap-1">
                                             <button
                                                 onClick={toggleVoice}
-                                                className={`p-1.5 rounded-full transition-colors ${isVoiceEnabled ? 'text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20' : 'text-zinc-600 hover:text-zinc-400'}`}
+                                                className={`p-1.5 rounded-full transition-colors ${isVoiceEnabled ? 'text-primary bg-indigo-500/10 hover:bg-indigo-500/20' : 'text-muted-foreground hover:text-muted-foreground'}`}
                                                 title={isVoiceEnabled ? "Выключить озвучку" : "Включить озвучку"}
                                             >
                                                 {isVoiceEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
                                             </button>
-                                            <button onClick={endTour} className="text-zinc-600 hover:text-white transition-colors p-1.5 rounded-full hover:bg-zinc-800">
+                                            <button onClick={endTour} className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-full hover:bg-secondary">
                                                 <X className="h-4 w-4" />
                                             </button>
                                         </div>
@@ -1404,16 +1404,16 @@ export function HelpAssistant() {
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ duration: 0.3 }}
                                     >
-                                        <h4 className="text-sm font-black text-white uppercase mb-1.5 tracking-tight flex items-center gap-2">
+                                        <h4 className="text-sm font-black text-foreground uppercase mb-1.5 tracking-tight flex items-center gap-2">
                                             {activeSection.steps[tourStep]?.title || activeSection.title}
                                             <Sparkles className="h-3 w-3 text-amber-400" />
                                         </h4>
-                                        <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+                                        <p className="text-xs text-muted-foreground leading-relaxed mb-4">
                                             {activeSection.steps[tourStep]?.text}
                                         </p>
 
                                         {activeSection.steps[tourStep]?.tip && (
-                                            <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3 mb-4 flex gap-2">
+                                            <div className="bg-emerald-500/20 border border-emerald-500/10 rounded-xl p-3 mb-4 flex gap-2">
                                                 <Lightbulb className="h-3.5 w-3.5 text-emerald-500 flex-none mt-0.5" />
                                                 <p className="text-[10px] font-medium text-emerald-400 italic">
                                                     {activeSection.steps[tourStep].tip}
@@ -1427,7 +1427,7 @@ export function HelpAssistant() {
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => setIsExpanded(!isExpanded)}
-                                                    className="w-full justify-between h-8 text-[10px] font-bold uppercase tracking-widest text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/5 p-0"
+                                                    className="w-full justify-between h-8 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary hover:bg-primary/20 p-0"
                                                 >
                                                     <span className="flex items-center gap-2">
                                                         <Info className="h-3 w-3" />
@@ -1444,8 +1444,8 @@ export function HelpAssistant() {
                                                             exit={{ height: 0, opacity: 0 }}
                                                             className="overflow-hidden"
                                                         >
-                                                            <div className="pt-2 pb-1 border-t border-zinc-800/50 mt-2">
-                                                                <p className="text-[10px] text-zinc-400 leading-relaxed italic">
+                                                            <div className="pt-2 pb-1 border-t border-border/50 mt-2">
+                                                                <p className="text-[10px] text-muted-foreground leading-relaxed italic">
                                                                     {activeSection.steps[tourStep].details}
                                                                 </p>
                                                             </div>
@@ -1463,7 +1463,7 @@ export function HelpAssistant() {
                                                 size="icon"
                                                 onClick={prevStep}
                                                 disabled={tourStep === 0}
-                                                className="h-9 w-9 text-zinc-500 hover:text-white hover:bg-zinc-800 disabled:opacity-0 rounded-xl"
+                                                className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-secondary disabled:opacity-0 rounded-xl"
                                             >
                                                 <ChevronLeft className="h-4 w-4" />
                                             </Button>
@@ -1471,7 +1471,7 @@ export function HelpAssistant() {
                                                 variant="ghost"
                                                 size="sm"
                                                 onClick={endTour}
-                                                className="h-9 text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:text-white hover:bg-zinc-800/50 rounded-xl px-3"
+                                                className="h-9 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-xl px-3"
                                             >
                                                 Пропустить
                                             </Button>
@@ -1488,7 +1488,7 @@ export function HelpAssistant() {
                                                     nextStep();
                                                 }
                                             }}
-                                            className="h-9 text-[11px] font-black uppercase tracking-widest gap-2 bg-indigo-600 hover:bg-indigo-500 px-5 min-w-[110px] rounded-xl shadow-lg shadow-indigo-600/20 active:scale-95 transition-all"
+                                            className="h-9 text-[11px] font-black uppercase tracking-widest gap-2 bg-primary hover:bg-primary px-5 min-w-[110px] rounded-xl shadow-lg shadow-cyan-600/20 active:scale-95 transition-all"
                                         >
                                             {tourStep === activeSection.steps.length - 1 ? (
                                                 <>Готово <CheckCircle2 className="h-3.5 w-3.5" /></>
@@ -1525,7 +1525,7 @@ export function HelpAssistant() {
                                 )}
 
                                 {/* Arrow Indicator */}
-                                <div className={`w-5 h-5 bg-zinc-900 border-l border-t border-zinc-800/50 rotate-45 -mt-2.5 relative z-10 ${highlightRect.bottom + 40 > (typeof window !== 'undefined' ? window.innerHeight : 800) - 250 ? 'mt-[238px] rotate-[225deg]' : ''}`} />
+                                <div className={`w-5 h-5 bg-card border-l border-t border-border/50 rotate-45 -mt-2.5 relative z-10 ${highlightRect.bottom + 40 > (typeof window !== 'undefined' ? window.innerHeight : 800) - 250 ? 'mt-[238px] rotate-[225deg]' : ''}`} />
                             </motion.div>
                         </div>
                     )

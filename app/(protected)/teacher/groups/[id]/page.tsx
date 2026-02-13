@@ -51,14 +51,14 @@ function InviteDialog({ groupId }: { groupId: string }) {
     return (
         <Dialog onOpenChange={(open) => !open && reset()}>
             <DialogTrigger asChild>
-                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2">
+                <Button className="bg-primary hover:bg-primary/90 text-white gap-2">
                     <Ticket className="h-4 w-4" /> Пригласить студентов
                 </Button>
             </DialogTrigger>
-            <DialogContent className="bg-zinc-900 border-zinc-800 text-zinc-100 sm:max-w-md">
+            <DialogContent className="bg-card border-border text-foreground sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Создание приглашения</DialogTitle>
-                    <DialogDescription className="text-zinc-400">
+                    <DialogDescription className="text-muted-foreground">
                         Сгенерируйте код или QR для входа студентов.
                     </DialogDescription>
                 </DialogHeader>
@@ -68,10 +68,10 @@ function InviteDialog({ groupId }: { groupId: string }) {
                         <div className="space-y-2">
                             <Label>Срок действия</Label>
                             <Select value={expires} onValueChange={setExpires}>
-                                <SelectTrigger className="bg-zinc-800 border-zinc-700">
+                                <SelectTrigger className="bg-secondary border-border">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="bg-zinc-800 border-zinc-700 text-zinc-100">
+                                <SelectContent className="bg-secondary border-border text-foreground">
                                     <SelectItem value="10">10 минут</SelectItem>
                                     <SelectItem value="60">1 час</SelectItem>
                                     <SelectItem value="1440">24 часа</SelectItem>
@@ -82,24 +82,24 @@ function InviteDialog({ groupId }: { groupId: string }) {
                         <div className="space-y-2">
                             <Label>Лимит использования</Label>
                             <Select value={maxUses} onValueChange={setMaxUses}>
-                                <SelectTrigger className="bg-zinc-800 border-zinc-700">
+                                <SelectTrigger className="bg-secondary border-border">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="bg-zinc-800 border-zinc-700 text-zinc-100">
+                                <SelectContent className="bg-secondary border-border text-foreground">
                                     <SelectItem value="1">Одноразовый (1 студент)</SelectItem>
                                     <SelectItem value="unlimited">Многоразовый (Вся группа)</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
-                        <Button onClick={handleGenerate} className="w-full bg-indigo-600 hover:bg-indigo-700" disabled={loading}>
+                        <Button onClick={handleGenerate} className="w-full bg-primary hover:bg-primary/90" disabled={loading}>
                             {loading ? 'Создание...' : 'Сгенерировать'}
                         </Button>
                     </div>
                 ) : (
                     <div className="space-y-6 py-4 flex flex-col items-center">
                         <div className="text-center space-y-2">
-                            <div className="text-zinc-400 text-sm">Код приглашения</div>
-                            <div className="text-4xl font-mono font-bold tracking-widest text-white select-all bg-zinc-800 p-4 rounded-lg border border-zinc-700">
+                            <div className="text-muted-foreground text-sm">Код приглашения</div>
+                            <div className="text-4xl font-mono font-bold tracking-widest text-white select-all bg-secondary p-4 rounded-lg border border-border">
                                 {inviteData?.token}
                             </div>
                         </div>
@@ -107,15 +107,15 @@ function InviteDialog({ groupId }: { groupId: string }) {
                         <InviteQR value={inviteData?.token} />
 
                         <div className="grid grid-cols-2 gap-2 w-full">
-                            <Button variant="outline" className="border-zinc-700 text-zinc-300" onClick={() => navigator.clipboard.writeText(inviteData?.token)}>
+                            <Button variant="outline" className="border-border text-foreground" onClick={() => navigator.clipboard.writeText(inviteData?.token)}>
                                 <Copy className="mr-2 h-4 w-4" /> Копировать
                             </Button>
-                            <Button variant="outline" className="border-zinc-700 text-zinc-300" onClick={() => window.print()}>
+                            <Button variant="outline" className="border-border text-foreground" onClick={() => window.print()}>
                                 <Printer className="mr-2 h-4 w-4" /> Печать
                             </Button>
                         </div>
 
-                        <Button variant="ghost" className="w-full text-zinc-500 hover:text-zinc-300" onClick={reset}>
+                        <Button variant="ghost" className="w-full text-muted-foreground hover:text-foreground" onClick={reset}>
                             Создать новое
                         </Button>
                     </div>
@@ -158,7 +158,7 @@ export default function GroupDetailsPage() {
         }
     });
 
-    if (isLoading) return <div className="p-8 text-zinc-400 flex items-center gap-2"><Loader2 className="animate-spin" /> Загрузка...</div>;
+    if (isLoading) return <div className="p-8 text-muted-foreground flex items-center gap-2"><Loader2 className="animate-spin" /> Загрузка...</div>;
 
     const translateStatus = (status: string) => {
         switch (status) {
@@ -174,22 +174,22 @@ export default function GroupDetailsPage() {
             case 'ACTIVE': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
             case 'PENDING': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
             case 'SUSPENDED': return 'bg-red-500/10 text-red-500 border-red-500/20';
-            default: return 'bg-zinc-800 text-zinc-400';
+            default: return 'bg-secondary text-muted-foreground';
         }
     };
 
     return (
-        <div className="p-8 space-y-6 bg-zinc-950 min-h-screen text-zinc-100">
+        <div className="p-8 space-y-6 bg-background min-h-screen text-foreground">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <Link href="/teacher">
-                        <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white">
+                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white">
                             <ArrowLeft className="h-4 w-4" />
                         </Button>
                     </Link>
                     <div>
                         <h1 className="text-2xl font-bold text-white">Управление группой</h1>
-                        <p className="text-zinc-400">Список студентов и модерация</p>
+                        <p className="text-muted-foreground">Список студентов и модерация</p>
                     </div>
                 </div>
                 {/* Invite Button Component */}
@@ -197,23 +197,23 @@ export default function GroupDetailsPage() {
                 <InviteDialog groupId={id} />
             </div>
 
-            <div className="rounded-md border border-zinc-800 bg-zinc-900 overflow-hidden">
+            <div className="rounded-md border border-border bg-card overflow-hidden">
                 <Table>
-                    <TableHeader className="bg-zinc-900">
-                        <TableRow className="border-zinc-800 hover:bg-zinc-900">
-                            <TableHead className="text-zinc-400">Имя Студента</TableHead>
-                            <TableHead className="text-zinc-400">Email</TableHead>
-                            <TableHead className="text-zinc-400">Дата присоединения</TableHead>
-                            <TableHead className="text-zinc-400">Статус</TableHead>
-                            <TableHead className="text-right text-zinc-400">Действия</TableHead>
+                    <TableHeader className="bg-card">
+                        <TableRow className="border-border hover:bg-card">
+                            <TableHead className="text-muted-foreground">Имя Студента</TableHead>
+                            <TableHead className="text-muted-foreground">Email</TableHead>
+                            <TableHead className="text-muted-foreground">Дата присоединения</TableHead>
+                            <TableHead className="text-muted-foreground">Статус</TableHead>
+                            <TableHead className="text-right text-muted-foreground">Действия</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {members?.map((member: any) => (
-                            <TableRow key={member.id} className="border-zinc-800 hover:bg-zinc-800/50">
+                            <TableRow key={member.id} className="border-border hover:bg-secondary/50">
                                 <TableCell className="font-medium text-white">{member.name}</TableCell>
-                                <TableCell className="text-zinc-400">{member.email}</TableCell>
-                                <TableCell className="text-zinc-500">
+                                <TableCell className="text-muted-foreground">{member.email}</TableCell>
+                                <TableCell className="text-muted-foreground">
                                     {new Date(member.joinedAt).toLocaleDateString('ru-RU')}
                                 </TableCell>
                                 <TableCell>
@@ -224,12 +224,12 @@ export default function GroupDetailsPage() {
                                 <TableCell className="text-right">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" className="h-8 w-8 p-0 text-zinc-400 hover:text-white">
+                                            <Button variant="ghost" className="h-8 w-8 p-0 text-muted-foreground hover:text-white">
                                                 <span className="sr-only">Open menu</span>
                                                 <MoreHorizontal className="h-4 w-4" />
                                             </Button>
                                         </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-800 text-zinc-200">
+                                        <DropdownMenuContent align="end" className="bg-card border-border text-foreground">
                                             {member.status !== 'ACTIVE' && (
                                                 <DropdownMenuItem
                                                     className="focus:bg-emerald-900/50 focus:text-emerald-400 cursor-pointer"
@@ -263,7 +263,7 @@ export default function GroupDetailsPage() {
                         ))}
                         {members?.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={5} className="h-24 text-center text-zinc-500">
+                                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                                     В этой группе пока нет студентов.
                                 </TableCell>
                             </TableRow>

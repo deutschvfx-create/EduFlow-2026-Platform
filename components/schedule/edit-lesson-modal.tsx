@@ -129,15 +129,15 @@ export function LessonModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="w-80 bg-zinc-900 border-zinc-800 p-0 shadow-2xl shadow-black/80 gap-0 border-white/5 outline-none overflow-hidden">
-                <div className="p-3 border-b border-zinc-800 text-sm font-semibold text-white flex justify-between items-center bg-zinc-900/50">
+            <DialogContent className="w-80 bg-card border-border p-0 shadow-2xl shadow-black/80 gap-0 border-border outline-none overflow-hidden">
+                <div className="p-3 border-b border-border text-sm font-semibold text-foreground flex justify-between items-center bg-card/50">
                     <span className="flex items-center gap-2">
                         {isEdit ? "Редактирование" : "Новое занятие"}
                         {isEdit && status === 'CANCELLED' && (
                             <span className="text-[10px] bg-red-900/50 text-red-200 px-1.5 py-0.5 rounded border border-red-500/20">Отменен</span>
                         )}
                     </span>
-                    <Button size="icon" variant="ghost" className="h-6 w-6 text-zinc-400 hover:text-white hover:bg-white/5" onClick={() => onOpenChange(false)}>
+                    <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-white/5" onClick={() => onOpenChange(false)}>
                         <XCircle className="h-4 w-4" />
                     </Button>
                 </div>
@@ -145,32 +145,32 @@ export function LessonModal({
                 <div className="p-4 space-y-3">
                     <div className="flex gap-3">
                         <div className="flex-1 space-y-1.5 flex flex-col items-center">
-                            <Label className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Начало</Label>
+                            <Label className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Начало</Label>
                             <IOSStyleTimePicker
                                 value={startTime}
                                 onChange={setStartTime}
-                                className="w-full h-24 border-zinc-800/50 bg-black/40"
+                                className="w-full h-24 border-border/50 bg-black/40"
                                 minuteStep={5}
                             />
                         </div>
                         <div className="flex-1 space-y-1.5 flex flex-col items-center">
-                            <Label className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Конец</Label>
+                            <Label className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Конец</Label>
                             <IOSStyleTimePicker
                                 value={endTime}
                                 onChange={setEndTime}
-                                className="w-full h-24 border-zinc-800/50 bg-black/40"
+                                className="w-full h-24 border-border/50 bg-black/40"
                                 minuteStep={5}
                             />
                         </div>
                     </div>
 
                     <div className="space-y-1">
-                        <Label className="text-[10px] text-zinc-500 uppercase font-bold px-0.5">Предмет</Label>
+                        <Label className="text-[10px] text-muted-foreground uppercase font-bold px-0.5">Предмет</Label>
                         <Select value={courseId} onValueChange={setCourseId}>
-                            <SelectTrigger className="h-9 text-xs bg-zinc-950 border-zinc-800 focus:ring-1 focus:ring-indigo-500 transition-all">
+                            <SelectTrigger className="h-9 text-xs bg-background border-border focus:ring-1 focus:ring-cyan-500 transition-all">
                                 <SelectValue placeholder="Выберите предмет" />
                             </SelectTrigger>
-                            <SelectContent className="bg-zinc-900 border-zinc-800">
+                            <SelectContent className="bg-card border-border">
                                 {courses.map(c => <SelectItem key={c.id} value={c.id} className="text-xs">{c.name}</SelectItem>)}
                             </SelectContent>
                         </Select>
@@ -178,23 +178,23 @@ export function LessonModal({
 
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
-                            <Label className="text-[10px] text-zinc-500 uppercase font-bold px-0.5">Группа</Label>
+                            <Label className="text-[10px] text-muted-foreground uppercase font-bold px-0.5">Группа</Label>
                             <Select value={groupId} onValueChange={setGroupId}>
-                                <SelectTrigger className="h-9 text-xs bg-zinc-950 border-zinc-800 focus:ring-1 focus:ring-indigo-500 transition-all">
+                                <SelectTrigger className="h-9 text-xs bg-background border-border focus:ring-1 focus:ring-cyan-500 transition-all">
                                     <SelectValue placeholder="Группа" />
                                 </SelectTrigger>
-                                <SelectContent className="bg-zinc-900 border-zinc-800">
+                                <SelectContent className="bg-card border-border">
                                     {groups.map(g => <SelectItem key={g.id} value={g.id} className="text-xs">{g.name}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
                         <div className="space-y-1">
-                            <Label className="text-[10px] text-zinc-500 uppercase font-bold px-0.5">День</Label>
+                            <Label className="text-[10px] text-muted-foreground uppercase font-bold px-0.5">День</Label>
                             <Select value={dayOfWeek} onValueChange={(v) => setDayOfWeek(v as DayOfWeek)}>
-                                <SelectTrigger className="h-9 text-xs bg-zinc-950 border-zinc-800">
+                                <SelectTrigger className="h-9 text-xs bg-background border-border">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="bg-zinc-900 border-zinc-800">
+                                <SelectContent className="bg-card border-border">
                                     <SelectItem value="MON" className="text-xs">Пнд</SelectItem>
                                     <SelectItem value="TUE" className="text-xs">Втр</SelectItem>
                                     <SelectItem value="WED" className="text-xs">Срд</SelectItem>
@@ -208,12 +208,12 @@ export function LessonModal({
                     </div>
 
                     <div className="space-y-1">
-                        <Label className="text-[10px] text-zinc-500 uppercase font-bold px-0.5">Преподаватель</Label>
+                        <Label className="text-[10px] text-muted-foreground uppercase font-bold px-0.5">Преподаватель</Label>
                         <Select value={teacherId} onValueChange={setTeacherId}>
-                            <SelectTrigger className="h-9 text-xs bg-zinc-950 border-zinc-800 focus:ring-1 focus:ring-indigo-500 transition-all">
+                            <SelectTrigger className="h-9 text-xs bg-background border-border focus:ring-1 focus:ring-cyan-500 transition-all">
                                 <SelectValue placeholder="Выберите учителя" />
                             </SelectTrigger>
-                            <SelectContent className="bg-zinc-900 border-zinc-800">
+                            <SelectContent className="bg-card border-border">
                                 {teachers.map(t => (
                                     <SelectItem key={t.id} value={t.id} className="text-xs">
                                         {t.lastName} {t.firstName?.charAt(0)}.
@@ -225,12 +225,12 @@ export function LessonModal({
 
                     {modules.classrooms && (
                         <div className="space-y-1">
-                            <Label className="text-[10px] text-zinc-500 uppercase font-bold px-0.5">Аудитория</Label>
+                            <Label className="text-[10px] text-muted-foreground uppercase font-bold px-0.5">Аудитория</Label>
                             <Select value={room || "__none__"} onValueChange={setRoom}>
-                                <SelectTrigger className="h-9 text-xs bg-zinc-950 border-zinc-800 focus:ring-1 focus:ring-indigo-500 transition-all">
+                                <SelectTrigger className="h-9 text-xs bg-background border-border focus:ring-1 focus:ring-cyan-500 transition-all">
                                     <SelectValue placeholder="Аудитория" />
                                 </SelectTrigger>
-                                <SelectContent className="bg-zinc-900 border-zinc-800">
+                                <SelectContent className="bg-card border-border">
                                     <SelectItem value="__none__" className="text-xs">Не выбрана</SelectItem>
                                     {classrooms.map(cls => (
                                         <SelectItem key={cls.id} value={cls.name} className="text-xs">{cls.name}</SelectItem>
@@ -244,7 +244,7 @@ export function LessonModal({
                         <Button
                             onClick={handleSubmit}
                             disabled={loading || !courseId || !groupId || !teacherId}
-                            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white h-9 text-xs font-semibold shadow-lg shadow-indigo-950/40 border border-white/5 active:scale-[0.98] transition-all"
+                            className="flex-1 bg-primary hover:bg-primary/90 text-foreground h-9 text-xs font-semibold shadow-lg shadow-cyan-950/40 border border-border active:scale-[0.98] transition-all"
                         >
                             {loading && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
                             {isEdit ? "Сохранить" : "Создать занятие"}
@@ -257,10 +257,10 @@ export function LessonModal({
                                     variant="ghost"
                                     size="icon"
                                     className={cn(
-                                        "h-9 w-9 border border-zinc-800",
+                                        "h-9 w-9 border border-border",
                                         status === 'CANCELLED'
                                             ? "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/30"
-                                            : "text-zinc-500 hover:text-red-400 hover:bg-red-950/30"
+                                            : "text-muted-foreground hover:text-red-400 hover:bg-red-950/30"
                                     )}
                                     onClick={() => setStatus(status === 'CANCELLED' ? 'PLANNED' : 'CANCELLED')}
                                 >
@@ -272,7 +272,7 @@ export function LessonModal({
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        className="h-9 w-9 text-zinc-600 hover:text-red-500 hover:bg-red-950/30 border border-zinc-800"
+                                        className="h-9 w-9 text-muted-foreground hover:text-red-500 hover:bg-red-950/30 border border-border"
                                         onClick={() => onDelete(lesson.id)}
                                     >
                                         <Trash2 className="h-4 w-4" />

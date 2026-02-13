@@ -82,13 +82,13 @@ export function FloatingBotTrigger({ onClick, hasNewFeatures }: FloatingBotTrigg
                 className="absolute pointer-events-auto cursor-grab active:cursor-grabbing group"
             >
                 {/* Backdrop Glow */}
-                <div className={`absolute inset-0 bg-indigo-500 rounded-full blur-xl transition-opacity duration-500 ${isIdle ? 'opacity-0' : 'opacity-40'}`} />
+                <div className={`absolute inset-0 bg-primary rounded-full blur-xl transition-opacity duration-500 ${isIdle ? 'opacity-0' : 'opacity-40'}`} />
 
                 {/* Main Bubble */}
-                <div className="relative w-14 h-14 md:w-16 md:h-16 bg-zinc-900/90 backdrop-blur-xl border border-zinc-800/50 rounded-full shadow-2xl flex items-center justify-center overflow-hidden ring-1 ring-inset ring-white/10">
+                <div className="relative w-14 h-14 md:w-16 md:h-16 bg-card/90 backdrop-blur-xl border border-border/50 rounded-full shadow-2xl flex items-center justify-center overflow-hidden ring-1 ring-inset ring-white/10">
 
                     {/* Drag Handle Indicator (visible on hover) */}
-                    <div className={`absolute top-1 left-1/2 -translate-x-1/2 text-zinc-600 transition-opacity duration-300 ${isDragging ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}`}>
+                    <div className={`absolute top-1 left-1/2 -translate-x-1/2 text-muted-foreground transition-opacity duration-300 ${isDragging ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}`}>
                         <GripVertical className="w-3 h-3 rotate-90" />
                     </div>
 
@@ -101,8 +101,8 @@ export function FloatingBotTrigger({ onClick, hasNewFeatures }: FloatingBotTrigg
                     {hasNewFeatures && (
                         <div className="absolute top-0 right-0 p-1">
                             <span className="relative flex h-3 w-3">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500 border border-zinc-900"></span>
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-primary border border-border"></span>
                             </span>
                         </div>
                     )}

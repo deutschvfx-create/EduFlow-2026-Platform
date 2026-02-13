@@ -4,10 +4,14 @@ import { Student } from "@/lib/types/student";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { StudentStatusBadge } from "./status-badge";
 import { CreditCountdown } from "./credit-countdown";
+import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, AlertCircle } from "lucide-react";
+import { Users, Calendar, AlertCircle, MoreHorizontal } from "lucide-react";
+import {
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 
 interface StudentCardsProps {
     students: Student[];
@@ -19,9 +23,9 @@ export function StudentCards({ students, onAction }: StudentCardsProps) {
 
     if (students.length === 0) {
         return (
-            <div className="text-center py-20 bg-zinc-900/50 rounded-lg border border-zinc-800 border-dashed">
-                <p className="text-zinc-500 mb-2 font-bold uppercase tracking-widest text-xs">Студенты не найдены</p>
-                <p className="text-sm text-zinc-600">Попробуйте изменить фильтры или добавьте нового ученика</p>
+            <div className="text-center py-20 bg-card/50 rounded-lg border border-border border-dashed">
+                <p className="text-muted-foreground mb-2 font-bold uppercase tracking-widest text-xs">Студенты не найдены</p>
+                <p className="text-sm text-muted-foreground">Попробуйте изменить фильтры или добавьте нового ученика</p>
             </div>
         );
     }
@@ -46,83 +50,58 @@ export function StudentCards({ students, onAction }: StudentCardsProps) {
             variants={container}
             initial="hidden"
             animate="show"
-            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-12 gap-3 p-1"
+            className="grid grid-cols-1 md:grid-cols-2 gap-3"
         >
             {students.map((student) => {
-                const age = Math.floor((new Date().getTime() - new Date(student.birthDate).getTime()) / 31536000000);
-                const isDebt = student.paymentStatus === 'DUE';
-
                 return (
                     <motion.div
                         key={student.id}
                         variants={item}
-                        whileHover={{ y: -5 }}
-                        className="group relative bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden hover:border-indigo-500/50 hover:shadow-[0_0_25px_rgba(99,102,241,0.2)] transition-all duration-300 cursor-pointer aspect-[3/4.5] flex flex-col"
+                        className="group relative flex items-center gap-4 bg-white border border-[#DDE7EA] rounded-[14px] p-4 h-[100px] hover:border-[#2EC4C6] hover:shadow-md transition-all cursor-pointer overflow-hidden"
                         onClick={() => router.push(`/app/students/${student.id}`)}
                     >
-                        {/* Premium Header Gradient */}
-                        <div className="h-14 bg-gradient-to-br from-indigo-500/30 via-purple-500/10 to-transparent relative overflow-hidden">
-                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(99,102,241,0.2),transparent)]" />
+                        {/* Avatar */}
+                        <Avatar className="h-12 w-12 border-2 border-[#FAFAF2] shadow-sm flex-shrink-0">
+                            <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.firstName}${student.lastName}`} />
+                            <AvatarFallback className="bg-[#FAFAF2] text-[#0F3D4C] font-bold text-xs">
+                                {student.firstName[0]}{student.lastName[0]}
+                            </AvatarFallback>
+                        </Avatar>
 
-                            {/* Age/Debt Tag - Like a price tag */}
-                            <div className="absolute top-1.5 right-1.5 z-20">
-                                {isDebt ? (
-                                    <Badge className="bg-rose-600/90 text-white border-none text-[8px] h-4 px-1 font-black animate-pulse shadow-lg">
-                                        ДОЛГ
-                                    </Badge>
-                                ) : (
-                                    <Badge variant="outline" className="bg-zinc-950/50 backdrop-blur-md border-white/10 text-white text-[9px] h-4 px-1.5 font-bold shadow-lg">
-                                        {age} л.
-                                    </Badge>
-                                )}
-                            </div>
-
-                            {/* Status Dot Top Left */}
-                            <div className="absolute top-2 left-2 z-20">
-                                <div className={`h-1.5 w-1.5 rounded-full shadow-[0_0_5px_currentColor] 
-                                    ${student.status === 'ACTIVE' ? 'bg-emerald-500 text-emerald-500' :
-                                        student.status === 'SUSPENDED' ? 'bg-rose-500 text-rose-500' :
-                                            'bg-amber-500 text-amber-500'}`}
-                                />
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                            <h3 className="text-[15px] font-bold text-[#0F3D4C] truncate leading-tight mb-1">
+                                {student.firstName} {student.lastName}
+                            </h3>
+                            <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-1.5 text-[#0F3D4C]/60 text-xs font-semibold">
+                                    <Users className="h-3.5 w-3.5" />
+                                    <span>{student.groupIds?.length || 0} гр.</span>
+                                </div>
+                                <div className="h-1 w-1 rounded-full bg-[#DDE7EA]" />
+                                <Badge variant="ghost" className={`h-5 text-[10px] font-bold px-2 rounded-full border border-current/20 
+                                    ${student.status === 'ACTIVE' ? 'bg-[#2EC4C6]/10 text-[#2EC4C6]' :
+                                        student.status === 'SUSPENDED' ? 'bg-red-50 text-red-500 border-red-200' :
+                                            'bg-amber-50 text-amber-500 border-amber-200'}`}>
+                                    {student.status}
+                                </Badge>
                             </div>
                         </div>
 
-                        {/* Avatar Section */}
-                        <div className="-mt-9 px-1 flex flex-col items-center z-10">
-                            <Avatar className="h-14 w-14 border-[3px] border-zinc-900 ring-1 ring-white/10 shadow-2xl group-hover:scale-110 transition-transform duration-500">
-                                <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.firstName}${student.lastName}`} />
-                                <AvatarFallback className="bg-zinc-950 text-indigo-400 font-black text-[10px]">
-                                    {student.firstName[0]}{student.lastName[0]}
-                                </AvatarFallback>
-                            </Avatar>
-
-                            <div className="mt-1.5 text-center w-full px-1 overflow-hidden">
-                                <h3 className="text-[11px] font-black text-white truncate leading-tight tracking-tight drop-shadow-md" title={`${student.firstName} ${student.lastName}`}>
-                                    {student.firstName}
-                                </h3>
-                                <p className="text-[9px] font-bold text-zinc-500 truncate leading-tight uppercase tracking-tighter opacity-80">
-                                    {student.lastName}
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Bottom Information (Glassmorphism Section) */}
-                        <div className="mt-auto bg-zinc-950/80 backdrop-blur-md border-t border-zinc-800/50 p-1.5 group-hover:bg-zinc-950 transition-colors">
-                            <div className="flex justify-between items-center gap-1 mb-1 opacity-90">
-                                <div className="flex items-center gap-0.5 bg-indigo-500/10 px-1 py-0 rounded border border-indigo-500/20">
-                                    <Users className="h-2 w-2 text-indigo-400" />
-                                    <span className="text-[7px] font-black text-indigo-300 uppercase">
-                                        {student.groupIds?.length || 0} ГР.
-                                    </span>
-                                </div>
-                                <div className="scale-75 origin-right translate-x-1">
-                                    <StudentStatusBadge status={student.status} />
-                                </div>
-                            </div>
-
-                            <div className="scale-90 origin-left w-[111%] min-h-[30px] flex items-end">
-                                <CreditCountdown paidUntil={student.paidUntil} />
-                            </div>
+                        {/* Actions */}
+                        <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-[#0F3D4C]/40 hover:text-[#0F3D4C] hover:bg-[#FAFAF2]">
+                                        <MoreHorizontal className="h-5 w-5" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="bg-white border-[#DDE7EA] text-[#0F3D4C]">
+                                    <DropdownMenuItem onClick={() => router.push(`/app/students/${student.id}`)}>Профиль</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => onAction('activate', student.id)}>Активировать</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => onAction('suspend', student.id)} className="text-red-500">Заблокировать</DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
                     </motion.div>
                 );

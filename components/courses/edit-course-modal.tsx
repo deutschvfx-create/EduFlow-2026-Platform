@@ -32,6 +32,10 @@ export function EditCourseModal({ course, open, onOpenChange, onSave }: EditCour
     const [level, setLevel] = useState("");
     const [description, setDescription] = useState("");
     const [status, setStatus] = useState<CourseStatus>("ACTIVE");
+    const [basePrice, setBasePrice] = useState("");
+    const [currency, setCurrency] = useState<'RUB' | 'USD' | 'EUR' | 'TJS'>('RUB');
+    const [format, setFormat] = useState<"ONLINE" | "OFFLINE" | "HYBRID">("OFFLINE");
+    const [grouping, setGrouping] = useState<"INDIVIDUAL" | "GROUP">("GROUP");
     const [faculties, setFaculties] = useState<Faculty[]>([]);
     const [allDepartments, setAllDepartments] = useState<Department[]>([]);
 
@@ -56,6 +60,10 @@ export function EditCourseModal({ course, open, onOpenChange, onSave }: EditCour
             setLevel(course.level || "");
             setDescription(course.description || "");
             setStatus(course.status);
+            setBasePrice(course.basePrice?.toString() || "");
+            setCurrency(course.currency || 'RUB');
+            setFormat(course.format || "OFFLINE");
+            setGrouping(course.grouping || "GROUP");
         }
     }, [course]);
 
@@ -86,6 +94,10 @@ export function EditCourseModal({ course, open, onOpenChange, onSave }: EditCour
             level,
             description,
             status,
+            basePrice: parseInt(basePrice) || undefined,
+            currency,
+            format,
+            grouping,
         });
 
         setLoading(false);
@@ -96,10 +108,10 @@ export function EditCourseModal({ course, open, onOpenChange, onSave }: EditCour
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[600px] bg-zinc-900 border-zinc-800 text-zinc-100">
+            <DialogContent className="sm:max-w-[600px] bg-card border-border text-foreground">
                 <DialogHeader>
-                    <DialogTitle>Редактирование предмета</DialogTitle>
-                    <DialogDescription>Изменение данных дисциплины {course.code}</DialogDescription>
+                    <DialogTitle className="text-[20px] font-black text-[#0F172A] tracking-tight">Редактировать курс</DialogTitle>
+                    <DialogDescription>Изменение данных курса {course.code}</DialogDescription>
                 </DialogHeader>
 
                 <div className="grid gap-4 py-4">
@@ -107,7 +119,7 @@ export function EditCourseModal({ course, open, onOpenChange, onSave }: EditCour
                         <div className="space-y-2">
                             <Label>Факультет *</Label>
                             <Select value={facultyId} onValueChange={handleFacultyChange}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                <SelectTrigger className="bg-background border-border">
                                     <SelectValue placeholder="Выберите факультет" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -120,7 +132,7 @@ export function EditCourseModal({ course, open, onOpenChange, onSave }: EditCour
                         <div className="space-y-2">
                             <Label>Кафедра *</Label>
                             <Select value={departmentId} onValueChange={setDepartmentId} disabled={!facultyId}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                <SelectTrigger className="bg-background border-border">
                                     <SelectValue placeholder={!facultyId ? "Сначала выберите факультет" : "Выберите кафедру"} />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -136,16 +148,44 @@ export function EditCourseModal({ course, open, onOpenChange, onSave }: EditCour
                         <div className="space-y-2">
                             <Label>Название *</Label>
                             <Input
-                                className="bg-zinc-950 border-zinc-800"
+                                className="bg-background border-border"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                             />
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                    <Label className="text-[11px] text-muted-foreground">Формат *</Label>
+                                    <Select value={format} onValueChange={(v: any) => setFormat(v)}>
+                                        <SelectTrigger className="h-9 bg-secondary/20 border-border/50 text-sm">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="OFFLINE">🏛 Офлайн</SelectItem>
+                                            <SelectItem value="ONLINE">💻 Онлайн</SelectItem>
+                                            <SelectItem value="HYBRID">🔄 Гибрид</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="text-[11px] text-muted-foreground">Группа/Инд. *</Label>
+                                    <Select value={grouping} onValueChange={(v: any) => setGrouping(v)}>
+                                        <SelectTrigger className="h-9 bg-secondary/20 border-border/50 text-sm">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="GROUP">👥 Группа</SelectItem>
+                                            <SelectItem value="INDIVIDUAL">👤 Индивидуально</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
                         </div>
 
                         <div className="space-y-2">
                             <Label>Код (ID) *</Label>
                             <Input
-                                className="bg-zinc-950 border-zinc-800 uppercase"
+                                className="bg-background border-border uppercase"
                                 value={code}
                                 onChange={(e) => setCode(e.target.value.toUpperCase())}
                             />
@@ -156,21 +196,27 @@ export function EditCourseModal({ course, open, onOpenChange, onSave }: EditCour
                         <div className="space-y-2">
                             <Label>Уровень</Label>
                             <Select value={level} onValueChange={setLevel}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                <SelectTrigger className="bg-background border-border">
                                     <SelectValue placeholder="Выберите уровень" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="A1">A1</SelectItem>
-                                    <SelectItem value="A2">A2</SelectItem>
-                                    <SelectItem value="B1">B1</SelectItem>
-                                    <SelectItem value="B2">B2</SelectItem>
-                                    <SelectItem value="C1">C1</SelectItem>
-                                    <SelectItem value="1 курс">1 курс</SelectItem>
-                                    <SelectItem value="2 курс">2 курс</SelectItem>
+                                    <SelectItem value="A1.1">A1.1 (Beginner 1)</SelectItem>
+                                    <SelectItem value="A1.2">A1.2 (Beginner 2)</SelectItem>
+                                    <SelectItem value="A2.1">A2.1 (Elementary 1)</SelectItem>
+                                    <SelectItem value="A2.2">A2.2 (Elementary 2)</SelectItem>
+                                    <SelectItem value="B1.1">B1.1 (Pre-Intermediate 1)</SelectItem>
+                                    <SelectItem value="B1.2">B1.2 (Pre-Intermediate 2)</SelectItem>
+                                    <SelectItem value="B2.1">B2.1 (Intermediate 1)</SelectItem>
+                                    <SelectItem value="B2.2">B2.2 (Intermediate 2)</SelectItem>
+                                    <SelectItem value="C1.1">C1.1 (Upper-Intermediate 1)</SelectItem>
+                                    <SelectItem value="C1.2">C1.2 (Upper-Intermediate 2)</SelectItem>
+                                    <SelectItem value="C2">C2 (Proficiency)</SelectItem>
+                                    <SelectItem value="MANDATORY">Основной курс</SelectItem>
+                                    <SelectItem value="ELECTIVE">Спецкурс / По выбору</SelectItem>
+                                    <SelectItem value="OPTIONAL">Факультатив (кружок)</SelectItem>
+                                    <SelectItem value="INTENSIVE">Интенсив / Мастер-класс</SelectItem>
                                     <SelectItem value="3 курс">3 курс</SelectItem>
                                     <SelectItem value="4 курс">4 курс</SelectItem>
-                                    <SelectItem value="Beginner">Beginner</SelectItem>
-                                    <SelectItem value="Advanced">Advanced</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -178,7 +224,7 @@ export function EditCourseModal({ course, open, onOpenChange, onSave }: EditCour
                         <div className="space-y-2">
                             <Label>Статус</Label>
                             <Select value={status} onValueChange={(s) => setStatus(s as CourseStatus)}>
-                                <SelectTrigger className="bg-zinc-950 border-zinc-800">
+                                <SelectTrigger className="bg-background border-border">
                                     <SelectValue placeholder="Статус" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -193,16 +239,46 @@ export function EditCourseModal({ course, open, onOpenChange, onSave }: EditCour
                     <div className="space-y-2">
                         <Label>Описание</Label>
                         <Textarea
-                            className="bg-zinc-950 border-zinc-800 resize-none h-20"
+                            className="bg-background border-border resize-none h-20"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                         />
                     </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label>Базовая стоимость</Label>
+                            <Input
+                                type="number"
+                                className="bg-background border-border"
+                                value={basePrice}
+                                onChange={(e) => setBasePrice(e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Валюта</Label>
+                            <Select value={currency} onValueChange={(v) => setCurrency(v as any)}>
+                                <SelectTrigger className="bg-background border-border">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="RUB">RUB (₽)</SelectItem>
+                                    <SelectItem value="TJS">TJS (смн)</SelectItem>
+                                    <SelectItem value="USD">USD ($)</SelectItem>
+                                    <SelectItem value="EUR">EUR (€)</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
                 </div>
 
                 <DialogFooter>
-                    <Button variant="ghost" onClick={() => onOpenChange(false)}>Отмена</Button>
-                    <Button onClick={handleSubmit} disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                    <Button variant="ghost" onClick={() => onOpenChange(false)} className="text-[#64748B] hover:text-[#0F172A] font-bold">Отмена</Button>
+                    <Button
+                        onClick={handleSubmit}
+                        disabled={loading}
+                        className="h-10 px-6 bg-[#0F4C3D] hover:bg-[#0F4C3D]/90 text-white font-bold rounded-full shadow-lg shadow-[#0F4C3D]/20 transition-all active:scale-95"
+                    >
                         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Сохранить
                     </Button>

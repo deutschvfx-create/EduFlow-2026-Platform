@@ -45,6 +45,7 @@ import { UserData, UserService, OrganizationService } from "@/lib/services/fires
 import { Slider } from "@/components/ui/slider";
 import { auth, db } from "@/lib/firebase";
 import { updatePassword } from "firebase/auth";
+import { useTheme } from "next-themes";
 import { doc, onSnapshot } from "firebase/firestore";
 
 interface UserProfileCardProps {
@@ -58,8 +59,15 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     // Main UI State
-    const [activeTab, setActiveTab] = useState<"profile" | "organization" | "security" | "access">("profile");
+    const [activeTab, setActiveTab] = useState<"profile" | "organization" | "security" | "access" | "interface">("profile");
     const [saving, setSaving] = useState(false);
+    const { theme, setTheme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+
+    // Ensure theme is only rendered on client
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Load collapse preference
     useEffect(() => {
@@ -285,7 +293,7 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
     const isOwner = userData?.role === 'owner';
 
     return (
-        <Card className={`bg-zinc-950/30 border border-zinc-900/50 rounded-xl overflow-hidden mt-6 transition-all duration-300 ${isCollapsed ? 'mb-6' : ''}`}>
+        <Card className={`bg-background/30 border border-border/50 rounded-xl overflow-hidden mt-6 transition-all duration-300 ${isCollapsed ? 'mb-6' : ''}`}>
             <AnimatePresence mode="wait">
                 {isCollapsed ? (
                     <motion.div
@@ -293,32 +301,32 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
                         key="collapsed"
-                        className="flex items-center justify-between p-4 bg-zinc-900/20"
+                        className="flex items-center justify-between p-4 bg-card/20"
                     >
                         <div className="flex items-center gap-4">
-                            <Avatar className="h-10 w-10 border border-zinc-800">
+                            <Avatar className="h-10 w-10 border border-border">
                                 <AvatarImage src={formData.photoURL} className="object-cover" />
-                                <AvatarFallback className="bg-zinc-900 text-zinc-400">
+                                <AvatarFallback className="bg-card text-muted-foreground">
                                     {formData.firstName?.[0] || user?.email?.[0]?.toUpperCase()}
                                 </AvatarFallback>
                             </Avatar>
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <h3 className="text-sm font-bold text-white">
+                                    <h3 className="text-sm font-bold text-foreground">
                                         {formData.firstName || "Пользователь"} {formData.lastName || ""}
                                     </h3>
                                     <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
                                         ONLINE
                                     </span>
                                 </div>
-                                <p className="text-xs text-zinc-500">{user?.email}</p>
+                                <p className="text-xs text-muted-foreground">{user?.email}</p>
                             </div>
                         </div>
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={toggleCollapse}
-                            className="text-zinc-500 hover:text-white"
+                            className="text-muted-foreground hover:text-foreground"
                         >
                             <Maximize2 className="h-4 w-4" />
                         </Button>
@@ -332,14 +340,14 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                     >
                         <CardContent className="p-0">
                             {/* Compact Header */}
-                            <div className="flex items-center justify-between px-4 py-3 bg-zinc-900/20 border-b border-zinc-900/50">
-                                <div className="flex items-center gap-1 bg-zinc-900/50 p-1 rounded-lg">
+                            <div className="flex items-center justify-between px-4 py-3 bg-card/20 border-b border-border/50">
+                                <div className="flex items-center gap-1 bg-card/50 p-1 rounded-lg">
                                     <button
                                         onClick={() => setActiveTab("profile")}
                                         className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-[10px] uppercase font-bold tracking-wider transition-all
                                         ${activeTab === "profile"
-                                                ? "bg-zinc-800 text-white shadow-sm"
-                                                : "text-zinc-500 hover:text-zinc-300"
+                                                ? "bg-secondary text-white shadow-sm"
+                                                : "text-muted-foreground hover:text-foreground"
                                             }`}
                                     >
                                         <User className="h-3.5 w-3.5" />
@@ -350,8 +358,8 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                             onClick={() => setActiveTab("organization")}
                                             className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-[10px] uppercase font-bold tracking-wider transition-all
                                             ${activeTab === "organization"
-                                                    ? "bg-zinc-800 text-white shadow-sm"
-                                                    : "text-zinc-500 hover:text-zinc-300"
+                                                    ? "bg-secondary text-white shadow-sm"
+                                                    : "text-muted-foreground hover:text-foreground"
                                                 }`}
                                         >
                                             <Building2 className="h-3.5 w-3.5" />
@@ -362,8 +370,8 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                         onClick={() => setActiveTab("security")}
                                         className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-[10px] uppercase font-bold tracking-wider transition-all
                                         ${activeTab === "security"
-                                                ? "bg-zinc-800 text-white shadow-sm"
-                                                : "text-zinc-500 hover:text-zinc-300"
+                                                ? "bg-secondary text-white shadow-sm"
+                                                : "text-muted-foreground hover:text-foreground"
                                             }`}
                                     >
                                         <ShieldCheck className="h-3.5 w-3.5" />
@@ -373,19 +381,30 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                         onClick={() => setActiveTab("access")}
                                         className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-[10px] uppercase font-bold tracking-wider transition-all
                                         ${activeTab === "access"
-                                                ? "bg-zinc-800 text-white shadow-sm"
-                                                : "text-zinc-500 hover:text-zinc-300"
+                                                ? "bg-secondary text-white shadow-sm"
+                                                : "text-muted-foreground hover:text-foreground"
                                             }`}
                                     >
                                         <Monitor className="h-3.5 w-3.5" />
                                         Доступ
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab("interface")}
+                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-[10px] uppercase font-bold tracking-wider transition-all
+                                        ${activeTab === "interface"
+                                                ? "bg-secondary text-white shadow-sm"
+                                                : "text-muted-foreground hover:text-foreground"
+                                            }`}
+                                    >
+                                        <Smartphone className="h-3.5 w-3.5" />
+                                        Интерфейс
                                     </button>
                                 </div>
                                 <Button
                                     variant="ghost"
                                     size="icon"
                                     onClick={toggleCollapse}
-                                    className="h-8 w-8 text-zinc-500 hover:text-white"
+                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
                                 >
                                     <Minimize2 className="h-4 w-4" />
                                 </Button>
@@ -396,7 +415,7 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                     <div className="flex flex-col md:flex-row gap-6">
                                         <div className="flex-shrink-0 flex flex-col items-center gap-3">
                                             <div
-                                                className="relative group cursor-move h-24 w-24 rounded-full overflow-hidden border-2 border-zinc-800 bg-zinc-900"
+                                                className="relative group cursor-move h-24 w-24 rounded-full overflow-hidden border-2 border-border bg-card"
                                                 onMouseDown={() => setIsDragging(true)}
                                                 onMouseMove={handleMouseMove}
                                             >
@@ -412,13 +431,13 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                                         }}
                                                     />
                                                 ) : (
-                                                    <div className="h-full w-full flex items-center justify-center text-zinc-600">
+                                                    <div className="h-full w-full flex items-center justify-center text-muted-foreground">
                                                         <User className="h-8 w-8" />
                                                     </div>
                                                 )}
                                                 <button
                                                     onClick={() => fileInputRef.current?.click()}
-                                                    className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
+                                                    className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-foreground"
                                                 >
                                                     <Camera className="h-5 w-5" />
                                                 </button>
@@ -427,7 +446,7 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
 
                                             {formData.photoURL && (
                                                 <div className="w-24 space-y-2">
-                                                    <div className="flex items-center justify-between text-zinc-500">
+                                                    <div className="flex items-center justify-between text-muted-foreground">
                                                         <ZoomOut className="h-3 w-3" />
                                                         <Slider
                                                             value={[formData.photoScale || 1]}
@@ -441,7 +460,7 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                                     </div>
                                                     <button
                                                         onClick={() => setFormData(prev => ({ ...prev, photoScale: 1, photoPosition: { x: 0, y: 0 } }))}
-                                                        className="w-full text-[9px] text-zinc-500 hover:text-indigo-400 font-medium uppercase tracking-wider"
+                                                        className="w-full text-[9px] text-muted-foreground hover:text-primary font-medium uppercase tracking-wider"
                                                     >
                                                         Сброс
                                                     </button>
@@ -452,45 +471,45 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                         <div className="flex-1 space-y-3">
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div className="space-y-1">
-                                                    <Label className="text-[9px] font-bold uppercase text-zinc-500">Имя</Label>
+                                                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">Имя</Label>
                                                     <Input
                                                         value={formData.firstName}
                                                         onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                                                        className="h-9 bg-zinc-900/30 border-zinc-900 text-xs"
+                                                        className="h-9 bg-card/30 border-border text-xs"
                                                     />
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <Label className="text-[9px] font-bold uppercase text-zinc-500">Фамилия</Label>
+                                                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">Фамилия</Label>
                                                     <Input
                                                         value={formData.lastName}
                                                         onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                                                        className="h-9 bg-zinc-900/30 border-zinc-900 text-xs"
+                                                        className="h-9 bg-card/30 border-border text-xs"
                                                     />
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <Label className="text-[9px] font-bold uppercase text-zinc-500">Email (ID)</Label>
+                                                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">Email (ID)</Label>
                                                     <Input
                                                         value={userData?.email || ""}
                                                         disabled
-                                                        className="h-9 bg-zinc-900/50 border-zinc-900 text-xs text-zinc-500"
+                                                        className="h-9 bg-card/50 border-border text-xs text-muted-foreground"
                                                     />
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <Label className="text-[9px] font-bold uppercase text-zinc-500">Телефон</Label>
+                                                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">Телефон</Label>
                                                     <Input
                                                         value={formData.phone}
                                                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                                         placeholder="+992..."
-                                                        className="h-9 bg-zinc-900/30 border-zinc-900 text-xs"
+                                                        className="h-9 bg-card/30 border-border text-xs"
                                                     />
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <Label className="text-[9px] font-bold uppercase text-zinc-500">Дата рождения</Label>
+                                                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">Дата рождения</Label>
                                                     <Input
                                                         type="date"
                                                         value={formData.birthDate}
                                                         onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
-                                                        className="h-9 bg-zinc-900/30 border-zinc-900 text-xs text-zinc-300"
+                                                        className="h-9 bg-card/30 border-border text-xs text-foreground"
                                                         style={{ colorScheme: 'dark' }}
                                                     />
                                                 </div>
@@ -500,7 +519,7 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                                 <Button
                                                     onClick={handleSaveProfile}
                                                     disabled={saving}
-                                                    className="h-9 bg-white hover:bg-zinc-200 text-black text-[10px] font-black uppercase tracking-wider px-6"
+                                                    className="h-9 bg-white hover:bg-secondary text-black text-[10px] font-black uppercase tracking-wider px-6"
                                                 >
                                                     {saving ? <RefreshCcw className="h-3.5 w-3.5 animate-spin mr-2" /> : <Save className="h-3.5 w-3.5 mr-2" />}
                                                     Сохранить
@@ -514,7 +533,7 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                     <div className="flex flex-col md:flex-row gap-6">
                                         <div className="flex-shrink-0 flex flex-col items-center gap-3">
                                             <div
-                                                className="relative group cursor-move h-24 w-24 rounded-xl overflow-hidden border-2 border-zinc-800 bg-zinc-900"
+                                                className="relative group cursor-move h-24 w-24 rounded-xl overflow-hidden border-2 border-border bg-card"
                                                 onMouseDown={() => setIsDraggingOrgLogo(true)}
                                                 onMouseMove={handleMouseMove}
                                             >
@@ -526,13 +545,13 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                                         style={{ scale: orgData.logoScale, objectPosition: `${orgData.logoPosition?.x}% ${orgData.logoPosition?.y}%` }}
                                                     />
                                                 ) : (
-                                                    <div className="h-full w-full flex items-center justify-center text-zinc-600">
+                                                    <div className="h-full w-full flex items-center justify-center text-muted-foreground">
                                                         <Building2 className="h-8 w-8" />
                                                     </div>
                                                 )}
                                                 <button
                                                     onClick={() => orgLogoInputRef.current?.click()}
-                                                    className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
+                                                    className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-foreground"
                                                 >
                                                     <Upload className="h-5 w-5" />
                                                 </button>
@@ -541,7 +560,7 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
 
                                             {orgData.logo && (
                                                 <div className="w-24 space-y-2">
-                                                    <div className="flex items-center justify-between text-zinc-500">
+                                                    <div className="flex items-center justify-between text-muted-foreground">
                                                         <ZoomOut className="h-3 w-3" />
                                                         <Slider
                                                             value={[orgData.logoScale || 1]}
@@ -555,7 +574,7 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                                     </div>
                                                     <button
                                                         onClick={() => setOrgData((prev: any) => ({ ...prev, logoScale: 1, logoPosition: { x: 50, y: 50 } }))}
-                                                        className="w-full text-[9px] text-zinc-500 hover:text-indigo-400 font-medium uppercase tracking-wider"
+                                                        className="w-full text-[9px] text-muted-foreground hover:text-primary font-medium uppercase tracking-wider"
                                                     >
                                                         Сброс
                                                     </button>
@@ -565,64 +584,64 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
 
                                         <div className="flex-1 space-y-3">
                                             <div className="space-y-1">
-                                                <Label className="text-[9px] font-bold uppercase text-zinc-500">Название организации</Label>
+                                                <Label className="text-[9px] font-bold uppercase text-muted-foreground">Название организации</Label>
                                                 <Input
                                                     value={orgData.name}
                                                     onChange={(e) => setOrgData({ ...orgData, name: e.target.value })}
-                                                    className="h-9 bg-zinc-900/30 border-zinc-900 text-xs"
+                                                    className="h-9 bg-card/30 border-border text-xs"
                                                 />
                                             </div>
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div className="space-y-1">
-                                                    <Label className="text-[9px] font-bold uppercase text-zinc-500">Тип</Label>
+                                                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">Тип</Label>
                                                     <select
                                                         value={orgData.type}
                                                         onChange={(e) => setOrgData({ ...orgData, type: e.target.value })}
-                                                        className="w-full h-9 text-xs bg-zinc-900/30 border border-zinc-900 rounded-md px-2 text-zinc-300 outline-none"
+                                                        className="w-full h-9 text-xs bg-card/30 border border-border rounded-md px-2 text-foreground outline-none"
                                                     >
                                                         <option value="university">🎓 Университет</option>
                                                         <option value="language_school">🌍 Языковая школа</option>
                                                     </select>
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <Label className="text-[9px] font-bold uppercase text-zinc-500">Год основания</Label>
+                                                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">Год основания</Label>
                                                     <Input
                                                         type="number"
                                                         value={orgData.establishedYear}
                                                         onChange={(e) => setOrgData({ ...orgData, establishedYear: parseInt(e.target.value) })}
-                                                        className="h-9 bg-zinc-900/30 border-zinc-900 text-xs"
+                                                        className="h-9 bg-card/30 border-border text-xs"
                                                     />
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <Label className="text-[9px] font-bold uppercase text-zinc-500">Email</Label>
+                                                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">Email</Label>
                                                     <Input
                                                         value={orgData.email}
                                                         onChange={(e) => setOrgData({ ...orgData, email: e.target.value })}
-                                                        className="h-9 bg-zinc-900/30 border-zinc-900 text-xs"
+                                                        className="h-9 bg-card/30 border-border text-xs"
                                                     />
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <Label className="text-[9px] font-bold uppercase text-zinc-500">Телефон</Label>
+                                                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">Телефон</Label>
                                                     <Input
                                                         value={orgData.phone}
                                                         onChange={(e) => setOrgData({ ...orgData, phone: e.target.value })}
-                                                        className="h-9 bg-zinc-900/30 border-zinc-900 text-xs"
+                                                        className="h-9 bg-card/30 border-border text-xs"
                                                     />
                                                 </div>
                                                 <div className="space-y-1 col-span-2">
-                                                    <Label className="text-[9px] font-bold uppercase text-zinc-500">Веб-сайт</Label>
+                                                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">Веб-сайт</Label>
                                                     <Input
                                                         value={orgData.website}
                                                         onChange={(e) => setOrgData({ ...orgData, website: e.target.value })}
-                                                        className="h-9 bg-zinc-900/30 border-zinc-900 text-xs"
+                                                        className="h-9 bg-card/30 border-border text-xs"
                                                     />
                                                 </div>
                                                 <div className="space-y-1 col-span-2">
-                                                    <Label className="text-[9px] font-bold uppercase text-zinc-500">Адрес</Label>
+                                                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">Адрес</Label>
                                                     <Input
                                                         value={orgData.address}
                                                         onChange={(e) => setOrgData({ ...orgData, address: e.target.value })}
-                                                        className="h-9 bg-zinc-900/30 border-zinc-900 text-xs"
+                                                        className="h-9 bg-card/30 border-border text-xs"
                                                     />
                                                 </div>
                                             </div>
@@ -630,7 +649,7 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                                 <Button
                                                     onClick={handleSaveOrganization}
                                                     disabled={saving}
-                                                    className="h-9 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black uppercase tracking-wider px-6"
+                                                    className="h-9 bg-primary hover:bg-primary text-foreground text-[10px] font-black uppercase tracking-wider px-6"
                                                 >
                                                     <Save className="h-3.5 w-3.5 mr-2" /> Сохранить
                                                 </Button>
@@ -642,28 +661,28 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                 {activeTab === "security" && (
                                     <div className="max-w-sm mx-auto space-y-4">
                                         <div className="space-y-1 relative">
-                                            <Label className="text-[9px] font-bold uppercase text-zinc-500">Новый пароль</Label>
+                                            <Label className="text-[9px] font-bold uppercase text-muted-foreground">Новый пароль</Label>
                                             <div className="relative">
                                                 <Input
                                                     type={showPassword ? "text" : "password"}
                                                     value={passwords.new}
                                                     onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
                                                     placeholder="••••••••"
-                                                    className="h-9 bg-zinc-900/30 border-zinc-900 text-xs pr-8"
+                                                    className="h-9 bg-card/30 border-border text-xs pr-8"
                                                 />
-                                                <button onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white">
+                                                <button onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                                                     {showPassword ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                                                 </button>
                                             </div>
                                         </div>
                                         <div className="space-y-1">
-                                            <Label className="text-[9px] font-bold uppercase text-zinc-500">Подтвердите пароль</Label>
+                                            <Label className="text-[9px] font-bold uppercase text-muted-foreground">Подтвердите пароль</Label>
                                             <Input
                                                 type={showPassword ? "text" : "password"}
                                                 value={passwords.confirm}
                                                 onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
                                                 placeholder="••••••••"
-                                                className="h-9 bg-zinc-900/30 border-zinc-900 text-xs"
+                                                className="h-9 bg-card/30 border-border text-xs"
                                             />
                                         </div>
                                         {securityError && <p className="text-[9px] font-bold text-red-400 flex items-center gap-1"><Lock className="h-3 w-3" />{securityError}</p>}
@@ -671,7 +690,7 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
                                             <Button
                                                 onClick={handleSavePassword}
                                                 disabled={saving || !passwords.new}
-                                                className="h-9 bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-black uppercase tracking-wider px-6"
+                                                className="h-9 bg-amber-600 hover:bg-amber-500 text-foreground text-[10px] font-black uppercase tracking-wider px-6"
                                             >
                                                 <ShieldCheck className="h-3.5 w-3.5 mr-2" /> Обновить пароль
                                             </Button>
@@ -681,6 +700,61 @@ export function UserProfileCard({ onSave }: UserProfileCardProps) {
 
                                 {activeTab === "access" && (
                                     <AccessManager />
+                                )}
+
+                                {activeTab === "interface" && mounted && (
+                                    <div className="space-y-6 py-2">
+                                        <div className="flex items-center gap-3 px-2 mb-4">
+                                            <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                                            <h3 className="text-[11px] font-black text-foreground uppercase tracking-widest italic">
+                                                Оформление интерфейса
+                                            </h3>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                            {[
+                                                { id: 'light', label: 'Светлая', icon: Eye, color: 'text-amber-500', desc: 'Максимум яркости' },
+                                                { id: 'dark', label: 'Тёмная', icon: EyeOff, color: 'text-primary', desc: 'Комфорт для глаз' },
+                                                { id: 'system', label: 'Системная', icon: Monitor, color: 'text-emerald-500', desc: 'Как в Windows' }
+                                            ].map((t) => (
+                                                <button
+                                                    key={t.id}
+                                                    onClick={() => setTheme(t.id)}
+                                                    className={`relative flex flex-col items-center gap-4 p-5 rounded-2xl border transition-all duration-300 group
+                                                        ${theme === t.id
+                                                            ? 'bg-card border-primary/50 shadow-lg shadow-cyan-500/10 scale-[1.02]'
+                                                            : 'bg-background/40 border-border hover:bg-card hover:border-border'
+                                                        }`}
+                                                >
+                                                    <div className={`p-4 rounded-full transition-colors ${theme === t.id ? 'bg-primary/20 ' + t.color : 'bg-secondary/50 text-muted-foreground'}`}>
+                                                        <t.icon className="h-6 w-6" />
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <p className={`text-xs font-black uppercase tracking-wider ${theme === t.id ? 'text-white' : 'text-muted-foreground'}`}>
+                                                            {t.label}
+                                                        </p>
+                                                        <p className="text-[10px] text-muted-foreground mt-1 font-medium group-hover:text-muted-foreground transition-colors">
+                                                            {t.desc}
+                                                        </p>
+                                                    </div>
+                                                    {theme === t.id && (
+                                                        <div className="absolute top-3 right-3">
+                                                            <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-cyan-500/40">
+                                                                <Check className="h-3 w-3 text-foreground" />
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        <div className="mt-8 p-4 rounded-xl bg-card/40 border border-border/50">
+                                            <p className="text-[10px] text-muted-foreground text-center uppercase tracking-[0.15em] font-medium leading-relaxed">
+                                                Переключайте тему в зависимости от времени суток и освещения. <br />
+                                                <span className="text-primary/80">Ваша настройка сохранится автоматически.</span>
+                                            </p>
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                         </CardContent>

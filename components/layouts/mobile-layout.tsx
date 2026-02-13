@@ -22,14 +22,14 @@ export function MobileLayout({ children }: MobileLayoutProps) {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
     return (
-        <div className="h-[100dvh] w-full bg-zinc-950 flex flex-col laptop:hidden overflow-hidden selection:bg-indigo-500/30">
+        <div className="h-[100dvh] w-full bg-background flex flex-col laptop:hidden overflow-hidden selection:bg-primary/30">
             {/* Mobile Header */}
             <MobileHeader />
 
             {/* Main Content with Swipe Support */}
             <main className="flex-1 relative overflow-hidden">
                 <SwipeableTabs tabs={mainTabs}>
-                    <div className="absolute inset-0 overflow-y-auto scroll-smooth overscroll-contain pb-24">
+                    <div className="absolute inset-0 overflow-y-auto scroll-smooth overscroll-contain pb-32 custom-scrollbar">
                         <div className="px-4 py-6 min-h-full">
                             {children}
                         </div>

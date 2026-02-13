@@ -35,9 +35,9 @@ export function StudentsTable({ students, onAction }: StudentsTableProps) {
 
     if (students.length === 0) {
         return (
-            <div className="text-center py-20 bg-zinc-900/50 rounded-lg border border-zinc-800 border-dashed">
-                <p className="text-zinc-500 mb-2 font-bold uppercase tracking-widest text-xs">Студенты не найдены</p>
-                <p className="text-sm text-zinc-600">Попробуйте изменить фильтры или добавьте нового ученика</p>
+            <div className="text-center py-20 bg-card/50 rounded-lg border border-border border-dashed">
+                <p className="text-muted-foreground mb-2 font-bold uppercase tracking-widest text-xs">Студенты не найдены</p>
+                <p className="text-sm text-muted-foreground">Попробуйте изменить фильтры или добавьте нового ученика</p>
             </div>
         );
     }
@@ -45,43 +45,43 @@ export function StudentsTable({ students, onAction }: StudentsTableProps) {
     return (
         <div className="overflow-x-auto">
             <Table>
-                <TableHeader className="bg-zinc-900/50">
-                    <TableRow className="hover:bg-zinc-900 border-zinc-800/50">
+                <TableHeader className="bg-card/50">
+                    <TableRow className="hover:bg-card border-border/50">
                         <TableHead className="w-[40px] px-4">
-                            <Checkbox className="border-zinc-700 data-[state=checked]:bg-indigo-600 rounded-md" />
+                            <Checkbox className="border-border data-[state=checked]:bg-primary rounded-md" />
                         </TableHead>
-                        <TableHead className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Студент</TableHead>
-                        <TableHead className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 hidden md:table-cell">Возраст / Дата рождения</TableHead>
-                        <TableHead className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Статус</TableHead>
-                        <TableHead className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 hidden laptop:table-cell">Группы / Курсы</TableHead>
-                        <TableHead className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Баланс (время)</TableHead>
-                        <TableHead className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Оплата</TableHead>
-                        <TableHead className="text-right text-[10px] font-bold uppercase tracking-widest text-zinc-500 px-4">Управление</TableHead>
+                        <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Студент</TableHead>
+                        <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hidden md:table-cell">Возраст / Дата рождения</TableHead>
+                        <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Статус</TableHead>
+                        <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hidden laptop:table-cell">Группы / Курсы</TableHead>
+                        <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Баланс (время)</TableHead>
+                        <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Оплата</TableHead>
+                        <TableHead className="text-right text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-4">Управление</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {students.map((student) => (
                         <TableRow
                             key={student.id}
-                            className="hover:bg-zinc-900/50 border-zinc-800/50 cursor-pointer group transition-colors"
+                            className="hover:bg-card/50 border-border/50 cursor-pointer group transition-colors"
                             onClick={() => router.push(`/app/students/${student.id}`)}
                         >
                             <TableCell className="px-4" onClick={(e) => e.stopPropagation()}>
-                                <Checkbox className="border-zinc-700 data-[state=checked]:bg-indigo-600 rounded-md" />
+                                <Checkbox className="border-border data-[state=checked]:bg-primary rounded-md" />
                             </TableCell>
                             <TableCell>
                                 <div className="flex items-center gap-3">
-                                    <Avatar className="h-9 w-9 border border-zinc-800 ring-1 ring-white/5 shadow-xl">
+                                    <Avatar className="h-9 w-9 border border-border ring-1 ring-white/5 shadow-xl">
                                         <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.firstName}${student.lastName}`} alt={student.firstName} />
-                                        <AvatarFallback className="bg-zinc-950 text-indigo-400 font-black text-xs">
+                                        <AvatarFallback className="bg-background text-primary font-black text-xs">
                                             {student.firstName[0]}{student.lastName[0]}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="flex flex-col">
-                                        <div className="text-sm font-bold text-white group-hover:text-indigo-400 transition-colors">
+                                        <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
                                             {student.firstName} {student.lastName}
                                         </div>
-                                        <div className="text-[10px] text-zinc-500 font-medium">
+                                        <div className="text-[10px] text-muted-foreground font-medium">
                                             {student.email || 'Нет email'}
                                         </div>
                                     </div>
@@ -89,11 +89,11 @@ export function StudentsTable({ students, onAction }: StudentsTableProps) {
                             </TableCell>
                             <TableCell className="hidden md:table-cell">
                                 <div className="flex flex-col gap-0.5">
-                                    <div className="text-sm text-zinc-300 font-medium flex items-center gap-1.5">
-                                        <Calendar className="h-3 w-3 text-zinc-500" />
+                                    <div className="text-sm text-foreground font-medium flex items-center gap-1.5">
+                                        <Calendar className="h-3 w-3 text-muted-foreground" />
                                         {new Date(student.birthDate).toLocaleDateString('ru-RU')}
                                     </div>
-                                    <div className="text-[10px] text-zinc-600 uppercase font-black">
+                                    <div className="text-[10px] text-muted-foreground uppercase font-black">
                                         {Math.floor((new Date().getTime() - new Date(student.birthDate).getTime()) / 31536000000)} лет
                                     </div>
                                 </div>
@@ -104,11 +104,11 @@ export function StudentsTable({ students, onAction }: StudentsTableProps) {
                             <TableCell className="hidden laptop:table-cell">
                                 <div className="flex flex-wrap gap-1 max-w-[200px]">
                                     {(student.groupIds?.length || 0) > 0 ? (
-                                        <span className="text-zinc-400 text-[9px] font-bold uppercase tracking-tighter">
+                                        <span className="text-muted-foreground text-[9px] font-bold uppercase tracking-tighter">
                                             {student.groupIds.length} {student.groupIds.length === 1 ? 'группа' : 'групп'}
                                         </span>
                                     ) : (
-                                        <span className="text-zinc-700 text-[10px] font-bold uppercase italic">Без группы</span>
+                                        <span className="text-muted-foreground text-[10px] font-bold uppercase italic">Без группы</span>
                                     )}
                                 </div>
                             </TableCell>
@@ -130,26 +130,26 @@ export function StudentsTable({ students, onAction }: StudentsTableProps) {
                                         </div>
                                     )}
                                     {student.paymentStatus === 'UNKNOWN' && (
-                                        <span className="text-zinc-700 font-black text-xs">—</span>
+                                        <span className="text-muted-foreground font-black text-xs">—</span>
                                     )}
                                 </div>
                             </TableCell>
                             <TableCell className="text-right px-4" onClick={(e) => e.stopPropagation()}>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" className="h-8 w-8 p-0 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors">
+                                        <Button variant="ghost" className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors">
                                             <MoreHorizontal className="h-4 w-4" />
                                         </Button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-800 text-zinc-300 shadow-2xl min-w-[160px]">
-                                        <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 px-3 py-2">Контроль</DropdownMenuLabel>
-                                        <DropdownMenuItem onClick={() => router.push(`/app/students/${student.id}`)} className="cursor-pointer hover:bg-zinc-800 focus:bg-zinc-800 py-2">
-                                            <Eye className="mr-2 h-4 w-4 text-zinc-400" /> Профиль студента
+                                    <DropdownMenuContent align="end" className="bg-card border-border text-foreground shadow-2xl min-w-[160px]">
+                                        <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-3 py-2">Контроль</DropdownMenuLabel>
+                                        <DropdownMenuItem onClick={() => router.push(`/app/students/${student.id}`)} className="cursor-pointer hover:bg-secondary focus:bg-secondary py-2">
+                                            <Eye className="mr-2 h-4 w-4 text-muted-foreground" /> Профиль студента
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem className="cursor-pointer hover:bg-zinc-800 focus:bg-zinc-800 py-2">
-                                            <CreditCard className="mr-2 h-4 w-4 text-zinc-400" /> История оплат
+                                        <DropdownMenuItem className="cursor-pointer hover:bg-secondary focus:bg-secondary py-2">
+                                            <CreditCard className="mr-2 h-4 w-4 text-muted-foreground" /> История оплат
                                         </DropdownMenuItem>
-                                        <DropdownMenuSeparator className="bg-zinc-800" />
+                                        <DropdownMenuSeparator className="bg-secondary" />
 
                                         {student.status !== 'ACTIVE' && (
                                             <DropdownMenuItem onClick={() => onAction('activate', student.id)} className="text-emerald-400 cursor-pointer hover:bg-emerald-500/10 focus:bg-emerald-500/10 py-2">
@@ -163,7 +163,7 @@ export function StudentsTable({ students, onAction }: StudentsTableProps) {
                                             </DropdownMenuItem>
                                         )}
 
-                                        <DropdownMenuItem onClick={() => onAction('archive', student.id)} className="text-zinc-500 cursor-pointer hover:bg-zinc-800 py-2">
+                                        <DropdownMenuItem onClick={() => onAction('archive', student.id)} className="text-muted-foreground cursor-pointer hover:bg-secondary py-2">
                                             <Archive className="mr-2 h-4 w-4" /> В архив
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>

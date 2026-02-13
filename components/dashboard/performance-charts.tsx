@@ -9,15 +9,15 @@ export function AttendanceTrend() {
     const points = "0,80 40,60 80,75 120,40 160,50 200,20 240,45 280,10";
 
     return (
-        <div className="relative h-64 w-full bg-zinc-950/20 rounded-xl border border-zinc-800/50 p-4 overflow-hidden group">
+        <div className="relative h-64 w-full bg-background/20 rounded-xl border border-border/50 p-4 overflow-hidden group">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                     <Activity className="h-4 w-4 text-emerald-500" />
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">Attendance Pulse</span>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Attendance Pulse</span>
                 </div>
                 <div className="flex gap-1">
                     {[1, 2, 3, 4, 5, 6, 7].map(i => (
-                        <div key={i} className={`h-1 w-3 rounded-full ${i > 5 ? 'bg-zinc-800' : 'bg-emerald-500/50'}`} />
+                        <div key={i} className={`h-1 w-3 rounded-full ${i > 5 ? 'bg-secondary' : 'bg-emerald-500/50'}`} />
                     ))}
                 </div>
             </div>
@@ -36,7 +36,7 @@ export function AttendanceTrend() {
                         transition={{ duration: 2, ease: "easeOut" }}
                         d={`M 0 100 L ${points} L 280 100 Z`}
                         fill="url(#gradient-emerald)"
-                        className="opacity-20"
+                        className="opacity-50"
                     />
 
                     {/* Main Line */}
@@ -75,8 +75,8 @@ export function AttendanceTrend() {
 
 function MiniStat({ label, value }: { label: string, value: string }) {
     return (
-        <div className="text-center p-2 rounded-lg bg-zinc-900/50 border border-zinc-800/30">
-            <div className="text-[9px] text-zinc-500 uppercase font-bold">{label}</div>
+        <div className="text-center p-2 rounded-lg bg-card/50 border border-border/30">
+            <div className="text-[9px] text-muted-foreground uppercase font-bold">{label}</div>
             <div className="text-xs font-black text-emerald-400 mt-0.5">{value}</div>
         </div>
     );
@@ -84,21 +84,21 @@ function MiniStat({ label, value }: { label: string, value: string }) {
 
 export function EnrollmentFunnel() {
     return (
-        <div className="h-64 w-full bg-zinc-950/20 rounded-xl border border-zinc-800/50 p-4 flex flex-col group">
+        <div className="h-64 w-full bg-background/20 rounded-xl border border-border/50 p-4 flex flex-col group">
             <div className="flex items-center gap-2 mb-6">
-                <Target className="h-4 w-4 text-indigo-400" />
-                <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">Enrollment Funnel</span>
+                <Target className="h-4 w-4 text-primary" />
+                <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Enrollment Funnel</span>
             </div>
 
             <div className="flex-1 space-y-3 px-4">
-                <FunnelStep label="Leads" value="124" width="w-full" color="bg-indigo-500" />
-                <FunnelStep label="Trials" value="48" width="w-[60%]" color="bg-indigo-400" />
+                <FunnelStep label="Leads" value="124" width="w-full" color="bg-primary" />
+                <FunnelStep label="Trials" value="48" width="w-[60%]" color="bg-primary" />
                 <FunnelStep label="Paid" value="12" width="w-[20%]" color="bg-emerald-400" />
             </div>
 
-            <div className="mt-4 pt-4 border-t border-zinc-800/50 flex justify-between items-center px-1">
-                <div className="text-xs text-zinc-500">Conv. Rate</div>
-                <div className="text-sm font-black text-white">9.6% <span className="text-emerald-500 text-[10px]">↑ 2%</span></div>
+            <div className="mt-4 pt-4 border-t border-border/50 flex justify-between items-center px-1">
+                <div className="text-xs text-muted-foreground">Conv. Rate</div>
+                <div className="text-sm font-black text-foreground">9.6% <span className="text-emerald-500 text-[10px]">↑ 2%</span></div>
             </div>
         </div>
     );
@@ -110,17 +110,17 @@ function FunnelStep({ label, value, width, color }: any) {
             <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: "100%" }}
-                className={`absolute left-0 inset-y-0 rounded-lg opacity-10 ${color}`}
+                className={`absolute left-0 inset-y-0 rounded-lg opacity-40 ${color}`}
             />
             <div className="flex items-center gap-2 z-10 transition-transform group-hover:translate-x-1">
                 <div className={`h-1.5 w-1.5 rounded-full ${color}`} />
-                <span className="text-[11px] font-bold text-zinc-300">{label}</span>
+                <span className="text-[11px] font-bold text-foreground">{label}</span>
             </div>
-            <div className="text-xs font-black text-white z-10">{value}</div>
+            <div className="text-xs font-black text-foreground z-10">{value}</div>
             <motion.div
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
-                className={`absolute bottom-0 left-0 h-[2px] ${color} opacity-30 origin-left`}
+                className={`absolute bottom-0 left-0 h-[2px] ${color} opacity-60 origin-left`}
                 style={{ width: width === 'w-full' ? '100%' : width.replace('w-[', '').replace(']', '') }}
             />
         </div>
@@ -134,10 +134,10 @@ export function RevenueRadial() {
     const strokeDashoffset = circumference - (progress / 100) * circumference;
 
     return (
-        <div className="h-64 w-full bg-zinc-950/20 rounded-xl border border-zinc-800/50 p-4 flex flex-col items-center justify-center group">
+        <div className="h-64 w-full bg-background/20 rounded-xl border border-border/50 p-4 flex flex-col items-center justify-center group">
             <div className="flex items-center gap-2 w-full mb-2">
                 <TrendingUp className="h-4 w-4 text-purple-400" />
-                <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">Target Achievement</span>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Target Achievement</span>
             </div>
 
             <div className="relative h-32 w-32 mt-2">
@@ -166,17 +166,17 @@ export function RevenueRadial() {
                     />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <div className="text-2xl font-black text-white">{progress}%</div>
-                    <div className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest text-center">of Monthly<br />Goal</div>
+                    <div className="text-2xl font-black text-foreground">{progress}%</div>
+                    <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest text-center">of Monthly<br />Goal</div>
                 </div>
             </div>
 
             <div className="mt-4 w-full space-y-2">
                 <div className="flex justify-between text-[10px]">
-                    <span className="text-zinc-500">Target</span>
-                    <span className="text-white font-bold">$16,000</span>
+                    <span className="text-muted-foreground">Target</span>
+                    <span className="text-foreground font-bold">$16,000</span>
                 </div>
-                <div className="h-1 w-full bg-zinc-900 rounded-full overflow-hidden">
+                <div className="h-1 w-full bg-card rounded-full overflow-hidden">
                     <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: "78%" }}
