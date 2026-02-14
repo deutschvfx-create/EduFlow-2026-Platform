@@ -5,8 +5,6 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import QueryProvider from "@/components/providers/query-provider";
 import { AuthProvider } from "@/components/auth/auth-provider";
-import { InstallPrompt } from "@/components/pwa/install-prompt";
-import { OfflineIndicator } from "@/components/pwa/offline-indicator";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -31,9 +29,6 @@ export default function RootLayout({
   return (
     <html lang="ru" suppressHydrationWarning>
       <head>
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#06b6d4" />
-        <link rel="apple-touch-icon" href="/icon-192x192.png" />
       </head>
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
@@ -47,9 +42,7 @@ export default function RootLayout({
         >
           <AuthProvider>
             <QueryProvider>
-              <OfflineIndicator />
               {children}
-              <InstallPrompt />
             </QueryProvider>
           </AuthProvider>
         </ThemeProvider>

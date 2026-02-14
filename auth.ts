@@ -14,20 +14,10 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
                 password: { label: "Password", type: "password" }
             },
             async authorize(credentials) {
-                if (!credentials?.email) return null;
-                const email = credentials.email as string;
-
-                // Demo Users for MVP
-                if (email === "director@example.com") {
-                    return { id: "d1", name: "Director Smith", email, role: "DIRECTOR" }
-                }
-                if (email === "teacher@example.com") {
-                    return { id: "t1", name: "Teacher Jones", email, role: "TEACHER" }
-                }
-                if (email === "student@example.com") {
-                    return { id: "s1", name: "Alex Student", email, role: "STUDENT" }
-                }
-
+                if (!credentials?.email || !credentials?.password) return null;
+                // Currently, we are relying on custom Firebase auth provider for the main app logic.
+                // NextAuth is kept for infrastructure/protecting standard routes if needed.
+                // In production, you would verify Firebase ID tokens here.
                 return null;
             },
         }),

@@ -246,6 +246,14 @@ export const OrganizationService = {
                 createdAt: new Date().toISOString()
             });
 
+            // 3. Update User Top-Level Profile (First Org Setup)
+            const userRef = doc(db, "users", uid);
+            await updateDoc(userRef, {
+                role: 'director',
+                organizationId: orgId,
+                currentOrganizationId: orgId
+            });
+
             return orgId;
         } catch (e) {
             console.error("OrganizationService.createNewOrganization failed:", e);

@@ -360,8 +360,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 }
 
                 if (userData) {
-                    // 1. If on protected page but NO organization, go to select-school
-                    if (!userData.organizationId && pathname !== '/select-school' && pathname !== '/') {
+                    // 1. If on protected page but NO organization selected, go to select-school
+                    const hasOrg = userData.organizationId || userData.currentOrganizationId;
+                    if (!hasOrg && pathname !== '/select-school' && pathname !== '/') {
                         if (pathname === '/register') return;
                         router.push('/select-school');
                         return;
