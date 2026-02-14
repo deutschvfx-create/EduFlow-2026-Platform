@@ -154,6 +154,10 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
+  // Enable standalone output for self-hosted deployment
+  // This creates a minimal production server with only necessary dependencies
+  output: 'standalone',
+
   transpilePackages: [
     "zod",
     "framer-motion",
@@ -162,18 +166,10 @@ const nextConfig: NextConfig = {
     "zxing-wasm",
     "smob",
   ],
+
   // Next.js 16 defaults to Turbopack. Setting an empty turbopack config
   // allows it to fall back to Webpack for plugins that need it.
   turbopack: {},
-  env: {
-    NEXT_PUBLIC_FIREBASE_API_KEY: "AIzaSyAZ-pavG6ZxI2BofcMJjCKJu_V47yrAtFA",
-    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "uniwersitet-kontrolle.firebaseapp.com",
-    NEXT_PUBLIC_FIREBASE_PROJECT_ID: "uniwersitet-kontrolle",
-    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: "uniwersitet-kontrolle.firebasestorage.app",
-    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "856355317221",
-    NEXT_PUBLIC_FIREBASE_APP_ID: "1:856355317221:web:42d2aa689a1b50f686bb0c",
-    NEXT_PUBLIC_MASTER_ADMIN_UID: "AC2WpFCYjFdzdHTemoqOSyb4KLJ3",
-  },
 };
 
 export default withPWA(nextConfig);

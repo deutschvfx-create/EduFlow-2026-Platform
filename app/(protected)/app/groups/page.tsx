@@ -261,6 +261,6 @@ export default function GroupsPage() {
                 onArchive={handleArchive}
             />
         </div>
-        </ModuleGuard >
+        </ModuleGuard>
     );
 }
