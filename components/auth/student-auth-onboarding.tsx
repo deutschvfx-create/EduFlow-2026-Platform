@@ -94,6 +94,8 @@ export function StudentAuthOnboarding({ onComplete, initialEmail = "" }: Student
                 firstName,
                 lastName,
                 name: `${firstName} ${lastName}`,
+                emailVerified: true,
+                onboardingStep: 'complete'
             });
 
             setStep('success');
