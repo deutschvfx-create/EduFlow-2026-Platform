@@ -9,35 +9,73 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Role check helper
-    function isRole(role) {
-      return isSignedIn() && 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Role check helper - safer and avoids redundant exists checks when used carefully
+    function hasRole(role) {
+      let path = /databases/$(database)/documents/users/$(request.auth.uid);
+      return isSignedIn() && exists(path) && get(path).data.get('role', 'user') == role;
     }
 
     function getOrgId() {
-      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
-      return (userDoc != null) ? userDoc.data.organizationId : null;
+      let path = /databases/$(database)/documents/users/$(request.auth.uid);
+      return (isSignedIn() && exists(path)) ? get(path).data.get('organizationId', null) : null;
     }
 
     // --- USER PROFILE RULES ---
     
     match /users/{userId} {
       allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == userId 
+                    && request.resource.data.onboardingStep == 'verify-email';
       
-      allow create: if (isSignedIn() && (
-        request.auth.uid == userId ||
-        (isRole('owner') && request.resource.data.organizationId == getOrgId())
-      )) || (
-        // Public Registration via Invite
-        request.resource.data.organizationId != null &&
-        (request.resource.data.role == 'teacher' || request.resource.data.role == 'student')
-      );
-      
-      allow update: if isSignedIn() && (
-        (request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])) ||
-        (isRole('owner') && get(/databases/$(database)/documents/users/$(userId)).data.organizationId == getOrgId())
-      );
+      allow update: if isSignedIn() && request.auth.uid == userId 
+                    && isValidUserUpdate(userId);
+
+      function isValidUserUpdate(uid) {
+        let oldData = resource.data;
+        let newData = request.resource.data;
+        
+        // Transitions
+        let oldStep = oldData.get('onboardingStep', '');
+        let newStep = newData.get('onboardingStep', '');
+        let stepChanged = oldStep != newStep;
+        
+        let validTransition = !stepChanged || (
+          (oldStep == 'verify-email' && newStep == 'organization') ||
+          (oldStep == 'organization' && newStep == 'complete')
+        );
+
+        // Security: No direct skips or jumps to complete
+        let noJumpToComplete = !(oldStep == '' && newStep == 'complete') && 
+                               !(oldStep == 'verify-email' && newStep == 'complete');
+
+        // Org ID Assignment Protection
+        let oldOrgId = oldData.get('organizationId', '');
+        let newOrgId = newData.get('organizationId', '');
+        let orgChanged = oldOrgId != newOrgId;
+        
+        // If assigning organizationId, user MUST be the owner of that org
+        let validOrgAssignment = !orgChanged || (
+          newOrgId == null || newOrgId == '' || (
+            existsAfter(/databases/$(database)/documents/organizations/$(newOrgId)) &&
+            getAfter(/databases/$(database)/documents/organizations/$(newOrgId)).data.ownerId == uid
+          )
+        );
+
+        return validTransition && noJumpToComplete && validOrgAssignment;
+      }
+
+      match /memberships/{orgId} {
+        allow read, create: if isSignedIn() && request.auth.uid == userId;
+        allow update, delete: if isSignedIn() && (
+          request.auth.uid == userId || 
+          hasRole('director') ||
+          hasRole('owner')
+        );
+      }
 
       match /sessions/{sessionId} {
         allow read, write: if isSignedIn() && request.auth.uid == userId;
@@ -49,11 +87,13 @@ service cloud.firestore {
     match /organizations/{orgId} {
       allow read: if true; // Discovery Mode: Public access
       
-      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() 
+                    && request.resource.data.ownerId == request.auth.uid
+                    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.onboardingStep == 'organization';
       
       allow update: if isSignedIn() && (
         resource.data.ownerId == request.auth.uid || 
-        (isRole('owner') && orgId == getOrgId())
+        ((hasRole('owner') || hasRole('director')) && orgId == getOrgId())
       );
     }
 
@@ -61,7 +101,7 @@ service cloud.firestore {
     
     match /groups/{groupId} {
       allow read: if true; // Discovery Mode: Public access
-      allow write: if isSignedIn() && isRole('owner') && request.resource.data.organizationId == getOrgId();
+      allow write: if isSignedIn() && (hasRole('owner') || hasRole('director')) && request.resource.data.organizationId == getOrgId();
     }
 
     // --- MULTI-TENANT DOMAIN RULES ---
@@ -74,28 +114,41 @@ service cloud.firestore {
         return targetOrgId == currentOrgId;
       }
 
-      // Public Discovery Collections (Read-only)
-      function isDiscoveryCollection() {
-        return collection in ["faculties", "subjects", "departments", "schedules", "courses"];
+      // Explicitly exclude core collections and their subpaths to prevent recursion
+      // Since this is a catch-all for top-level collections, it won't match 
+      // subcollections of users/orgs anyway due to how Firestore rules work,
+      // but let's be safe.
+      function isTenantCollection() {
+        return !(collection in ["users", "organizations", "groups", "memberships"]);
       }
 
-      // 1. OWNER: Full access to everything in their org
-      allow read, write: if isRole('owner') && belongsToOrg();
+      // 1. OWNER/DIRECTOR: Full access to everything in their org
+      allow read, write: if isTenantCollection() && (hasRole('owner') || hasRole('director')) && belongsToOrg();
 
       // 2. TEACHER: Specific access
-      allow read: if isRole('teacher') && belongsToOrg();
-      allow write: if isRole('teacher') && belongsToOrg() && (collection in ["attendance", "grades"]);
+      allow read: if isRoleInOrg('teacher');
+      allow write: if isRoleInOrg('teacher') && (collection in ["attendance", "grades"]);
 
       // 3. STUDENT: Own data read-only
-      allow read: if isRole('student') && belongsToOrg() && (
-        collection in ["schedule", "courses"] ||
+      allow read: if isRoleInOrg('student') && (
+        collection in ["schedule", "courses", "subjects", "faculties"] ||
         (collection == "attendance" && (resource == null || resource.data.studentId == request.auth.uid)) ||
-        (collection == "grades" && (resource == null || resource.data.studentId == request.auth.uid)) ||
-        (resource != null && resource.data.studentId == request.auth.uid)
+        (collection == "grades" && (resource == null || resource.data.studentId == request.auth.uid))
       );
 
+      // Helper for role in org check
+      function isRoleInOrg(role) {
+        return hasRole(role) && belongsToOrg();
+      }
+
       // 4. DISCOVERY: Public read for educational structure
-      allow read: if isDiscoveryCollection();
+      allow read: if collection in ["faculties", "subjects", "departments", "schedules", "courses"];
+    }
+
+    // --- COLLECTION GROUP RULES ---
+    
+    match /{path=**}/memberships/{memId} {
+      allow read: if isSignedIn(); // Required for dashboard stats and user lookups
     }
   }
 }

@@ -277,15 +277,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                             setUserData(data);
 
                             if (window.location.pathname === '/login' || window.location.pathname === '/register') {
-                                if (data.organizationId) {
+                                if (data.onboardingStep === 'complete') {
                                     const target = data.role === 'student' ? '/student' : '/app/dashboard';
                                     router.push(target);
                                 } else if (support) {
-                                    // 🛡️ SUPPORT FIX: If we are support and no doc orgId yet, 
-                                    // still try dashboard to avoid register loop
                                     router.push('/app/dashboard');
-                                } else {
-                                    if (window.location.pathname !== '/register') router.push('/register');
+                                } else if (data.onboardingStep) {
+                                    // Handle intermediate steps
+                                    if (data.onboardingStep === 'verify-email') router.push('/verify-email');
+                                    else if (data.onboardingStep === 'organization') router.push('/onboarding/organization');
                                 }
                             }
                         } else {
@@ -349,25 +349,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         if (user && !loading) {
-            // 🛡️ SUPPORT FIX: Skip registration redirect for support sessions
             if (isSupportSession) return;
 
-            if (isProtected) {
-                // If the doc doesn't exist yet, we MUST go to /register
-                if (!userData && pathname !== '/register') {
-                    router.push('/register');
+            // Define onboarding paths to avoid redirect loops
+            const onboardingPaths = ['/verify-email', '/onboarding/organization', '/onboarding/complete'];
+            const isOnboardingPath = onboardingPaths.some(p => pathname.startsWith(p));
+
+            if (userData) {
+                // FORCED STATE MACHINE TRANSITIONS
+                if (userData.onboardingStep === 'verify-email' && pathname !== '/verify-email') {
+                    router.push('/verify-email');
+                    return;
+                }
+                if (userData.onboardingStep === 'organization' && pathname !== '/onboarding/organization') {
+                    router.push('/onboarding/organization');
                     return;
                 }
 
-                if (userData) {
-                    // 1. If on protected page but NO organization selected, go to select-school
-                    const hasOrg = userData.organizationId || userData.currentOrganizationId;
-                    if (!hasOrg && pathname !== '/select-school' && pathname !== '/') {
-                        if (pathname === '/register') return;
-                        router.push('/select-school');
-                        return;
-                    }
+                // If on login/register/verify/org-setup but ALREADY complete, go to dashboard
+                // We EXCLUDE /onboarding/complete here so the user can see the success message
+                const shouldRedirectToApp = (pathname === '/login' || pathname === '/register' || pathname === '/verify-email' || pathname === '/onboarding/organization') && userData.onboardingStep === 'complete';
+
+                if (shouldRedirectToApp) {
+                    const target = userData.role === 'student' ? '/student' : '/app/dashboard';
+                    router.push(target);
+                    return;
                 }
+
+                // Protect app routes if not complete
+                if (isProtected && userData.onboardingStep !== 'complete') {
+                    if (userData.onboardingStep === 'verify-email') router.push('/verify-email');
+                    else if (userData.onboardingStep === 'organization') router.push('/onboarding/organization');
+                    return;
+                }
+            } else if (isProtected && pathname !== '/register') {
+                // If no profile but trying to access app, go to register
+                router.push('/register');
+                return;
             }
         }
 

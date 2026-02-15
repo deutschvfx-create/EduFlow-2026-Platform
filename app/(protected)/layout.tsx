@@ -12,12 +12,14 @@ import { DesktopLayout } from "@/components/layouts/desktop-layout";
 import { OrganizationProvider } from "@/hooks/use-organization";
 import { useAuth } from "@/components/auth/auth-provider";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 import { SplashScreen } from "@/components/shared/splash-screen";
 import { useState, useEffect } from "react";
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
     const { userData, isGuest } = useAuth();
+    const router = useRouter();
     const [showSplash, setShowSplash] = useState(true);
 
     // Fetch modules config on client side
@@ -54,7 +56,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
                                 <span className="text-[10px] font-black uppercase tracking-widest text-primary">Режим ознакомления</span>
                             </div>
                             <button
-                                onClick={() => window.location.href = '/register'}
+                                onClick={() => router.push('/register')}
                                 className="text-[10px] font-black uppercase tracking-widest bg-primary text-white px-3 py-1 rounded-full hover:bg-[#0F3D4C] transition-colors"
                             >
                                 Зарегистрироваться

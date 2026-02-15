@@ -14,9 +14,11 @@ import { JoinOrgModal } from "@/components/organizations/join-org-modal";
 import { OrganizationService } from "@/lib/services/firestore";
 import { Input } from "@/components/ui/input";
 import { SchoolSearch } from "@/components/organizations/school-search";
+import { useRouter } from "next/navigation";
 
 export default function SelectSchoolPage() {
     const { user, memberships, loading: authLoading } = useAuth();
+    const router = useRouter();
     const { organizations, switchOrganization } = useOrganization();
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
@@ -25,7 +27,7 @@ export default function SelectSchoolPage() {
 
     const handleLogout = () => {
         auth.signOut().then(() => {
-            window.location.href = '/login';
+            router.push('/login');
         });
     };
 

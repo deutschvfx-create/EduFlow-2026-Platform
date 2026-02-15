@@ -7,6 +7,8 @@ export type UserRole = 'user' | 'director' | 'owner' | 'teacher' | 'student'; //
 export interface UserData {
     uid: string;
     email: string;
+    emailVerified: boolean;
+    onboardingStep: 'verify-email' | 'organization' | 'complete';
     // Global Profile Data
     name?: string;
     firstName?: string; // Global First Name
@@ -261,45 +263,47 @@ export const OrganizationService = {
         }
     },
 
-    async bootstrapOrganization(uid: string, userData: UserData, orgData: { name: string, type: string }) {
+    async createOrganizationWithTransaction(uid: string, data: { name: string, type: string }) {
         if (typeof window === 'undefined' || !db) return null;
-        console.log("Starting bootstrap for UID:", uid);
+        const { runTransaction, collection, doc } = await import("firebase/firestore");
 
         try {
-            const { collection, doc, setDoc } = await import("firebase/firestore");
+            return await runTransaction(db, async (transaction) => {
+                const orgRef = doc(collection(db, "organizations"));
+                const orgId = orgRef.id;
 
-            // 1. Create Organization
-            const orgRef = doc(collection(db, "organizations"));
-            const orgId = orgRef.id;
-            const organization = {
-                ...orgData,
-                id: orgId,
-                organizationId: orgId,
-                ownerId: uid,
-                createdAt: Date.now()
-            };
+                // 1. Create Organization
+                transaction.set(orgRef, {
+                    ...data,
+                    id: orgId,
+                    organizationId: orgId,
+                    ownerId: uid,
+                    createdAt: Date.now()
+                });
 
-            console.log("Attempting to create organization at:", orgRef.path, organization);
-            await setDoc(orgRef, organization);
-            console.log("Organization created successfully:", orgId);
+                // 2. Create Owner Membership
+                const membershipRef = doc(db, "users", uid, "memberships", orgId);
+                transaction.set(membershipRef, {
+                    userId: uid,
+                    organizationId: orgId,
+                    role: 'owner',
+                    status: 'ACTIVE',
+                    createdAt: new Date().toISOString()
+                });
 
-            // 2. Create User Profile
-            const userRef = doc(db, "users", uid);
-            const userUpdate = {
-                ...userData,
-                uid,
-                organizationId: orgId,
-                organizationType: orgData.type,
-                createdAt: Date.now()
-            };
+                // 3. Update User Top-Level Profile
+                const userRef = doc(db, "users", uid);
+                transaction.update(userRef, {
+                    organizationId: orgId,
+                    currentOrganizationId: orgId,
+                    role: 'director',
+                    onboardingStep: 'complete'
+                });
 
-            console.log("Attempting to create user profile at:", userRef.path, userUpdate);
-            await setDoc(userRef, userUpdate);
-            console.log("User profile created successfully");
-
-            return orgId;
-        } catch (e: any) {
-            console.error("Bootstrap failed at some step:", e.code, e.message);
+                return orgId;
+            });
+        } catch (e) {
+            console.error("OrganizationService.createOrganizationWithTransaction failed:", e);
             throw e;
         }
     },
